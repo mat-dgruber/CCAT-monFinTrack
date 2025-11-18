@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Service Account Keys
+app/certs/serviceAccountKey.json
+
+# Log files
+*.log
+
+# Environment variables
+.env
+
+# IDE configuration
+.idea/
+.vscode/
