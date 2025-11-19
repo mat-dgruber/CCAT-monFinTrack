@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
 from .category import Category
+from .account import Account
 
 
 # 1. Definindo as Listas Fixas (Enums)
@@ -29,7 +30,10 @@ class TransactionBase(BaseModel):
 
 # 3. Create: O que precisamos receber para CRIAR uma despesa?
 class TransactionCreate(TransactionBase):
-     category_id = str = Field(..., description="ID da categoria")
+     category_id: str = Field(..., description="ID da categoria")
+     account_id: str = Field(..., description="ID da conta")
+
+
 
 # 4. Response: O que devolvemos para o Frontend?
 # (Inclui o ID, que é gerado pelo banco de dados, não pelo usuário)
@@ -37,6 +41,7 @@ class TransactionCreate(TransactionBase):
 class Transaction(TransactionBase):
      id: str
      category: Category
+     account: Account
 
 
      class Config:

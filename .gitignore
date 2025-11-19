@@ -16,5 +16,40 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# IDEs
+# IDEs & Editors
 .idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Build artifacts
+build/
+dist/
+out-tsc/
+bazel-out/
+wheels/
+*.egg-info
+
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.venv/
+htmlcov/
+*.sqlite3
+
+# Angular
+.angular/
+.sass-cache/
+
+# Coverage
+coverage/
+
+# Service Account Keys
+**/app/certs/serviceAccountKey.json

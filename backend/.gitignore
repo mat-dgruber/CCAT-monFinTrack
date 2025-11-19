@@ -21,3 +21,10 @@ app/certs/serviceAccountKey.json
 # IDE configuration
 .idea/
 .vscode/
+
+# Tests
+.pytest_cache/
+htmlcov/
+
+# DB
+*.sqlite3

@@ -3,7 +3,7 @@ from typing import Optional
 
 # 1. Base: O que toda categoria tem
 class CategoryBase(BaseModel):
-     name: str = Field(..., min_lenght=2, max_length=20, description="Nome da categoria")
+     name: str = Field(..., min_length=2, max_length=20, description="Nome da categoria")
      icon: str = Field(default="default_icon", description="Identificador do ícone (string)")
      color: str = Field(default="#000000", description="cor em Hex")
      is_custom: bool = Field(default=True, description="Se foi criada pelo usuário ou é padrão do sistema")

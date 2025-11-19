@@ -1,1 +1,25 @@
-/* You can add global styles to this file, and also import other style files */
+/* 1. Definimos a ordem das camadas */
+@layer tailwind-base, primeng, tailwind-utilities;
+
+/* 2. Importamos o Tailwind nas camadas certas */
+@layer tailwind-base {
+     @tailwind base;
+}
+
+@layer tailwind-utilities {
+     @tailwind components;
+     @tailwind utilities;
+}
+
+/* 3. PrimeIcons (único CSS que ainda importamos) */
+@import "primeicons/primeicons.css";
+
+/* 4. Configurações globais */
+html,
+body {
+     height: 100%;
+     background-color: #f8fafc;
+     /* Slate-50 do Tailwind */
+     font-family: var(--font-family);
+     /* Usa a fonte do tema Aura */
+}

@@ -7,8 +7,7 @@ CRED_PATH = "app/certs/serviceAccountKey.json"
 
 def get_db():
     """
-    Inicializa a conexão com o Firebase Firestore se ainda não existir
-    e retorna o cliente do banco de dados.
+    Inicializa a conexão com o Firebase Firestore se ainda não existir e retorna o cliente do banco de dados.
     """
     try:
         # Usamos '_apps' (com underscore) para checar se já existe

@@ -1,0 +1,67 @@
+<p-dialog header="Nova Transação" [modal]="true" [(visible)]="visible" [style]="{ width: '30rem' }"
+     [breakpoints]="{ '960px': '75vw', '640px': '95vw' }" [draggable]="false" [resizable]="false"
+     [contentStyle]="{'overflow': 'visible'}">
+     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5 pt-4">
+
+          <div class="flex justify-center">
+               <p-selectButton [options]="typeOptions" formControlName="type" optionLabel="label" optionValue="value">
+               </p-selectButton>
+          </div>
+
+          <div class="flex flex-col gap-2">
+               <label for="desc" class="font-semibold text-gray-700">Descrição</label>
+               <input pInputText id="desc" formControlName="description" placeholder="Ex: Mercado, Uber..."
+                    class="w-full" />
+          </div>
+
+          <div class="flex gap-4">
+               <div class="flex-1 flex flex-col gap-2">
+                    <label for="amount" class="font-semibold text-gray-700">Valor</label>
+                    <p-inputNumber inputId="amount" formControlName="amount" mode="currency" currency="BRL"
+                         locale="pt-BR" placeholder="R$ 0,00" [style]="{'width':'100%'}" inputStyleClass="w-full">
+                    </p-inputNumber>
+               </div>
+               <div class="flex-1 flex flex-col gap-2">
+                    <label for="date" class="font-semibold text-gray-700">Data</label>
+                    <p-datepicker inputId="date" formControlName="date" dateFormat="dd/mm/yy" [showIcon]="true"
+                         [appendTo]="'body'" [style]="{'width':'100%'}" inputStyleClass="w-full">
+                    </p-datepicker>
+               </div>
+          </div>
+
+          <div class="flex flex-col gap-2">
+               <label for="category" class="font-semibold text-gray-700">Categoria</label>
+               <p-select inputId="category" [options]="categories()" formControlName="category" optionLabel="name"
+                    placeholder="Selecione uma categoria" [style]="{'width':'100%'}" [appendTo]="'body'">
+
+                    <ng-template pTemplate="item" let-cat>
+                         <div class="flex items-center gap-2">
+                              <i [class]="cat.icon" [style.color]="cat.color"></i>
+                              <span>{{ cat.name }}</span>
+                         </div>
+                    </ng-template>
+
+                    <ng-template pTemplate="selectedItem" let-cat>
+                         <div class="flex items-center gap-2" *ngIf="cat">
+                              <i [class]="cat.icon" [style.color]="cat.color"></i>
+                              <span>{{ cat.name }}</span>
+                         </div>
+                    </ng-template>
+               </p-select>
+          </div>
+
+          <div class="flex flex-col gap-2">
+               <label for="payment" class="font-semibold text-gray-700">Pagamento</label>
+               <p-select inputId="payment" [options]="paymentOptions" formControlName="payment_method"
+                    optionLabel="label" optionValue="value" placeholder="Selecione..." [style]="{'width':'100%'}"
+                    [appendTo]="'body'">
+               </p-select>
+          </div>
+
+          <div class="flex justify-end gap-2 mt-6">
+               <p-button label="Cancelar" severity="secondary" (onClick)="visible.set(false)"></p-button>
+               <p-button label="Salvar" icon="pi pi-check" type="submit" [disabled]="form.invalid"></p-button>
+          </div>
+
+     </form>
+</p-dialog>
