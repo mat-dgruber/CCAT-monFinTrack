@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from enum import Enum
+from typing import List
 
 # Tipos de Conta
 class AccountType(str, Enum):
@@ -15,6 +16,7 @@ class AccountBase(BaseModel):
     type: AccountType = Field(default=AccountType.CHECKING, description="Tipo de Conta")
     balance: float = Field(default=0, description="Saldo da Conta")
     color: str = Field(default="#3b82f6", description="Cor da Conta em HEX")
+    icon: str = Field(default="", description="Ícone da Conta")
 
 class AccountCreate(AccountBase):
     pass
@@ -22,5 +24,5 @@ class AccountCreate(AccountBase):
 class Account(AccountBase):
     id: str
 
-    class COnfig:
-     from_attributes = True
+    class Config:
+        from_attributes = True

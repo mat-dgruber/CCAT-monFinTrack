@@ -2,24 +2,31 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-// PrimeNG
-import { TableModule } from 'primeng/table';
+// PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { ColorPickerModule } from 'primeng/colorpicker';
+import { ColorPickerModule } from 'primeng/colorpicker'; // <--- Importante
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectModule } from 'primeng/select'; // <--- Importante
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/transaction.model';
+import { ICON_LIST } from '../../shared/icons'; // <--- Importe a lista
 
 @Component({
   selector: 'app-category-manager',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, TableModule, ButtonModule, 
-    DialogModule, InputTextModule, ColorPickerModule, ConfirmDialogModule
+    CommonModule, 
+    ReactiveFormsModule, 
+    ButtonModule, 
+    DialogModule, 
+    InputTextModule, 
+    ColorPickerModule, 
+    ConfirmDialogModule,
+    SelectModule // <--- Adicione aqui
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss'
@@ -33,6 +40,9 @@ export class CategoryManager implements OnInit {
   categories = signal<Category[]>([]);
   visible = signal(false);
   editingId = signal<string | null>(null);
+
+  // LISTA DE ÍCONES PARA O HTML
+  icons = ICON_LIST;
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -62,6 +72,8 @@ export class CategoryManager implements OnInit {
   }
 
   deleteCategory(event: Event, id: string) {
+    event.stopPropagation(); // Previne clique no card
+    
     this.confirmationService.confirm({
         target: event.target as EventTarget,
         message: 'Apagar esta categoria?',

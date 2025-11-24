@@ -3,5 +3,6 @@ export interface Account {
      name: string;
      type: 'checking' | 'savings' | 'investment' | 'cash' | 'credit_card' | 'other';
      balance: number;
-     color?: string;
-}
+     icon?: string;
+     color: string;
+}  

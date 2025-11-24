@@ -6,7 +6,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 
 // --- NOVOS IMPORTS DO PRIMENG ---
 import { providePrimeNG } from 'primeng/config';
-import Aura from '@primeuix/themes/aura';
+import Aura from '@primeng/themes/aura';
 import { ConfirmationService, MessageService } from 'primeng/api'; // <--- Importe aqui
 
 import { routes } from './app.routes';

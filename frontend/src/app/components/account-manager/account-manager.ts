@@ -1,44 +1,61 @@
-// 1. Adicione 'effect' nos imports
 import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-// PrimeNG imports...
+// PrimeNG Components
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectModule } from 'primeng/select';
+import { SelectModule } from 'primeng/select'; // Novo Dropdown
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { ColorPickerModule } from 'primeng/colorpicker';
 
+// Serviços e Modelos
 import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
 import { Account } from '../../models/account.model';
-import { AccountTypePipe } from '../../pipes/account-type.pipe';
+import { AccountTypePipe } from '../../pipes/account-type.pipe'; // Pipe de tradução
+
+// Lista de Ícones Compartilhada
+import { ICON_LIST } from '../../shared/icons';
 
 @Component({
   selector: 'app-account-manager',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, ButtonModule, TableModule, 
-    DialogModule, InputTextModule, InputNumberModule, SelectModule, ConfirmDialogModule, AccountTypePipe
+    CommonModule, 
+    ReactiveFormsModule, 
+    ButtonModule, 
+    DialogModule, 
+    InputTextModule, 
+    InputNumberModule, 
+    SelectModule, 
+    ConfirmDialogModule, 
+    ColorPickerModule,
+    AccountTypePipe
   ],
   templateUrl: './account-manager.html',
   styleUrl: './account-manager.scss'
 })
 export class AccountManager implements OnInit {
+  // Injeção de Dependências
   private accountService = inject(AccountService);
-  private refreshService = inject(RefreshService); // <--- Garanta que isso está injetado
+  private refreshService = inject(RefreshService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
 
+  // Signals (Estado)
   accounts = signal<Account[]>([]);
   visible = signal(false);
   editingId = signal<string | null>(null);
 
+  // Propriedade para o HTML acessar a lista de ícones
+  icons = ICON_LIST;
+
+  // Opções de Tipo de Conta
   typeOptions = [
     { label: 'Conta Corrente', value: 'checking' },
     { label: 'Poupança', value: 'savings' },
@@ -47,61 +64,90 @@ export class AccountManager implements OnInit {
     { label: 'Investimento', value: 'investment' }
   ];
 
+  // Formulário Reativo
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     type: ['checking', Validators.required],
-    balance: [0, Validators.required]
+    balance: [0, Validators.required],
+    icon: ['pi pi-wallet', Validators.required],
+    color: ['#3b82f6', Validators.required]
   });
 
-  // --- O TRECHO QUE FALTA ---
+  // Construtor com Efeito (Ouve atualizações do sistema)
   constructor() {
-    // Esse 'efeito' roda sempre que alguém chama o triggerRefresh()
     effect(() => {
-        // Apenas acessamos o sinal para registrar a dependência
-        this.refreshService.refreshSignal();
-        
-        // Recarregamos a lista de contas para pegar os saldos novos
-        this.loadAccounts();
+        this.refreshService.refreshSignal(); // Registra dependência
+        this.loadAccounts(); // Recarrega quando o sinal muda
     });
   }
-  // --------------------------
 
   ngOnInit() {
     this.loadAccounts();
   }
 
   loadAccounts() {
-    this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
+    this.accountService.getAccounts().subscribe({
+        next: (data) => this.accounts.set(data),
+        error: (err) => console.error('Erro ao carregar contas', err)
+    });
   }
 
-  // ... (o resto dos métodos openNew, editAccount, deleteAccount continuam iguais)
+  // Abrir modal para Nova Conta
   openNew() {
     this.editingId.set(null);
-    this.form.reset({ type: 'checking', balance: 0 });
+    this.form.reset({ 
+        type: 'checking', 
+        balance: 0,
+        icon: 'pi pi-wallet',
+        color: '#3b82f6'
+    });
     this.visible.set(true);
   }
 
-  editAccount(acc: Account) {
-    this.editingId.set(acc.id!);
-    this.form.patchValue(acc);
-    this.visible.set(true);
+  // Abrir modal para Editar Conta (Protegido contra erros de clique e dados faltantes)
+  editAccount(event: Event, acc: Account) {
+    event.stopPropagation(); // Impede clicar no card
+    event.preventDefault();
+
+    try {
+        this.editingId.set(acc.id!);
+        
+        // Prepara os dados (com fallback se a conta for antiga e não tiver cor/ícone)
+        const dataToPatch = {
+            name: acc.name,
+            type: acc.type,
+            balance: acc.balance,
+            icon: acc.icon || 'pi pi-wallet',
+            color: acc.color || '#3b82f6'
+        };
+
+        this.form.patchValue(dataToPatch);
+        this.visible.set(true);
+    } catch (e) {
+        console.error('Erro ao preparar edição:', e);
+    }
   }
 
+  // Deletar Conta
   deleteAccount(event: Event, id: string) {
+    event.stopPropagation(); // Impede clicar no card
+    
     this.confirmationService.confirm({
         target: event.target as EventTarget,
         message: 'Tem certeza? Transações antigas podem ficar sem referência.',
         icon: 'pi pi-exclamation-triangle',
+        acceptButtonStyleClass: "p-button-danger p-button-text",
+        rejectButtonStyleClass: "p-button-text p-button-plain",
         accept: () => {
             this.accountService.deleteAccount(id).subscribe(() => {
                 this.messageService.add({severity:'success', summary:'Conta Excluída'});
-                // Ao deletar uma conta, também avisamos o sistema
-                this.refreshService.triggerRefresh();
+                this.refreshService.triggerRefresh(); // Avisa o dashboard
             });
         }
     });
   }
 
+  // Salvar (Criação ou Edição)
   saveAccount() {
     if (this.form.valid) {
       const payload = this.form.value as Account;
@@ -109,8 +155,7 @@ export class AccountManager implements OnInit {
       const onSave = () => {
           this.visible.set(false);
           this.form.reset();
-          // Ao salvar, avisamos o sistema
-          this.refreshService.triggerRefresh();
+          this.refreshService.triggerRefresh(); // Avisa dashboard e lista
       };
 
       if (this.editingId()) {
