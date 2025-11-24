@@ -1,10 +1,10 @@
 <div class="p-4 max-w-6xl mx-auto">
+     <p-toast></p-toast>
+     <p-confirmDialog></p-confirmDialog>
 
      <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-gray-800">Transações Recentes</h2>
-
-          <p-button label="Nova Transação" icon="pi pi-plus" size="small" (onClick)="openNewTransaction()">
-          </p-button>
+          <p-button label="Nova Transação" icon="pi pi-plus" size="small" (onClick)="openNewTransaction()"></p-button>
      </div>
 
      <div class="card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -17,6 +17,7 @@
                          <th>Valor</th>
                          <th>Data</th>
                          <th>Forma Pagto.</th>
+                         <th style="width: 5rem"></th>
                     </tr>
                </ng-template>
 
@@ -38,13 +39,33 @@
                          </td>
 
                          <td>{{ t.date | date:'dd/MM/yyyy' }}</td>
-                         <td class="capitalize">{{ t.payment_method | paymentFormat }}</td>
+
+                         <td class="capitalize">
+                              {{ t.payment_method | paymentFormat }}
+                         </td>
+
+                         <td class="flex gap-1"> <p-button 
+                              icon="pi pi-pencil" 
+                              severity="info" 
+                              [text]="true" 
+                              [rounded]="true"
+                              (onClick)="transactionForm.editTransaction(t)">
+                          </p-button>
+                      
+                          <p-button 
+                              icon="pi pi-trash" 
+                              severity="danger" 
+                              [text]="true" 
+                              [rounded]="true"
+                              (onClick)="deleteTransaction($event, t)">
+                          </p-button>
+                      </td>
                     </tr>
                </ng-template>
 
                <ng-template pTemplate="emptymessage">
                     <tr>
-                         <td colspan="5" class="text-center p-4 text-gray-500">
+                         <td colspan="6" class="text-center p-4 text-gray-500">
                               Nenhuma transação encontrada.
                          </td>
                     </tr>
@@ -54,5 +75,4 @@
      </div>
 
      <app-transaction-form (save)="loadTransactions()"></app-transaction-form>
-
 </div>

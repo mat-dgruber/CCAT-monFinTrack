@@ -1,6 +1,8 @@
 from app.core.database import get_db
 from app.schemas.category import CategoryCreate, Category
 
+from fastapi import HTTPException
+
 # Nome da "pasta" (coleção) lá no Firestore onde guardaremos isso
 COLLECTION_NAME = "categories"
 
@@ -47,4 +49,20 @@ def list_categories() -> list[Category]:
           categories.append(Category(id=doc.id, **doc.to_dict()))
 
      return categories
+
+def update_category(category_id: str, category_in: CategoryCreate) -> Category:
+    db = get_db()
+    doc_ref = db.collection(COLLECTION_NAME).document(category_id)
+    
+    if not doc_ref.get().exists:
+        raise HTTPException(status_code=404, detail="Category not found")
+        
+    data = category_in.model_dump()
+    doc_ref.update(data)
+    return Category(id=category_id, **data)
+
+def delete_category(category_id: str):
+    db = get_db()
+    db.collection(COLLECTION_NAME).document(category_id).delete()
+    return {"status": "success"}
 

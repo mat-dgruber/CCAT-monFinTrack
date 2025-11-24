@@ -1,0 +1,68 @@
+<div class="mb-8">
+     <p-confirmDialog></p-confirmDialog>
+
+     <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-800">Gerenciar Contas</h2>
+          <p-button label="Nova Conta" icon="pi pi-plus" size="small" (onClick)="openNew()"></p-button>
+     </div>
+
+     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <div *ngFor="let acc of accounts()"
+               class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between h-36 relative group">
+
+               <div
+                    class="absolute top-3 right-3 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button (click)="editAccount(acc)"
+                         class="w-8 h-8 rounded-full bg-gray-50 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors">
+                         <i class="pi pi-pencil text-sm"></i>
+                    </button>
+                    <button (click)="deleteAccount($event, acc.id!)"
+                         class="w-8 h-8 rounded-full bg-gray-50 text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors">
+                         <i class="pi pi-trash text-sm"></i>
+                    </button>
+               </div>
+
+               <div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{{ acc.type | accountType }}</div>
+                    <div class="text-lg font-bold text-gray-800 truncate pr-16">{{ acc.name }}</div>
+               </div>
+
+               <div class="mt-2">
+                    <span class="text-2xl font-bold text-blue-600 tracking-tight">
+                         {{ acc.balance | currency:'BRL' }}
+                    </span>
+               </div>
+          </div>
+
+          <div (click)="openNew()"
+               class="border-2 border-dashed border-gray-300 rounded-xl p-5 flex flex-col items-center justify-center h-36 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group text-gray-400 hover:text-blue-500">
+               <i class="pi pi-plus text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
+               <span class="font-medium">Adicionar Conta</span>
+          </div>
+
+     </div>
+</div>
+
+<p-dialog [header]="editingId() ? 'Editar Conta' : 'Nova Conta'" [modal]="true" [(visible)]="visible"
+     [style]="{ width: '25rem' }">
+     <form [formGroup]="form" (ngSubmit)="saveAccount()" class="flex flex-col gap-4 pt-4">
+          <div class="flex flex-col gap-2">
+               <label class="font-semibold">Nome</label>
+               <input pInputText formControlName="name" class="w-full" />
+          </div>
+          <div class="flex flex-col gap-2">
+               <label class="font-semibold">Tipo</label>
+               <p-select [options]="typeOptions" formControlName="type" optionLabel="label" optionValue="value"
+                    [style]="{'width':'100%'}" appendTo="body"></p-select>
+          </div>
+          <div class="flex flex-col gap-2">
+               <label class="font-semibold">Saldo</label>
+               <p-inputNumber formControlName="balance" mode="currency" currency="BRL" locale="pt-BR"
+                    [style]="{'width':'100%'}" inputStyleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="flex justify-end mt-4">
+               <p-button label="Salvar" type="submit" [disabled]="form.invalid"></p-button>
+          </div>
+     </form>
+</p-dialog>

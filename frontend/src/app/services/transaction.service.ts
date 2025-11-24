@@ -21,5 +21,16 @@ export class TransactionService {
           return this.http.post<Transaction>(this.apiUrl, transaction);
      }
 
+     // Atualiza uma transação existente
+  updateTransaction(id: string, transaction: Partial<Transaction>): Observable<Transaction> {
+    return this.http.put<Transaction>(`${this.apiUrl}/${id}`, transaction);
+  }
+
+     deleteTransaction(id: string): Observable<void> {
+          // CORREÇÃO: Adicione a barra "/" explicitamente antes do ID
+          // Se this.apiUrl for '.../transactions', isso vira '.../transactions/123'
+          return this.http.delete<void>(`${this.apiUrl}/${id}`);
+        }
+
 
 }
