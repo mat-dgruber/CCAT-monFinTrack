@@ -1,0 +1,54 @@
+<div class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+  <p-card
+    [style]="{ width: '100%', maxWidth: '450px' }"
+    styleClass="shadow-lg border-none text-center"
+  >
+    @if (status() === 'loading') {
+    <div class="flex flex-col items-center gap-4 py-8">
+      <p-progressSpinner
+        styleClass="w-12 h-12"
+        strokeWidth="4"
+      ></p-progressSpinner>
+      <p class="text-gray-600 font-medium">Verificando seu e-mail...</p>
+    </div>
+    } @if (status() === 'success') {
+    <div class="flex flex-col items-center gap-4 py-4">
+      <div
+        class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2 animate-bounce"
+      >
+        <i class="pi pi-check text-4xl font-bold"></i>
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-800">E-mail Confirmado!</h2>
+      <p class="text-gray-500 mb-4">
+        Sua conta foi ativada com sucesso. Agora você pode acessar o
+        monFinTrack.
+      </p>
+
+      <p-button
+        label="Ir para o Login"
+        (onClick)="goToLogin()"
+        styleClass="w-full"
+      ></p-button>
+    </div>
+    } @if (status() === 'error') {
+    <div class="flex flex-col items-center gap-4 py-4">
+      <div
+        class="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-2"
+      >
+        <i class="pi pi-times text-4xl font-bold"></i>
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-800">Ops! Algo deu errado.</h2>
+      <p class="text-red-500 mb-4">{{ errorMessage() }}</p>
+
+      <p-button
+        label="Voltar ao Início"
+        severity="secondary"
+        (onClick)="goToLogin()"
+        styleClass="w-full"
+      ></p-button>
+    </div>
+    }
+  </p-card>
+</div>

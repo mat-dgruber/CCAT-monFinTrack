@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from app.schemas.budget import Budget
 
 class CategoryTotal(BaseModel):
      category_name: str
@@ -11,3 +12,4 @@ class DashboardSummary(BaseModel):
      income_month: float
      expense_month: float
      expenses_by_category: List[CategoryTotal]
+     budgets: List[Budget]

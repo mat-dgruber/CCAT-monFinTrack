@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from enum import Enum
+from app.core.validators import sanitize_html
 
 # 1. A definição do ENUM deve vir PRIMEIRO
 class CategoryType(str, Enum):
@@ -16,6 +17,13 @@ class CategoryBase(BaseModel):
     
     # Aqui usamos o Enum definido acima
     type: CategoryType = Field(default=CategoryType.EXPENSE, description="Tipo: expense ou income")
+
+    # --- BLOCO DE PROTEÇÃO XSS ---
+    @field_validator('name')
+    @classmethod # No Pydantic v2 usamos @classmethod as vezes, mas field_validator cuida disso
+    def clean_name(cls, v):
+        return sanitize_html(v)
+    # -----------------------------
 
 # 3. Classes derivadas
 class CategoryCreate(CategoryBase):

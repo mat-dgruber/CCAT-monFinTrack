@@ -1,8 +1,25 @@
+@if (authService.currentUser()) {
+
 <div class="min-h-screen bg-gray-50 flex flex-col">
   <header class="bg-white shadow-sm pt-4 px-4 sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto flex items-center gap-2 mb-4">
-      <i class="pi pi-wallet text-2xl text-blue-600"></i>
-      <h1 class="text-xl font-bold text-gray-800">monFinTrack</h1>
+    <div class="max-w-6xl mx-auto flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-wallet text-2xl text-blue-600"></i>
+        <h1 class="text-xl font-bold text-gray-800">monFinTrack</h1>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500 hidden sm:block">{{
+          authService.currentUser()?.email
+        }}</span>
+        <button
+          (click)="logout()"
+          class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+          title="Sair"
+        >
+          <i class="pi pi-sign-out"></i>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -11,31 +28,30 @@
 
     <p-tabs value="0">
       <p-tablist>
-        <p-tab value="0"> <i class="pi pi-list mr-2"></i> Transações </p-tab>
-        <p-tab value="1"> <i class="pi pi-wallet mr-2"></i> Contas </p-tab>
-        <p-tab value="2"> <i class="pi pi-tags mr-2"></i> Categorias </p-tab>
-        <p-tab value="3">
-          <i class="pi pi-bullseye mr-2"></i> Metas
-        </p-tab>
+        <p-tab value="0"><i class="pi pi-list mr-2"></i> Transações</p-tab>
+        <p-tab value="1"><i class="pi pi-wallet mr-2"></i> Contas</p-tab>
+        <p-tab value="2"><i class="pi pi-tags mr-2"></i> Categorias</p-tab>
+        <p-tab value="3"><i class="pi pi-bullseye mr-2"></i> Metas</p-tab>
       </p-tablist>
 
       <p-tabpanels>
-        <p-tabpanel value="0">
-          <app-transaction-list></app-transaction-list>
-        </p-tabpanel>
-
-        <p-tabpanel value="1">
-          <app-account-manager></app-account-manager>
-        </p-tabpanel>
-
-        <p-tabpanel value="2">
-          <app-category-manager></app-category-manager>
-        </p-tabpanel>
-
-        <p-tabpanel value="3">
-          <app-budget-manager></app-budget-manager>
-        </p-tabpanel>
+        <p-tabpanel value="0"
+          ><app-transaction-list></app-transaction-list
+        ></p-tabpanel>
+        <p-tabpanel value="1"
+          ><app-account-manager></app-account-manager
+        ></p-tabpanel>
+        <p-tabpanel value="2"
+          ><app-category-manager></app-category-manager
+        ></p-tabpanel>
+        <p-tabpanel value="3"
+          ><app-budget-manager></app-budget-manager
+        ></p-tabpanel>
       </p-tabpanels>
     </p-tabs>
   </main>
 </div>
+
+} @else {
+<app-login></app-login>
+}

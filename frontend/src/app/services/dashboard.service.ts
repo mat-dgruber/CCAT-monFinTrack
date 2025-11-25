@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { Budget } from '../models/budget.model';
+
 export interface CategoryTotal{
   category_name: string;
   color: string;
@@ -13,6 +15,7 @@ export interface DashboardSummary {
   income_month: number;
   expense_month: number;
   expenses_by_category: CategoryTotal[];
+  budgets: Budget[];
 }
 
 

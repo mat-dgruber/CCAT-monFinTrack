@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from enum import Enum
 from .category import Category
 from .account import Account
+from app.core.validators import sanitize_html
 
 
 # 1. Definindo as Listas Fixas (Enums)
@@ -27,6 +28,12 @@ class TransactionBase(BaseModel):
      type: TransactionType = Field(default=TransactionType.EXPENSE, description="Tipo: Despesa ou Receita")
      payment_method: PaymentMethod = Field(..., description="Forma de pagamento")
 
+     # --- BLOCO DE PROTEÇÃO XSS ---
+     @field_validator('description')
+     @classmethod # No Pydantic v2 usamos @classmethod as vezes, mas field_validator cuida disso
+     def clean_description(cls, v):
+          return sanitize_html(v)
+     # -----------------------------
 
 # 3. Create: O que precisamos receber para CRIAR uma despesa?
 class TransactionCreate(TransactionBase):

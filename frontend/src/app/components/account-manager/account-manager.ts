@@ -7,7 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectModule } from 'primeng/select'; // Novo Dropdown
+import { SelectModule } from 'primeng/select'; // Novo Dropdown (v18+)
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
@@ -76,8 +76,10 @@ export class AccountManager implements OnInit {
   // Construtor com Efeito (Ouve atualizações do sistema)
   constructor() {
     effect(() => {
-        this.refreshService.refreshSignal(); // Registra dependência
-        this.loadAccounts(); // Recarrega quando o sinal muda
+        // Registra dependência do sinal de refresh
+        this.refreshService.refreshSignal(); 
+        // Recarrega quando o sinal muda (ex: nova transação alterou saldo)
+        this.loadAccounts(); 
     });
   }
 
@@ -104,9 +106,9 @@ export class AccountManager implements OnInit {
     this.visible.set(true);
   }
 
-  // Abrir modal para Editar Conta (Protegido contra erros de clique e dados faltantes)
+  // Abrir modal para Editar Conta
   editAccount(event: Event, acc: Account) {
-    event.stopPropagation(); // Impede clicar no card
+    event.stopPropagation(); // Impede clicar no card de fundo
     event.preventDefault();
 
     try {
@@ -130,7 +132,7 @@ export class AccountManager implements OnInit {
 
   // Deletar Conta
   deleteAccount(event: Event, id: string) {
-    event.stopPropagation(); // Impede clicar no card
+    event.stopPropagation(); // Impede clicar no card de fundo
     
     this.confirmationService.confirm({
         target: event.target as EventTarget,

@@ -1,27 +1,28 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
+from dotenv import load_dotenv # <--- Importe
 
-# O caminho para o arquivo JSON
-CRED_PATH = "app/certs/serviceAccountKey.json"
+# Carrega as variáveis do arquivo .env
+load_dotenv()
 
 def get_db():
-    """
-    Inicializa a conexão com o Firebase Firestore se ainda não existir e retorna o cliente do banco de dados.
-    """
     try:
-        # Usamos '_apps' (com underscore) para checar se já existe
         if not firebase_admin._apps:
-            if os.path.exists(CRED_PATH):
-                cred = credentials.Certificate(CRED_PATH)
+            # Pega o caminho da variável de ambiente
+            cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            
+            if cred_path and os.path.exists(cred_path):
+                cred = credentials.Certificate(cred_path)
                 firebase_admin.initialize_app(cred)
-                print("✅ Conexão com Firestore estabelecida com sucesso!")
+                print("✅ Conexão com Firestore estabelecida!")
             else:
-                print(f"❌ Erro: Arquivo de credencial não encontrado em: {CRED_PATH}")
+                # Fallback ou Erro
+                print(f"❌ Erro: Credencial não encontrada em {cred_path}")
                 return None
 
         return firestore.client()
         
     except Exception as e:
-        print(f"❌ Erro ao conectar ao Firestore: {e}")
+        print(f"❌ Erro ao conectar no Firestore: {e}")
         return None

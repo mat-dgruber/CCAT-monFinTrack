@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from .category import Category
+from app.core.validators import sanitize_html
 
 class BudgetBase(BaseModel):
     amount: float = Field(..., gt=0, description="Limite de gasto mensal")

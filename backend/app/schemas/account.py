@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 from typing import List
+from app.core.validators import sanitize_html
 
 # Tipos de Conta
 class AccountType(str, Enum):
@@ -17,6 +18,13 @@ class AccountBase(BaseModel):
     balance: float = Field(default=0, description="Saldo da Conta")
     color: str = Field(default="#3b82f6", description="Cor da Conta em HEX")
     icon: str = Field(default="", description="Ícone da Conta")
+
+    # --- BLOCO DE PROTEÇÃO XSS ---
+    @field_validator('name')
+    @classmethod # No Pydantic v2 usamos @classmethod as vezes, mas field_validator cuida disso
+    def clean_name(cls, v):
+        return sanitize_html(v)
+    # -----------------------------
 
 class AccountCreate(AccountBase):
     pass

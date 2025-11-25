@@ -10,7 +10,7 @@ wheels/
 .venv
 
 # Service Account Keys
-app/certs/serviceAccountKey.json
+app/certs/
 
 # Log files
 *.log

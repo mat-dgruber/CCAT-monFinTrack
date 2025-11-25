@@ -1,39 +1,51 @@
 import { Component, OnInit, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-// PrimeNG
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastModule } from 'primeng/toast';
-import { ConfirmationService, MessageService } from 'primeng/api';
+// PrimeNG Components
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
-import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
- 
+// Serviços e Modelos
 import { TransactionService } from '../../services/transaction.service';
-import { Transaction } from '../../models/transaction.model';
-import { TransactionForm } from '../transaction-form/transaction-form';
 import { RefreshService } from '../../services/refresh.service';
+import { Transaction } from '../../models/transaction.model';
 
+// Componentes Filhos e Pipes
+import { TransactionForm } from '../transaction-form/transaction-form';
+import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
 
 @Component({
   selector: 'app-transaction-list',
   standalone: true,
-  imports: [CommonModule, TableModule, ButtonModule, TagModule, TransactionForm, PaymentFormatPipe, ConfirmDialogModule, ToastModule],
+  imports: [
+    CommonModule, 
+    TableModule, 
+    ButtonModule, 
+    TagModule, 
+    ConfirmDialogModule,
+    ToastModule,
+    TransactionForm, 
+    PaymentFormatPipe
+  ],
+  // Nota: ConfirmationService e MessageService estão no app.config.ts, não precisa aqui
   templateUrl: './transaction-list.html',
   styleUrl: './transaction-list.scss',
 })
-export class TransactionList implements OnInit{
+export class TransactionList implements OnInit {
 
+  // Referência ao componente do formulário (para poder abrir o modal)
   @ViewChild(TransactionForm) transactionForm!: TransactionForm;
 
-
-  private transactionService = inject(TransactionService)
+  private transactionService = inject(TransactionService);
   private refreshService = inject(RefreshService);
-  private confirmationService = inject(ConfirmationService)
+  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
 
+  // Estado da lista
   transactions = signal<Transaction[]>([]);
 
   ngOnInit() {
@@ -42,18 +54,25 @@ export class TransactionList implements OnInit{
 
   loadTransactions() {
     this.transactionService.getTransactions().subscribe({
-      next: (data) => {
-        this.transactions.set(data);
-        console.log('Dados recebidos:', data);
-      },
-      error: (error) => console.error('Erro ao buscar transações:', error)
-    })
+      next: (data) => this.transactions.set(data),
+      error: (error) => {
+        console.error('Erro ao buscar transações:', error);
+        // Opcional: Mostrar erro visual
+      }
+    });
   }
 
+  // Ação do botão "Nova Transação"
   openNewTransaction() {
     this.transactionForm.showDialog();
   }
 
+  // Ação do botão "Editar" (Lápis)
+  editTransaction(event: any, transaction: Transaction) {
+    this.transactionForm.editTransaction(event, transaction);
+  }
+
+  // Ação do botão "Excluir" (Lixeira)
   deleteTransaction(event: Event, transaction: Transaction) {
     this.confirmationService.confirm({
         target: event.target as EventTarget,
@@ -68,23 +87,28 @@ export class TransactionList implements OnInit{
         accept: () => {
             this.transactionService.deleteTransaction(transaction.id).subscribe({
                 next: () => {
-                    // 1. Mostra mensagem
-                    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação excluída e saldo estornado.' });
+                    this.messageService.add({ 
+                        severity: 'success', 
+                        summary: 'Sucesso', 
+                        detail: 'Transação excluída e saldo estornado.' 
+                    });
                     
-                    // 2. Atualiza a lista local
+                    // 1. Recarrega a lista local
                     this.loadTransactions();
                     
-                    // 3. Avisa o Dashboard e Contas para atualizarem o saldo!
+                    // 2. Avisa o resto do app (Dashboard/Contas) para atualizar saldos
                     this.refreshService.triggerRefresh();
                 },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível excluir.' });
+                error: (err) => {
+                    console.error(err);
+                    this.messageService.add({ 
+                        severity: 'error', 
+                        summary: 'Erro', 
+                        detail: 'Não foi possível excluir.' 
+                    });
                 }
             });
         }
     });
   }
-
-
-
 }
