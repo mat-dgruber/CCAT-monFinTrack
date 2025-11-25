@@ -13,13 +13,20 @@ def get_dashboard_data(user_id: str, month: Optional[int] = None, year: Optional
     total_balance = sum(acc.to_dict().get("balance", 0) for acc in accounts)
     
     # 2. Transações (Apenas do usuário)
-    query = db.collection("transactions").where("user_id", "==", user_id)
-    
+    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
+    all_transactions = transactions_query.stream()
+
+    transactions = []
     if month and year:
         start_date, end_date = get_month_range(month, year)
-        query = query.where("date", ">=", start_date).where("date", "<=", end_date)
-        
-    transactions = list(query.stream())
+        for t in all_transactions:
+            t_data = t.to_dict()
+            transaction_date = t_data.get("date")
+            if transaction_date and start_date <= transaction_date <= end_date:
+                transactions.append(t)
+    else:
+        # Se não houver mês e ano, pega todas as transações (embora o ideal seja limitar)
+        transactions = list(all_transactions)
     
     income = 0.0
     expense = 0.0

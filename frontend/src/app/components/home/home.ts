@@ -9,6 +9,7 @@ import { AccountManager } from '../account-manager/account-manager';
 import { CategoryManager } from '../category-manager/category-manager';
 import { BudgetManager } from '../budget-manager/budget-manager';
 import { Login } from '../login/login';
+import { MonthSelector } from '../month-selector/month-selector';
 
 import { AuthService } from '../../services/auth.service';
 
@@ -23,7 +24,8 @@ import { AuthService } from '../../services/auth.service';
     AccountManager,
     CategoryManager,
     BudgetManager,
-    Login
+    Login,
+    MonthSelector
   ],
   templateUrl: './home.html',
 })

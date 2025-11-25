@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { MonthSelector } from '../month-selector/month-selector';
+
 // PrimeNG
 import { ChartModule } from 'primeng/chart';
 import { CardModule } from 'primeng/card';
@@ -14,7 +16,7 @@ import { FilterService } from '../../services/filter.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ChartModule, CardModule],
+  imports: [CommonModule, ChartModule, CardModule, MonthSelector],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -41,8 +43,8 @@ export class Dashboard implements OnInit {
   }
 
   ngOnInit() {
-      this.initChartOptions();
-      // this.loadDashboard(); // Effect já chama
+    this.initChartOptions();
+    // this.loadDashboard(); // Effect já chama
   }
 
   loadDashboard(m: number, y: number) {
@@ -55,28 +57,28 @@ export class Dashboard implements OnInit {
   setupChart(data: DashboardSummary) {
     // Prepara os dados para o Gráfico de Rosca (Doughnut)
     this.chartData = {
-        labels: data.expenses_by_category.map(c => c.category_name),
-        datasets: [
-            {
-                data: data.expenses_by_category.map(c => c.total),
-                backgroundColor: data.expenses_by_category.map(c => c.color),
-                hoverBackgroundColor: data.expenses_by_category.map(c => c.color)
-            }
-        ]
+      labels: data.expenses_by_category.map(c => c.category_name),
+      datasets: [
+        {
+          data: data.expenses_by_category.map(c => c.total),
+          backgroundColor: data.expenses_by_category.map(c => c.color),
+          hoverBackgroundColor: data.expenses_by_category.map(c => c.color)
+        }
+      ]
     };
   }
 
   initChartOptions() {
     this.chartOptions = {
-        cutout: '60%', // Tamanho do buraco da rosca
-        plugins: {
-            legend: {
-                labels: {
-                    usePointStyle: true,
-                    color: '#4b5563'
-                }
-            }
+      cutout: '60%', // Tamanho do buraco da rosca
+      plugins: {
+        legend: {
+          labels: {
+            usePointStyle: true,
+            color: '#4b5563'
+          }
         }
+      }
     };
   }
 

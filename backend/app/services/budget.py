@@ -31,19 +31,25 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
     budgets = []
     
     # 2. Pegar despesas DO USUÁRIO
-    query = db.collection("transactions")\
-        .where("user_id", "==", user_id)\
-        .where("type", "==", "expense")
-        
+    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
+    all_transactions = transactions_query.stream()
+
+    filtered_transactions = []
     if month and year:
         start_date, end_date = get_month_range(month, year)
-        query = query.where("date", ">=", start_date).where("date", "<=", end_date)
-
-    transactions = query.stream()
+        for t in all_transactions:
+            t_data = t.to_dict()
+            transaction_date = t_data.get("date")
+            if t_data.get("type") == "expense" and transaction_date and start_date <= transaction_date <= end_date:
+                filtered_transactions.append(t)
+    else:
+        for t in all_transactions:
+            if t.to_dict().get("type") == "expense":
+                filtered_transactions.append(t)
         
     spending_map = {} 
     
-    for t in transactions:
+    for t in filtered_transactions:
         data = t.to_dict()
         cat_id = data.get("category_id")
         amount = data.get("amount", 0)
