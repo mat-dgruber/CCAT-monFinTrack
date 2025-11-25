@@ -43,7 +43,7 @@ export class AuthService {
         // CONFIGURAÇÃO DO LINK MÁGICO
         const actionCodeSettings = {
             // Para onde o usuário vai após clicar? (Mude para seu domínio real em produção)
-            url: 'http://localhost:4200/verify-email', 
+            url: `${environment.appUrl}/verify-email`, 
             handleCodeInApp: true
         };
 
