@@ -2,8 +2,10 @@ from app.core.database import get_db
 from app.schemas.dashboard import DashboardSummary, CategoryTotal, BudgetSummary
 from app.services import category as category_service
 from app.services import budget as budget_service
+from app.core.date_utils import get_month_range
+from typing import Optional
 
-def get_dashboard_data(user_id: str) -> DashboardSummary:
+def get_dashboard_data(user_id: str, month: Optional[int] = None, year: Optional[int] = None) -> DashboardSummary:
     db = get_db()
     
     # 1. Saldo Total (Apenas contas do usuário)
@@ -11,7 +13,20 @@ def get_dashboard_data(user_id: str) -> DashboardSummary:
     total_balance = sum(acc.to_dict().get("balance", 0) for acc in accounts)
     
     # 2. Transações (Apenas do usuário)
-    transactions = list(db.collection("transactions").where("user_id", "==", user_id).stream())
+    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
+    all_transactions = transactions_query.stream()
+
+    transactions = []
+    if month and year:
+        start_date, end_date = get_month_range(month, year)
+        for t in all_transactions:
+            t_data = t.to_dict()
+            transaction_date = t_data.get("date")
+            if transaction_date and start_date <= transaction_date <= end_date:
+                transactions.append(t)
+    else:
+        # Se não houver mês e ano, pega todas as transações (embora o ideal seja limitar)
+        transactions = list(all_transactions)
     
     income = 0.0
     expense = 0.0
@@ -33,7 +48,7 @@ def get_dashboard_data(user_id: str) -> DashboardSummary:
                 category_map[cat_id] = amount
 
     categories_list = []
-    for cat__id, total in category_map.items():
+    for cat_id, total in category_map.items():
         cat_obj = category_service.get_category(cat_id)
         if cat_obj:
             categories_list.append(CategoryTotal(
@@ -43,23 +58,7 @@ def get_dashboard_data(user_id: str) -> DashboardSummary:
             ))
             
     # 3. Orçamentos (Budgets)
-    user_budgets = budget_service.list_budgets(user_id)
-    budgets_with_spent = []
-    for budget_data in user_budgets:
-        category = category_service.get_category(budget_data['category_id'])
-        spent = sum(
-            t.to_dict().get("amount", 0)
-            for t in transactions
-            if t.to_dict().get("category_id") == budget_data['category_id'] and t.to_dict().get("type") == "expense"
-        )
-        
-        budget_summary = BudgetSummary(
-            **budget_data,
-            category=category,
-            spent=spent
-        )
-        budgets_with_spent.append(budget_summary)
-
+    budgets_with_spent = budget_service.list_budgets_with_progress(user_id, month, year)
 
     return DashboardSummary(
         total_balance=total_balance,

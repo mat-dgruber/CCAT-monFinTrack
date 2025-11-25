@@ -14,6 +14,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { BudgetService } from '../../services/budget.service';
 import { CategoryService } from '../../services/category.service';
 import { RefreshService } from '../../services/refresh.service';
+import { FilterService } from '../../services/filter.service';
 import { Budget } from '../../models/budget.model';
 import { Category } from '../../models/transaction.model';
 
@@ -31,6 +32,7 @@ export class BudgetManager implements OnInit {
   private budgetService = inject(BudgetService);
   private categoryService = inject(CategoryService);
   private refreshService = inject(RefreshService);
+  private filterService = inject(FilterService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
@@ -49,18 +51,20 @@ export class BudgetManager implements OnInit {
   constructor() {
     // Se adicionar uma despesa nova, atualiza as barras de progresso
     effect(() => {
+        const m = this.filterService.month();
+        const y = this.filterService.year();
         this.refreshService.refreshSignal();
-        this.loadBudgets();
+        this.loadBudgets(m, y);
     });
   }
 
   ngOnInit() {
-    this.loadBudgets();
+    // this.loadBudgets(); // Effect ja chama
     this.loadCategories();
   }
 
-  loadBudgets() {
-    this.budgetService.getBudgets().subscribe(data => {
+  loadBudgets(m: number, y: number) {
+    this.budgetService.getBudgets(m, y).subscribe(data => {
         console.log('Budgets Data:', data);
         this.budgets.set(data);
     });
@@ -101,7 +105,7 @@ export class BudgetManager implements OnInit {
         accept: () => {
             this.budgetService.deleteBudget(id).subscribe(() => {
                 this.messageService.add({severity:'success', summary:'Meta Removida'});
-                this.loadBudgets();
+                this.loadBudgets(this.filterService.month(), this.filterService.year());
             });
         }
     });
@@ -119,7 +123,7 @@ export class BudgetManager implements OnInit {
         // Função auxiliar para fechar e atualizar
         const onSave = () => {
             this.visible.set(false);
-            this.loadBudgets();
+            this.loadBudgets(this.filterService.month(), this.filterService.year());
             this.messageService.add({
                 severity:'success', 
                 summary: this.editingId() ? 'Meta Atualizada' : 'Meta Criada'

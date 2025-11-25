@@ -30,8 +30,8 @@ export class DashboardService {
 
   private apiUrl = `${environment.apiUrl}/dashboard`;
 
-  getSummary(): Observable<DashboardSummary> {
-    return this.http.get<DashboardSummary>(this.apiUrl);
+  getSummary(month: number, year: number): Observable<DashboardSummary> {
+    return this.http.get<DashboardSummary>(`${this.apiUrl}?month=${month}&year=${year}`);
   }
 
 }

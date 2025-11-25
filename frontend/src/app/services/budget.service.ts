@@ -12,8 +12,8 @@ export class BudgetService {
   private apiUrl = `${environment.apiUrl}/budgets`;
 
   // GET (Lista com progresso calculado)
-  getBudgets(): Observable<Budget[]> {
-    return this.http.get<Budget[]>(this.apiUrl);
+  getBudgets(month: number, year: number): Observable<Budget[]> {
+    return this.http.get<Budget[]>(`${this.apiUrl}?month=${month}&year=${year}`);
   }
 
   // POST (Criar Meta)

@@ -7,15 +7,14 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-
 export class TransactionService {
 
      private http = inject(HttpClient);
 
      private apiUrl = `${environment.apiUrl}/transactions`;
 
-     getTransactions(): Observable<Transaction[]> {
-          return this.http.get<Transaction[]>(this.apiUrl);
+     getTransactions(month: number, year: number): Observable<Transaction[]> {
+          return this.http.get<Transaction[]>(`${this.apiUrl}?month=${month}&year=${year}`);
      }
 
      createTransaction(transaction: Transaction): Observable<Transaction> {
@@ -23,15 +22,11 @@ export class TransactionService {
      }
 
      // Atualiza uma transação existente
-  updateTransaction(id: string, transaction: Partial<Transaction>): Observable<Transaction> {
-    return this.http.put<Transaction>(`${this.apiUrl}/${id}`, transaction);
-  }
+     updateTransaction(id: string, transaction: Partial<Transaction>): Observable<Transaction> {
+          return this.http.put<Transaction>(`${this.apiUrl}/${id}`, transaction);
+     }
 
      deleteTransaction(id: string): Observable<void> {
-          // CORREÇÃO: Adicione a barra "/" explicitamente antes do ID
-          // Se this.apiUrl for '.../transactions', isso vira '.../transactions/123'
           return this.http.delete<void>(`${this.apiUrl}/${id}`);
-        }
-
-
+     }
 }

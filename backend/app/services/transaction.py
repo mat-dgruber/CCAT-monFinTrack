@@ -3,6 +3,8 @@ from app.core.database import get_db
 from app.schemas.transaction import TransactionCreate, Transaction
 from app.schemas.category import Category 
 from app.schemas.account import Account 
+from app.core.date_utils import get_month_range
+from typing import Optional
 
 from app.services import category as category_service
 from app.services import account as account_service
@@ -69,14 +71,27 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
         **data
     )
 
-def list_transactions(user_id: str) -> list[Transaction]:
+def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[int] = None) -> list[Transaction]:
     db = get_db()
     # FILTRO DO USUÁRIO
-    docs = db.collection(COLLECTION_NAME)\
-        .where("user_id", "==", user_id)\
-        .order_by("date", direction="DESCENDING")\
-        .order_by(firestore.Client.field_path('__name__'), direction="DESCENDING")\
-        .stream()
+    query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+    all_transactions = query.stream()
+
+    filtered_transactions = []
+    if month and year:
+        start_date, end_date = get_month_range(month, year)
+        for t in all_transactions:
+            t_data = t.to_dict()
+            transaction_date = t_data.get("date")
+            if transaction_date and start_date <= transaction_date <= end_date:
+                filtered_transactions.append(t)
+    else:
+        filtered_transactions = list(all_transactions)
+
+    # Ordenação em memória
+    filtered_transactions.sort(key=lambda t: (t.to_dict().get('date', firestore.SERVER_TIMESTAMP), t.id), reverse=True)
+
+    docs = filtered_transactions
     
     transactions = []
     for doc in docs:
@@ -146,7 +161,7 @@ def delete_transaction(transaction_id: str, user_id: str):
     account_id = data.get("account_id")
 
     # Estorna Saldo
-    if account_.id:
+    if account_id:
         _update_account_balance(db, account_id, amount, t_type, user_id, revert=True)
 
     doc_ref.delete()

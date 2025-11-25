@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // PrimeNG Components
@@ -12,6 +12,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 // Serviços e Modelos
 import { TransactionService } from '../../services/transaction.service';
 import { RefreshService } from '../../services/refresh.service';
+import { FilterService } from '../../services/filter.service';
 import { Transaction } from '../../models/transaction.model';
 
 // Componentes Filhos e Pipes
@@ -22,13 +23,13 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
   selector: 'app-transaction-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    TableModule, 
-    ButtonModule, 
-    TagModule, 
+    CommonModule,
+    TableModule,
+    ButtonModule,
+    TagModule,
     ConfirmDialogModule,
     ToastModule,
-    TransactionForm, 
+    TransactionForm,
     PaymentFormatPipe
   ],
   // Nota: ConfirmationService e MessageService estão no app.config.ts, não precisa aqui
@@ -42,18 +43,32 @@ export class TransactionList implements OnInit {
 
   private transactionService = inject(TransactionService);
   private refreshService = inject(RefreshService);
+  private filterService = inject(FilterService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
 
   // Estado da lista
   transactions = signal<Transaction[]>([]);
 
-  ngOnInit() {
-    this.loadTransactions();
+  constructor() {
+    effect(() => {
+      const m = this.filterService.month();
+      const y = this.filterService.year();
+      this.refreshService.refreshSignal(); // Reage a updates manuais
+
+      this.loadTransactions(m, y);
+    });
   }
 
-  loadTransactions() {
-    this.transactionService.getTransactions().subscribe({
+  ngOnInit() {
+    // Effect roda 1x no inicio
+  }
+
+  loadTransactions(m?: number, y?: number) {
+    const month = m ?? this.filterService.month();
+    const year = y ?? this.filterService.year();
+
+    this.transactionService.getTransactions(month, year).subscribe({
       next: (data) => {
         console.log('Transactions Data:', data);
         this.transactions.set(data);
@@ -77,40 +92,40 @@ export class TransactionList implements OnInit {
   // Ação do botão "Excluir" (Lixeira)
   deleteTransaction(event: Event, transaction: Transaction) {
     this.confirmationService.confirm({
-        target: event.target as EventTarget,
-        message: `Tem certeza que deseja excluir esta transação de ${transaction.description}?`,
-        header: 'Confirmar Exclusão',
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Sim, excluir',
-        rejectLabel: 'Cancelar',
-        acceptButtonStyleClass: "p-button-danger p-button-text",
-        rejectButtonStyleClass: "p-button-text p-button-plain",
-        
-        accept: () => {
-            this.transactionService.deleteTransaction(transaction.id).subscribe({
-                next: () => {
-                    this.messageService.add({ 
-                        severity: 'success', 
-                        summary: 'Sucesso', 
-                        detail: 'Transação excluída e saldo estornado.' 
-                    });
-                    
-                    // 1. Recarrega a lista local
-                    this.loadTransactions();
-                    
-                    // 2. Avisa o resto do app (Dashboard/Contas) para atualizar saldos
-                    this.refreshService.triggerRefresh();
-                },
-                error: (err) => {
-                    console.error(err);
-                    this.messageService.add({ 
-                        severity: 'error', 
-                        summary: 'Erro', 
-                        detail: 'Não foi possível excluir.' 
-                    });
-                }
+      target: event.target as EventTarget,
+      message: `Tem certeza que deseja excluir esta transação de ${transaction.description}?`,
+      header: 'Confirmar Exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sim, excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: "p-button-danger p-button-text",
+      rejectButtonStyleClass: "p-button-text p-button-plain",
+
+      accept: () => {
+        this.transactionService.deleteTransaction(transaction.id).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Transação excluída e saldo estornado.'
             });
-        }
+
+            // 1. Recarrega a lista local
+            this.loadTransactions(this.filterService.month(), this.filterService.year());
+
+            // 2. Avisa o resto do app (Dashboard/Contas) para atualizar saldos
+            this.refreshService.triggerRefresh();
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Não foi possível excluir.'
+            });
+          }
+        });
+      }
     });
   }
 }

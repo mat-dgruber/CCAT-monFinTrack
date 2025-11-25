@@ -1,6 +1,8 @@
 from app.core.database import get_db
 from app.schemas.budget import BudgetCreate, Budget
 from app.services import category as category_service
+from app.core.date_utils import get_month_range
+from typing import Optional
 
 COLLECTION_NAME = "budgets"
 
@@ -21,7 +23,7 @@ def list_budgets(user_id: str) -> list[dict]:
     budget_docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in budget_docs]
 
-def list_budgets_with_progress(user_id: str) -> list[dict]:
+def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: Optional[int] = None) -> list[dict]:
     db = get_db()
     
     # 1. Pegar metas DO USUÁRIO
@@ -29,14 +31,25 @@ def list_budgets_with_progress(user_id: str) -> list[dict]:
     budgets = []
     
     # 2. Pegar despesas DO USUÁRIO
-    transactions = db.collection("transactions")\
-        .where("user_id", "==", user_id)\
-        .where("type", "==", "expense")\
-        .stream()
+    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
+    all_transactions = transactions_query.stream()
+
+    filtered_transactions = []
+    if month and year:
+        start_date, end_date = get_month_range(month, year)
+        for t in all_transactions:
+            t_data = t.to_dict()
+            transaction_date = t_data.get("date")
+            if t_data.get("type") == "expense" and transaction_date and start_date <= transaction_date <= end_date:
+                filtered_transactions.append(t)
+    else:
+        for t in all_transactions:
+            if t.to_dict().get("type") == "expense":
+                filtered_transactions.append(t)
         
     spending_map = {} 
     
-    for t in transactions:
+    for t in filtered_transactions:
         data = t.to_dict()
         cat_id = data.get("category_id")
         amount = data.get("amount", 0)
@@ -58,8 +71,9 @@ def list_budgets_with_progress(user_id: str) -> list[dict]:
         
         budgets.append({
             "id": doc.id,
+            "category_id": cat_id,
             "category": cat_obj,
-            "limit": limit,
+            "amount": limit,
             "spent": spent,
             "percentage": min(percentage, 100),
             "is_over_budget": spent > limit
