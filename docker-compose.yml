@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app/certs:/app/app/certs
+    env_file:
+      - ./backend/.env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=app/certs/serviceAccountKey.json
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
