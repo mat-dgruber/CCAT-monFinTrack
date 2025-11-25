@@ -9,6 +9,8 @@ from app.schemas.account import Account, AccountCreate
 from app.services import account as account_service
 from app.schemas.dashboard import DashboardSummary
 from app.services import dashboard as dashboard_service
+from app.schemas.budget import Budget, BudgetCreate
+from app.services import budget as budget_service
 
 
 router = APIRouter()
@@ -73,3 +75,21 @@ def update_account(account_id: str, account: AccountCreate):
 @router.delete("/accounts/{account_id}")
 def delete_account(account_id: str):
     return account_service.delete_account(account_id)
+
+# --- BUDGETS (METAS) ---
+
+@router.post("/budgets", response_model=Budget)
+def create_budget(budget: BudgetCreate):
+    return budget_service.create_budget(budget)
+
+@router.get("/budgets", response_model=List[dict]) # Retorna dict com progresso
+def read_budgets():
+    return budget_service.list_budgets_with_progress()
+
+@router.put("/budgets/{budget_id}", response_model=Budget)
+def update_budget(budget_id: str, budget: BudgetCreate):
+    return budget_service.update_budget(budget_id, budget)
+
+@router.delete("/budgets/{budget_id}")
+def delete_budget(budget_id: str):
+    return budget_service.delete_budget(budget_id)

@@ -1,24 +1,28 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from enum import Enum
 
+# 1. A definição do ENUM deve vir PRIMEIRO
+class CategoryType(str, Enum):
+    EXPENSE = "expense"
+    INCOME = "income"
 
-
-# 1. Base: O que toda categoria tem
+# 2. Agora podemos usar o CategoryType dentro da classe Base
 class CategoryBase(BaseModel):
-     name: str = Field(..., min_length=2, max_length=20, description="Nome da categoria")
-     icon: str = Field(default="default_icon", description="Identificador do ícone (string)")
-     color: str = Field(default="#000000", description="cor em Hex")
-     is_custom: bool = Field(default=True, description="Se foi criada pelo usuário ou é padrão do sistema")
+    name: str = Field(..., min_length=2, description="Nome da categoria")
+    icon: str = Field(default="pi pi-tag", description="Ícone visual")
+    color: str = Field(default="#3b82f6", description="Cor hexadecimal")
+    is_custom: bool = Field(default=True, description="Se foi criada pelo usuário")
+    
+    # Aqui usamos o Enum definido acima
+    type: CategoryType = Field(default=CategoryType.EXPENSE, description="Tipo: expense ou income")
 
-
-# 2. Create: O que precisamos para criar uma
+# 3. Classes derivadas
 class CategoryCreate(CategoryBase):
-     pass
+    pass
 
-# 3. Response: O que devolvemos para o Frontend?
-# (Inclui o ID, que é gerado pelo banco de dados, não pelo usuário)
 class Category(CategoryBase):
-     id: str
+    id: str
 
-     class Config:
-          from_attributes = True
+    class Config:
+        from_attributes = True

@@ -16,27 +16,39 @@
   >
     <div
       *ngFor="let c of categories()"
-      class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group relative flex flex-col items-center text-center gap-3 h-32 justify-center"
+      class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group relative flex flex-col items-center text-center gap-3 h-36 justify-center overflow-hidden"
     >
+      <div
+        class="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
+        [class.bg-red-50]="c.type === 'expense'"
+        [class.text-red-600]="c.type === 'expense'"
+        [class.border-red-100]="c.type === 'expense'"
+        [class.bg-green-50]="c.type === 'income'"
+        [class.text-green-600]="c.type === 'income'"
+        [class.border-green-100]="c.type === 'income'"
+      >
+        {{ c.type === "expense" ? "Despesa" : "Receita" }}
+      </div>
+
       <div
         class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
       >
         <button
           (click)="editCategory(c)"
-          class="w-6 h-6 rounded-full bg-white shadow-sm text-blue-600 flex items-center justify-center cursor-pointer border border-gray-100"
+          class="w-6 h-6 rounded-full bg-white shadow-sm text-blue-600 flex items-center justify-center cursor-pointer border border-gray-100 hover:bg-blue-50"
         >
           <i class="pi pi-pencil text-xs"></i>
         </button>
         <button
           (click)="deleteCategory($event, c.id!)"
-          class="w-6 h-6 rounded-full bg-white shadow-sm text-red-600 flex items-center justify-center cursor-pointer border border-gray-100"
+          class="w-6 h-6 rounded-full bg-white shadow-sm text-red-600 flex items-center justify-center cursor-pointer border border-gray-100 hover:bg-red-50"
         >
           <i class="pi pi-trash text-xs"></i>
         </button>
       </div>
 
       <div
-        class="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1"
+        class="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1 mt-2"
         [style.backgroundColor]="c.color + '20'"
         [style.color]="c.color"
       >
@@ -50,7 +62,7 @@
 
     <div
       (click)="openNew()"
-      class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500 h-32"
+      class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500 h-36"
     >
       <i class="pi pi-plus text-xl mb-2"></i>
       <span class="text-sm font-medium">Nova</span>
@@ -71,6 +83,44 @@
     (ngSubmit)="onSubmit()"
     class="flex flex-col gap-4 pt-4"
   >
+    <div class="flex justify-center mb-2">
+      <div class="grid grid-cols-2 gap-4 mb-2">
+        <div
+          (click)="form.get('type')?.setValue('expense')"
+          class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
+          [class.border-red-500]="form.get('type')?.value === 'expense'"
+          [class.bg-red-50]="form.get('type')?.value === 'expense'"
+          [class.text-red-600]="form.get('type')?.value === 'expense'"
+          [class.ring-2]="form.get('type')?.value === 'expense'"
+          [class.ring-red-200]="form.get('type')?.value === 'expense'"
+          [class.border-gray-200]="form.get('type')?.value !== 'expense'"
+          [class.bg-white]="form.get('type')?.value !== 'expense'"
+          [class.text-gray-500]="form.get('type')?.value !== 'expense'"
+          [class.hover:bg-gray-50]="form.get('type')?.value !== 'expense'"
+        >
+          <i class="pi pi-minus-circle text-2xl"></i>
+          <span class="font-bold text-sm uppercase tracking-wide">Despesa</span>
+        </div>
+
+        <div
+          (click)="form.get('type')?.setValue('income')"
+          class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
+          [class.border-green-500]="form.get('type')?.value === 'income'"
+          [class.bg-green-50]="form.get('type')?.value === 'income'"
+          [class.text-green-600]="form.get('type')?.value === 'income'"
+          [class.ring-2]="form.get('type')?.value === 'income'"
+          [class.ring-green-200]="form.get('type')?.value === 'income'"
+          [class.border-gray-200]="form.get('type')?.value !== 'income'"
+          [class.bg-white]="form.get('type')?.value !== 'income'"
+          [class.text-gray-500]="form.get('type')?.value !== 'income'"
+          [class.hover:bg-gray-50]="form.get('type')?.value !== 'income'"
+        >
+          <i class="pi pi-plus-circle text-2xl"></i>
+          <span class="font-bold text-sm uppercase tracking-wide">Receita</span>
+        </div>
+      </div>
+    </div>
+
     <div class="flex flex-col gap-2">
       <label class="font-semibold text-gray-700">Nome</label>
       <input

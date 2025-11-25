@@ -10,10 +10,12 @@ import { ColorPickerModule } from 'primeng/colorpicker'; // <--- Importante
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectModule } from 'primeng/select'; // <--- Importante
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { SelectButtonModule } from 'primeng/selectbutton';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/transaction.model';
 import { ICON_LIST } from '../../shared/icons'; // <--- Importe a lista
+
 
 @Component({
   selector: 'app-category-manager',
@@ -26,7 +28,8 @@ import { ICON_LIST } from '../../shared/icons'; // <--- Importe a lista
     InputTextModule, 
     ColorPickerModule, 
     ConfirmDialogModule,
-    SelectModule // <--- Adicione aqui
+    SelectModule, // <--- Adicione aqui
+    SelectButtonModule
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss'
@@ -44,11 +47,17 @@ export class CategoryManager implements OnInit {
   // LISTA DE ÍCONES PARA O HTML
   icons = ICON_LIST;
 
+  typeOptions = [
+    { name: 'Despesa', value: 'expense' },
+    { name: 'Receita', value: 'income' }
+  ];
+
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     icon: ['pi pi-tag', Validators.required],
     color: ['#3b82f6', Validators.required],
-    is_custom: [true]
+    is_custom: [true],
+    type: ['expense', Validators.required]
   });
 
   ngOnInit() {
@@ -61,7 +70,13 @@ export class CategoryManager implements OnInit {
 
   openNew() {
     this.editingId.set(null);
-    this.form.reset({ name: '', icon: 'pi pi-tag', color: '#3b82f6', is_custom: true });
+    this.form.reset({ 
+        name: '', 
+        icon: 'pi pi-tag', 
+        color: '#3b82f6', 
+        type: 'expense', // Padrão
+        is_custom: true 
+    });
     this.visible.set(true);
   }
 

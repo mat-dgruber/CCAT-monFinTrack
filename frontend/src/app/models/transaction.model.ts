@@ -8,6 +8,7 @@ export interface Category {
      icon: string;
      color: string;
      is_custom: boolean;
+     type: TransactionType;
 }
 
 export interface Transaction {

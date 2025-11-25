@@ -1,47 +1,72 @@
-import { Component, EventEmitter, Output, inject, signal, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-//PrimeNG Imports
+// PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { SelectModule } from 'primeng/select';        
-import { DatePickerModule } from 'primeng/datepicker'; 
+import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
-import { RefreshService } from '../../services/refresh.service';
 import { CategoryService } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
+import { RefreshService } from '../../services/refresh.service';
+
 import { Category, Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 
+// 1. CORREÇÃO: Importar o Pipe aqui
+import { AccountTypePipe } from '../../pipes/account-type.pipe';
 
 @Component({
   selector: 'app-transaction-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DialogModule, ButtonModule, InputTextModule, InputNumberModule, SelectModule, DatePickerModule, SelectButtonModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    DialogModule, 
+    ButtonModule, 
+    InputTextModule, 
+    InputNumberModule, 
+    SelectModule, 
+    DatePickerModule, 
+    SelectButtonModule,
+    // 2. CORREÇÃO: Adicionar o Pipe na lista de imports
+    AccountTypePipe
+  ],
   templateUrl: './transaction-form.html',
   styleUrl: './transaction-form.scss',
 })
-export class TransactionForm implements OnInit{
-
+export class TransactionForm implements OnInit {
   private fb = inject(FormBuilder);
-  private refreshService = inject(RefreshService);
   private categoryService = inject(CategoryService);
   private transactionService = inject(TransactionService);
   private accountService = inject(AccountService);
-
-  // Variável para saber se estamos editando (null = criando novo)
-  editingId = signal<string | null>(null);
+  private refreshService = inject(RefreshService);
 
   visible = signal(false);
-  categories = signal<Category[]>([]);
+  
+  // Lista completa do banco
+  categories = signal<Category[]>([]); 
   accounts = signal<Account[]>([]);
-
+  editingId = signal<string | null>(null);
+  
   @Output() save = new EventEmitter<void>();
+
+  // 3. CORREÇÃO: Signal para rastrear o tipo atual (expense/income)
+  currentType = signal<'expense' | 'income'>('expense');
+
+  // 4. CORREÇÃO: Signal Computado para filtrar a lista automaticamente
+  filteredCategories = computed(() => {
+      const type = this.currentType();
+      const all = this.categories();
+      // Retorna apenas as categorias que batem com o tipo selecionado
+      return all.filter(c => c.type === type);
+  });
 
   typeOptions = [
     { label: 'Despesas', value: 'expense' },
@@ -49,11 +74,11 @@ export class TransactionForm implements OnInit{
   ];
 
   paymentOptions = [
-    { label:'Cartão de Crédito', value: 'credit_card' },
+    { label: 'Cartão de Crédito', value: 'credit_card' },
     { label: 'Débito', value: 'debit_card' },
     { label: 'Pix', value: 'pix' },
     { label: 'Dinheiro', value: 'cash' }
-  ]
+  ];
 
   form: FormGroup = this.fb.group({
     description: ['', [Validators.required, Validators.minLength(3)]],
@@ -65,45 +90,62 @@ export class TransactionForm implements OnInit{
     payment_method: [null, Validators.required]
   });
 
+  constructor() {
+      // 5. CORREÇÃO: Monitorar mudança no formulário para atualizar o filtro
+      this.form.get('type')?.valueChanges.subscribe(val => {
+          if (val) {
+              this.currentType.set(val); // Atualiza o signal -> Atualiza o computed
+              // Limpa a categoria selecionada pois ela pode não existir no novo tipo
+              this.form.patchValue({ category: null });
+          }
+      });
+  }
+
   ngOnInit() {
-    this.loadCategories();  
+    this.loadCategories();
     this.loadAccounts();
   }
 
   loadCategories() {
-    this.categoryService.getCategories().subscribe(data => {
-      this.categories.set(data);
-    })
+    this.categoryService.getCategories().subscribe(data => this.categories.set(data));
   }
 
   loadAccounts() {
     this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
   }
 
-  // NOVO MÉTODO: Chamado pelo botão de lápis da lista
-  editTransaction(transaction: Transaction) {
-    this.editingId.set(transaction.id); // Guarda o ID
+  showDialog() {
+    this.editingId.set(null);
+    this.currentType.set('expense'); // Reseta o filtro para despesa
     
-    // Preenche o formulário com os dados da transação
+    this.form.reset({ 
+        type: 'expense', 
+        date: new Date(), 
+        payment_method: null,
+        account: null 
+    });
+    
+    this.loadAccounts();
+    this.visible.set(true);
+  }
+
+  editTransaction(event: Event, transaction: Transaction) {
+    event.stopPropagation(); 
+    this.editingId.set(transaction.id);
+    
+    // 6. CORREÇÃO: Sincronizar o filtro com o tipo da transação editada
+    this.currentType.set(transaction.type);
+
     this.form.patchValue({
         description: transaction.description,
         amount: transaction.amount,
-        // Precisamos converter a string de data de volta para objeto Date
         date: new Date(transaction.date), 
         type: transaction.type,
         payment_method: transaction.payment_method,
-        // Para Selects (Dropdowns), passamos o objeto inteiro que está na lista
         category: transaction.category,
         account: transaction.account 
     });
 
-    this.visible.set(true); // Abre o modal
-  }
-
-  showDialog() {
-    this.editingId.set(null); // Limpa o ID (Modo Criação)
-    this.form.reset({ type: 'expense', date: new Date(), payment_method: null, account: null });
-    this.loadAccounts(); // Garante dados frescos
     this.visible.set(true);
   }
 
@@ -117,31 +159,24 @@ export class TransactionForm implements OnInit{
         account_id: formValue.account.id
       };
 
-      // LÓGICA DE DECISÃO: CRIAR OU EDITAR?
+      const onSave = () => {
+          this.visible.set(false);
+          this.form.reset();
+          this.save.emit();
+          this.refreshService.triggerRefresh();
+      };
+
       if (this.editingId()) {
-        // --- MODO EDIÇÃO ---
         this.transactionService.updateTransaction(this.editingId()!, payload).subscribe({
-            next: () => this.handleSuccess('Transação atualizada!'),
+            next: onSave,
             error: (err) => console.error('Erro ao atualizar', err)
         });
       } else {
-        // --- MODO CRIAÇÃO ---
         this.transactionService.createTransaction(payload).subscribe({
-            next: () => this.handleSuccess('Transação criada!'),
+            next: onSave,
             error: (err) => console.error('Erro ao criar', err)
         });
       }
     }
   }
-
-  // Função auxiliar para limpar código
-  private handleSuccess(msg: string) {
-      this.visible.set(false);
-      this.form.reset();
-      this.save.emit(); // Avisa a lista
-      this.refreshService.triggerRefresh(); // Avisa o saldo
-      console.log(msg);
-  }
-
-  
 }

@@ -9,6 +9,7 @@ import { Dashboard } from './components/dashboard/dashboard';
 import { TransactionList } from './components/transaction-list/transaction-list';
 import { AccountManager } from './components/account-manager/account-manager';
 import { CategoryManager } from './components/category-manager/category-manager';
+import { BudgetManager } from './components/budget-manager/budget-manager';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,8 @@ import { CategoryManager } from './components/category-manager/category-manager'
     Dashboard,        // Dashboard (Fixo no topo)
     TransactionList,  // Aba 1
     AccountManager,   // Aba 2
-    CategoryManager   // Aba 3
+    CategoryManager,  // Aba 3
+    BudgetManager     // Aba 4
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
