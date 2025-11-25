@@ -1,6 +1,7 @@
 from app.core.database import get_db
-from app.schemas.category import CategoryCreate, Category
+from app.schemas.category import CategoryCreate, Category, CategoryType
 from fastapi import HTTPException
+from typing import Optional
 
 COLLECTION_NAME = "categories"
 
@@ -12,10 +13,15 @@ def create_category(category_in: CategoryCreate, user_id: str) -> Category:
     update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
     return Category(id=doc_ref.id, **data)
 
-def list_categories(user_id: str) -> list[Category]:
+def list_categories(user_id: str, cat_type: Optional[CategoryType] = None) -> list[Category]:
     db = get_db()
     # Filtra apenas categorias do usuário
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+    
+    if cat_type:
+        query = query.where("type", "==", cat_type.value)
+        
+    docs = query.stream()
     
     categories = []
     for doc in docs:

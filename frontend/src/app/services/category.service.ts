@@ -16,8 +16,12 @@ export class CategoryService {
 
   private apiUrl = `${environment.apiUrl}/categories`;
 
-  getCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(this.apiUrl);
+  getCategories(type?: string): Observable<Category[]> {
+    let url = this.apiUrl;
+    if (type) {
+      url += `?type=${type}`;
+    }
+    return this.http.get<Category[]>(url);
   }
 
   createCategory(category: Category): Observable<Category> {

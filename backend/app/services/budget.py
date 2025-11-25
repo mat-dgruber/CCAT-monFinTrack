@@ -1,8 +1,10 @@
 from app.core.database import get_db
 from app.schemas.budget import BudgetCreate, Budget
+from app.schemas.category import CategoryType
 from app.services import category as category_service
 from app.core.date_utils import get_month_range
 from typing import Optional
+from fastapi import HTTPException
 
 COLLECTION_NAME = "budgets"
 
@@ -10,6 +12,11 @@ def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
     
     cat = category_service.get_category(budget_in.category_id)
+    
+    # Validate Category Type
+    if cat.type != CategoryType.EXPENSE:
+        raise HTTPException(status_code=400, detail="Budgets can only be created for expense categories")
+
     # Em produção, verificaríamos se a categoria pertence ao user_id aqui também
 
     data = budget_in.model_dump()
@@ -91,6 +98,11 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
         raise Exception("Budget not found or access denied")
     
     cat = category_service.get_category(budget_in.category_id)
+    
+    # Validate Category Type
+    if cat.type != CategoryType.EXPENSE:
+        raise HTTPException(status_code=400, detail="Budgets can only be created for expense categories")
+        
     data = budget_in.model_dump()
     data['user_id'] = user_id
     

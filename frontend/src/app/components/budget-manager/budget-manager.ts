@@ -71,7 +71,7 @@ export class BudgetManager implements OnInit {
   }
 
   loadCategories() {
-    this.categoryService.getCategories().subscribe(data => this.categories.set(data));
+    this.categoryService.getCategories('expense').subscribe(data => this.categories.set(data));
   }
 
   openNew() {

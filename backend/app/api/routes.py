@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from app.core.limiter import limiter
 
-from app.schemas.category import Category, CategoryCreate
+from app.schemas.category import Category, CategoryCreate, CategoryType
 from app.schemas.transaction import Transaction, TransactionCreate
 from app.schemas.account import Account, AccountCreate
 from app.schemas.budget import Budget, BudgetCreate
@@ -46,8 +46,8 @@ def create_new_category(request: Request, category: CategoryCreate, current_user
     return category_service.create_category(category, current_user['uid'])
 
 @router.get("/categories", response_model=List[Category])
-def read_categories(current_user: dict = Depends(get_current_user)):
-    return category_service.list_categories(current_user['uid'])
+def read_categories(type: Optional[CategoryType] = None, current_user: dict = Depends(get_current_user)):
+    return category_service.list_categories(current_user['uid'], cat_type=type)
 
 @router.put("/categories/{category_id}", response_model=Category)
 @limiter.limit("10 per minute")
