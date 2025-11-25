@@ -7,7 +7,6 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { ColorPickerModule } from 'primeng/colorpicker'; // <--- Importante
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectModule } from 'primeng/select'; // <--- Importante
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -27,7 +26,6 @@ import { ICON_LIST } from '../../shared/icons'; // <--- Importe a lista
     DialogModule, 
     InputTextModule, 
     ColorPickerModule, 
-    ConfirmDialogModule,
     SelectModule, // <--- Adicione aqui
     SelectButtonModule
   ],

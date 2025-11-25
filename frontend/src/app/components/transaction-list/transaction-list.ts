@@ -5,8 +5,6 @@ import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 // Serviços e Modelos
@@ -27,8 +25,6 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     TableModule,
     ButtonModule,
     TagModule,
-    ConfirmDialogModule,
-    ToastModule,
     TransactionForm,
     PaymentFormatPipe
   ],

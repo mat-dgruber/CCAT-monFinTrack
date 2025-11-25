@@ -82,4 +82,10 @@ export class Dashboard implements OnInit {
     };
   }
 
+  getProgressColor(percentage: number): string {
+    if (percentage >= 100) return '#ef4444'; // Red (Estourou)
+    if (percentage >= 80) return '#f59e0b';  // Amber (Alerta)
+    return '#22c55e';                         // Green (Ok)
+  }
+
 }

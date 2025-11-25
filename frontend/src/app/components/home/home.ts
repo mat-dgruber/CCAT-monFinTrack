@@ -1,6 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabsModule } from 'primeng/tabs';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Componentes
 import { Dashboard } from '../dashboard/dashboard';
@@ -19,6 +21,8 @@ import { AuthService } from '../../services/auth.service';
   imports: [
     CommonModule,
     TabsModule,
+    ToastModule,
+    ConfirmDialogModule,
     Dashboard,
     TransactionList,
     AccountManager,
