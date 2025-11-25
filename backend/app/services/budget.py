@@ -1,6 +1,8 @@
 from app.core.database import get_db
 from app.schemas.budget import BudgetCreate, Budget
 from app.services import category as category_service
+from app.core.date_utils import get_month_range
+from typing import Optional
 
 COLLECTION_NAME = "budgets"
 
@@ -21,7 +23,7 @@ def list_budgets(user_id: str) -> list[dict]:
     budget_docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in budget_docs]
 
-def list_budgets_with_progress(user_id: str) -> list[dict]:
+def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: Optional[int] = None) -> list[dict]:
     db = get_db()
     
     # 1. Pegar metas DO USUÁRIO
@@ -29,10 +31,15 @@ def list_budgets_with_progress(user_id: str) -> list[dict]:
     budgets = []
     
     # 2. Pegar despesas DO USUÁRIO
-    transactions = db.collection("transactions")\
+    query = db.collection("transactions")\
         .where("user_id", "==", user_id)\
-        .where("type", "==", "expense")\
-        .stream()
+        .where("type", "==", "expense")
+        
+    if month and year:
+        start_date, end_date = get_month_range(month, year)
+        query = query.where("date", ">=", start_date).where("date", "<=", end_date)
+
+    transactions = query.stream()
         
     spending_map = {} 
     
@@ -58,8 +65,9 @@ def list_budgets_with_progress(user_id: str) -> list[dict]:
         
         budgets.append({
             "id": doc.id,
+            "category_id": cat_id,
             "category": cat_obj,
-            "limit": limit,
+            "amount": limit,
             "spent": spent,
             "percentage": min(percentage, 100),
             "is_over_budget": spent > limit

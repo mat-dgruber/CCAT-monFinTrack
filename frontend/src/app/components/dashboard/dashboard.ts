@@ -8,6 +8,7 @@ import { CardModule } from 'primeng/card';
 // Services
 import { DashboardService, DashboardSummary } from '../../services/dashboard.service';
 import { RefreshService } from '../../services/refresh.service';
+import { FilterService } from '../../services/filter.service';
 
 
 @Component({
@@ -21,6 +22,7 @@ export class Dashboard implements OnInit {
 
   private dashboardService = inject(DashboardService);
   private refreshService = inject(RefreshService);
+  private filterService = inject(FilterService);
 
   summary = signal<DashboardSummary | null>(null);
 
@@ -31,18 +33,20 @@ export class Dashboard implements OnInit {
   constructor() {
     // Efeito para recarregar os dados do dashboard quando o sinal de refresh for acionado
     effect(() => {
+      const m = this.filterService.month();
+      const y = this.filterService.year();
       this.refreshService.refreshSignal();
-      this.loadDashboard();
+      this.loadDashboard(m, y);
     });
   }
 
   ngOnInit() {
       this.initChartOptions();
-      this.loadDashboard();
+      // this.loadDashboard(); // Effect já chama
   }
 
-  loadDashboard() {
-    this.dashboardService.getSummary().subscribe(data => {
+  loadDashboard(m: number, y: number) {
+    this.dashboardService.getSummary(m, y).subscribe(data => {
       this.summary.set(data);
       this.setupChart(data);
     });

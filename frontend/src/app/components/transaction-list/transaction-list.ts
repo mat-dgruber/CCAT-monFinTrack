@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // PrimeNG Components
@@ -12,6 +12,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 // Serviços e Modelos
 import { TransactionService } from '../../services/transaction.service';
 import { RefreshService } from '../../services/refresh.service';
+import { FilterService } from '../../services/filter.service';
 import { Transaction } from '../../models/transaction.model';
 
 // Componentes Filhos e Pipes
@@ -42,18 +43,29 @@ export class TransactionList implements OnInit {
 
   private transactionService = inject(TransactionService);
   private refreshService = inject(RefreshService);
+  private filterService = inject(FilterService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
 
   // Estado da lista
   transactions = signal<Transaction[]>([]);
 
-  ngOnInit() {
-    this.loadTransactions();
+  constructor() {
+    effect(() => {
+        const m = this.filterService.month();
+        const y = this.filterService.year();
+        this.refreshService.refreshSignal(); // Reage a updates manuais
+        
+        this.loadTransactions(m, y);
+    });
   }
 
-  loadTransactions() {
-    this.transactionService.getTransactions().subscribe({
+  ngOnInit() {
+    // Effect roda 1x no inicio
+  }
+
+  loadTransactions(m: number, y: number) {
+    this.transactionService.getTransactions(m, y).subscribe({
       next: (data) => {
         console.log('Transactions Data:', data);
         this.transactions.set(data);
@@ -96,7 +108,7 @@ export class TransactionList implements OnInit {
                     });
                     
                     // 1. Recarrega a lista local
-                    this.loadTransactions();
+                    this.loadTransactions(this.filterService.month(), this.filterService.year());
                     
                     // 2. Avisa o resto do app (Dashboard/Contas) para atualizar saldos
                     this.refreshService.triggerRefresh();

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from typing import List
+from typing import List, Optional
 
 from app.core.limiter import limiter
 
@@ -66,8 +66,8 @@ def create_new_transaction(request: Request, transaction: TransactionCreate, cur
     return transaction_service.create_transaction(transaction, current_user['uid'])
 
 @router.get("/transactions")
-def read_transactions(current_user: dict = Depends(get_current_user)):
-    transactions = transaction_service.list_transactions(current_user['uid'])
+def read_transactions(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    transactions = transaction_service.list_transactions(current_user['uid'], month, year)
     return [t.model_dump() for t in transactions]
 
 @router.put("/transactions/{transaction_id}", response_model=Transaction)
@@ -87,8 +87,8 @@ def create_budget(request: Request, budget: BudgetCreate, current_user: dict = D
     return budget_service.create_budget(budget, current_user['uid'])
 
 @router.get("/budgets", response_model=List[dict])
-def read_budgets(current_user: dict = Depends(get_current_user)):
-    return budget_service.list_budgets_with_progress(current_user['uid'])
+def read_budgets(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    return budget_service.list_budgets_with_progress(current_user['uid'], month, year)
 
 @router.delete("/budgets/{budget_id}")
 @limiter.limit("10 per minute")
@@ -102,5 +102,5 @@ def update_budget(request: Request, budget_id: str, budget: BudgetCreate, curren
 
 # --- DASHBOARD ---
 @router.get("/dashboard", response_model=DashboardSummary)
-def get_dashboard_summary(current_user: dict = Depends(get_current_user)):
-    return dashboard_service.get_dashboard_data(current_user['uid'])
+def get_dashboard_summary(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    return dashboard_service.get_dashboard_data(current_user['uid'], month, year)
