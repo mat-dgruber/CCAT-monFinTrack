@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from typing import List, Optional
+from datetime import datetime
 
 from app.core.limiter import limiter
 
@@ -102,5 +103,21 @@ def update_budget(request: Request, budget_id: str, budget: BudgetCreate, curren
 
 # --- DASHBOARD ---
 @router.get("/dashboard", response_model=DashboardSummary)
-def get_dashboard_summary(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
-    return dashboard_service.get_dashboard_data(current_user['uid'], month, year)
+def get_dashboard_summary(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    accounts: Optional[List[str]] = Query(None),
+    payment_methods: Optional[List[str]] = Query(None),
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    return dashboard_service.get_dashboard_data(
+        user_id=current_user['uid'],
+        month=month,
+        year=year,
+        accounts=accounts,
+        payment_methods=payment_methods,
+        start_date=start_date,
+        end_date=end_date
+    )

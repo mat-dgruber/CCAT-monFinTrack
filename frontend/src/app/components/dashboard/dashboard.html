@@ -1,5 +1,7 @@
 <div class="mb-8">
-  <div class="sticky top-0 z-10 bg-[#f8fafc] py-4 flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
+  <div
+    class="sticky top-0 z-10 bg-[#f8fafc] py-4 flex flex-col md:flex-row justify-between items-center gap-4 mb-2"
+  >
     <h2 class="text-2xl font-bold text-gray-800">Visão Geral</h2>
     <app-month-selector></app-month-selector>
   </div>
@@ -29,24 +31,105 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div
+      class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-800">Despesas por Categoria</h3>
+        <button
+          pButton
+          type="button"
+          [icon]="showFilters() ? 'pi pi-filter-slash' : 'pi pi-filter'"
+          (click)="showFilters.set(!showFilters())"
+          class="p-button-text p-button-rounded p-button-sm"
+          [pTooltip]="showFilters() ? 'Ocultar Filtros' : 'Exibir Filtros'"
+          tooltipPosition="left"
+        ></button>
+      </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
-      <h3 class="text-lg font-bold text-gray-800 mb-4 self-start">
-        Despesas por Categoria
-      </h3>
+      @if (showFilters()) {
+      <form
+        [formGroup]="filterForm"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-end"
+      >
+        <!-- Chart Type -->
+        <div class="flex flex-col">
+          <label class="font-medium text-sm text-gray-600 mb-1"
+            >Tipo de Gráfico</label
+          >
+          <p-select
+            [options]="chartTypes"
+            [ngModel]="chartType()"
+            (ngModelChange)="onChartTypeChange($event)"
+            [ngModelOptions]="{ standalone: true }"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          >
+          </p-select>
+        </div>
 
-      @if (data.expenses_by_category.length > 0) {
+        <!-- Date Range -->
+        <div class="flex flex-col">
+          <label class="font-medium text-sm text-gray-600 mb-1">Período</label>
+          <p-datepicker
+            formControlName="dateRange"
+            selectionMode="range"
+            [readonlyInput]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            placeholder="Selecione o período"
+          >
+          </p-datepicker>
+        </div>
+
+        <!-- Accounts -->
+        <div class="flex flex-col">
+          <label class="font-medium text-sm text-gray-600 mb-1">Contas</label>
+          <p-multiSelect
+            formControlName="accounts"
+            [options]="accounts()"
+            optionLabel="name"
+            placeholder="Todas as contas"
+            styleClass="w-full"
+          >
+          </p-multiSelect>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="flex flex-col">
+          <label class="font-medium text-sm text-gray-600 mb-1"
+            >Forma de Pagamento</label
+          >
+          <p-multiSelect
+            formControlName="paymentMethods"
+            [options]="paymentMethods"
+            optionLabel="label"
+            placeholder="Todas as formas"
+            styleClass="w-full"
+          >
+          </p-multiSelect>
+        </div>
+      </form>
+      } @if (data.expenses_by_category.length > 0) {
       <div class="w-full h-[300px] flex justify-center">
-        <p-chart type="doughnut" [data]="chartData" [options]="chartOptions" class="w-full h-full"></p-chart>
+        <p-chart
+          [type]="chartType()"
+          [data]="chartData"
+          [options]="chartOptions"
+          class="w-full h-full"
+        ></p-chart>
       </div>
       } @else {
-      <div class="text-gray-400 italic mt-10">
-        Sem despesas registradas ainda.
+      <div class="text-gray-400 italic mt-10 text-center">
+        Sem despesas registradas para os filtros selecionados.
       </div>
       }
     </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+    <div
+      class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center"
+    >
       <span class="text-gray-400">Próximo: Gráfico de Evolução Mensal...</span>
     </div>
   </div>
@@ -61,7 +144,7 @@
         <div class="flex justify-between items-center mb-1">
           <span class="font-medium text-gray-700">{{
             budget.category?.name
-            }}</span>
+          }}</span>
           <span class="text-sm text-gray-500">
             {{ budget.spent || 0 | currency : "BRL" }} /
             {{ budget.amount | currency : "BRL" }}
@@ -69,9 +152,15 @@
         </div>
 
         <div class="w-full bg-gray-200 rounded-full h-2.5">
-          <div class="h-2.5 rounded-full"
+          <div
+            class="h-2.5 rounded-full"
             [style.width.%]="((budget.spent || 0) / (budget.amount || 1)) * 100"
-            [style.backgroundColor]="getProgressColor(((budget.spent || 0) / (budget.amount || 1)) * 100)"></div>
+            [style.backgroundColor]="
+              getProgressColor(
+                ((budget.spent || 0) / (budget.amount || 1)) * 100
+              )
+            "
+          ></div>
         </div>
       </div>
       }
@@ -82,7 +171,9 @@
   </div>
   } @else {
   <div class="flex justify-center items-center h-64">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div
+      class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+    ></div>
   </div>
   }
 </div>

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { Budget } from '../models/budget.model';
@@ -30,8 +30,31 @@ export class DashboardService {
 
   private apiUrl = `${environment.apiUrl}/dashboard`;
 
-  getSummary(month: number, year: number): Observable<DashboardSummary> {
-    return this.http.get<DashboardSummary>(`${this.apiUrl}?month=${month}&year=${year}`);
+  getSummary(month: number, year: number, filters?: any): Observable<DashboardSummary> {
+    let params = new HttpParams()
+      .set('month', month.toString())
+      .set('year', year.toString());
+
+    if (filters) {
+      if (filters.accounts && filters.accounts.length > 0) {
+        filters.accounts.forEach((acc: any) => {
+          params = params.append('accounts', acc.id);
+        });
+      }
+      if (filters.paymentMethods && filters.paymentMethods.length > 0) {
+        filters.paymentMethods.forEach((pm: any) => {
+          params = params.append('payment_methods', pm.value);
+        });
+      }
+      if (filters.dateRange && filters.dateRange[0]) {
+        params = params.append('start_date', new Date(filters.dateRange[0]).toISOString());
+        if (filters.dateRange[1]) {
+          params = params.append('end_date', new Date(filters.dateRange[1]).toISOString());
+        }
+      }
+    }
+
+    return this.http.get<DashboardSummary>(this.apiUrl, { params });
   }
 
 }
