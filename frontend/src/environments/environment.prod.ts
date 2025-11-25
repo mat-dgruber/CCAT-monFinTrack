@@ -1,6 +1,6 @@
 export const environment = {
-  production: false,
-  apiUrl: 'http://127.0.0.1:8000/api',
+  production: true,
+  apiUrl: 'https://nome-do-seu-app-backend.onrender.com/api',
   firebaseConfig: {
     apiKey: "AIzaSyCMmJapjjZLp0h3TyI7v3r2z9FSD-pxfeQ",
     authDomain: "ccat-monfintrack.firebaseapp.com",

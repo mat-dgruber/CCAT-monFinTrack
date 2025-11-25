@@ -110,10 +110,12 @@
         </ng-template>
 
         <ng-template pTemplate="selectedItem" let-cat>
-          <div class="flex items-center gap-2" *ngIf="cat">
+          @if (cat) {
+          <div class="flex items-center gap-2">
             <i [class]="cat.icon" [style.color]="cat.color"></i>
             <span>{{ cat.name }}</span>
           </div>
+          }
         </ng-template>
       </p-select>
     </div>

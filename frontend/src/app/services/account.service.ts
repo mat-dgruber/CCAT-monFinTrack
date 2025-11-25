@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Account } from '../models/account.model';
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -10,7 +12,7 @@ export class AccountService {
 
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://127.0.0.1:8000/api/accounts';
+  private apiUrl = `${environment.apiUrl}/accounts`;
 
   getAccounts(): Observable<Account[]> {
     return this.http.get<Account[]>(this.apiUrl);

@@ -7,9 +7,9 @@ import {
     signOut, 
     User, 
     onAuthStateChanged,
-    updateProfile, // <--- Importe isso
-    sendEmailVerification // <--- Importe isso
-    sendPasswordResetEmail // <--- Importe isso
+    updateProfile,
+    sendEmailVerification,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { environment } from '../../environments/environment';
 

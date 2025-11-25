@@ -12,8 +12,8 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    @for (b of budgets(); track b.id) {
     <div
-      *ngFor="let b of budgets()"
       class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all relative group"
     >
       <div
@@ -74,14 +74,14 @@
         </div>
       </div>
     </div>
-
+    } @if (budgets().length === 0) {
     <div
-      *ngIf="budgets().length === 0"
       class="col-span-full text-center py-10 text-gray-400 bg-white rounded-xl border border-dashed border-gray-200"
     >
       <i class="pi pi-bullseye text-4xl mb-2 opacity-50"></i>
       <p>Nenhuma meta definida. Que tal criar uma?</p>
     </div>
+    }
   </div>
 </div>
 
@@ -115,10 +115,12 @@
           </div>
         </ng-template>
         <ng-template pTemplate="selectedItem" let-cat>
-          <div class="flex items-center gap-2" *ngIf="cat">
+          @if (cat) {
+          <div class="flex items-center gap-2">
             <i [class]="cat.icon" [style.color]="cat.color"></i>
             <span>{{ cat.name }}</span>
           </div>
+          }
         </ng-template>
       </p-select>
     </div>

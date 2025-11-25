@@ -5,6 +5,8 @@ import { Category } from '../models/transaction.model'; // Reaproveitando a inte
 
 
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -12,7 +14,7 @@ export class CategoryService {
   
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://127.0.0.1:8000/api/categories';
+  private apiUrl = `${environment.apiUrl}/categories`;
 
   getCategories(): Observable<Category[]> {
     return this.http.get<Category[]>(this.apiUrl);

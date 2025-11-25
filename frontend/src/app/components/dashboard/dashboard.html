@@ -1,73 +1,88 @@
-<div class="mb-8" *ngIf="summary() as data">
+@if (summary(); as data) {
+<div class="mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="text-gray-500 font-medium mb-2">Saldo Total</div>
+      <div class="text-3xl font-bold text-blue-600">
+        {{ data.total_balance | currency : "BRL" }}
+      </div>
+    </div>
 
-     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="text-gray-500 font-medium mb-2">Receitas (Geral)</div>
+      <div class="text-3xl font-bold text-green-500">
+        + {{ data.income_month | currency : "BRL" }}
+      </div>
+    </div>
 
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-               <div class="text-gray-500 font-medium mb-2">Saldo Total</div>
-               <div class="text-3xl font-bold text-blue-600">
-                    {{ data.total_balance | currency:'BRL' }}
-               </div>
-          </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="text-gray-500 font-medium mb-2">Despesas (Geral)</div>
+      <div class="text-3xl font-bold text-red-500">
+        - {{ data.expense_month | currency : "BRL" }}
+      </div>
+    </div>
+  </div>
 
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-               <div class="text-gray-500 font-medium mb-2">Receitas (Geral)</div>
-               <div class="text-3xl font-bold text-green-500">
-                    + {{ data.income_month | currency:'BRL' }}
-               </div>
-          </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div
+      class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center"
+    >
+      <h3 class="text-lg font-bold text-gray-800 mb-4 self-start">
+        Despesas por Categoria
+      </h3>
 
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-               <div class="text-gray-500 font-medium mb-2">Despesas (Geral)</div>
-               <div class="text-3xl font-bold text-red-500">
-                    - {{ data.expense_month | currency:'BRL' }}
-               </div>
-          </div>
-     </div>
+      @if (data.expenses_by_category.length > 0) {
+      <div class="w-full h-[300px] flex justify-center">
+        <p-chart
+          type="doughnut"
+          [data]="chartData"
+          [options]="chartOptions"
+          class="w-full h-full"
+        ></p-chart>
+      </div>
+      } @else {
+      <div class="text-gray-400 italic mt-10">
+        Sem despesas registradas ainda.
+      </div>
+      }
+    </div>
 
-     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-     
-         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
-              <h3 class="text-lg font-bold text-gray-800 mb-4 self-start">Despesas por Categoria</h3>
-     
-              <div class="w-full h-[300px] flex justify-center"
-                   *ngIf="data.expenses_by_category.length > 0; else noData">
-                   <p-chart type="doughnut" [data]="chartData" [options]="chartOptions"
-                        class="w-full h-full"></p-chart>
-              </div>
-     
-              <ng-template #noData>
-                   <div class="text-gray-400 italic mt-10">Sem despesas registradas ainda.</div>
-              </ng-template>
-         </div>
-     
-         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
-              <span class="text-gray-400">Próximo: Gráfico de Evolução Mensal...</span>
-         </div>
-     </div>
-     
-     <div class="mt-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-         <h3 class="text-lg font-bold text-gray-800 mb-4">Orçamentos</h3>
-     
-         <div *ngIf="data.budgets && data.budgets.length > 0; else noBudgets">
-             <div *ngFor="let budget of data.budgets" class="mb-4">
-     
-                 <div class="flex justify-between items-center mb-1">
-                     <span class="font-medium text-gray-700">{{ budget.category?.name }}</span>
-                     <span class="text-sm text-gray-500">
-                         {{ (budget.spent || 0) | currency:'BRL' }} / {{ budget.amount | currency:'BRL' }}
-                     </span>
-                 </div>
-     
-                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                     <div class="bg-blue-500 h-2.5 rounded-full" 
-                          [style.width.%]="((budget.spent || 0) / (budget.amount || 1)) * 100">
-                     </div>
-                 </div>
-             </div>
-         </div>
-     
-         <ng-template #noBudgets>
-             <div class="text-gray-400">Nenhum orçamento cadastrado.</div>
-         </ng-template>
-     </div>     
+    <div
+      class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center"
+    >
+      <span class="text-gray-400">Próximo: Gráfico de Evolução Mensal...</span>
+    </div>
+  </div>
+
+  <div class="mt-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">Orçamentos</h3>
+
+    @if (data.budgets && data.budgets.length > 0) {
+    <div>
+      @for (budget of data.budgets; track budget.category?.id || $index) {
+      <div class="mb-4">
+        <div class="flex justify-between items-center mb-1">
+          <span class="font-medium text-gray-700">{{
+            budget.category?.name
+          }}</span>
+          <span class="text-sm text-gray-500">
+            {{ budget.spent || 0 | currency : "BRL" }} /
+            {{ budget.amount | currency : "BRL" }}
+          </span>
+        </div>
+
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div
+            class="bg-blue-500 h-2.5 rounded-full"
+            [style.width.%]="((budget.spent || 0) / (budget.amount || 1)) * 100"
+          ></div>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="text-gray-400">Nenhum orçamento cadastrado.</div>
+    }
+  </div>
 </div>
+}

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import os
 
 from app.core.database import get_db
 from app.api.routes import router as api_router
@@ -17,10 +18,9 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) 
 # --- CONFIGURAÇÃO DO CORS (LIBERAR O FRONTEND) ---
-origins = [
-    "http://localhost:4200",      # Frontend Angular
-    "http://127.0.0.1:4200",      # Variação do localhost
-]
+# Pega origens do .env OU usa uma lista padrão segura
+origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://localhost")
+origins = origins_str.split(",")
 
 app.add_middleware(
     CORSMiddleware,

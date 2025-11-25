@@ -14,8 +14,8 @@
   <div
     class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
   >
+    @for (c of categories(); track c.id) {
     <div
-      *ngFor="let c of categories()"
       class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group relative flex flex-col items-center text-center gap-3 h-36 justify-center overflow-hidden"
     >
       <div
@@ -59,6 +59,7 @@
         {{ c.name }}
       </div>
     </div>
+    }
 
     <div
       (click)="openNew()"
@@ -151,10 +152,12 @@
           </ng-template>
 
           <ng-template pTemplate="selectedItem" let-i>
-            <div class="flex items-center gap-2" *ngIf="i">
+            @if (i) {
+            <div class="flex items-center gap-2">
               <i [class]="i.value"></i>
               <span>{{ i.label }}</span>
             </div>
+            }
           </ng-template>
         </p-select>
       </div>
