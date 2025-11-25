@@ -1,3 +1,4 @@
+from google.cloud import firestore
 from app.core.database import get_db
 from app.schemas.transaction import TransactionCreate, Transaction
 from app.schemas.category import Category 
@@ -74,6 +75,7 @@ def list_transactions(user_id: str) -> list[Transaction]:
     docs = db.collection(COLLECTION_NAME)\
         .where("user_id", "==", user_id)\
         .order_by("date", direction="DESCENDING")\
+        .order_by(firestore.Client.field_path('__name__'), direction="DESCENDING")\
         .stream()
     
     transactions = []
@@ -144,7 +146,7 @@ def delete_transaction(transaction_id: str, user_id: str):
     account_id = data.get("account_id")
 
     # Estorna Saldo
-    if account_id:
+    if account_.id:
         _update_account_balance(db, account_id, amount, t_type, user_id, revert=True)
 
     doc_ref.delete()

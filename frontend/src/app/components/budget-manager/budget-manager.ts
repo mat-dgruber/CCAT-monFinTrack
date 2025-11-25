@@ -60,7 +60,10 @@ export class BudgetManager implements OnInit {
   }
 
   loadBudgets() {
-    this.budgetService.getBudgets().subscribe(data => this.budgets.set(data));
+    this.budgetService.getBudgets().subscribe(data => {
+        console.log('Budgets Data:', data);
+        this.budgets.set(data);
+    });
   }
 
   loadCategories() {

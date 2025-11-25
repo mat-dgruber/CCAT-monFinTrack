@@ -65,9 +65,10 @@ def delete_category(request: Request, category_id: str, current_user: dict = Dep
 def create_new_transaction(request: Request, transaction: TransactionCreate, current_user: dict = Depends(get_current_user)):
     return transaction_service.create_transaction(transaction, current_user['uid'])
 
-@router.get("/transactions", response_model=List[Transaction])
+@router.get("/transactions")
 def read_transactions(current_user: dict = Depends(get_current_user)):
-    return transaction_service.list_transactions(current_user['uid'])
+    transactions = transaction_service.list_transactions(current_user['uid'])
+    return [t.model_dump() for t in transactions]
 
 @router.put("/transactions/{transaction_id}", response_model=Transaction)
 @limiter.limit("10 per minute")

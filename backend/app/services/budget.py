@@ -19,7 +19,7 @@ def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
 def list_budgets(user_id: str) -> list[dict]:
     db = get_db()
     budget_docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
-    return [doc.to_dict() for doc in budget_docs]
+    return [{**doc.to_dict(), "id": doc.id} for doc in budget_docs]
 
 def list_budgets_with_progress(user_id: str) -> list[dict]:
     db = get_db()

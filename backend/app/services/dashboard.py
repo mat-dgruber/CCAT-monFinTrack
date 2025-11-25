@@ -1,6 +1,5 @@
 from app.core.database import get_db
-from app.schemas.dashboard import DashboardSummary, CategoryTotal
-from app.schemas.budget import Budget
+from app.schemas.dashboard import DashboardSummary, CategoryTotal, BudgetSummary
 from app.services import category as category_service
 from app.services import budget as budget_service
 
@@ -34,7 +33,7 @@ def get_dashboard_data(user_id: str) -> DashboardSummary:
                 category_map[cat_id] = amount
 
     categories_list = []
-    for cat_id, total in category_map.items():
+    for cat__id, total in category_map.items():
         cat_obj = category_service.get_category(cat_id)
         if cat_obj:
             categories_list.append(CategoryTotal(
@@ -47,14 +46,19 @@ def get_dashboard_data(user_id: str) -> DashboardSummary:
     user_budgets = budget_service.list_budgets(user_id)
     budgets_with_spent = []
     for budget_data in user_budgets:
-        budget = Budget(**budget_data)
+        category = category_service.get_category(budget_data['category_id'])
         spent = sum(
             t.to_dict().get("amount", 0)
             for t in transactions
-            if t.to_dict().get("category_id") == budget.category_id and t.to_dict().get("type") == "expense"
+            if t.to_dict().get("category_id") == budget_data['category_id'] and t.to_dict().get("type") == "expense"
         )
-        budget.spent = spent
-        budgets_with_spent.append(budget)
+        
+        budget_summary = BudgetSummary(
+            **budget_data,
+            category=category,
+            spent=spent
+        )
+        budgets_with_spent.append(budget_summary)
 
 
     return DashboardSummary(

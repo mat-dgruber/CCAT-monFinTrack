@@ -54,10 +54,12 @@ export class TransactionList implements OnInit {
 
   loadTransactions() {
     this.transactionService.getTransactions().subscribe({
-      next: (data) => this.transactions.set(data),
+      next: (data) => {
+        console.log('Transactions Data:', data);
+        this.transactions.set(data);
+      },
       error: (error) => {
         console.error('Erro ao buscar transações:', error);
-        // Opcional: Mostrar erro visual
       }
     });
   }
