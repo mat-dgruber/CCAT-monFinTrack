@@ -14,6 +14,10 @@
         <span class="text-sm text-gray-500 hidden sm:block">{{
           authService.currentUser()?.displayName
           }}</span>
+        <a routerLink="/settings" class="text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors"
+          title="Configurações">
+          <i class="pi pi-cog"></i>
+        </a>
         <button (click)="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors" title="Sair">
           <i class="pi pi-sign-out"></i>
         </button>
@@ -29,7 +33,12 @@
   </main>
 
   <footer class="bg-white shadow-sm p-4 text-center text-sm text-gray-500">
-    &copy; 2025 monFinTrack. Todos os direitos reservados.
+    <span>&copy; 2025 monFinTrack. Todos os direitos reservados.</span>
+    <div class="mt-2">
+      <a routerLink="/terms" class="hover:underline">Termos de Uso</a>
+      <span class="mx-2">|</span>
+      <a routerLink="/privacy-policy" class="hover:underline">Política de Privacidade</a>
+    </div>
   </footer>
 </div>
 
