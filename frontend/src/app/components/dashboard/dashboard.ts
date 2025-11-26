@@ -163,8 +163,8 @@ export class Dashboard implements OnInit {
     };
   }
 
-  onChartTypeChange(event: any) {
-    this.chartType.set(event.value);
+  onChartTypeChange(type: 'doughnut' | 'bar' | 'line') {
+    this.chartType.set(type);
     if (this.summary()) {
       this.setupChart(this.summary()!);
     }
