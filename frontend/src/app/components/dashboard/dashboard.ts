@@ -76,6 +76,10 @@ export class Dashboard implements OnInit {
   chartOptions: any;
   chartType = 'doughnut';
 
+  // Evolution Chart
+  evolutionChartData: any;
+  evolutionChartOptions: any;
+
   loadAccounts() {
     this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
   }
@@ -88,6 +92,7 @@ export class Dashboard implements OnInit {
   }
 
   setupChart(data: DashboardSummary) {
+    // 1. Doughnut Chart (Categories)
     this.chartData = {
       labels: data.expenses_by_category.map(c => c.category_name),
       datasets: [
@@ -95,16 +100,40 @@ export class Dashboard implements OnInit {
           label: 'Despesas por Categoria',
           data: data.expenses_by_category.map(c => c.total),
           backgroundColor: data.expenses_by_category.map(c => c.color),
-          borderColor: '#3b82f6',
+          borderWidth: 0,
           hoverBackgroundColor: data.expenses_by_category.map(c => c.color)
         }
       ]
     };
 
+    // 2. Bar Chart (Evolution)
+    if (data.evolution) {
+        this.evolutionChartData = {
+            labels: data.evolution.map(e => e.month),
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: data.evolution.map(e => e.income),
+                    backgroundColor: '#22c55e', // Green
+                    borderColor: '#22c55e',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Despesas',
+                    data: data.evolution.map(e => e.expense),
+                    backgroundColor: '#ef4444', // Red
+                    borderColor: '#ef4444',
+                    borderWidth: 1
+                }
+            ]
+        };
+    }
+
     this.initChartOptions(); // Reset options
   }
 
   initChartOptions() {
+    // Options for Doughnut
     this.chartOptions = {
       cutout: '60%',
       plugins: {
@@ -118,6 +147,43 @@ export class Dashboard implements OnInit {
       },
       maintainAspectRatio: false,
       responsive: true
+    };
+
+    // Options for Evolution Bar Chart
+    this.evolutionChartOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    color: '#4b5563'
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: '#6b7280'
+                },
+                grid: {
+                    color: '#f3f4f6',
+                    drawBorder: false
+                }
+            },
+            y: {
+                ticks: {
+                    color: '#6b7280',
+                    callback: function(value: any) {
+                        return 'R$ ' + value; 
+                    }
+                },
+                grid: {
+                    color: '#f3f4f6',
+                    drawBorder: false
+                }
+            }
+        }
     };
   }
 

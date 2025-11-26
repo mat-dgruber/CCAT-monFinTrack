@@ -42,8 +42,17 @@
       }
     </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
-      <span class="text-gray-400">Próximo: Gráfico de Evolução Mensal...</span>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">Evolução Mensal</h3>
+      @if (data.evolution && data.evolution.length > 0) {
+        <div class="w-full h-[300px] flex justify-center">
+          <p-chart type="bar" [data]="evolutionChartData" [options]="evolutionChartOptions" class="w-full h-full"></p-chart>
+        </div>
+      } @else {
+        <div class="text-gray-400 italic mt-10 text-center">
+           Dados insuficientes para exibir evolução.
+        </div>
+      }
     </div>
   </div>
 

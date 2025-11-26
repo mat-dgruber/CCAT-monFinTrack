@@ -10,12 +10,19 @@ export interface CategoryTotal {
   total: number;
 }
 
+export interface MonthlyEvolution {
+  month: string;
+  income: number;
+  expense: number;
+}
+
 export interface DashboardSummary {
   total_balance: number;
   income_month: number;
   expense_month: number;
   expenses_by_category: CategoryTotal[];
   budgets: Budget[];
+  evolution: MonthlyEvolution[];
 }
 
 
