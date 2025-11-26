@@ -161,6 +161,13 @@
         </small>
         }
       </div>
+
+      <div class="flex items-center mt-2">
+        <p-checkbox formControlName="termsAccepted" [binary]="true" inputId="terms"></p-checkbox>
+        <label for="terms" class="ml-2 text-sm text-gray-600">
+          Li e aceito os <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Termos</a> e <a href="/privacy-policy" target="_blank" class="text-blue-600 hover:underline">Política de Privacidade</a>.
+        </label>
+      </div>
       } @if (!isRegisterMode()) {
       <div class="flex justify-end">
         <a

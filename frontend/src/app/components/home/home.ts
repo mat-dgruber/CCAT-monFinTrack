@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { TabsModule } from 'primeng/tabs';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ButtonModule } from 'primeng/button';
 
 // Componentes
 import { Dashboard } from '../dashboard/dashboard';
@@ -29,7 +30,8 @@ import { AuthService } from '../../services/auth.service';
     AccountManager,
     CategoryManager,
     BudgetManager,
-    Login
+    Login,
+    ButtonModule
   ],
   templateUrl: './home.html',
 })

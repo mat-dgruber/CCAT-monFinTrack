@@ -6,14 +6,17 @@
   <header class="bg-white shadow-sm pt-4 px-4 sticky top-0 z-50">
     <div class="max-w-6xl mx-auto flex items-center justify-between mb-4">
       <div class="flex items-center gap-2">
-        <i class="pi pi-wallet text-2xl text-blue-600"></i>
+        <img src="assets/logo-ccat.png" alt="monFinTrack Logo" class="h-8">
         <h1 class="text-xl font-bold text-gray-800">monFinTrack</h1>
       </div>
 
       <div class="flex items-center gap-3">
         <span class="text-sm text-gray-500 hidden sm:block">{{
-          authService.currentUser()?.email
+          authService.currentUser()?.displayName
           }}</span>
+        <a routerLink="/settings" class="text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors" title="Configurações">
+          <i class="pi pi-cog"></i>
+        </a>
         <button (click)="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors" title="Sair">
           <i class="pi pi-sign-out"></i>
         </button>
@@ -23,7 +26,6 @@
 
   <main class="max-w-6xl mx-auto p-4 w-full flex-1 flex flex-col gap-6">
     <app-dashboard></app-dashboard>
-
 
     <p-tabs value="0">
       <p-tablist>
@@ -41,6 +43,15 @@
       </p-tabpanels>
     </p-tabs>
   </main>
+
+  <footer class="bg-white shadow-sm p-4 text-center text-sm text-gray-500">
+    <span>&copy; 2025 monFinTrack. Todos os direitos reservados.</span>
+    <div class="mt-2">
+      <a routerLink="/terms" class="hover:underline">Termos de Uso</a>
+      <span class="mx-2">|</span>
+      <a routerLink="/privacy-policy" class="hover:underline">Política de Privacidade</a>
+    </div>
+  </footer>
 </div>
 
 } @else {
