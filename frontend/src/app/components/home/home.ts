@@ -1,17 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { TabsModule } from 'primeng/tabs';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ButtonModule } from 'primeng/button';
 
 // Componentes
 import { Dashboard } from '../dashboard/dashboard';
-import { TransactionList } from '../transaction-list/transaction-list';
-import { AccountManager } from '../account-manager/account-manager';
-import { CategoryManager } from '../category-manager/category-manager';
-import { BudgetManager } from '../budget-manager/budget-manager';
 import { Login } from '../login/login';
+import { Sidebar } from '../shared/sidebar/sidebar';
 
 import { AuthService } from '../../services/auth.service';
 
@@ -20,23 +17,25 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    TabsModule,
     ToastModule,
     ConfirmDialogModule,
     Dashboard,
     RouterModule,
-    TransactionList,
-    AccountManager,
-    CategoryManager,
-    BudgetManager,
-    Login
+    Login,
+    Sidebar,
+    ButtonModule
   ],
   templateUrl: './home.html',
 })
 export class Home {
+  @ViewChild(Sidebar) sidebar!: Sidebar;
   authService = inject(AuthService);
 
   logout() {
     this.authService.logout();
+  }
+
+  toggleSidebar() {
+    this.sidebar.sidebarVisible = !this.sidebar.sidebarVisible;
   }
 }
