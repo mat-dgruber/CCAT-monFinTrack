@@ -4,9 +4,19 @@ import { Observable } from 'rxjs';
 
 import { Budget } from '../models/budget.model';
 
-export interface CategoryTotal{
+export interface CategoryTotal {
   category_name: string;
   color: string;
+  total: number;
+}
+
+export interface PaymentMethodTotal {
+  payment_method_name: string;
+  total: number;
+}
+
+export interface AccountTotal {
+  account_name: string;
   total: number;
 }
 
@@ -16,6 +26,8 @@ export interface DashboardSummary {
   expense_month: number;
   expenses_by_category: CategoryTotal[];
   budgets: Budget[];
+  expenses_by_payment_method?: PaymentMethodTotal[];
+  expenses_by_account?: AccountTotal[];
 }
 
 
@@ -30,28 +42,17 @@ export class DashboardService {
 
   private apiUrl = `${environment.apiUrl}/dashboard`;
 
-  getSummary(month: number, year: number, filters?: any): Observable<DashboardSummary> {
+  getSummary(month: number, year: number, filters?: { [key: string]: any }): Observable<DashboardSummary> {
     let params = new HttpParams()
       .set('month', month.toString())
       .set('year', year.toString());
 
     if (filters) {
-      if (filters.accounts && filters.accounts.length > 0) {
-        filters.accounts.forEach((acc: any) => {
-          params = params.append('accounts', acc.id);
-        });
-      }
-      if (filters.paymentMethods && filters.paymentMethods.length > 0) {
-        filters.paymentMethods.forEach((pm: any) => {
-          params = params.append('payment_methods', pm.value);
-        });
-      }
-      if (filters.dateRange && filters.dateRange[0]) {
-        params = params.append('start_date', new Date(filters.dateRange[0]).toISOString());
-        if (filters.dateRange[1]) {
-          params = params.append('end_date', new Date(filters.dateRange[1]).toISOString());
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          params = params.set(key, filters[key]);
         }
-      }
+      });
     }
 
     return this.http.get<DashboardSummary>(this.apiUrl, { params });

@@ -1,0 +1,10 @@
+:host ::ng-deep .p-select {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    :host ::ng-deep .p-select {
+        width: auto;
+        min-width: 150px;
+    }
+}
