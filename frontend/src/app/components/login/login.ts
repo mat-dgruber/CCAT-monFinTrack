@@ -11,6 +11,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { MessageService } from 'primeng/api';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ToastModule } from 'primeng/toast';
 import { DividerModule } from 'primeng/divider'; // Opcional, para visual
 import { DialogModule } from 'primeng/dialog';
@@ -22,7 +23,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, CardModule, ButtonModule, 
-    InputTextModule, PasswordModule, ToastModule, DividerModule, DialogModule
+    InputTextModule, PasswordModule, ToastModule, DividerModule, DialogModule, CheckboxModule
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -56,7 +57,8 @@ export class Login {
     name: [''], // Apenas para cadastro
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
-    confirmPassword: [''] // Apenas para cadastro
+    confirmPassword: [''], // Apenas para cadastro
+    termsAccepted: [false]
   }, { validators: this.passwordMatchValidator }); // Validador do Grupo
 
   // --- Validador de "Senhas Iguais" ---
@@ -98,16 +100,20 @@ export class Login {
     // Ajusta validadores dinamicamente
     const nameControl = this.form.get('name');
     const confirmControl = this.form.get('confirmPassword');
+    const termsControl = this.form.get('termsAccepted');
 
     if (this.isRegisterMode()) {
         nameControl?.setValidators([Validators.required, Validators.minLength(3)]);
         confirmControl?.setValidators([Validators.required]);
+        termsControl?.setValidators([Validators.requiredTrue]);
     } else {
         nameControl?.clearValidators();
         confirmControl?.clearValidators();
+        termsControl?.clearValidators();
     }
     nameControl?.updateValueAndValidity();
     confirmControl?.updateValueAndValidity();
+    termsControl?.updateValueAndValidity();
   }
 
   async onSubmit() {
