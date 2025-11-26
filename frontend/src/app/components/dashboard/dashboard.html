@@ -38,7 +38,7 @@
       </div>
 
       @if (showFilters()) {
-      <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-end">
+      <form [formGroup]="filterForm" class="flex overflow-x-auto gap-4 mb-4 items-end">
         <!-- Chart Type -->
         <div class="flex flex-col">
           <label class="font-medium text-sm text-gray-600 mb-1">Tipo de Gráfico</label>
@@ -50,11 +50,9 @@
         <!-- Date Range -->
         <div class="flex flex-col">
           <label class="font-medium text-sm text-gray-600 mb-1">Período</label>
-          <div class="w-48">
-            <p-datepicker formControlName="dateRange" selectionMode="range" [readonlyInput]="true" dateFormat="dd/mm/yy"
-              placeholder="Selecione o período">
-            </p-datepicker>
-          </div>
+          <p-datepicker formControlName="dateRange" selectionMode="range" [readonlyInput]="true" dateFormat="dd/mm/yy"
+            placeholder="Selecione o período">
+          </p-datepicker>
         </div>
 
         <!-- Accounts -->
