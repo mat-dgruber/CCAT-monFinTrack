@@ -15,7 +15,7 @@ import { CategoryService } from '../../services/category.service';
 import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
 import { Budget } from '../../models/budget.model';
-import { Category } from '../../models/transaction.model';
+import { Category } from '../../models/category.model';
 
 @Component({
   selector: 'app-budget-manager',

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from app.core.validators import sanitize_html
 
@@ -14,6 +14,7 @@ class CategoryBase(BaseModel):
     icon: str = Field(default="pi pi-tag", description="Ícone visual")
     color: str = Field(default="#3b82f6", description="Cor hexadecimal")
     is_custom: bool = Field(default=True, description="Se foi criada pelo usuário")
+    parent_id: Optional[str] = Field(default=None, description="ID da categoria pai")
     
     # Aqui usamos o Enum definido acima
     type: CategoryType = Field(default=CategoryType.EXPENSE, description="Tipo: expense ou income")
@@ -31,6 +32,7 @@ class CategoryCreate(CategoryBase):
 
 class Category(CategoryBase):
     id: str
+    subcategories: List["Category"] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

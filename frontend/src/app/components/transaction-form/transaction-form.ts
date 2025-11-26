@@ -10,16 +10,17 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { SelectItemGroup, SelectItem } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
 
-import { Category, Transaction } from '../../models/transaction.model';
+import { Category } from '../../models/category.model';
+import { Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 
-// 1. CORREÇÃO: Importar o Pipe aqui
 import { AccountTypePipe } from '../../pipes/account-type.pipe';
 
 @Component({
@@ -35,7 +36,6 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
     SelectModule, 
     DatePickerModule, 
     SelectButtonModule,
-    // 2. CORREÇÃO: Adicionar o Pipe na lista de imports
     AccountTypePipe
   ],
   templateUrl: './transaction-form.html',
@@ -57,15 +57,30 @@ export class TransactionForm implements OnInit {
   
   @Output() save = new EventEmitter<void>();
 
-  // 3. CORREÇÃO: Signal para rastrear o tipo atual (expense/income)
+  // Signal para rastrear o tipo atual (expense/income)
   currentType = signal<'expense' | 'income'>('expense');
 
   // 4. CORREÇÃO: Signal Computado para filtrar a lista automaticamente
-  filteredCategories = computed(() => {
+  filteredCategories = computed<SelectItemGroup[]>(() => {
       const type = this.currentType();
       const all = this.categories();
-      // Retorna apenas as categorias que batem com o tipo selecionado
-      return all.filter(c => c.type === type);
+      // Filter roots by type
+      const roots = all.filter(c => c.type === type);
+      
+      return roots.map(root => {
+          const items = [root, ...(root.subcategories || [])];
+          
+          return {
+              label: root.name,
+              value: root.id,
+              items: items.map(c => ({
+                  label: c.name,
+                  value: c,
+                  icon: c.icon,
+                  color: c.color
+              } as SelectItem))
+          };
+      });
   });
 
   typeOptions = [

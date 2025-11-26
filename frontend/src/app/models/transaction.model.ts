@@ -1,15 +1,7 @@
 import { Account } from './account.model';
+import { Category, CategoryType } from './category.model';
 
-export type TransactionType = 'expense' | 'income';
-
-export interface Category {
-     id?: string;
-     name: string;
-     icon: string;
-     color: string;
-     is_custom: boolean;
-     type: TransactionType;
-}
+export type TransactionType = CategoryType;
 
 export interface Transaction {
      id: string;

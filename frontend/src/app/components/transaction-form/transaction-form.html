@@ -96,16 +96,22 @@
         inputId="category"
         [options]="filteredCategories()"
         formControlName="category"
-        optionLabel="name"
         placeholder="Selecione uma categoria"
+        [group]="true"
         [style]="{ width: '100%' }"
         [appendTo]="'body'"
         [emptyMessage]="'Nenhuma categoria deste tipo encontrada.'"
       >
+        <ng-template pTemplate="group" let-group>
+            <div class="flex items-center gap-2">
+                <span class="font-bold">{{ group.label }}</span>
+            </div>
+        </ng-template>
+
         <ng-template pTemplate="item" let-cat>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 ml-2">
             <i [class]="cat.icon" [style.color]="cat.color"></i>
-            <span>{{ cat.name }}</span>
+            <span>{{ cat.label }}</span>
           </div>
         </ng-template>
 
