@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
 
@@ -8,7 +8,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss'],
   standalone: true,
-  imports: [SidebarModule, ButtonModule, RouterModule]
+  imports: [DrawerModule, ButtonModule, RouterModule]
 })
 export class Sidebar {
   sidebarVisible = false;
