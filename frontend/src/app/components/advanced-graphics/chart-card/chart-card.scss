@@ -1,0 +1,19 @@
+:host ::ng-deep .p-toolbar {
+  padding: 0.5rem;
+}
+
+:host ::ng-deep .p-selectbutton .p-button {
+  padding: 0.5rem;
+}
+
+:host ::ng-deep .p-dropdown {
+  width: 120px;
+}
+
+:host ::ng-deep .p-calendar {
+    width: 200px;
+}
+
+.summary-overlay {
+  transition: opacity 0.3s ease-in-out;
+}
