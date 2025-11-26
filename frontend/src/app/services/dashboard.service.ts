@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { Budget } from '../models/budget.model';
 
-export interface CategoryTotal{
+export interface CategoryTotal {
   category_name: string;
   color: string;
   total: number;
@@ -25,7 +25,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class DashboardService {
- 
+
   private http = inject(HttpClient);
 
   private apiUrl = `${environment.apiUrl}/dashboard`;

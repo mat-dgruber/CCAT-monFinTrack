@@ -30,52 +30,10 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-800">Despesas por Categoria</h3>
-        <button pButton type="button" [icon]="showFilters() ? 'pi pi-filter-slash' : 'pi pi-filter'"
-          (click)="showFilters.set(!showFilters())" class="p-button-text p-button-rounded p-button-sm"
-          [pTooltip]="showFilters() ? 'Ocultar Filtros' : 'Exibir Filtros'" tooltipPosition="left"></button>
-      </div>
-
-      @if (showFilters()) {
-      <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-end">
-        <!-- Chart Type -->
-        <div class="flex flex-col">
-          <label class="font-medium text-sm text-gray-600 mb-1">Tipo de Gráfico</label>
-          <p-select [options]="chartTypes" [ngModel]="chartType()" (ngModelChange)="onChartTypeChange($event)"
-            [ngModelOptions]="{ standalone: true }" optionLabel="label" optionValue="value" styleClass="w-full">
-          </p-select>
-        </div>
-
-        <!-- Date Range -->
-        <div class="flex flex-col">
-          <label class="font-medium text-sm text-gray-600 mb-1">Período</label>
-          <div class="w-48">
-            <p-datepicker formControlName="dateRange" selectionMode="range" [readonlyInput]="true" dateFormat="dd/mm/yy"
-              placeholder="Selecione o período">
-            </p-datepicker>
-          </div>
-        </div>
-
-        <!-- Accounts -->
-        <div class="flex flex-col">
-          <label class="font-medium text-sm text-gray-600 mb-1">Contas</label>
-          <p-multiSelect formControlName="accounts" [options]="accounts()" optionLabel="name"
-            placeholder="Todas as contas" styleClass="w-full">
-          </p-multiSelect>
-        </div>
-
-        <!-- Payment Methods -->
-        <div class="flex flex-col">
-          <label class="font-medium text-sm text-gray-600 mb-1">Forma de Pagamento</label>
-          <p-multiSelect formControlName="paymentMethods" [options]="paymentMethods" optionLabel="label"
-            placeholder="Todas as formas" styleClass="w-full">
-          </p-multiSelect>
-        </div>
-      </form>
-      } @if (data.expenses_by_category.length > 0) {
+      <h3 class="text-lg font-bold text-gray-800 mb-4">Despesas por Categoria</h3>
+      @if (data.expenses_by_category.length > 0) {
       <div class="w-full h-[300px] flex justify-center">
-        <p-chart [type]="chartType()" [data]="chartData" [options]="chartOptions" class="w-full h-full"></p-chart>
+        <p-chart type="doughnut" [data]="chartData" [options]="chartOptions" class="w-full h-full"></p-chart>
       </div>
       } @else {
       <div class="text-gray-400 italic mt-10 text-center">

@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { TabsModule } from 'primeng/tabs';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -23,6 +24,7 @@ import { AuthService } from '../../services/auth.service';
     ToastModule,
     ConfirmDialogModule,
     Dashboard,
+    RouterModule,
     TransactionList,
     AccountManager,
     CategoryManager,
