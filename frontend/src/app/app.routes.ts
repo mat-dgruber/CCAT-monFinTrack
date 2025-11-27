@@ -16,7 +16,8 @@ export const routes: Routes = [
         component: Home,
         children: [
             { path: '', component: Dashboard },
-            { path: 'settings', component: Settings }
+            { path: 'settings', component: Settings },
+            { path: 'categories', component: CategoryManager }
         ]
     },
     { path: 'verify-email', component: EmailVerification },

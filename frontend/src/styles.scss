@@ -24,3 +24,93 @@ body {
      /* Usa a fonte do tema Aura */
 }
 
+/* 5. Global PrimeNG Overrides (Force Light Theme for Overlays) */
+
+/* Dropdown Panel/Overlay */
+.p-select-overlay, .p-dropdown-panel {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    
+    .p-select-option, .p-dropdown-item {
+        color: #1f2937 !important;
+        
+        &:not(.p-highlight):not(.p-disabled):hover {
+            background: #f3f4f6 !important;
+            color: #1f2937 !important;
+        }
+        
+        &.p-highlight {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+        }
+    }
+}
+
+/* Datepicker Panel Styles */
+.p-datepicker {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    color: #1f2937 !important;
+    
+    .p-datepicker-header {
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        padding: 0.5rem !important;
+        
+        .p-datepicker-title {
+            color: #1f2937 !important;
+        }
+        
+        button {
+            color: #6b7280 !important;
+            &:hover {
+                background: #f3f4f6 !important;
+                color: #1f2937 !important;
+            }
+        }
+    }
+    
+    table {
+        th {
+            color: #6b7280 !important;
+        }
+        
+        td {
+            > span {
+                color: #1f2937 !important;
+                
+                &.p-datepicker-today {
+                    background: #eff6ff !important;
+                    color: #1d4ed8 !important;
+                }
+                
+                &:not(.p-disabled):not(.p-datepicker-other-month):hover {
+                    background: #f3f4f6 !important;
+                    color: #1f2937 !important;
+                }
+            }
+            
+            /* Force text color for unselected dates */
+            > span:not(.p-highlight) {
+                color: #1f2937 !important;
+            }
+        }
+    }
+    
+    /* Month/Year Picker */
+    .p-monthpicker-month, .p-yearpicker-year {
+        color: #1f2937 !important;
+        
+        &:hover {
+            background: #f3f4f6 !important;
+        }
+        
+        &.p-highlight {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+        }
+    }
+}

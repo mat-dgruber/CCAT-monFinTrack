@@ -2,3 +2,59 @@
   display: block;
   padding: 2rem;
 }
+
+:host ::ng-deep {
+    // Card Styles
+    .p-card {
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        
+        .p-card-title {
+            color: #1f2937 !important;
+        }
+        
+        .p-card-content {
+            color: #4b5563 !important;
+        }
+    }
+
+    // Input Styles
+    .p-inputtext {
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        border-color: #d1d5db;
+        
+        &:enabled:hover {
+            border-color: #3b82f6;
+        }
+        
+        &:enabled:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+    }
+
+    // Select/Dropdown Styles (Trigger only)
+    .p-select {
+        background: #ffffff !important;
+        border-color: #d1d5db;
+        
+        .p-select-label {
+             color: #1f2937 !important;
+        }
+        
+        .p-select-dropdown {
+            color: #6b7280 !important;
+        }
+
+        &:not(.p-disabled):hover {
+            border-color: #3b82f6;
+        }
+        
+        &.p-focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+    }
+}

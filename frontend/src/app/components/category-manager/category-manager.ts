@@ -10,6 +10,7 @@ import { ColorPickerModule } from 'primeng/colorpicker';
 import { SelectModule } from 'primeng/select';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { TableModule } from 'primeng/table';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
@@ -27,7 +28,8 @@ import { ICON_LIST } from '../../shared/icons';
     InputTextModule, 
     ColorPickerModule, 
     SelectModule,
-    SelectButtonModule
+    SelectButtonModule,
+    TableModule
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss'
@@ -54,6 +56,28 @@ export class CategoryManager implements OnInit {
       }
     };
     traverse(this.categories());
+    return result;
+  });
+
+  // Flat list for Row Group Table
+  tableData = computed(() => {
+    const result: any[] = [];
+    // Sort categories by type then name
+    const sortedCats = [...this.categories()].sort((a, b) => {
+        if (a.type !== b.type) return a.type.localeCompare(b.type);
+        return a.name.localeCompare(b.name);
+    });
+
+    for (const cat of sortedCats) {
+        if (cat.subcategories && cat.subcategories.length > 0) {
+            for (const sub of cat.subcategories) {
+                result.push({ ...sub, parent: cat, isPlaceholder: false });
+            }
+        } else {
+            // Placeholder for empty parents so they show up as headers
+            result.push({ parent: cat, isPlaceholder: true });
+        }
+    }
     return result;
   });
 

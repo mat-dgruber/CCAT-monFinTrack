@@ -23,7 +23,6 @@ import { Account } from '../../models/account.model';
 
 // Components
 import { AccountManager } from '../account-manager/account-manager';
-import { CategoryManager } from '../category-manager/category-manager';
 import { BudgetManager } from '../budget-manager/budget-manager';
 import { TransactionList } from '../transaction-list/transaction-list';
 
@@ -39,7 +38,7 @@ import { TransactionList } from '../transaction-list/transaction-list';
     CardModule,
     MonthSelector,
     AccountManager,
-    CategoryManager,
+    AccountManager,
     BudgetManager,
     BudgetManager,
     TransactionList
