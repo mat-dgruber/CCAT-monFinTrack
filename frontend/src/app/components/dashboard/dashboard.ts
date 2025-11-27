@@ -21,6 +21,12 @@ import { FilterService } from '../../services/filter.service';
 import { AccountService } from '../../services/account.service';
 import { Account } from '../../models/account.model';
 
+// Components
+import { AccountManager } from '../account-manager/account-manager';
+import { CategoryManager } from '../category-manager/category-manager';
+import { BudgetManager } from '../budget-manager/budget-manager';
+import { TransactionList } from '../transaction-list/transaction-list';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -31,7 +37,12 @@ import { Account } from '../../models/account.model';
     FormsModule,
     ChartModule,
     CardModule,
-    MonthSelector
+    MonthSelector,
+    AccountManager,
+    CategoryManager,
+    BudgetManager,
+    BudgetManager,
+    TransactionList
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -196,4 +207,3 @@ export class Dashboard implements OnInit {
   }
 
 }
-

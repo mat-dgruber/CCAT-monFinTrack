@@ -1,4 +1,300 @@
-<div>
-  <h2>User Settings</h2>
-  <!-- Settings form will be added here -->
+<div class="max-w-4xl mx-auto p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex items-center gap-4 mb-8">
+    <p-button
+      icon="pi pi-arrow-left"
+      styleClass="p-button-text p-button-rounded p-button-secondary"
+      routerLink="/"
+    ></p-button>
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 m-0">
+      Settings
+    </h1>
+  </div>
+
+  <!-- Display Section -->
+  <p-card header="Display" styleClass="dark:bg-slate-800 dark:text-slate-100">
+    <div class="flex flex-col gap-2">
+      <label class="font-medium text-slate-700 dark:text-slate-300"
+        >Visual Appearance</label
+      >
+      <p-select
+        [options]="themeOptions"
+        [(ngModel)]="selectedTheme"
+        (onChange)="onThemeChange()"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full max-w-md"
+      >
+      </p-select>
+    </div>
+  </p-card>
+
+  <!-- Profile Section -->
+  <p-card header="Profile" styleClass="dark:bg-slate-800 dark:text-slate-100">
+    <div class="flex flex-col gap-6">
+      <!-- Profile Picture -->
+      <div class="flex items-center gap-4">
+        <p-avatar
+          icon="pi pi-user"
+          size="xlarge"
+          shape="circle"
+          styleClass="bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+        >
+        </p-avatar>
+        <p-button
+          label="Choose picture"
+          styleClass="p-button-outlined p-button-secondary"
+          size="small"
+        >
+        </p-button>
+      </div>
+
+      <!-- Full Name -->
+      <div class="flex flex-col gap-2">
+        <label
+          for="displayName"
+          class="font-medium text-slate-700 dark:text-slate-300"
+          >Full Name</label
+        >
+        <input
+          pInputText
+          id="displayName"
+          [(ngModel)]="displayName"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Birthday -->
+      <div class="flex flex-col gap-2">
+        <label
+          for="birthday"
+          class="font-medium text-slate-700 dark:text-slate-300"
+          >Birthday</label
+        >
+        <p-datepicker
+          [(ngModel)]="birthday"
+          [showIcon]="true"
+          inputId="birthday"
+          placeholder="Date"
+          styleClass="w-full"
+        >
+        </p-datepicker>
+      </div>
+
+      <!-- Timezone -->
+      <div class="flex flex-col gap-2">
+        <label
+          for="timezone"
+          class="font-medium text-slate-700 dark:text-slate-300"
+          >Timezone</label
+        >
+        <p-select
+          [options]="timezones"
+          [(ngModel)]="selectedTimezone"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        >
+        </p-select>
+      </div>
+
+      <!-- Update Button -->
+      <div class="mt-2">
+        <p-button
+          label="Update Profile"
+          styleClass="w-full bg-orange-300 border-orange-300 hover:bg-orange-400 text-white"
+          (onClick)="updateProfile()"
+        >
+        </p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- Email & Password Section -->
+  <p-card
+    header="Email & Password"
+    styleClass="dark:bg-slate-800 dark:text-slate-100"
+  >
+    <div class="flex flex-col gap-6">
+      <!-- Email -->
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-slate-700 dark:text-slate-300"
+            >Email</span
+          >
+          <div class="flex items-center gap-2">
+            <span class="text-slate-600 dark:text-slate-400">{{
+              email()
+            }}</span>
+            <p-tag
+              value="Verified"
+              severity="success"
+              styleClass="text-xs"
+            ></p-tag>
+          </div>
+        </div>
+        <p-button
+          label="Edit email"
+          styleClass="p-button-outlined p-button-secondary"
+          size="small"
+        ></p-button>
+      </div>
+
+      <hr class="border-slate-100 dark:border-slate-700" />
+
+      <!-- Password -->
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-slate-700 dark:text-slate-300"
+            >Password</span
+          >
+          <span class="text-slate-600 dark:text-slate-400"
+            >Click the button to change your password</span
+          >
+        </div>
+        <p-button
+          label="Edit password"
+          styleClass="p-button-outlined p-button-secondary"
+          size="small"
+          (onClick)="sendPasswordReset()"
+        >
+        </p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <!-- Multi-Factor Authentication -->
+  <p-card
+    header="Multi-Factor Authentication"
+    styleClass="dark:bg-slate-800 dark:text-slate-100"
+  >
+    <div class="flex justify-between items-start">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span class="font-medium text-slate-700 dark:text-slate-300"
+            >Multi-Factor Authentication</span
+          >
+          <p-tag
+            value="Disabled"
+            severity="warn"
+            styleClass="text-xs bg-orange-100 text-orange-800"
+          ></p-tag>
+        </div>
+        <span class="text-slate-600 dark:text-slate-400"
+          >Protect your account with an extra security step</span
+        >
+      </div>
+      <p-button
+        label="Enable MFA"
+        styleClass="p-button-outlined p-button-secondary"
+        size="small"
+      ></p-button>
+    </div>
+  </p-card>
+
+  <!-- Customer Support 
+  <p-card
+    header="Customer Support"
+    styleClass="dark:bg-slate-800 dark:text-slate-100"
+  >
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-slate-700 dark:text-slate-300"
+            >Account access</span
+          >
+          <p class="text-slate-600 dark:text-slate-400 text-sm max-w-xl">
+            To better help troubleshoot your issues, you may grant full account
+            access to support agents. Access will auto-disable after 14 days.
+          </p>
+        </div>
+        <p-button
+          label="Grant access"
+          styleClass="p-button-outlined p-button-secondary"
+          size="small"
+        ></p-button>
+      </div>
+
+      <div class="text-sm text-slate-600 dark:text-slate-400">
+        If you haven't already, you may also
+        <a href="#" class="text-blue-500 hover:underline"
+          >create a new support ticket</a
+        >.
+      </div>
+    </div>
+  </p-card>-->
+
+  <!-- Account Data -->
+  <p-card
+    header="Account Data"
+    styleClass="dark:bg-slate-800 dark:text-slate-100"
+  >
+    <div class="flex justify-between items-start">
+      <div class="flex flex-col gap-1">
+        <span class="font-medium text-slate-700 dark:text-slate-300"
+          >Delete account</span
+        >
+        <p class="text-slate-600 dark:text-slate-400 text-sm max-w-xl">
+          Delete your account and all associated data. This action is permanent
+          and cannot be undone.
+        </p>
+      </div>
+      <p-button
+        label="Delete account"
+        styleClass="p-button-outlined p-button-danger text-red-500 border-red-200 hover:bg-red-50"
+        size="small"
+        (onClick)="confirmDelete()"
+      >
+      </p-button>
+    </div>
+  </p-card>
+
+  <!-- Billing 
+  <p-card header="Billing" styleClass="dark:bg-slate-800 dark:text-slate-100">
+    <div class="flex flex-col gap-6">
+      <!-- Current Plan 
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col gap-2">
+          <span class="text-slate-500 font-medium">Current plan</span>
+          <div class="flex items-center gap-2">
+            <span class="text-lg font-medium text-slate-900 dark:text-slate-100"
+              >Monthly - Trial</span
+            >
+            <p-tag
+              value="Canceled"
+              severity="danger"
+              styleClass="text-xs bg-red-100 text-red-800"
+            ></p-tag>
+          </div>
+          <p class="text-slate-600 dark:text-slate-400 text-sm">
+            Your subscription has been canceled. You will have access to Premium
+            until September 22, 2025.
+          </p>
+        </div>
+        <p-button
+          label="Reactivate subscription"
+          styleClass="bg-orange-500 border-orange-500 hover:bg-orange-600 text-white"
+        >
+        </p-button>
+      </div>
+
+      <hr class="border-slate-100 dark:border-slate-700" />
+
+      <!-- Payment Method 
+      <div class="flex justify-between items-center">
+        <div class="flex flex-col gap-1">
+          <span class="text-slate-500 font-medium">Payment Method</span>
+          <span class="text-slate-900 dark:text-slate-100"
+            >Visa ending in 4400</span
+          >
+        </div>
+        <a href="#" class="text-blue-500 hover:underline font-medium text-sm"
+          >Update payment method</a
+        >
+      </div>
+    </div>
+  </p-card>-->
 </div>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

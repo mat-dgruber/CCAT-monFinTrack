@@ -71,7 +71,7 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
         **data
     )
 
-def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[int] = None) -> list[Transaction]:
+def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[int] = None, limit: Optional[int] = None) -> list[Transaction]:
     db = get_db()
     # FILTRO DO USUÁRIO
     query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
@@ -82,20 +82,6 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         start_date, end_date = get_month_range(month, year)
         for t in all_transactions:
             t_data = t.to_dict()
-            transaction_date = t_data.get("date")
-            if transaction_date and start_date <= transaction_date <= end_date:
-                filtered_transactions.append(t)
-    else:
-        filtered_transactions = list(all_transactions)
-
-    # Ordenação em memória
-    filtered_transactions.sort(key=lambda t: (t.to_dict().get('date', firestore.SERVER_TIMESTAMP), t.id), reverse=True)
-
-    docs = filtered_transactions
-    
-    transactions = []
-    for doc in docs:
-        data = doc.to_dict()
         
         cat_id = data.get("category_id")
         category = category_service.get_category(cat_id)

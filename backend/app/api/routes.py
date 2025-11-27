@@ -67,8 +67,8 @@ def create_new_transaction(request: Request, transaction: TransactionCreate, cur
     return transaction_service.create_transaction(transaction, current_user['uid'])
 
 @router.get("/transactions")
-def read_transactions(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
-    transactions = transaction_service.list_transactions(current_user['uid'], month, year)
+def read_transactions(month: Optional[int] = None, year: Optional[int] = None, limit: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    transactions = transaction_service.list_transactions(current_user['uid'], month, year, limit)
     return [t.model_dump() for t in transactions]
 
 @router.put("/transactions/{transaction_id}", response_model=Transaction)
@@ -80,7 +80,6 @@ def update_transaction(request: Request, transaction_id: str, transaction: Trans
 @limiter.limit("10 per minute")
 def delete_transaction(request: Request, transaction_id: str, current_user: dict = Depends(get_current_user)):
     return transaction_service.delete_transaction(transaction_id, current_user['uid'])
-
 # --- BUDGETS ---
 @router.post("/budgets", response_model=Budget)
 @limiter.limit("10 per minute")

@@ -8,21 +8,19 @@ import { TransactionList } from './components/transaction-list/transaction-list'
 import { AccountManager } from './components/account-manager/account-manager';
 import { CategoryManager } from './components/category-manager/category-manager';
 import { BudgetManager } from './components/budget-manager/budget-manager';
+import { Dashboard } from './components/dashboard/dashboard';
 
 export const routes: Routes = [
     {
         path: '',
         component: Home,
         children: [
-            { path: 'transactions', component: TransactionList },
-            { path: 'accounts', component: AccountManager },
-            { path: 'categories', component: CategoryManager },
-            { path: 'goals', component: BudgetManager },
+            { path: '', component: Dashboard },
+            { path: 'settings', component: Settings }
         ]
     },
     { path: 'verify-email', component: EmailVerification },
     { path: 'terms', component: Terms },
     { path: 'privacy-policy', component: PrivacyPolicy },
-    { path: 'settings', component: Settings },
     { path: '**', redirectTo: '' }
 ];

@@ -1,10 +1,13 @@
 <div class="mb-8">
-  <div class="sticky top-0 z-10 bg-[#f8fafc] py-4 flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
+  <div
+    class="sticky top-0 z-10 bg-[#f8fafc] py-4 flex flex-col md:flex-row justify-between items-center gap-4 mb-2"
+  >
     <h2 class="text-2xl font-bold text-gray-800">Visão Geral</h2>
     <app-month-selector></app-month-selector>
   </div>
 
   @if (summary(); as data) {
+  <!-- 1. Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <div class="text-gray-500 font-medium mb-2">Saldo Total</div>
@@ -28,12 +31,27 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-      <h3 class="text-lg font-bold text-gray-800 mb-4">Despesas por Categoria</h3>
+  <!-- 2. Accounts (Contas) - Above Charts -->
+  <div class="mb-8">
+    <app-account-manager></app-account-manager>
+  </div>
+
+  <!-- 3. Charts Section -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div
+      class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col"
+    >
+      <h3 class="text-lg font-bold text-gray-800 mb-4">
+        Despesas por Categoria
+      </h3>
       @if (data.expenses_by_category.length > 0) {
       <div class="w-full h-[300px] flex justify-center">
-        <p-chart type="doughnut" [data]="chartData" [options]="chartOptions" class="w-full h-full"></p-chart>
+        <p-chart
+          type="doughnut"
+          [data]="chartData"
+          [options]="chartOptions"
+          class="w-full h-full"
+        ></p-chart>
       </div>
       } @else {
       <div class="text-gray-400 italic mt-10 text-center">
@@ -42,55 +60,45 @@
       }
     </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+    <div
+      class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col"
+    >
       <h3 class="text-lg font-bold text-gray-800 mb-4">Evolução Mensal</h3>
       @if (data.evolution && data.evolution.length > 0) {
-        <div class="w-full h-[300px] flex justify-center">
-          <p-chart type="bar" [data]="evolutionChartData" [options]="evolutionChartOptions" class="w-full h-full"></p-chart>
-        </div>
+      <div class="w-full h-[300px] flex justify-center">
+        <p-chart
+          type="bar"
+          [data]="evolutionChartData"
+          [options]="evolutionChartOptions"
+          class="w-full h-full"
+        ></p-chart>
+      </div>
       } @else {
-        <div class="text-gray-400 italic mt-10 text-center">
-           Dados insuficientes para exibir evolução.
-        </div>
-      }
-    </div>
-  </div>
-
-  <div class="mt-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-    <h3 class="text-lg font-bold text-gray-800 mb-4">Orçamentos</h3>
-
-    @if (data.budgets && data.budgets.length > 0) {
-    <div>
-      @for (budget of data.budgets; track budget.category?.id || $index) {
-      <div class="mb-4">
-        <div class="flex justify-between items-center mb-1">
-          <span class="font-medium text-gray-700">{{
-            budget.category?.name
-            }}</span>
-          <span class="text-sm text-gray-500">
-            {{ budget.spent || 0 | currency : "BRL" }} /
-            {{ budget.amount | currency : "BRL" }}
-          </span>
-        </div>
-
-        <div class="w-full bg-gray-200 rounded-full h-2.5">
-          <div class="h-2.5 rounded-full" [style.width.%]="((budget.spent || 0) / (budget.amount || 1)) * 100"
-            [style.backgroundColor]="
-              getProgressColor(
-                ((budget.spent || 0) / (budget.amount || 1)) * 100
-              )
-            "></div>
-        </div>
+      <div class="text-gray-400 italic mt-10 text-center">
+        Dados insuficientes para exibir evolução.
       </div>
       }
     </div>
-    } @else {
-    <div class="text-gray-400">Nenhum orçamento cadastrado.</div>
-    }
   </div>
+
+  <!-- 4. Metas (Budgets) -->
+  <div class="mb-8">
+    <app-budget-manager></app-budget-manager>
+  </div>
+
+  <!-- 5. Categories (Categorias) - Between Metas and Transactions -->
+  <div class="mb-8">
+    <app-category-manager></app-category-manager>
+  </div>
+
+  <!-- 6. Transaction List (Full List, Bottom) -->
+  <app-transaction-list></app-transaction-list>
+
   } @else {
   <div class="flex justify-center items-center h-64">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div
+      class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+    ></div>
   </div>
   }
 </div>

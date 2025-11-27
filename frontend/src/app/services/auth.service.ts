@@ -74,4 +74,12 @@ export class AuthService {
   resetPassword(email: string) {
     return sendPasswordResetEmail(this.auth, email);
   }
+
+  async deleteAccount() {
+    const user = this.auth.currentUser;
+    if (user) {
+      await user.delete();
+      this.currentUser.set(null);
+    }
+  }
 }
