@@ -10,6 +10,7 @@ import { CategoryManager } from './components/category-manager/category-manager'
 import { BudgetManager } from './components/budget-manager/budget-manager';
 import { Dashboard } from './components/dashboard/dashboard';
 import { TransactionManager } from './components/transaction-manager/transaction-manager';
+import { AdvancedGraphicsComponent } from './pages/advanced-graphics/advanced-graphics.component';
 
 export const routes: Routes = [
     {
@@ -19,7 +20,8 @@ export const routes: Routes = [
             { path: '', component: Dashboard },
             { path: 'settings', component: Settings },
             { path: 'categories', component: CategoryManager },
-            { path: 'transactions', component: TransactionManager }
+            { path: 'transactions', component: TransactionManager },
+            { path: 'advanced-graphics', component: AdvancedGraphicsComponent }
         ]
     },
     { path: 'verify-email', component: EmailVerification },
