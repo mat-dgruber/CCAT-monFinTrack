@@ -9,6 +9,7 @@ import { AccountManager } from './components/account-manager/account-manager';
 import { CategoryManager } from './components/category-manager/category-manager';
 import { BudgetManager } from './components/budget-manager/budget-manager';
 import { Dashboard } from './components/dashboard/dashboard';
+import { TransactionManager } from './components/transaction-manager/transaction-manager';
 
 export const routes: Routes = [
     {
@@ -17,7 +18,8 @@ export const routes: Routes = [
         children: [
             { path: '', component: Dashboard },
             { path: 'settings', component: Settings },
-            { path: 'categories', component: CategoryManager }
+            { path: 'categories', component: CategoryManager },
+            { path: 'transactions', component: TransactionManager }
         ]
     },
     { path: 'verify-email', component: EmailVerification },
