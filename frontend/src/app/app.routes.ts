@@ -11,6 +11,8 @@ import { BudgetManager } from './components/budget-manager/budget-manager';
 import { Dashboard } from './components/dashboard/dashboard';
 import { TransactionManager } from './components/transaction-manager/transaction-manager';
 import { AdvancedGraphicsComponent } from './pages/advanced-graphics/advanced-graphics.component';
+import { FinancialCalendarComponent } from './components/financial-calendar/financial-calendar.component';
+import { SubscriptionsDashboardComponent } from './components/subscriptions-dashboard/subscriptions-dashboard.component';
 
 export const routes: Routes = [
     {
@@ -21,6 +23,8 @@ export const routes: Routes = [
             { path: 'settings', component: Settings },
             { path: 'categories', component: CategoryManager },
             { path: 'transactions', component: TransactionManager },
+            { path: 'calendar', component: FinancialCalendarComponent },
+            { path: 'subscriptions', component: SubscriptionsDashboardComponent },
             { path: 'advanced-graphics', component: AdvancedGraphicsComponent }
         ]
     },

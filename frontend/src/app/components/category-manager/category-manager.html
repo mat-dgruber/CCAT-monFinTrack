@@ -1,6 +1,6 @@
-<div class="mb-8">
+<div class="p-6 max-w-6xl mx-auto">
   <div class="flex justify-between items-center mb-6">
-    <h2 class="text-xl font-bold text-gray-800">Gerenciar Categorias</h2>
+    <h2 class="text-2xl font-bold text-gray-800">Gerenciar Categorias</h2>
     <p-button
       label="Nova Categoria"
       icon="pi pi-plus"
@@ -9,7 +9,9 @@
     ></p-button>
   </div>
 
-  <div class="card">
+  <div
+    class="card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+  >
     <p-table
       [value]="tableData()"
       sortField="parent.name"
@@ -57,18 +59,20 @@
                 >
                   {{ row.parent.type === "expense" ? "Despesa" : "Receita" }}
                 </span>
-                <button
-                  pButton
+                <p-button
                   icon="pi pi-pencil"
-                  class="p-button-rounded p-button-text p-button-secondary"
-                  (click)="editCategory(row.parent)"
-                ></button>
-                <button
-                  pButton
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="editCategory(row.parent)"
+                ></p-button>
+                <p-button
                   icon="pi pi-trash"
-                  class="p-button-rounded p-button-text p-button-danger"
-                  (click)="deleteCategory($event, row.parent.id)"
-                ></button>
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="deleteCategory($event, row.parent.id)"
+                ></p-button>
               </div>
             </div>
           </td>
@@ -107,18 +111,22 @@
           </td>
           <td>
             <div class="flex gap-2">
-              <button
-                pButton
+              <p-button
                 icon="pi pi-pencil"
-                class="p-button-rounded p-button-text p-button-sm p-button-secondary"
-                (click)="editCategory(row)"
-              ></button>
-              <button
-                pButton
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="secondary"
+                (onClick)="editCategory(row)"
+              ></p-button>
+              <p-button
                 icon="pi pi-trash"
-                class="p-button-rounded p-button-text p-button-danger p-button-sm"
-                (click)="deleteCategory($event, row.id)"
-              ></button>
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="danger"
+                (onClick)="deleteCategory($event, row.id)"
+              ></p-button>
             </div>
           </td>
         </tr>

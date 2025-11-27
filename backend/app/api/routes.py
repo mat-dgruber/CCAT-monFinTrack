@@ -9,12 +9,14 @@ from app.schemas.transaction import Transaction, TransactionCreate
 from app.schemas.account import Account, AccountCreate
 from app.schemas.budget import Budget, BudgetCreate
 from app.schemas.dashboard import DashboardSummary
+from app.schemas.recurrence import Recurrence
 
 from app.services import category as category_service
 from app.services import transaction as transaction_service
 from app.services import account as account_service
 from app.services import budget as budget_service
 from app.services import dashboard as dashboard_service
+from app.services import recurrence as recurrence_service
 
 from app.core.security import get_current_user # Importe a segurança
 
@@ -61,10 +63,10 @@ def delete_category(request: Request, category_id: str, current_user: dict = Dep
     return category_service.delete_category(category_id, current_user['uid'])
 
 # --- TRANSAÇÕES ---
-@router.post("/transactions", response_model=Transaction)
+@router.post("/transactions", response_model=List[Transaction])
 @limiter.limit("10 per minute")
 def create_new_transaction(request: Request, transaction: TransactionCreate, current_user: dict = Depends(get_current_user)):
-    return transaction_service.create_transaction(transaction, current_user['uid'])
+    return transaction_service.create_unified_transaction(transaction, current_user['uid'])
 
 @router.get("/transactions")
 def read_transactions(month: Optional[int] = None, year: Optional[int] = None, limit: Optional[int] = None, current_user: dict = Depends(get_current_user)):
@@ -80,6 +82,7 @@ def update_transaction(request: Request, transaction_id: str, transaction: Trans
 @limiter.limit("10 per minute")
 def delete_transaction(request: Request, transaction_id: str, current_user: dict = Depends(get_current_user)):
     return transaction_service.delete_transaction(transaction_id, current_user['uid'])
+
 # --- BUDGETS ---
 @router.post("/budgets", response_model=Budget)
 @limiter.limit("10 per minute")
@@ -120,3 +123,12 @@ def get_dashboard_summary(
         start_date=start_date,
         end_date=end_date
     )
+
+# --- RECORRÊNCIAS ---
+@router.get("/recurrences", response_model=List[Recurrence])
+def list_recurrences(active_only: bool = False, current_user: dict = Depends(get_current_user)):
+    return recurrence_service.list_recurrences(current_user['uid'], active_only=active_only)
+
+@router.patch("/recurrences/{recurrence_id}/cancel", response_model=Recurrence)
+def cancel_recurrence(recurrence_id: str, current_user: dict = Depends(get_current_user)):
+    return recurrence_service.cancel_recurrence(recurrence_id, current_user['uid'])

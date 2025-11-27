@@ -13,15 +13,100 @@
     (ngSubmit)="onSubmit()"
     class="flex flex-col gap-5 pt-4"
   >
-    <div class="flex justify-center">
-      <p-selectButton
-        [options]="typeOptions"
-        formControlName="type"
-        optionLabel="label"
-        optionValue="value"
-      >
-      </p-selectButton>
+    <div class="flex justify-center flex-col gap-3">
+      <div class="flex justify-center">
+        <p-selectButton
+          [options]="typeOptions"
+          formControlName="type"
+          optionLabel="label"
+          optionValue="value"
+        >
+        </p-selectButton>
+      </div>
+
+      <div class="flex justify-center">
+        <p-selectButton
+          [options]="modeOptions"
+          formControlName="mode"
+          optionLabel="label"
+          optionValue="value"
+        >
+        </p-selectButton>
+      </div>
     </div>
+
+    <!-- Campos de Recorrência -->
+    @if (form.get('mode')?.value === 'recurrence') {
+    <div
+      class="flex flex-col gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50"
+    >
+      <h3 class="font-bold text-sm text-gray-600">
+        Configuração da Recorrência
+      </h3>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-semibold text-gray-700">Periodicidade</label>
+        <p-select
+          [options]="periodicityOptions"
+          formControlName="recurrence_periodicity"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        ></p-select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <p-checkbox
+          formControlName="recurrence_auto_pay"
+          [binary]="true"
+          inputId="auto_pay"
+        ></p-checkbox>
+        <label for="auto_pay" class="cursor-pointer"
+          >Pagamento Automático</label
+        >
+      </div>
+
+      <div class="flex items-center gap-2">
+        <p-checkbox
+          formControlName="recurrence_create_first"
+          [binary]="true"
+          inputId="create_first"
+        ></p-checkbox>
+        <label for="create_first" class="cursor-pointer"
+          >Criar primeira transação agora</label
+        >
+      </div>
+    </div>
+    }
+
+    <!-- Campos de Parcelamento -->
+    @if (form.get('mode')?.value === 'installments') {
+    <div
+      class="flex flex-col gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50"
+    >
+      <h3 class="font-bold text-sm text-gray-600">
+        Configuração do Parcelamento
+      </h3>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-semibold text-gray-700">Número de Parcelas</label>
+        <p-inputNumber
+          formControlName="total_installments"
+          [min]="2"
+          [max]="120"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          inputId="installments"
+          decrementButtonClass="p-button-secondary"
+          incrementButtonClass="p-button-secondary"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          [style]="{ width: '100%' }"
+          inputStyleClass="w-full text-center"
+        ></p-inputNumber>
+      </div>
+    </div>
+    }
 
     <div class="flex flex-col gap-2">
       <label for="desc" class="font-semibold text-gray-700">Descrição</label>
@@ -103,9 +188,9 @@
         [emptyMessage]="'Nenhuma categoria deste tipo encontrada.'"
       >
         <ng-template pTemplate="group" let-group>
-            <div class="flex items-center gap-2">
-                <span class="font-bold">{{ group.label }}</span>
-            </div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold">{{ group.label }}</span>
+          </div>
         </ng-template>
 
         <ng-template pTemplate="item" let-cat>
@@ -141,16 +226,45 @@
       </p-select>
     </div>
 
+    <div class="flex items-center gap-2 mt-2">
+      <p-checkbox
+        formControlName="is_paid"
+        [binary]="true"
+        inputId="is_paid"
+      ></p-checkbox>
+      <label for="is_paid" class="cursor-pointer font-semibold text-gray-700"
+        >Pago / Recebido</label
+      >
+    </div>
+
+    @if (form.get('is_paid')?.value) {
+    <div class="flex flex-col gap-2 mt-2">
+      <label for="payment_date" class="font-semibold text-gray-700"
+        >Data do Pagamento</label
+      >
+      <p-datepicker
+        inputId="payment_date"
+        formControlName="payment_date"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        [style]="{ width: '100%' }"
+        inputStyleClass="w-full"
+      >
+      </p-datepicker>
+    </div>
+    }
+
     <div class="flex justify-between mt-6">
       @if (editingId()) {
-        <p-button
-          label="Excluir"
-          icon="pi pi-trash"
-          severity="danger"
-          [text]="true"
-          [rounded]="true"
-          (onClick)="confirmDelete()"
-        ></p-button>
+      <p-button
+        label="Excluir"
+        icon="pi pi-trash"
+        severity="danger"
+        [text]="true"
+        [rounded]="true"
+        (onClick)="confirmDelete()"
+      ></p-button>
       }
       <div class="flex gap-2 ml-auto">
         <p-button
