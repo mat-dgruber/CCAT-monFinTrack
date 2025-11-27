@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Signal, computed, effect, signal, inject } from '@angular/core';
+import { Component, Input, OnInit, Signal, computed, effect, signal, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChartModule } from 'primeng/chart';
@@ -6,11 +6,33 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { TooltipModule } from 'primeng/tooltip'; // Import Tooltip
 import { DashboardWidget, DateRangePreset, GroupingOption, ValueFilter, WidgetType } from '../../models/dashboard-widget.model';
 import { Transaction } from '../../models/transaction.model';
 import { Category } from '../../models/category.model';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
+
+interface TreemapNode {
+    label: string;
+    value: number;
+    formattedValue: string;
+    color: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+
+interface BoxPlotItem {
+    label: string;
+    min: number;
+    q1: number;
+    median: number;
+    q3: number;
+    max: number;
+    color: string;
+}
 
 @Component({
   selector: 'app-chart-widget',
@@ -22,7 +44,8 @@ import { CategoryService } from '../../services/category.service';
     SelectModule,
     DatePickerModule,
     ButtonModule,
-    ToggleButtonModule
+    ToggleButtonModule,
+    TooltipModule
   ],
   template: `
     <div class="bg-white rounded-lg shadow-md p-4 flex flex-col h-full relative">
@@ -36,7 +59,7 @@ import { CategoryService } from '../../services/category.service';
                 (onChange)="updateChart()"
                 optionLabel="label"
                 optionValue="value"
-                styleClass="w-32"
+                styleClass="w-48"
                 size="small"
                 variant="filled">
             </p-select>
@@ -79,8 +102,9 @@ import { CategoryService } from '../../services/category.service';
                 variant="filled">
             </p-select>
 
-             <!-- Group By -->
+             <!-- Group By (Hidden for Heatmap/Treemap) -->
             <p-select
+                *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap'"
                 [options]="groupingOptions"
                 [(ngModel)]="widgetConfig.groupBy"
                 (onChange)="updateChart()"
@@ -107,13 +131,78 @@ import { CategoryService } from '../../services/category.service';
       </div>
 
       <!-- Chart Area -->
-      <div class="flex-grow relative min-h-[300px]" [class.hidden]="widgetConfig.showSummary">
-        <p-chart [type]="widgetConfig.type" [data]="chartData" [options]="chartOptions" height="300px"></p-chart>
+      <div class="flex-grow relative min-h-[300px] overflow-hidden" [class.hidden]="widgetConfig.showSummary">
+        <!-- Standard Charts -->
+        <p-chart *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'boxplot'" [type]="widgetConfig.type" [data]="chartData" [options]="chartOptions" height="300px"></p-chart>
+        
+        <!-- Heatmap (Disabled) -->
+        <!-- <div *ngIf="widgetConfig.type === 'heatmap'">...</div> -->
+
+        <!-- Treemap v1.0 -->
+        <div *ngIf="widgetConfig.type === 'treemap'" class="relative w-full h-[300px] bg-gray-50 rounded overflow-hidden">
+            <div *ngFor="let node of treemapData"
+                 class="absolute border border-white flex flex-col items-center justify-center text-center p-1 transition-all hover:brightness-110 cursor-pointer"
+                 [style.left.%]="node.x"
+                 [style.top.%]="node.y"
+                 [style.width.%]="node.w"
+                 [style.height.%]="node.h"
+                 [style.backgroundColor]="node.color"
+                 [pTooltip]="node.label + ': ' + node.formattedValue"
+                 tooltipPosition="top">
+                 
+                 <span class="text-white font-bold text-xs md:text-sm truncate w-full px-1 drop-shadow-md">{{ node.label }}</span>
+                 <span *ngIf="node.h > 15" class="text-white text-[10px] opacity-90 drop-shadow-md">{{ node.formattedValue }}</span>
+            </div>
+            
+            <div *ngIf="treemapData.length === 0" class="flex items-center justify-center h-full text-gray-400">
+                Sem dados para exibir.
+            </div>
+        </div>
+
+        <!-- Box Plot v1.0 -->
+        <div *ngIf="widgetConfig.type === 'boxplot'" class="w-full h-full flex flex-col overflow-y-auto pr-2">
+            <div *ngFor="let item of boxPlotData" class="flex items-center mb-4 h-12 group">
+                <!-- Label -->
+                <div class="w-32 text-xs text-gray-600 font-medium truncate text-right pr-3" [title]="item.label">
+                    {{ item.label }}
+                </div>
+                
+                <!-- Plot Area -->
+                <div class="flex-grow relative h-full bg-gray-50 rounded border-l border-gray-200">
+                    <!-- Whisker Line (Min to Max) -->
+                    <div class="absolute top-1/2 h-[2px] bg-gray-300 -translate-y-1/2"
+                         [style.left.%]="getBoxPlotPercent(item.min)"
+                         [style.width.%]="getBoxPlotPercent(item.max - item.min)">
+                    </div>
+                    
+                    <!-- Whisker Caps -->
+                    <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 -translate-y-1/2" [style.left.%]="getBoxPlotPercent(item.min)"></div>
+                    <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 -translate-y-1/2" [style.left.%]="getBoxPlotPercent(item.max)"></div>
+
+                    <!-- Box (Q1 to Q3) -->
+                    <div class="absolute top-1/2 h-6 -translate-y-1/2 border border-gray-400 opacity-80 hover:opacity-100 transition-opacity"
+                         [style.backgroundColor]="item.color"
+                         [style.left.%]="getBoxPlotPercent(item.q1)"
+                         [style.width.%]="getBoxPlotPercent(item.q3 - item.q1)"
+                         [pTooltip]="'Min: ' + (item.min | currency) + '\nQ1: ' + (item.q1 | currency) + '\nMediana: ' + (item.median | currency) + '\nQ3: ' + (item.q3 | currency) + '\nMax: ' + (item.max | currency)"
+                         tooltipPosition="top">
+                    </div>
+
+                    <!-- Median Line -->
+                    <div class="absolute top-1/2 h-6 w-[3px] bg-white -translate-y-1/2 z-10"
+                         [style.left.%]="getBoxPlotPercent(item.median)">
+                    </div>
+                </div>
+            </div>
+             <div *ngIf="boxPlotData.length === 0" class="flex items-center justify-center h-full text-gray-400">
+                Sem dados suficientes para distribuição.
+            </div>
+        </div>
       </div>
 
       <!-- Summary Area -->
       <div *ngIf="widgetConfig.showSummary" class="flex-grow flex flex-col gap-6 p-4 overflow-auto min-h-[300px] bg-white rounded">
-        <!-- Summary Cards (Parity with Transaction Manager) -->
+        <!-- Summary Cards -->
         <div class="space-y-4">
             <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <div class="text-sm text-gray-500 mb-1">Total de Transações</div>
@@ -170,6 +259,13 @@ export class ChartWidgetComponent implements OnInit {
   chartData: any;
   chartOptions: any;
   
+  // Treemap Data
+  treemapData: TreemapNode[] = [];
+
+  // Box Plot Data
+  boxPlotData: BoxPlotItem[] = [];
+  boxPlotGlobalMax = 0;
+
   // Summary Stats matching TransactionManager
   summaryStats: any = {
     totalTransactions: 0,
@@ -187,7 +283,10 @@ export class ChartWidgetComponent implements OnInit {
     { label: 'Pizza', value: 'pie' },
     { label: 'Rosca', value: 'doughnut' },
     { label: 'Barras', value: 'bar' },
-    { label: 'Linha', value: 'line' }
+    { label: 'Linha', value: 'line' },
+    { label: 'Treemap (Categorias)', value: 'treemap' },
+    { label: 'Box Plot (Distribuição)', value: 'boxplot' }
+    // { label: 'Heatmap (Calendário)', value: 'heatmap' } // Disabled
   ];
 
   datePresets = [
@@ -227,6 +326,10 @@ export class ChartWidgetComponent implements OnInit {
           this.buildCategoryMap(cats);
           this.fetchData();
       });
+  }
+
+  trackByDate(index: number, cell: any): string {
+    return cell.date;
   }
 
   buildCategoryMap(categories: Category[]) {
@@ -282,16 +385,195 @@ export class ChartWidgetComponent implements OnInit {
            return true;
        });
 
-       // Group
-       const groupedData = this.groupData(filteredTransactions);
-
-       // Stats (using filtered transactions)
+       // Calculate Stats
        this.calculateStats(filteredTransactions);
 
-       // Chart
-       this.chartData = this.generateChartData(groupedData);
-       this.chartOptions = this.getChartOptions();
+       if (this.widgetConfig.type === 'treemap') {
+           this.generateTreemapData(filteredTransactions);
+       } else if (this.widgetConfig.type === 'boxplot') {
+           this.generateBoxPlotData(filteredTransactions);
+       } else if (this.widgetConfig.type === 'heatmap') {
+           // this.generateHeatmapData(filteredTransactions); // Disabled
+       } else {
+           // Group
+           const groupedData = this.groupData(filteredTransactions);
+           // Chart
+           this.chartData = this.generateChartData(groupedData);
+           this.chartOptions = this.getChartOptions();
+       }
   }
+
+  // --- BOX PLOT LOGIC ---
+  private generateBoxPlotData(transactions: Transaction[]) {
+      const groups: { [key: string]: number[] } = {};
+      let globalMax = 0;
+
+      // 1. Group amounts
+      const paymentMap: Record<string, string> = {
+        'credit_card': 'Cartão de Crédito',
+        'debit_card': 'Débito',
+        'pix': 'Pix',
+        'cash': 'Dinheiro',
+        'bank_transfer': 'Transferência',
+        'other': 'Outros'
+      };
+
+      transactions.forEach(t => {
+          let key = 'Outros';
+          if (this.widgetConfig.groupBy === 'category') {
+              const catId = t.category_id || t.category?.id;
+              if (catId && this.categoryMap.has(catId)) {
+                  const cat = this.categoryMap.get(catId)!;
+                  if (cat.parent_id && this.categoryMap.has(cat.parent_id)) {
+                      key = this.categoryMap.get(cat.parent_id)!.name;
+                  } else {
+                      key = cat.name;
+                  }
+              } else {
+                  key = t.category?.name || 'Sem Categoria';
+              }
+          } else if (this.widgetConfig.groupBy === 'payment-method') {
+              key = paymentMap[t.payment_method] || t.payment_method;
+          } else if (this.widgetConfig.groupBy === 'subcategory') {
+              key = t.category?.name || 'Sem Categoria';
+          }
+
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(t.amount);
+          if (t.amount > globalMax) globalMax = t.amount;
+      });
+
+      this.boxPlotGlobalMax = globalMax > 0 ? globalMax : 100; // Avoid division by zero
+
+      // 2. Calculate Stats for each group
+      this.boxPlotData = Object.keys(groups).map(key => {
+          const values = groups[key].sort((a, b) => a - b);
+          const min = values[0];
+          const max = values[values.length - 1];
+          const q1 = this.getPercentile(values, 25);
+          const median = this.getPercentile(values, 50);
+          const q3 = this.getPercentile(values, 75);
+
+          return {
+              label: key,
+              min,
+              q1,
+              median,
+              q3,
+              max,
+              color: this.getColorForLabel(key)
+          };
+      }).sort((a, b) => b.median - a.median); // Sort by median descending
+  }
+
+  getBoxPlotPercent(value: number): number {
+      return (value / this.boxPlotGlobalMax) * 100;
+  }
+
+  private getPercentile(data: number[], percentile: number): number {
+      if (data.length === 0) return 0;
+      const index = (percentile / 100) * (data.length - 1);
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      const weight = index - lower;
+      if (upper >= data.length) return data[lower];
+      return data[lower] * (1 - weight) + data[upper] * weight;
+  }
+
+  // --- TREEMAP LOGIC (Slice-and-Dice Algorithm) ---
+  private generateTreemapData(transactions: Transaction[]) {
+      // 1. Group by Category (Parent)
+      const groups: { [key: string]: number } = {};
+      let totalValue = 0;
+
+      transactions.forEach(t => {
+          let key = 'Outros';
+          // Logic matches groupData for 'category'
+          const catId = t.category_id || t.category?.id;
+          if (catId && this.categoryMap.has(catId)) {
+              const cat = this.categoryMap.get(catId)!;
+              if (cat.parent_id && this.categoryMap.has(cat.parent_id)) {
+                  key = this.categoryMap.get(cat.parent_id)!.name;
+              } else {
+                  key = cat.name;
+              }
+          } else {
+              key = t.category?.name || 'Sem Categoria';
+          }
+          
+          if (!groups[key]) groups[key] = 0;
+          groups[key] += t.amount;
+          totalValue += t.amount;
+      });
+
+      // 2. Convert to Array and Sort
+      let items = Object.entries(groups).map(([label, value]) => ({
+          label,
+          value,
+          percentage: value / totalValue
+      })).sort((a, b) => b.value - a.value);
+
+      // 3. Calculate Rectangles (Simple Slice-and-Dice Recursion)
+      this.treemapData = [];
+      this.layoutTreemap(items, 0, 0, 100, 100, 0);
+  }
+
+  private layoutTreemap(items: any[], x: number, y: number, w: number, h: number, depth: number) {
+      if (items.length === 0) return;
+
+      if (items.length === 1) {
+          const item = items[0];
+          this.treemapData.push({
+              label: item.label,
+              value: item.value,
+              formattedValue: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.value),
+              color: this.getColorForLabel(item.label),
+              x, y, w, h
+          });
+          return;
+      }
+
+      // Determine split direction based on depth (Vertical vs Horizontal) or Aspect Ratio
+      // Simple approach: Alternate. Even depth = Vertical Split (vary X), Odd = Horizontal (vary Y).
+      const isVertical = w > h; // Split along the longer axis usually better
+
+      // Split items into two halves based on value
+      let total = items.reduce((acc, i) => acc + i.value, 0);
+      let half = total / 2;
+      let acc = 0;
+      let midIndex = 0;
+      
+      for (let i = 0; i < items.length; i++) {
+          acc += items[i].value;
+          if (acc >= half) {
+              midIndex = i + 1; // Include this item in first half
+              break;
+          }
+      }
+      if (midIndex >= items.length) midIndex = items.length - 1; // Ensure at least one item in second half if possible
+      if (midIndex === 0) midIndex = 1; // Ensure at least one item in first half
+
+      const firstHalf = items.slice(0, midIndex);
+      const secondHalf = items.slice(midIndex);
+
+      const firstTotal = firstHalf.reduce((sum, i) => sum + i.value, 0);
+      const firstPercent = firstTotal / total;
+
+      if (isVertical) {
+          // Split Width
+          const w1 = w * firstPercent;
+          const w2 = w - w1;
+          this.layoutTreemap(firstHalf, x, y, w1, h, depth + 1);
+          this.layoutTreemap(secondHalf, x + w1, y, w2, h, depth + 1);
+      } else {
+          // Split Height
+          const h1 = h * firstPercent;
+          const h2 = h - h1;
+          this.layoutTreemap(firstHalf, x, y, w, h1, depth + 1);
+          this.layoutTreemap(secondHalf, x, y + h1, w, h2, depth + 1);
+      }
+  }
+  // --------------------------------------------
 
   private calculateDateRange(): { start?: Date, end?: Date } {
       const now = new Date();
@@ -310,10 +592,16 @@ export class ChartWidgetComponent implements OnInit {
               startDate = new Date(now.getFullYear(), 0, 1);
               break;
           case 'this-week':
-              const day = now.getDay();
-              const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-              startDate = new Date(now.setDate(diff));
+              // Start on Sunday (0)
+              const today = new Date();
+              const dayOfWeek = today.getDay(); // 0 for Sunday
+              startDate = new Date(today);
+              startDate.setDate(today.getDate() - dayOfWeek);
               startDate.setHours(0,0,0,0);
+
+              endDate = new Date(startDate);
+              endDate.setDate(startDate.getDate() + 6); // End on Saturday
+              endDate.setHours(23,59,59,999);
               break;
           case 'custom':
               if (this.widgetConfig.customDateRange && this.widgetConfig.customDateRange[0]) {
@@ -343,7 +631,6 @@ export class ChartWidgetComponent implements OnInit {
           let key = 'Outros';
           
           if (this.widgetConfig.groupBy === 'category') {
-              // PARENT Logic: Try to find parent
               const catId = t.category_id || t.category?.id;
               if (catId && this.categoryMap.has(catId)) {
                   const cat = this.categoryMap.get(catId)!;
