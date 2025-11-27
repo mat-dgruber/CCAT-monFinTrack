@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Signal, computed, effect, signal, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, Signal, computed, effect, signal, inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChartModule } from 'primeng/chart';
@@ -31,6 +31,27 @@ interface BoxPlotItem {
     median: number;
     q3: number;
     max: number;
+    color: string;
+}
+
+interface SankeyNode {
+    id: string;
+    name: string;
+    column: number;
+    value: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    color: string;
+}
+
+interface SankeyLink {
+    source: string;
+    target: string;
+    value: number;
+    width: number;
+    d: string; // SVG path
     color: string;
 }
 
@@ -102,9 +123,9 @@ interface BoxPlotItem {
                 variant="filled">
             </p-select>
 
-             <!-- Group By (Hidden for Heatmap/Treemap) -->
+             <!-- Group By (Hidden for Heatmap/Treemap/Sankey) -->
             <p-select
-                *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap'"
+                *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'sankey'"
                 [options]="groupingOptions"
                 [(ngModel)]="widgetConfig.groupBy"
                 (onChange)="updateChart()"
@@ -125,6 +146,14 @@ interface BoxPlotItem {
                 styleClass="w-24 text-sm">
             </p-toggleButton>
 
+            <!-- Resize Button -->
+            <button pButton 
+                    [icon]="widgetConfig.colSpan === 2 ? 'pi pi-window-minimize' : 'pi pi-window-maximize'" 
+                    class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8" 
+                    (click)="onResizeWidget()"
+                    pTooltip="Expandir/Reduzir">
+            </button>
+
             <!-- Delete Button -->
              <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm p-0 w-8 h-8" (click)="onRemoveWidget()"></button>
         </div>
@@ -133,7 +162,7 @@ interface BoxPlotItem {
       <!-- Chart Area -->
       <div class="flex-grow relative min-h-[300px] overflow-hidden" [class.hidden]="widgetConfig.showSummary">
         <!-- Standard Charts -->
-        <p-chart *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'boxplot'" [type]="widgetConfig.type" [data]="chartData" [options]="chartOptions" height="300px"></p-chart>
+        <p-chart *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'boxplot' && widgetConfig.type !== 'sankey'" [type]="widgetConfig.type" [data]="chartData" [options]="chartOptions" height="300px"></p-chart>
         
         <!-- Heatmap (Disabled) -->
         <!-- <div *ngIf="widgetConfig.type === 'heatmap'">...</div> -->
@@ -198,6 +227,49 @@ interface BoxPlotItem {
                 Sem dados suficientes para distribuição.
             </div>
         </div>
+
+        <!-- Sankey Diagram v1.0 -->
+        <div *ngIf="widgetConfig.type === 'sankey'" class="w-full h-[300px] bg-white rounded overflow-hidden relative">
+             <svg *ngIf="sankeyData.nodes.length > 0" width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 1000 500">
+                <!-- Links -->
+                <path *ngFor="let link of sankeyData.links"
+                      [attr.d]="link.d"
+                      [attr.stroke]="link.color"
+                      [attr.stroke-width]="link.width"
+                      fill="none"
+                      stroke-opacity="0.3"
+                      class="hover:stroke-opacity-60 transition-all duration-300 cursor-pointer"
+                      [pTooltip]="link.source + ' -> ' + link.target + ': ' + (link.value | currency:'BRL')">
+                </path>
+
+                <!-- Nodes -->
+                <g *ngFor="let node of sankeyData.nodes">
+                    <rect [attr.x]="node.x" 
+                          [attr.y]="node.y" 
+                          [attr.width]="node.w" 
+                          [attr.height]="node.h" 
+                          [attr.fill]="node.color"
+                          rx="4" ry="4"
+                          stroke="#fff" stroke-width="1"
+                          [pTooltip]="node.name + ': ' + (node.value | currency:'BRL')">
+                    </rect>
+                    <!-- Label -->
+                    <text [attr.x]="node.column === 0 ? node.x - 5 : (node.column === 3 ? node.x + node.w + 5 : node.x + node.w / 2)" 
+                          [attr.y]="node.y + node.h / 2" 
+                          [attr.text-anchor]="node.column === 0 ? 'end' : (node.column === 3 ? 'start' : 'middle')"
+                          [attr.transform]="(node.column === 1 || node.column === 2) ? 'rotate(-90, ' + (node.x + node.w/2) + ', ' + (node.y + node.h/2) + ')' : ''"
+                          dominant-baseline="middle"
+                          font-size="10"
+                          fill="#4b5563"
+                          class="pointer-events-none select-none font-medium">
+                        {{ node.name }}
+                    </text>
+                </g>
+             </svg>
+             <div *ngIf="sankeyData.nodes.length === 0" class="flex items-center justify-center h-full text-gray-400">
+                Sem dados de fluxo para exibir.
+            </div>
+        </div>
       </div>
 
       <!-- Summary Area -->
@@ -252,6 +324,7 @@ interface BoxPlotItem {
 export class ChartWidgetComponent implements OnInit {
   @Input() widgetConfig!: DashboardWidget;
   @Input() removeCallback!: (id: string) => void;
+  @Output() toggleSize = new EventEmitter<string>();
 
   private transactionService = inject(TransactionService);
   private categoryService = inject(CategoryService);
@@ -265,6 +338,9 @@ export class ChartWidgetComponent implements OnInit {
   // Box Plot Data
   boxPlotData: BoxPlotItem[] = [];
   boxPlotGlobalMax = 0;
+
+  // Sankey Data
+  sankeyData: { nodes: SankeyNode[], links: SankeyLink[] } = { nodes: [], links: [] };
 
   // Summary Stats matching TransactionManager
   summaryStats: any = {
@@ -285,7 +361,8 @@ export class ChartWidgetComponent implements OnInit {
     { label: 'Barras', value: 'bar' },
     { label: 'Linha', value: 'line' },
     { label: 'Treemap (Categorias)', value: 'treemap' },
-    { label: 'Box Plot (Distribuição)', value: 'boxplot' }
+    { label: 'Box Plot (Distribuição)', value: 'boxplot' },
+    { label: 'Sankey (Fluxo)', value: 'sankey' }
     // { label: 'Heatmap (Calendário)', value: 'heatmap' } // Disabled
   ];
 
@@ -312,7 +389,7 @@ export class ChartWidgetComponent implements OnInit {
 
   // Palette for deterministic colors
   private colorPalette = [
-    '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', 
+    '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899',
     '#06b6d4', '#10b981', '#f97316', '#6366f1', '#14b8a6', '#d946ef',
     '#84cc16', '#eab308', '#a855f7', '#0ea5e9', '#f43f5e', '#64748b'
   ];
@@ -362,6 +439,14 @@ export class ChartWidgetComponent implements OnInit {
       }
   }
 
+  onResizeWidget() {
+      this.toggleSize.emit(this.widgetConfig.id);
+      // Trigger chart resize/update after layout change
+      setTimeout(() => {
+          this.updateChart();
+      }, 300); // Wait for transition
+  }
+
   onDatePresetChange() {
       if (this.widgetConfig.datePreset !== 'custom') {
           this.widgetConfig.customDateRange = undefined;
@@ -392,6 +477,8 @@ export class ChartWidgetComponent implements OnInit {
            this.generateTreemapData(filteredTransactions);
        } else if (this.widgetConfig.type === 'boxplot') {
            this.generateBoxPlotData(filteredTransactions);
+       } else if (this.widgetConfig.type === 'sankey') {
+           this.generateSankeyData(filteredTransactions);
        } else if (this.widgetConfig.type === 'heatmap') {
            // this.generateHeatmapData(filteredTransactions); // Disabled
        } else {
@@ -401,6 +488,186 @@ export class ChartWidgetComponent implements OnInit {
            this.chartData = this.generateChartData(groupedData);
            this.chartOptions = this.getChartOptions();
        }
+  }
+
+  // --- SANKEY LOGIC ---
+  private generateSankeyData(transactions: Transaction[]) {
+      const links: { source: string, target: string, value: number, type: string }[] = [];
+      
+      // Unique ID tracking to handle naming collisions between cols
+      // We will suffix IDs with _colX to ensure uniqueness if names are same (e.g. "Other" in Income vs "Other" in Expense)
+      const uniqueNodeIds = new Set<string>();
+      
+      const getNodeId = (name: string, col: number) => `${name}_${col}`; // Internal ID
+      const getNodeName = (id: string) => id.substring(0, id.lastIndexOf('_')); // Display Name
+
+      // Aggregation Maps
+      const incomeToAccount: { [key: string]: number } = {};
+      const accountToParent: { [key: string]: number } = {};
+      const parentToSub: { [key: string]: number } = {};
+
+      transactions.forEach(t => {
+          const accountName = t.account?.name || 'Conta';
+          const accountNodeId = getNodeId(accountName, 1);
+
+          if (t.type === 'income') {
+              // 1. Income Cat -> Account
+              let catName = 'Outros';
+              const catId = t.category_id || t.category?.id;
+              if (catId && this.categoryMap.has(catId)) {
+                  const cat = this.categoryMap.get(catId)!;
+                  // Use parent name if available, or own name
+                  if (cat.parent_id && this.categoryMap.has(cat.parent_id)) {
+                      catName = this.categoryMap.get(cat.parent_id)!.name;
+                  } else {
+                      catName = cat.name;
+                  }
+              } else {
+                  catName = t.category?.name || 'Sem Categoria';
+              }
+              
+              const incomeNodeId = getNodeId(catName, 0);
+              const linkKey = `${incomeNodeId}|${accountNodeId}`;
+              
+              if (!incomeToAccount[linkKey]) incomeToAccount[linkKey] = 0;
+              incomeToAccount[linkKey] += t.amount;
+
+          } else if (t.type === 'expense') {
+              // 2. Account -> Expense Parent
+              let parentName = 'Outros';
+              let subName = 'Outros';
+              const catId = t.category_id || t.category?.id;
+              
+              if (catId && this.categoryMap.has(catId)) {
+                  const cat = this.categoryMap.get(catId)!;
+                  if (cat.parent_id && this.categoryMap.has(cat.parent_id)) {
+                      // It has a parent
+                      parentName = this.categoryMap.get(cat.parent_id)!.name;
+                      subName = cat.name;
+                  } else {
+                      // Is a root
+                      parentName = cat.name;
+                      subName = cat.name; // Self-link
+                  }
+              } else {
+                  parentName = t.category?.name || 'Sem Categoria';
+                  subName = parentName;
+              }
+
+              const parentNodeId = getNodeId(parentName, 2);
+              const subNodeId = getNodeId(subName, 3);
+
+              // Link Account -> Parent
+              const accToParentKey = `${accountNodeId}|${parentNodeId}`;
+              if (!accountToParent[accToParentKey]) accountToParent[accToParentKey] = 0;
+              accountToParent[accToParentKey] += t.amount;
+
+              // Link Parent -> Sub
+              const parentToSubKey = `${parentNodeId}|${subNodeId}`;
+              if (!parentToSub[parentToSubKey]) parentToSub[parentToSubKey] = 0;
+              parentToSub[parentToSubKey] += t.amount;
+          }
+      });
+
+      // Convert Maps to Links Array
+      const processMap = (map: {[key:string]: number}) => {
+          Object.entries(map).forEach(([key, val]) => {
+              const [s, t] = key.split('|');
+              links.push({ source: s, target: t, value: val, type: 'flow' });
+              uniqueNodeIds.add(s);
+              uniqueNodeIds.add(t);
+          });
+      };
+
+      processMap(incomeToAccount);
+      processMap(accountToParent);
+      processMap(parentToSub);
+
+      // 2. Nodes
+      const nodes: SankeyNode[] = [];
+      const nodeMap = new Map<string, SankeyNode>();
+      
+      // Define columns X positions
+      const colX = [50, 300, 600, 900];
+      const colColors = ['#22c55e', '#3b82f6', '#f97316', '#ef4444']; // Green, Blue, Orange, Red
+
+      Array.from(uniqueNodeIds).forEach(id => {
+          const col = parseInt(id.split('_').pop()!);
+          // Calculate node value (Max of Input sum or Output sum)
+          let flowIn = 0;
+          let flowOut = 0;
+          links.forEach(l => {
+              if (l.target === id) flowIn += l.value;
+              if (l.source === id) flowOut += l.value;
+          });
+          
+          nodes.push({
+              id: id,
+              name: getNodeName(id),
+              column: col,
+              value: Math.max(flowIn, flowOut),
+              x: colX[col],
+              y: 0,
+              w: 20,
+              h: 0,
+              color: colColors[col]
+          });
+      });
+
+      nodes.forEach(n => nodeMap.set(n.id, n));
+
+      // 3. Layout (Y positions)
+      const colTotals = [0, 0, 0, 0];
+      nodes.forEach(n => colTotals[n.column] += n.value);
+      const maxTotal = Math.max(...colTotals);
+      const scaleY = maxTotal > 0 ? 400 / maxTotal : 0;
+
+      [0, 1, 2, 3].forEach(col => {
+          let currentY = 50;
+          const colNodes = nodes.filter(n => n.column === col).sort((a, b) => b.value - a.value);
+          colNodes.forEach(n => {
+              n.h = Math.max(n.value * scaleY, 5);
+              n.y = currentY;
+              currentY += n.h + 20; // Gap
+          });
+      });
+
+      // 4. Generate Paths (Stroke based)
+      const sourceOffsets: { [key: string]: number } = {};
+      const targetOffsets: { [key: string]: number } = {};
+      nodes.forEach(n => { sourceOffsets[n.id] = 0; targetOffsets[n.id] = 0; });
+
+      const cleanLinks: SankeyLink[] = links.sort((a, b) => b.value - a.value).map(l => {
+          const source = nodeMap.get(l.source)!;
+          const target = nodeMap.get(l.target)!;
+          
+          const linkWidth = Math.max(l.value * scaleY, 2);
+          
+          const sy = source.y + sourceOffsets[source.id] + linkWidth / 2;
+          const ty = target.y + targetOffsets[target.id] + linkWidth / 2;
+          
+          sourceOffsets[source.id] += linkWidth;
+          targetOffsets[target.id] += linkWidth;
+          
+          const sx = source.x + source.w;
+          const tx = target.x;
+          
+          // Bezier Curve
+          const dist = tx - sx;
+          const cp1x = sx + dist * 0.4;
+          const cp2x = tx - dist * 0.4;
+          
+          return {
+              source: source.name,
+              target: target.name,
+              value: l.value,
+              width: linkWidth,
+              d: `M ${sx} ${sy} C ${cp1x} ${sy}, ${cp2x} ${ty}, ${tx} ${ty}`,
+              color: source.color
+          };
+      });
+
+      this.sankeyData = { nodes, links: cleanLinks };
   }
 
   // --- BOX PLOT LOGIC ---
@@ -745,4 +1012,11 @@ export class ChartWidgetComponent implements OnInit {
           } : undefined
       };
   }
+}
+
+// Helper function for lerp (linear interpolation), usually available in d3-interpolate but implemented simply here
+function d3_interpolateNumber(a: number, b: number) {
+    return function(t: number) {
+        return a * (1 - t) + b * t;
+    };
 }

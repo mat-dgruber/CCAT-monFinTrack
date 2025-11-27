@@ -20,11 +20,18 @@ import { DashboardWidget } from '../../models/dashboard-widget.model';
       </div>
 
       <!-- Grid Layout -->
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
-        <div *ngFor="let widget of widgets(); let i = index" class="h-[500px]">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 auto-rows-min">
+        <div *ngFor="let widget of widgets(); let i = index" 
+             class="transition-all duration-300 ease-in-out"
+             [ngClass]="{
+                'md:col-span-1': !widget.colSpan || widget.colSpan === 1,
+                'md:col-span-2': widget.colSpan === 2,
+                'h-[500px]': true
+             }">
            <app-chart-widget
                 [widgetConfig]="widget"
-                [removeCallback]="removeWidget.bind(this)">
+                [removeCallback]="removeWidget.bind(this)"
+                (toggleSize)="toggleSize($event)">
            </app-chart-widget>
         </div>
       </div>
@@ -44,7 +51,8 @@ export class AdvancedGraphicsComponent {
           datePreset: 'this-year',
           groupBy: 'category',
           valueFilter: 'expense',
-          showSummary: false
+          showSummary: false,
+          colSpan: 1
       },
       {
           id: '2',
@@ -52,7 +60,8 @@ export class AdvancedGraphicsComponent {
           datePreset: 'last-month',
           groupBy: 'date',
           valueFilter: 'both',
-          showSummary: true
+          showSummary: true,
+          colSpan: 1
       }
   ]);
 
@@ -63,7 +72,8 @@ export class AdvancedGraphicsComponent {
           datePreset: 'this-month',
           groupBy: 'category',
           valueFilter: 'both',
-          showSummary: false
+          showSummary: false,
+          colSpan: 1
       };
 
       this.widgets.update(widgets => [...widgets, newWidget]);
@@ -71,5 +81,14 @@ export class AdvancedGraphicsComponent {
 
   removeWidget(id: string) {
       this.widgets.update(widgets => widgets.filter(w => w.id !== id));
+  }
+
+  toggleSize(id: string) {
+      this.widgets.update(widgets => widgets.map(w => {
+          if (w.id === id) {
+              return { ...w, colSpan: w.colSpan === 2 ? 1 : 2 };
+          }
+          return w;
+      }));
   }
 }
