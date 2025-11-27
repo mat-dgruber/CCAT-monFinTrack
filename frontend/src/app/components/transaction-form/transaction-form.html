@@ -141,18 +141,30 @@
       </p-select>
     </div>
 
-    <div class="flex justify-end gap-2 mt-6">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        (onClick)="visible.set(false)"
-      ></p-button>
-      <p-button
-        label="Salvar"
-        icon="pi pi-check"
-        type="submit"
-        [disabled]="form.invalid"
-      ></p-button>
+    <div class="flex justify-between mt-6">
+      @if (editingId()) {
+        <p-button
+          label="Excluir"
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="confirmDelete()"
+        ></p-button>
+      }
+      <div class="flex gap-2 ml-auto">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          (onClick)="visible.set(false)"
+        ></p-button>
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          type="submit"
+          [disabled]="form.invalid"
+        ></p-button>
+      </div>
     </div>
   </form>
 </p-dialog>

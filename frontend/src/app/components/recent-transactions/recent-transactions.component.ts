@@ -50,14 +50,14 @@ export class RecentTransactionsComponent implements OnInit {
 
   groupTransactionsByDate(transactions: Transaction[]) {
     const groups: { [key: string]: Transaction[] } = {};
-    
+
     transactions.forEach(t => {
       if (!t.date) return;
       // Convert Firestore timestamp or string to Date object if needed
       // Assuming t.date is handled correctly by the service/model, but let's be safe
       const dateObj = new Date(t.date);
       const dateKey = this.formatDate(dateObj);
-      
+
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }
@@ -88,13 +88,17 @@ export class RecentTransactionsComponent implements OnInit {
 
   isSameDay(d1: Date, d2: Date): boolean {
     return d1.getDate() === d2.getDate() &&
-           d1.getMonth() === d2.getMonth() &&
-           d1.getFullYear() === d2.getFullYear();
+      d1.getMonth() === d2.getMonth() &&
+      d1.getFullYear() === d2.getFullYear();
   }
 
   editTransaction(event: Event, transaction: Transaction) {
     event.stopPropagation();
     this.transactionForm.editTransaction(event, transaction);
+  }
+
+  openNewTransaction() {
+    this.transactionForm.showDialog();
   }
 
   deleteTransaction(event: Event, transaction: Transaction) {

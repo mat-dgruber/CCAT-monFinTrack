@@ -24,7 +24,7 @@ import { Account } from '../../models/account.model';
 // Components
 import { AccountManager } from '../account-manager/account-manager';
 import { BudgetManager } from '../budget-manager/budget-manager';
-import { TransactionList } from '../transaction-list/transaction-list';
+import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
 
 
 @Component({
@@ -38,10 +38,8 @@ import { TransactionList } from '../transaction-list/transaction-list';
     CardModule,
     MonthSelector,
     AccountManager,
-    AccountManager,
     BudgetManager,
-    BudgetManager,
-    TransactionList
+    RecentTransactionsComponent
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',

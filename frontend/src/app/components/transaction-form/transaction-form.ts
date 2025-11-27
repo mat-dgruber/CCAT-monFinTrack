@@ -10,7 +10,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { SelectItemGroup, SelectItem } from 'primeng/api';
+import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
@@ -47,6 +47,8 @@ export class TransactionForm implements OnInit {
   private transactionService = inject(TransactionService);
   private accountService = inject(AccountService);
   private refreshService = inject(RefreshService);
+  private confirmationService = inject(ConfirmationService); // Injeta o ConfirmationService
+  private messageService = inject(MessageService); // Injeta o MessageService
 
   visible = signal(false);
   
@@ -193,5 +195,31 @@ export class TransactionForm implements OnInit {
         });
       }
     }
+  }
+
+  confirmDelete() {
+    this.confirmationService.confirm({
+      message: 'Tem certeza que deseja excluir esta transação?',
+      header: 'Confirmar Exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sim',
+      rejectLabel: 'Não',
+      accept: () => {
+        if (this.editingId()) {
+          this.transactionService.deleteTransaction(this.editingId()!).subscribe({
+            next: () => {
+              this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação excluída.' });
+              this.visible.set(false);
+              this.form.reset();
+              this.save.emit();
+              this.refreshService.triggerRefresh();
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao excluir transação.' });
+            }
+          });
+        }
+      }
+    });
   }
 }
