@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MonthSelector } from './components/month-selector/month-selector';
 
 
 @Component({
@@ -10,8 +9,7 @@ import { MonthSelector } from './components/month-selector/month-selector';
   imports: [
     CommonModule,
     CommonModule,
-    RouterModule,
-    MonthSelector
+    RouterModule
   ],
 
   templateUrl: './app.html',

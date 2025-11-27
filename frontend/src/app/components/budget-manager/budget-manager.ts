@@ -1,14 +1,13 @@
 import { Component, OnInit, inject, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG
-import { ProgressBarModule } from 'primeng/progressbar'; // <--- NOVO
+import { ProgressBarModule } from 'primeng/progressbar';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { BudgetService } from '../../services/budget.service';
@@ -16,15 +15,16 @@ import { CategoryService } from '../../services/category.service';
 import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
 import { Budget } from '../../models/budget.model';
-import { Category } from '../../models/transaction.model';
+import { Category } from '../../models/category.model';
 
 @Component({
   selector: 'app-budget-manager',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, ProgressBarModule, ButtonModule, 
-    DialogModule, InputNumberModule, SelectModule, ConfirmDialogModule
+    DialogModule, InputNumberModule, SelectModule, CurrencyPipe
   ],
+  providers: [CurrencyPipe],
   templateUrl: './budget-manager.html',
   styleUrl: './budget-manager.scss'
 })
@@ -36,8 +36,10 @@ export class BudgetManager implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
+  private currencyPipe = inject(CurrencyPipe);
 
   budgets = signal<Budget[]>([]);
+  previousBudgets = signal<Budget[]>([]);
   categories = signal<Category[]>([]); // Para o dropdown
   visible = signal(false);
 
@@ -56,6 +58,46 @@ export class BudgetManager implements OnInit {
         this.refreshService.refreshSignal();
         this.loadBudgets(m, y);
     });
+
+    // Effect for budget notifications
+    effect(() => {
+      const currentBudgets = this.budgets();
+      const previousBudgets = this.previousBudgets();
+
+      if (previousBudgets.length === 0) {
+        return;
+      }
+
+      currentBudgets.forEach(current => {
+        const previous = previousBudgets.find(p => p.category?.id === current.category?.id);
+        if (!previous) return;
+
+        const oldPercentage = previous.percentage || 0;
+        const newPercentage = current.percentage || 0;
+
+        const formatCurrency = (value: number) => this.currencyPipe.transform(value, 'BRL', 'symbol', '1.2-2');
+
+
+        // Over budget notification
+        if (newPercentage >= 100 && oldPercentage < 100) {
+            this.messageService.add({
+                severity: 'error',
+                summary: `Orçamento Estourado: ${current.category?.name}`,
+                detail: `Você ultrapassou o limite de ${formatCurrency(current.amount)} para esta categoria.`,
+                life: 6000
+            });
+        }
+        // Alert notification
+        else if (newPercentage >= 80 && oldPercentage < 80) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: `Alerta de Orçamento: ${current.category?.name}`,
+                detail: `Você já utilizou ${newPercentage.toFixed(0)}% do seu orçamento de ${formatCurrency(current.amount)}.`,
+                life: 6000
+            });
+        }
+      });
+    });
   }
 
   ngOnInit() {
@@ -65,13 +107,13 @@ export class BudgetManager implements OnInit {
 
   loadBudgets(m: number, y: number) {
     this.budgetService.getBudgets(m, y).subscribe(data => {
-        console.log('Budgets Data:', data);
+        this.previousBudgets.set(this.budgets());
         this.budgets.set(data);
     });
   }
 
   loadCategories() {
-    this.categoryService.getCategories().subscribe(data => this.categories.set(data));
+    this.categoryService.getCategories('expense').subscribe(data => this.categories.set(data));
   }
 
   openNew() {

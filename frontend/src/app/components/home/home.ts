@@ -1,15 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TabsModule } from 'primeng/tabs';
+import { RouterModule } from '@angular/router';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ButtonModule } from 'primeng/button';
 
 // Componentes
-import { Dashboard } from '../dashboard/dashboard';
-import { TransactionList } from '../transaction-list/transaction-list';
-import { AccountManager } from '../account-manager/account-manager';
-import { CategoryManager } from '../category-manager/category-manager';
-import { BudgetManager } from '../budget-manager/budget-manager';
 import { Login } from '../login/login';
-import { MonthSelector } from '../month-selector/month-selector';
 
 import { AuthService } from '../../services/auth.service';
 
@@ -18,19 +15,21 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    TabsModule,
-    Dashboard,
-    TransactionList,
-    AccountManager,
-    CategoryManager,
-    BudgetManager,
+    ToastModule,
+    ConfirmDialogModule,
+    RouterModule,
     Login,
-    MonthSelector
+    ButtonModule
   ],
   templateUrl: './home.html',
 })
 export class Home {
   authService = inject(AuthService);
+
+  firstName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.displayName?.split(' ')[0] || 'Usuário';
+  });
 
   logout() {
     this.authService.logout();

@@ -1,4 +1,4 @@
-import { Category } from './transaction.model';
+import { Category } from './category.model';
 
 export interface Budget {
     id?: string;

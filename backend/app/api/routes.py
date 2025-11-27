@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from typing import List, Optional
+from datetime import datetime
 
 from app.core.limiter import limiter
 
-from app.schemas.category import Category, CategoryCreate
+from app.schemas.category import Category, CategoryCreate, CategoryType
 from app.schemas.transaction import Transaction, TransactionCreate
 from app.schemas.account import Account, AccountCreate
 from app.schemas.budget import Budget, BudgetCreate
@@ -46,8 +47,8 @@ def create_new_category(request: Request, category: CategoryCreate, current_user
     return category_service.create_category(category, current_user['uid'])
 
 @router.get("/categories", response_model=List[Category])
-def read_categories(current_user: dict = Depends(get_current_user)):
-    return category_service.list_categories(current_user['uid'])
+def read_categories(type: Optional[CategoryType] = None, current_user: dict = Depends(get_current_user)):
+    return category_service.list_categories(current_user['uid'], cat_type=type)
 
 @router.put("/categories/{category_id}", response_model=Category)
 @limiter.limit("10 per minute")
@@ -66,8 +67,8 @@ def create_new_transaction(request: Request, transaction: TransactionCreate, cur
     return transaction_service.create_transaction(transaction, current_user['uid'])
 
 @router.get("/transactions")
-def read_transactions(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
-    transactions = transaction_service.list_transactions(current_user['uid'], month, year)
+def read_transactions(month: Optional[int] = None, year: Optional[int] = None, limit: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    transactions = transaction_service.list_transactions(current_user['uid'], month, year, limit)
     return [t.model_dump() for t in transactions]
 
 @router.put("/transactions/{transaction_id}", response_model=Transaction)
@@ -79,7 +80,6 @@ def update_transaction(request: Request, transaction_id: str, transaction: Trans
 @limiter.limit("10 per minute")
 def delete_transaction(request: Request, transaction_id: str, current_user: dict = Depends(get_current_user)):
     return transaction_service.delete_transaction(transaction_id, current_user['uid'])
-
 # --- BUDGETS ---
 @router.post("/budgets", response_model=Budget)
 @limiter.limit("10 per minute")
@@ -102,5 +102,21 @@ def update_budget(request: Request, budget_id: str, budget: BudgetCreate, curren
 
 # --- DASHBOARD ---
 @router.get("/dashboard", response_model=DashboardSummary)
-def get_dashboard_summary(month: Optional[int] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
-    return dashboard_service.get_dashboard_data(current_user['uid'], month, year)
+def get_dashboard_summary(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    accounts: Optional[List[str]] = Query(None),
+    payment_methods: Optional[List[str]] = Query(None),
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    return dashboard_service.get_dashboard_data(
+        user_id=current_user['uid'],
+        month=month,
+        year=year,
+        accounts=accounts,
+        payment_methods=payment_methods,
+        start_date=start_date,
+        end_date=end_date
+    )

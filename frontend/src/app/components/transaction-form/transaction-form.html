@@ -2,11 +2,11 @@
   [header]="editingId() ? 'Editar Transação' : 'Nova Transação'"
   [modal]="true"
   [(visible)]="visible"
-  [style]="{ width: '30rem' }"
+  [style]="{ width: '30rem', maxHeight: '90vh' }"
   [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
   [draggable]="false"
   [resizable]="false"
-  [contentStyle]="{ overflow: 'visible' }"
+  [contentStyle]="{ overflowY: 'auto' }"
 >
   <form
     [formGroup]="form"
@@ -34,8 +34,8 @@
       />
     </div>
 
-    <div class="flex gap-4">
-      <div class="flex-1 flex flex-col gap-2">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-2">
         <label for="amount" class="font-semibold text-gray-700">Valor</label>
         <p-inputNumber
           inputId="amount"
@@ -49,7 +49,7 @@
         >
         </p-inputNumber>
       </div>
-      <div class="flex-1 flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
         <label for="date" class="font-semibold text-gray-700">Data</label>
         <p-datepicker
           inputId="date"
@@ -96,16 +96,22 @@
         inputId="category"
         [options]="filteredCategories()"
         formControlName="category"
-        optionLabel="name"
         placeholder="Selecione uma categoria"
+        [group]="true"
         [style]="{ width: '100%' }"
         [appendTo]="'body'"
         [emptyMessage]="'Nenhuma categoria deste tipo encontrada.'"
       >
+        <ng-template pTemplate="group" let-group>
+            <div class="flex items-center gap-2">
+                <span class="font-bold">{{ group.label }}</span>
+            </div>
+        </ng-template>
+
         <ng-template pTemplate="item" let-cat>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 ml-2">
             <i [class]="cat.icon" [style.color]="cat.color"></i>
-            <span>{{ cat.name }}</span>
+            <span>{{ cat.label }}</span>
           </div>
         </ng-template>
 
@@ -135,18 +141,30 @@
       </p-select>
     </div>
 
-    <div class="flex justify-end gap-2 mt-6">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        (onClick)="visible.set(false)"
-      ></p-button>
-      <p-button
-        label="Salvar"
-        icon="pi pi-check"
-        type="submit"
-        [disabled]="form.invalid"
-      ></p-button>
+    <div class="flex justify-between mt-6">
+      @if (editingId()) {
+        <p-button
+          label="Excluir"
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="confirmDelete()"
+        ></p-button>
+      }
+      <div class="flex gap-2 ml-auto">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          (onClick)="visible.set(false)"
+        ></p-button>
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          type="submit"
+          [disabled]="form.invalid"
+        ></p-button>
+      </div>
     </div>
   </form>
 </p-dialog>

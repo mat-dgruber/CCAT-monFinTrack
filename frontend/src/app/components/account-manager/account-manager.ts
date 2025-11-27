@@ -8,7 +8,6 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select'; // Novo Dropdown (v18+)
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
 
@@ -32,7 +31,6 @@ import { ICON_LIST } from '../../shared/icons';
     InputTextModule, 
     InputNumberModule, 
     SelectModule, 
-    ConfirmDialogModule, 
     ColorPickerModule,
     AccountTypePipe
   ],

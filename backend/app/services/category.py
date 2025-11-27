@@ -1,6 +1,7 @@
 from app.core.database import get_db
-from app.schemas.category import CategoryCreate, Category
+from app.schemas.category import CategoryCreate, Category, CategoryType
 from fastapi import HTTPException
+from typing import Optional, List, Dict, Any
 
 COLLECTION_NAME = "categories"
 
@@ -12,15 +13,37 @@ def create_category(category_in: CategoryCreate, user_id: str) -> Category:
     update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
     return Category(id=doc_ref.id, **data)
 
-def list_categories(user_id: str) -> list[Category]:
+def list_categories(user_id: str, cat_type: Optional[CategoryType] = None) -> List[Category]:
     db = get_db()
     # Filtra apenas categorias do usuário
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
     
-    categories = []
+    if cat_type:
+        query = query.where("type", "==", cat_type.value)
+        
+    docs = query.stream()
+    
+    all_cats: List[Dict[str, Any]] = []
     for doc in docs:
-        categories.append(Category(id=doc.id, **doc.to_dict()))
-    return categories
+        data = doc.to_dict()
+        data['id'] = doc.id
+        data['subcategories'] = []
+        all_cats.append(data)
+    
+    # Create a map for easy access
+    cat_map = {c['id']: c for c in all_cats}
+    
+    roots = []
+    for cat in all_cats:
+        pid = cat.get('parent_id')
+        # Check if parent exists in the current filtered set
+        if pid and pid in cat_map:
+            cat_map[pid]['subcategories'].append(cat)
+        else:
+            # If no parent or parent not found in this query (e.g. type filter mismatch), treat as root
+            roots.append(cat)
+            
+    return [Category(**c) for c in roots]
 
 def update_category(category_id: str, category_in: CategoryCreate, user_id: str) -> Category:
     db = get_db()
@@ -44,6 +67,16 @@ def delete_category(category_id: str, user_id: str):
 
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
         raise HTTPException(status_code=404, detail="Category not found")
+
+    # Check for subcategories
+    children_query = db.collection(COLLECTION_NAME)\
+        .where("parent_id", "==", category_id)\
+        .limit(1)\
+        .stream()
+    
+    # Convert generator to list to check if empty
+    if any(children_query):
+         raise HTTPException(status_code=400, detail="Cannot delete category with subcategories. Please delete or move them first.")
 
     doc_ref.delete()
     return {"status": "success"}

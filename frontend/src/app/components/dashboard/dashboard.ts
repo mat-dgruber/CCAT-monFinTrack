@@ -1,22 +1,46 @@
 import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MonthSelector } from '../month-selector/month-selector';
 
 // PrimeNG
 import { ChartModule } from 'primeng/chart';
 import { CardModule } from 'primeng/card';
+import { SelectModule } from 'primeng/select'; // For p-select
+import { MultiSelectModule } from 'primeng/multiselect'; // For p-multiSelect
+import { DatePickerModule } from 'primeng/datepicker';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+
 
 // Services
 import { DashboardService, DashboardSummary } from '../../services/dashboard.service';
 import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
+import { AccountService } from '../../services/account.service';
+import { Account } from '../../models/account.model';
+
+// Components
+import { AccountManager } from '../account-manager/account-manager';
+import { BudgetManager } from '../budget-manager/budget-manager';
+import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ChartModule, CardModule, MonthSelector],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    ChartModule,
+    CardModule,
+    MonthSelector,
+    AccountManager,
+    BudgetManager,
+    RecentTransactionsComponent
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -25,14 +49,23 @@ export class Dashboard implements OnInit {
   private dashboardService = inject(DashboardService);
   private refreshService = inject(RefreshService);
   private filterService = inject(FilterService);
+  private accountService = inject(AccountService);
+
 
   summary = signal<DashboardSummary | null>(null);
 
-  // Configurações do Gráfico
-  chartData: any;
-  chartOptions: any;
+
+
+  // Filters
+  accounts = signal<Account[]>([]);
+
+
+
+
 
   constructor() {
+
+
     // Efeito para recarregar os dados do dashboard quando o sinal de refresh for acionado
     effect(() => {
       const m = this.filterService.month();
@@ -44,7 +77,19 @@ export class Dashboard implements OnInit {
 
   ngOnInit() {
     this.initChartOptions();
-    // this.loadDashboard(); // Effect já chama
+    this.loadAccounts();
+  }
+  // Chart
+  chartData: any;
+  chartOptions: any;
+  chartType = 'doughnut';
+
+  // Evolution Chart
+  evolutionChartData: any;
+  evolutionChartOptions: any;
+
+  loadAccounts() {
+    this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
   }
 
   loadDashboard(m: number, y: number) {
@@ -55,31 +100,107 @@ export class Dashboard implements OnInit {
   }
 
   setupChart(data: DashboardSummary) {
-    // Prepara os dados para o Gráfico de Rosca (Doughnut)
+    // 1. Doughnut Chart (Categories)
     this.chartData = {
       labels: data.expenses_by_category.map(c => c.category_name),
       datasets: [
         {
+          label: 'Despesas por Categoria',
           data: data.expenses_by_category.map(c => c.total),
           backgroundColor: data.expenses_by_category.map(c => c.color),
+          borderWidth: 0,
           hoverBackgroundColor: data.expenses_by_category.map(c => c.color)
         }
       ]
     };
+
+    // 2. Bar Chart (Evolution)
+    if (data.evolution) {
+        this.evolutionChartData = {
+            labels: data.evolution.map(e => e.month),
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: data.evolution.map(e => e.income),
+                    backgroundColor: '#22c55e', // Green
+                    borderColor: '#22c55e',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Despesas',
+                    data: data.evolution.map(e => e.expense),
+                    backgroundColor: '#ef4444', // Red
+                    borderColor: '#ef4444',
+                    borderWidth: 1
+                }
+            ]
+        };
+    }
+
+    this.initChartOptions(); // Reset options
   }
 
   initChartOptions() {
+    // Options for Doughnut
     this.chartOptions = {
-      cutout: '60%', // Tamanho do buraco da rosca
+      cutout: '60%',
       plugins: {
         legend: {
+          display: true, // Display legend for doughnut
           labels: {
             usePointStyle: true,
             color: '#4b5563'
           }
         }
-      }
+      },
+      maintainAspectRatio: false,
+      responsive: true
     };
+
+    // Options for Evolution Bar Chart
+    this.evolutionChartOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    color: '#4b5563'
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: '#6b7280'
+                },
+                grid: {
+                    color: '#f3f4f6',
+                    drawBorder: false
+                }
+            },
+            y: {
+                ticks: {
+                    color: '#6b7280',
+                    callback: function(value: any) {
+                        return 'R$ ' + value; 
+                    }
+                },
+                grid: {
+                    color: '#f3f4f6',
+                    drawBorder: false
+                }
+            }
+        }
+    };
+  }
+
+
+
+  getProgressColor(percentage: number): string {
+    if (percentage >= 100) return '#ef4444'; // Red (Estourou)
+    if (percentage >= 80) return '#f59e0b';  // Amber (Alerta)
+    return '#22c55e';                         // Green (Ok)
   }
 
 }

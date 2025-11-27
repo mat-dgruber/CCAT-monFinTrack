@@ -1,6 +1,4 @@
 <div class="mb-8">
-  <p-confirmDialog></p-confirmDialog>
-
   <div class="flex justify-between items-center mb-6">
     <h2 class="text-xl font-bold text-gray-800">Gerenciar Categorias</h2>
     <p-button
@@ -11,63 +9,122 @@
     ></p-button>
   </div>
 
-  <div
-    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-  >
-    @for (c of categories(); track c.id) {
-    <div
-      class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group relative flex flex-col items-center text-center gap-3 h-36 justify-center overflow-hidden"
+  <div class="card">
+    <p-table
+      [value]="tableData()"
+      sortField="parent.name"
+      sortMode="single"
+      dataKey="id"
+      rowGroupMode="subheader"
+      groupRowsBy="parent.id"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      styleClass="bg-white text-gray-800"
     >
-      <div
-        class="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
-        [class.bg-red-50]="c.type === 'expense'"
-        [class.text-red-600]="c.type === 'expense'"
-        [class.border-red-100]="c.type === 'expense'"
-        [class.bg-green-50]="c.type === 'income'"
-        [class.text-green-600]="c.type === 'income'"
-        [class.border-green-100]="c.type === 'income'"
-      >
-        {{ c.type === "expense" ? "Despesa" : "Receita" }}
-      </div>
+      <ng-template pTemplate="header">
+        <tr class="bg-white text-gray-800">
+          <th class="bg-white text-gray-800">Nome</th>
+          <th class="bg-white text-gray-800">Tipo</th>
+          <th class="bg-white text-gray-800">Ações</th>
+        </tr>
+      </ng-template>
 
-      <div
-        class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-      >
-        <button
-          (click)="editCategory(c)"
-          class="w-6 h-6 rounded-full bg-white shadow-sm text-blue-600 flex items-center justify-center cursor-pointer border border-gray-100 hover:bg-blue-50"
+      <ng-template pTemplate="groupheader" let-row>
+        <tr
+          pRowGroupHeader
+          class="bg-gray-50 hover:bg-gray-100 transition-colors"
         >
-          <i class="pi pi-pencil text-xs"></i>
-        </button>
-        <button
-          (click)="deleteCategory($event, c.id!)"
-          class="w-6 h-6 rounded-full bg-white shadow-sm text-red-600 flex items-center justify-center cursor-pointer border border-gray-100 hover:bg-red-50"
+          <td colspan="3">
+            <div class="flex items-center gap-3 font-bold text-gray-800 py-2">
+              <div
+                class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm"
+                [style.backgroundColor]="row.parent.color + '20'"
+                [style.color]="row.parent.color"
+              >
+                <i [class]="row.parent.icon"></i>
+              </div>
+              <span class="flex-1 text-lg">{{ row.parent.name }}</span>
+
+              <!-- Parent Actions -->
+              <div class="flex gap-2 mr-4 items-center">
+                <span
+                  class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border mr-4"
+                  [class.bg-red-50]="row.parent.type === 'expense'"
+                  [class.text-red-600]="row.parent.type === 'expense'"
+                  [class.border-red-100]="row.parent.type === 'expense'"
+                  [class.bg-green-50]="row.parent.type === 'income'"
+                  [class.text-green-600]="row.parent.type === 'income'"
+                  [class.border-green-100]="row.parent.type === 'income'"
+                >
+                  {{ row.parent.type === "expense" ? "Despesa" : "Receita" }}
+                </span>
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-secondary"
+                  (click)="editCategory(row.parent)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger"
+                  (click)="deleteCategory($event, row.parent.id)"
+                ></button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        @if (!row.isPlaceholder) {
+        <tr
+          class="bg-white hover:bg-gray-50/50 transition-colors text-gray-800"
         >
-          <i class="pi pi-trash text-xs"></i>
-        </button>
-      </div>
+          <td class="p-0 relative bg-white">
+            <div class="flex items-center h-full pl-8">
+              <!-- Visual Connector -->
+              <div
+                class="absolute left-8 top-0 bottom-0 w-px bg-gray-200 group-hover:bg-gray-300"
+              ></div>
+              <div
+                class="absolute left-8 top-1/2 w-6 h-px bg-gray-200 group-hover:bg-gray-300"
+              ></div>
 
-      <div
-        class="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-1 mt-2"
-        [style.backgroundColor]="c.color + '20'"
-        [style.color]="c.color"
-      >
-        <i [class]="c.icon"></i>
-      </div>
-
-      <div class="font-bold text-gray-700 text-sm truncate w-full px-2">
-        {{ c.name }}
-      </div>
-    </div>
-    }
-
-    <div
-      (click)="openNew()"
-      class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500 h-36"
-    >
-      <i class="pi pi-plus text-xl mb-2"></i>
-      <span class="text-sm font-medium">Nova</span>
-    </div>
+              <div class="flex items-center gap-3 ml-10 py-3">
+                <div
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+                  [style.backgroundColor]="row.color + '15'"
+                  [style.color]="row.color"
+                >
+                  <i [class]="row.icon"></i>
+                </div>
+                <span class="text-gray-600 font-medium">{{ row.name }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <!-- Type inherited -->
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-sm p-button-secondary"
+                (click)="editCategory(row)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                (click)="deleteCategory($event, row.id)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+        }
+      </ng-template>
+    </p-table>
   </div>
 </div>
 
@@ -132,6 +189,30 @@
       />
     </div>
 
+    <!-- Parent Category Selector -->
+    <div class="flex flex-col gap-2">
+      <label class="font-semibold text-gray-700"
+        >Categoria Pai (Opcional)</label
+      >
+      <p-select
+        [options]="getParentOptions()"
+        formControlName="parent_id"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Nenhuma (Raiz)"
+        [showClear]="true"
+        styleClass="w-full"
+        appendTo="body"
+      >
+        <ng-template pTemplate="item" let-item>
+          <div class="flex items-center gap-2">
+            <i [class]="item.icon" [style.color]="item.color"></i>
+            <span>{{ item.name }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
     <div class="flex gap-4 items-end">
       <div class="flex-1 flex flex-col gap-2">
         <label class="font-semibold text-gray-700">Ícone</label>
@@ -168,7 +249,21 @@
       </div>
     </div>
 
-    <div class="flex justify-end mt-4">
+    <div class="flex justify-between mt-4">
+      <!-- Delete Button (Only if Editing) -->
+      @if (editingId()) {
+      <p-button
+        label="Excluir"
+        severity="danger"
+        [text]="true"
+        icon="pi pi-trash"
+        (onClick)="deleteCategory($event, editingId()!); visible.set(false)"
+      ></p-button>
+      } @else {
+      <div></div>
+      <!-- Spacer -->
+      }
+
       <p-button
         label="Salvar"
         type="submit"

@@ -16,15 +16,17 @@ app = FastAPI()
 
 # Conecta o limitador ao App
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) 
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # --- CONFIGURAÇÃO DO CORS (LIBERAR O FRONTEND) ---
 # Pega origens do .env OU usa uma lista padrão segura
 origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://localhost,http://127.0.0.1,http://127.0.0.1:4200")
-origins = origins_str.split(",")
+origins = [origin.strip() for origin in origins_str.split(",")]
+print(f"Allowed origins: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,        # Quem pode acessar
+    allow_origins=origins,          # Use specific origins
     allow_credentials=True,
     allow_methods=["*"],          # Quais métodos (GET, POST, etc)
     allow_headers=["*"],          # Quais cabeçalhos
