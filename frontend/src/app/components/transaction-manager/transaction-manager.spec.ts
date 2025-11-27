@@ -24,8 +24,8 @@ describe('TransactionManager', () => {
       date: '2023-10-27',
       type: 'expense',
       payment_method: 'credit_card',
-      category: { id: 'c1', name: 'Alimentação', icon: 'pi pi-apple', color: 'red', type: 'expense' },
-      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, bank: 'Bank' },
+      category: { id: 'c1', name: 'Alimentação', icon: 'pi pi-apple', color: 'red', type: 'expense', is_custom: false },
+      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' },
       category_id: 'c1',
       account_id: 'a1'
     },
@@ -36,8 +36,8 @@ describe('TransactionManager', () => {
       date: '2023-10-05',
       type: 'income',
       payment_method: 'bank_transfer',
-      category: { id: 'c2', name: 'Salário', icon: 'pi pi-money-bill', color: 'green', type: 'income' },
-      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, bank: 'Bank' },
+      category: { id: 'c2', name: 'Salário', icon: 'pi pi-money-bill', color: 'green', type: 'income', is_custom: false },
+      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' },
       category_id: 'c2',
       account_id: 'a1'
     },
@@ -48,8 +48,8 @@ describe('TransactionManager', () => {
       date: '2023-10-28',
       type: 'expense',
       payment_method: 'credit_card',
-      category: { id: 'c3', name: 'Transporte', icon: 'pi pi-car', color: 'blue', type: 'expense' },
-      account: { id: 'a2', name: 'Cartão Nubank', type: 'credit', balance: 0, bank: 'Nubank' },
+      category: { id: 'c3', name: 'Transporte', icon: 'pi pi-car', color: 'blue', type: 'expense', is_custom: false },
+      account: { id: 'a2', name: 'Cartão Nubank', type: 'credit_card', balance: 0, color: 'purple' },
       category_id: 'c3',
       account_id: 'a2'
     }
