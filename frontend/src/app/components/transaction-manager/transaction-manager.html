@@ -56,6 +56,25 @@
                     [showClear]="true"
                     styleClass="w-full sm:w-48"
                 ></p-select>
+
+                <p-select
+                    [options]="paymentMethods"
+                    [(ngModel)]="filterPaymentMethod"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Forma de Pagamento"
+                    [showClear]="true"
+                    styleClass="w-full sm:w-48"
+                ></p-select>
+
+                <p-button 
+                    label="Limpar" 
+                    icon="pi pi-filter-slash" 
+                    [text]="true" 
+                    severity="secondary" 
+                    (onClick)="clearFilters()"
+                    pTooltip="Limpar todos os filtros"
+                ></p-button>
             </div>
         </div>
 

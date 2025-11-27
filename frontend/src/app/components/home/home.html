@@ -7,11 +7,7 @@
   <aside class="w-64 bg-white shadow-md flex flex-col z-20">
     <!-- Logo -->
     <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
-      <img
-        src="assets/logo-ccat.png"
-        alt="monFinTrack Logo"
-        class="h-8 w-auto"
-      />
+      <img src="assets/logo-ccat.png" alt="monFinTrack Logo" class="h-8 w-auto" />
       <h1 class="text-xl font-bold text-gray-800 tracking-tight">
         monFinTrack
       </h1>
@@ -21,39 +17,30 @@
     <nav class="flex-1 overflow-y-auto py-6 px-3">
       <ul class="space-y-1">
         <li>
-          <a
-            routerLink="/"
-            [routerLinkActiveOptions]="{ exact: true }"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group"
-          >
-            <i
-              class="pi pi-home text-lg group-hover:scale-110 transition-transform"
-            ></i>
+          <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="bg-blue-50 text-blue-600"
+            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group">
+            <i class="pi pi-home text-lg group-hover:scale-110 transition-transform"></i>
             <span class="font-medium">Dashboard</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/categories"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group"
-          >
-            <i
-              class="pi pi-tags text-lg group-hover:scale-110 transition-transform"
-            ></i>
+          <a routerLink="/transactions" routerLinkActive="bg-blue-50 text-blue-600"
+            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group">
+            <i class="pi pi-wallet text-lg group-hover:scale-110 transition-transform"></i>
+            <span class="font-medium">Transações</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/categories" routerLinkActive="bg-blue-50 text-blue-600"
+            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group">
+            <i class="pi pi-tags text-lg group-hover:scale-110 transition-transform"></i>
             <span class="font-medium">Categorias</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/settings"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group"
-          >
-            <i
-              class="pi pi-cog text-lg group-hover:rotate-90 transition-transform"
-            ></i>
+          <a routerLink="/settings" routerLinkActive="bg-blue-50 text-blue-600"
+            class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all duration-200 group">
+            <i class="pi pi-cog text-lg group-hover:rotate-90 transition-transform"></i>
             <span class="font-medium">Configurações</span>
           </a>
         </li>
@@ -64,8 +51,7 @@
     <div class="p-4 border-t border-gray-100">
       <div class="flex items-center gap-3 px-4 py-3 mb-2">
         <div
-          class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm"
-        >
+          class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm">
           {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
         </div>
         <div class="flex-1 min-w-0">
@@ -77,10 +63,8 @@
           </p>
         </div>
       </div>
-      <button
-        (click)="logout()"
-        class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-      >
+      <button (click)="logout()"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
         <i class="pi pi-sign-out"></i>
         <span>Sair da conta</span>
       </button>
@@ -93,19 +77,11 @@
       <router-outlet></router-outlet>
     </div>
 
-    <footer
-      class="mt-12 py-6 text-center text-sm text-gray-400 border-t border-gray-100"
-    >
+    <footer class="mt-12 py-6 text-center text-sm text-gray-400 border-t border-gray-100">
       <div class="flex items-center justify-center gap-4 mb-2">
-        <a routerLink="/terms" class="hover:text-gray-600 transition-colors"
-          >Termos</a
-        >
+        <a routerLink="/terms" class="hover:text-gray-600 transition-colors">Termos</a>
         <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-        <a
-          routerLink="/privacy-policy"
-          class="hover:text-gray-600 transition-colors"
-          >Privacidade</a
-        >
+        <a routerLink="/privacy-policy" class="hover:text-gray-600 transition-colors">Privacidade</a>
       </div>
       <p>&copy; 2025 monFinTrack. Todos os direitos reservados.</p>
     </footer>

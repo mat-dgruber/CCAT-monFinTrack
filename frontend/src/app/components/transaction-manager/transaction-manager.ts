@@ -72,6 +72,16 @@ export class TransactionManager implements OnInit {
   filterCategory = signal<Category | null>(null);
   filterAccount = signal<Account | null>(null);
   filterDateRange = signal<Date[] | null>(null);
+  filterPaymentMethod = signal<string | null>(null);
+
+  paymentMethods = [
+    { label: 'Cartão de Crédito', value: 'credit_card' },
+    { label: 'Débito', value: 'debit_card' },
+    { label: 'Pix', value: 'pix' },
+    { label: 'Dinheiro', value: 'cash' },
+    { label: 'Transferência', value: 'bank_transfer' },
+    { label: 'Outros', value: 'other' }
+  ];
 
   // UI State
   loading = signal(false);
@@ -82,28 +92,29 @@ export class TransactionManager implements OnInit {
     const desc = this.filterDescription().toLowerCase();
     const cat = this.filterCategory();
     const acc = this.filterAccount();
-    const dates = this.filterDateRange();
+    // Date filtering is handled by the backend/onDateRangeChange mostly.
+    // We skip client-side date filtering to avoid timezone mismatches with the fetched data.
+    
+    const pm = this.filterPaymentMethod();
 
     return list.filter(t => {
       // Description
       if (desc && !t.description.toLowerCase().includes(desc)) return false;
 
       // Category
-      if (cat && t.category_id !== cat.id) return false;
+      if (cat) {
+        const transactionCatId = t.category_id || t.category?.id;
+        if (transactionCatId !== cat.id) return false;
+      }
 
       // Account
-      // Note: Transaction model has account_id, need to check if it's string or object in model
-      // Assuming account_id string based on typical API, but let's check.
-      // Wait, Transaction model usually has account_id.
-      // If t.account_id is not present, we might skip.
-      if (acc && (t as any).account_id !== acc.id) return false;
-
-      // Date Range (Client side filtering if service returns all)
-      if (dates && dates.length) {
-        const tDate = new Date(t.date);
-        if (dates[0] && tDate < dates[0]) return false;
-        if (dates[1] && tDate > dates[1]) return false;
+      if (acc) {
+        const transactionAccId = t.account_id || t.account?.id;
+        if (transactionAccId !== acc.id) return false;
       }
+
+      // Payment Method
+      if (pm && t.payment_method !== pm) return false;
 
       return true;
     });
@@ -150,6 +161,15 @@ export class TransactionManager implements OnInit {
         lastDate: maxDate
     };
   });
+
+  clearFilters() {
+    this.filterDescription.set('');
+    this.filterCategory.set(null);
+    this.filterAccount.set(null);
+    this.filterPaymentMethod.set(null);
+    this.filterDateRange.set(null);
+    this.loadData();
+  }
 
   ngOnInit() {
     this.loadData();
