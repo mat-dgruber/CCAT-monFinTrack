@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
@@ -25,6 +25,11 @@ import { AuthService } from '../../services/auth.service';
 })
 export class Home {
   authService = inject(AuthService);
+
+  firstName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.displayName?.split(' ')[0] || 'Usuário';
+  });
 
   logout() {
     this.authService.logout();

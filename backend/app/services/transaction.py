@@ -5,6 +5,7 @@ from app.schemas.category import Category
 from app.schemas.account import Account 
 from app.core.date_utils import get_month_range
 from typing import Optional
+from datetime import datetime
 
 from app.services import category as category_service
 from app.services import account as account_service
@@ -77,12 +78,43 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
     query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
     all_transactions = query.stream()
 
-    filtered_transactions = []
+    transactions = []
+    
+    start_date = None
+    end_date = None
     if month and year:
         start_date, end_date = get_month_range(month, year)
-        for t in all_transactions:
-            t_data = t.to_dict()
+
+    for t in all_transactions:
+        data = t.to_dict()
         
+        # Date Filtering
+        if start_date and end_date:
+            t_date = data.get("date")
+            
+            if t_date:
+                # If it's a string, try to parse
+                if isinstance(t_date, str):
+                    try:
+                        t_date = datetime.fromisoformat(t_date.replace('Z', '+00:00'))
+                    except:
+                        pass 
+                
+                if isinstance(t_date, datetime):
+                     # Make naive for comparison if needed
+                     if t_date.tzinfo and not start_date.tzinfo:
+                          t_date = t_date.replace(tzinfo=None)
+                     elif not t_date.tzinfo and start_date.tzinfo:
+                          start_date = start_date.replace(tzinfo=None)
+                          end_date = end_date.replace(tzinfo=None)
+                     
+                     if not (start_date <= t_date <= end_date):
+                          continue
+                else:
+                     continue
+            else:
+                 continue
+
         cat_id = data.get("category_id")
         category = category_service.get_category(cat_id)
         if not category:
@@ -94,11 +126,17 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
             account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
 
         transactions.append(Transaction(
-            id=doc.id, 
+            id=t.id, 
             category=category, 
             account=account, 
             **data
         ))
+        
+    # Sort by date desc
+    transactions.sort(key=lambda x: x.date, reverse=True)
+    
+    if limit:
+        transactions = transactions[:limit]
         
     return transactions
 
