@@ -8,8 +8,9 @@ import { ButtonModule } from 'primeng/button';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { DashboardWidget, DateRangePreset, GroupingOption, ValueFilter, WidgetType } from '../../models/dashboard-widget.model';
 import { Transaction } from '../../models/transaction.model';
-import { CategoryType } from '../../models/category.model';
+import { Category } from '../../models/category.model';
 import { TransactionService } from '../../services/transaction.service';
+import { CategoryService } from '../../services/category.service';
 
 @Component({
   selector: 'app-chart-widget',
@@ -66,6 +67,18 @@ import { TransactionService } from '../../services/transaction.service';
         </div>
 
         <div class="flex flex-wrap gap-2 items-center">
+             <!-- Value Filter (Income/Expense/Both) -->
+             <p-select
+                [options]="valueFilterOptions"
+                [(ngModel)]="widgetConfig.valueFilter"
+                (onChange)="updateChart()"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-32"
+                size="small"
+                variant="filled">
+            </p-select>
+
              <!-- Group By -->
             <p-select
                 [options]="groupingOptions"
@@ -99,34 +112,50 @@ import { TransactionService } from '../../services/transaction.service';
       </div>
 
       <!-- Summary Area -->
-      <div *ngIf="widgetConfig.showSummary" class="flex-grow flex flex-col gap-4 p-4 overflow-auto min-h-[300px] bg-gray-50 rounded">
-         <div class="grid grid-cols-2 gap-4">
-             <div class="bg-white p-3 rounded shadow-sm border text-center">
-                 <div class="text-sm text-gray-500">Transações</div>
-                 <div class="text-xl font-bold">{{ summaryStats.count }}</div>
-             </div>
-             <div class="bg-white p-3 rounded shadow-sm border text-center">
-                 <div class="text-sm text-gray-500">Valor Total</div>
-                 <div class="text-xl font-bold">{{ summaryStats.total | currency }}</div>
-             </div>
-             <div class="bg-white p-3 rounded shadow-sm border text-center">
-                 <div class="text-sm text-gray-500">Média</div>
-                 <div class="text-xl font-bold">{{ summaryStats.average | currency }}</div>
-             </div>
-         </div>
-         <div class="text-sm text-gray-600 mt-2">
-            <p><strong>Intervalo:</strong> {{ summaryStats.firstDate | date:'mediumDate' }} - {{ summaryStats.lastDate | date:'mediumDate' }}</p>
-         </div>
+      <div *ngIf="widgetConfig.showSummary" class="flex-grow flex flex-col gap-6 p-4 overflow-auto min-h-[300px] bg-white rounded">
+        <!-- Summary Cards (Parity with Transaction Manager) -->
+        <div class="space-y-4">
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div class="text-sm text-gray-500 mb-1">Total de Transações</div>
+                <div class="text-2xl font-bold text-gray-900">{{summaryStats.totalTransactions}}</div>
+            </div>
 
-         <div class="mt-4">
-            <h4 class="font-semibold mb-2 text-sm">Top Segmentos</h4>
-             <ul class="text-sm space-y-1">
-                 <li *ngFor="let item of summaryStats.topSegments" class="flex justify-between border-b border-dashed pb-1">
-                     <span>{{ item.label }}</span>
-                     <span class="font-medium">{{ item.value | currency }}</span>
-                 </li>
-             </ul>
-         </div>
+            <div class="p-4 bg-red-50 rounded-xl border border-red-100">
+                <div class="text-sm text-red-600 mb-1">Total Despesas</div>
+                <div class="text-2xl font-bold text-red-700">{{summaryStats.totalExpense | currency:'BRL'}}</div>
+            </div>
+
+            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                <div class="text-sm text-green-600 mb-1">Total Receitas</div>
+                <div class="text-2xl font-bold text-green-700">{{summaryStats.totalIncome | currency:'BRL'}}</div>
+            </div>
+
+            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <div class="text-sm text-blue-600 mb-1">Saldo do Período</div>
+                <div class="text-2xl font-bold text-blue-700">{{summaryStats.net | currency:'BRL'}}</div>
+            </div>
+
+            <div class="border-t border-gray-100 my-2"></div>
+
+            <div class="space-y-3">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500">Maior Despesa</span>
+                    <span class="font-medium text-gray-900">{{summaryStats.maxExpense | currency:'BRL'}}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500">Média (Valor)</span>
+                    <span class="font-medium text-gray-900">{{summaryStats.avgTx | currency:'BRL'}}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500">Primeira Data</span>
+                    <span class="font-medium text-gray-900">{{summaryStats.firstDate | date:'dd/MM/yy'}}</span>
+                </div>
+                    <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500">Última Data</span>
+                    <span class="font-medium text-gray-900">{{summaryStats.lastDate | date:'dd/MM/yy'}}</span>
+                </div>
+            </div>
+        </div>
       </div>
     </div>
   `
@@ -136,16 +165,22 @@ export class ChartWidgetComponent implements OnInit {
   @Input() removeCallback!: (id: string) => void;
 
   private transactionService = inject(TransactionService);
+  private categoryService = inject(CategoryService);
 
   chartData: any;
   chartOptions: any;
+  
+  // Summary Stats matching TransactionManager
   summaryStats: any = {
-      count: 0,
-      total: 0,
-      average: 0,
-      firstDate: null,
-      lastDate: null,
-      topSegments: []
+    totalTransactions: 0,
+    totalIncome: 0,
+    totalExpense: 0,
+    net: 0,
+    maxTx: 0,
+    maxExpense: 0,
+    avgTx: 0,
+    firstDate: null,
+    lastDate: null
   };
 
   chartTypes = [
@@ -170,30 +205,42 @@ export class ChartWidgetComponent implements OnInit {
       { label: 'Data', value: 'date' }
   ];
 
+  valueFilterOptions = [
+      { label: 'Ambos', value: 'both' },
+      { label: 'Receitas', value: 'income' },
+      { label: 'Despesas', value: 'expense' }
+  ];
+
+  // Palette for deterministic colors
+  private colorPalette = [
+    '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', 
+    '#06b6d4', '#10b981', '#f97316', '#6366f1', '#14b8a6', '#d946ef',
+    '#84cc16', '#eab308', '#a855f7', '#0ea5e9', '#f43f5e', '#64748b'
+  ];
+
   private allTransactions: Transaction[] = [];
+  private categoryMap = new Map<string, Category>();
 
   ngOnInit() {
-      // Get all transactions first (for now, client-side filtering is easier for dynamic widgets)
-      // Ideally backend would support aggregation, but existing service returns list.
-      // We will fetch enough history or let the backend filter if optimized.
-      // For now, let's fetch 'this year' by default or all.
-      // Since we support 'This Year' as preset, fetching a wide range is safer if we do client side filtering.
-      // However, to keep it performant, maybe fetch based on preset?
-      // But if user changes preset, we need to refetch.
-      // Let's implement a fetch method.
+      // Load categories for hierarchy resolution
+      this.categoryService.getCategories().subscribe(cats => {
+          this.buildCategoryMap(cats);
+          this.fetchData();
+      });
+  }
 
-      this.fetchData();
+  buildCategoryMap(categories: Category[]) {
+      categories.forEach(cat => {
+          if (cat.id) this.categoryMap.set(cat.id, cat);
+          if (cat.subcategories) {
+              cat.subcategories.forEach(sub => {
+                  if (sub.id) this.categoryMap.set(sub.id, { ...sub, parent_id: cat.id }); // Flatten for lookup, ensuring parent link
+              });
+          }
+      });
   }
 
   fetchData() {
-      // Logic to determine date range for API call based on preset
-      // If we want to support switching presets without refetching ALL data every time, we might cache.
-      // But simpler is to fetch what is needed.
-
-      // However, the previous implementation did client-side filtering on a "pool".
-      // Let's fetch all transactions for the relevant period.
-      // Since the API supports start_date and end_date, we can use that.
-
       const { start, end } = this.calculateDateRange();
 
       this.transactionService.getTransactions(undefined, undefined, undefined, start?.toISOString(), end?.toISOString())
@@ -215,12 +262,11 @@ export class ChartWidgetComponent implements OnInit {
   onDatePresetChange() {
       if (this.widgetConfig.datePreset !== 'custom') {
           this.widgetConfig.customDateRange = undefined;
-          this.fetchData(); // Refetch data for new range
+          this.fetchData();
       }
   }
 
   updateChart() {
-      // If custom date range changes, we might need to refetch
       if (this.widgetConfig.datePreset === 'custom') {
            this.fetchData();
       } else {
@@ -229,12 +275,18 @@ export class ChartWidgetComponent implements OnInit {
   }
 
   private updateChartDataLocal() {
-       // Filter (already filtered by API mostly, but double check)
-       // Group
-       const groupedData = this.groupData(this.allTransactions);
+       // Filter based on ValueFilter
+       const filteredTransactions = this.allTransactions.filter(t => {
+           if (this.widgetConfig.valueFilter === 'income' && t.type !== 'income') return false;
+           if (this.widgetConfig.valueFilter === 'expense' && t.type !== 'expense') return false;
+           return true;
+       });
 
-       // Stats
-       this.calculateStats(this.allTransactions, groupedData);
+       // Group
+       const groupedData = this.groupData(filteredTransactions);
+
+       // Stats (using filtered transactions)
+       this.calculateStats(filteredTransactions);
 
        // Chart
        this.chartData = this.generateChartData(groupedData);
@@ -277,22 +329,42 @@ export class ChartWidgetComponent implements OnInit {
 
   private groupData(transactions: Transaction[]): { [key: string]: number } {
       const grouped: { [key: string]: number } = {};
+      
+      const paymentMap: Record<string, string> = {
+        'credit_card': 'Cartão de Crédito',
+        'debit_card': 'Débito',
+        'pix': 'Pix',
+        'cash': 'Dinheiro',
+        'bank_transfer': 'Transferência',
+        'other': 'Outros'
+      };
 
       transactions.forEach(t => {
-          // Value Filter
-          if (this.widgetConfig.valueFilter === 'income' && t.type !== 'income') return;
-          if (this.widgetConfig.valueFilter === 'expense' && t.type !== 'expense') return;
-
           let key = 'Outros';
+          
           if (this.widgetConfig.groupBy === 'category') {
+              // PARENT Logic: Try to find parent
+              const catId = t.category_id || t.category?.id;
+              if (catId && this.categoryMap.has(catId)) {
+                  const cat = this.categoryMap.get(catId)!;
+                  if (cat.parent_id && this.categoryMap.has(cat.parent_id)) {
+                      key = this.categoryMap.get(cat.parent_id)!.name;
+                  } else {
+                      key = cat.name;
+                  }
+              } else {
+                  key = t.category?.name || 'Sem Categoria';
+              }
+
+          } else if (this.widgetConfig.groupBy === 'subcategory') {
               key = t.category?.name || 'Sem Categoria';
+
           } else if (this.widgetConfig.groupBy === 'payment-method') {
-              key = t.payment_method;
+              const raw = t.payment_method;
+              key = paymentMap[raw] || raw;
           } else if (this.widgetConfig.groupBy === 'date') {
              const d = new Date(t.date);
              key = d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
-          } else if (this.widgetConfig.groupBy === 'subcategory') {
-              key = t.description.split(' ')[0]; // Still mock-ish as we don't have real subcategories
           }
 
           if (!grouped[key]) grouped[key] = 0;
@@ -301,31 +373,50 @@ export class ChartWidgetComponent implements OnInit {
       return grouped;
   }
 
-  private calculateStats(transactions: Transaction[], grouped: { [key: string]: number }) {
-      this.summaryStats.count = transactions.length;
-      this.summaryStats.total = transactions.reduce((acc, t) => acc + t.amount, 0);
-      this.summaryStats.average = this.summaryStats.count > 0 ? this.summaryStats.total / this.summaryStats.count : 0;
+  private calculateStats(list: Transaction[]) {
+    const totalTransactions = list.length;
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let maxTx = 0;
+    let maxExpense = 0;
+    let minDate = new Date();
+    let maxDate = new Date(0);
 
-      if (transactions.length > 0) {
-          const dates = transactions.map(t => new Date(t.date).getTime()).sort();
-          this.summaryStats.firstDate = new Date(dates[0]);
-          this.summaryStats.lastDate = new Date(dates[dates.length - 1]);
-      } else {
-          this.summaryStats.firstDate = null;
-          this.summaryStats.lastDate = null;
-      }
+    for (const t of list) {
+        const amount = t.amount;
+        if (t.type === 'income') totalIncome += amount;
+        else totalExpense += amount;
 
-      this.summaryStats.topSegments = Object.entries(grouped)
-          .map(([key, value]) => ({ label: key, value }))
-          .sort((a, b) => b.value - a.value)
-          .slice(0, 5);
+        if (amount > maxTx) maxTx = amount;
+        if (t.type === 'expense' && amount > maxExpense) maxExpense = amount;
+
+        const d = new Date(t.date);
+        if (d < minDate) minDate = d;
+        if (d > maxDate) maxDate = d;
+    }
+
+    const net = totalIncome - totalExpense;
+    const avg = list.length > 0 ? (totalIncome + totalExpense) / list.length : 0;
+
+    this.summaryStats = {
+        totalTransactions,
+        totalIncome,
+        totalExpense,
+        net,
+        maxTx,
+        maxExpense,
+        avgTx: avg,
+        firstDate: list.length > 0 ? minDate : null,
+        lastDate: list.length > 0 ? maxDate : null
+    };
   }
 
   private generateChartData(grouped: { [key: string]: number }) {
       const labels = Object.keys(grouped);
       const data = Object.values(grouped);
 
-      const backgroundColors = labels.map(() => '#' + Math.floor(Math.random()*16777215).toString(16));
+      // Deterministic Colors
+      const backgroundColors = labels.map(label => this.getColorForLabel(label));
 
       return {
           labels: labels,
@@ -340,6 +431,15 @@ export class ChartWidgetComponent implements OnInit {
               }
           ]
       };
+  }
+
+  private getColorForLabel(label: string): string {
+    let hash = 0;
+    for (let i = 0; i < label.length; i++) {
+        hash = label.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash % this.colorPalette.length);
+    return this.colorPalette[index];
   }
 
   private getChartOptions() {
