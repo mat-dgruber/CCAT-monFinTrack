@@ -70,9 +70,16 @@ export class TransactionManager implements OnInit {
   // Filters
   filterDescription = signal('');
   filterCategory = signal<Category | null>(null);
+  filterSubcategory = signal<Category | null>(null); // New Signal
   filterAccount = signal<Account | null>(null);
   filterDateRange = signal<Date[] | null>(null);
   filterPaymentMethod = signal<string | null>(null);
+
+  // Computed Subcategories Options
+  subcategoriesOptions = computed(() => {
+      const parent = this.filterCategory();
+      return parent ? (parent.subcategories || []) : [];
+  });
 
   paymentMethods = [
     { label: 'Cartão de Crédito', value: 'credit_card' },
@@ -91,20 +98,32 @@ export class TransactionManager implements OnInit {
     let list = this.transactions();
     const desc = this.filterDescription().toLowerCase();
     const cat = this.filterCategory();
+    const sub = this.filterSubcategory();
     const acc = this.filterAccount();
-    // Date filtering is handled by the backend/onDateRangeChange mostly.
-    // We skip client-side date filtering to avoid timezone mismatches with the fetched data.
-    
     const pm = this.filterPaymentMethod();
 
     return list.filter(t => {
       // Description
       if (desc && !t.description.toLowerCase().includes(desc)) return false;
 
-      // Category
+      // Category Hierarchy Filtering
       if (cat) {
-        const transactionCatId = t.category_id || t.category?.id;
-        if (transactionCatId !== cat.id) return false;
+        const tCatId = t.category_id || t.category?.id;
+        
+        if (sub) {
+            // Specific Subcategory Selected -> Exact Match
+            if (tCatId !== sub.id) return false;
+        } else {
+            // Only Parent Selected -> Match Parent OR any of its Children
+            // Check if transaction category is the parent
+            if (tCatId === cat.id) return true;
+            
+            // Check if transaction category is a child of this parent
+            // We need to know if t.category is a child of cat.
+            // Since we don't have a flat map easily here, we rely on checking the parent's subcategories list
+            const isChild = cat.subcategories?.some(child => child.id === tCatId);
+            if (!isChild) return false; 
+        }
       }
 
       // Account
@@ -165,6 +184,7 @@ export class TransactionManager implements OnInit {
   clearFilters() {
     this.filterDescription.set('');
     this.filterCategory.set(null);
+    this.filterSubcategory.set(null);
     this.filterAccount.set(null);
     this.filterPaymentMethod.set(null);
     this.filterDateRange.set(null);

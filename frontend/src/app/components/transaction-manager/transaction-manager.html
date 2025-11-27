@@ -39,6 +39,7 @@
                     placeholder="Categoria"
                     [showClear]="true"
                     styleClass="w-full sm:w-48"
+                    (onChange)="filterSubcategory.set(null)" 
                 >
                     <ng-template pTemplate="item" let-cat>
                         <div class="flex items-center gap-2">
@@ -47,6 +48,25 @@
                         </div>
                     </ng-template>
                 </p-select>
+
+                <!-- Subcategory Filter (Conditional) -->
+                @if (subcategoriesOptions().length > 0) {
+                    <p-select
+                        [options]="subcategoriesOptions()"
+                        [(ngModel)]="filterSubcategory"
+                        optionLabel="name"
+                        placeholder="Subcategoria"
+                        [showClear]="true"
+                        styleClass="w-full sm:w-48"
+                    >
+                        <ng-template pTemplate="item" let-sub>
+                             <div class="flex items-center gap-2">
+                                <i [class]="sub.icon" [style.color]="sub.color"></i>
+                                <span>{{sub.name}}</span>
+                            </div>
+                        </ng-template>
+                    </p-select>
+                }
 
                 <p-select
                     [options]="accounts()"
