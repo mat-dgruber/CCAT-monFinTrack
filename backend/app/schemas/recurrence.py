@@ -5,11 +5,9 @@ from enum import Enum
 from app.core.validators import sanitize_html
 
 class RecurrencePeriodicity(str, Enum):
-    MENSAL = "mensal"
-    BIMESTRAL = "bimestral"
-    TRIMESTRAL = "trimestral"
-    SEMESTRAL = "semestral"
-    ANUAL = "anual"
+    MONTHLY = "monthly"
+    WEEKLY = "weekly"
+    YEARLY = "yearly"
 
 class RecurrenceBase(BaseModel):
     name: str = Field(..., min_length=3, description="Nome da recorrência (ex: Netflix)")

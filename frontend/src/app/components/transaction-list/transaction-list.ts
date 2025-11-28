@@ -1,17 +1,23 @@
-import { Component, OnInit, inject, signal, ViewChild, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 // PrimeNG Components
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { SelectModule } from 'primeng/select';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 // Serviços e Modelos
 import { TransactionService } from '../../services/transaction.service';
+import { CategoryService } from '../../services/category.service';
 import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
+import { RecurrenceService } from '../../services/recurrence.service';
 import { Transaction } from '../../models/transaction.model';
+import { Category } from '../../models/category.model';
+import { Recurrence } from '../../models/recurrence.model';
 
 // Componentes Filhos e Pipes
 import { TransactionForm } from '../transaction-form/transaction-form';
@@ -22,42 +28,109 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     TagModule,
+    SelectModule,
     TransactionForm,
     PaymentFormatPipe
   ],
-  // Nota: ConfirmationService e MessageService estão no app.config.ts, não precisa aqui
   templateUrl: './transaction-list.html',
   styleUrl: './transaction-list.scss',
 })
 export class TransactionList implements OnInit {
 
-  // Referência ao componente do formulário (para poder abrir o modal)
   @ViewChild(TransactionForm) transactionForm!: TransactionForm;
 
   private transactionService = inject(TransactionService);
+  private categoryService = inject(CategoryService);
+  private recurrenceService = inject(RecurrenceService);
   private refreshService = inject(RefreshService);
   private filterService = inject(FilterService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
 
-  // Estado da lista
-  transactions = signal<Transaction[]>([]);
+  // Estado
+  rawTransactions = signal<Transaction[]>([]);
+  categories = signal<Category[]>([]);
+  flatCategories = signal<any[]>([]); // Categorias formatadas para o dropdown
+  selectedCategory = signal<Category | null>(null);
+  
+  // Novos Estados
+  recurrences = signal<Recurrence[]>([]);
+  upcomingTransactions = signal<Transaction[]>([]);
+
+  // Transações Filtradas (Computado)
+  transactions = computed(() => {
+    const all = this.rawTransactions();
+    const cat = this.selectedCategory();
+
+    if (!cat) return all;
+
+    // Se for subcategoria (tem parent_id), filtra exato
+    if (cat.parent_id) {
+      return all.filter(t => t.category_id === cat.id);
+    }
+
+    // Se for categoria pai, traz ela E suas filhas
+    return all.filter(t => 
+      t.category_id === cat.id || t.category?.parent_id === cat.id
+    );
+  });
 
   constructor() {
     effect(() => {
       const m = this.filterService.month();
       const y = this.filterService.year();
-      this.refreshService.refreshSignal(); // Reage a updates manuais
+      this.refreshService.refreshSignal(); 
 
       this.loadTransactions(m, y);
+      this.loadRecurrences();
+      this.loadUpcomingTransactions();
     });
   }
 
   ngOnInit() {
-    // Effect roda 1x no inicio
+    this.loadCategories();
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories().subscribe({
+      next: (data) => {
+        this.categories.set(data);
+        this.processCategoriesForDropdown(data);
+      },
+      error: (err) => console.error('Erro ao carregar categorias', err)
+    });
+  }
+
+  processCategoriesForDropdown(categories: Category[]) {
+    const flattened: any[] = [];
+    
+    // Separa pais e filhos
+    const parents = categories.filter(c => !c.parent_id);
+    
+    parents.forEach(parent => {
+      // Adiciona o Pai
+      flattened.push({
+        label: parent.name,
+        value: parent,
+        styleClass: 'font-bold'
+      });
+
+      // Busca filhos deste pai
+      const children = categories.filter(c => c.parent_id === parent.id);
+      children.forEach(child => {
+        flattened.push({
+          label: `— ${child.name}`, // Indentação visual
+          value: child,
+          styleClass: 'pl-4' // Padding via classe (opcional se o dropdown suportar)
+        });
+      });
+    });
+
+    this.flatCategories.set(flattened);
   }
 
   loadTransactions(m?: number, y?: number) {
@@ -66,8 +139,7 @@ export class TransactionList implements OnInit {
 
     this.transactionService.getTransactions(month, year).subscribe({
       next: (data) => {
-        console.log('Transactions Data:', data);
-        this.transactions.set(data);
+        this.rawTransactions.set(data);
       },
       error: (error) => {
         console.error('Erro ao buscar transações:', error);
@@ -75,17 +147,28 @@ export class TransactionList implements OnInit {
     });
   }
 
-  // Ação do botão "Nova Transação"
+  loadRecurrences() {
+    this.recurrenceService.getRecurrences(true).subscribe({
+        next: (data) => this.recurrences.set(data),
+        error: (err) => console.error('Erro ao carregar recorrências', err)
+    });
+  }
+
+  loadUpcomingTransactions() {
+    this.transactionService.getUpcomingTransactions().subscribe({
+        next: (data) => this.upcomingTransactions.set(data),
+        error: (err) => console.error('Erro ao carregar transações futuras', err)
+    });
+  }
+
   openNewTransaction() {
     this.transactionForm.showDialog();
   }
 
-  // Ação do botão "Editar" (Lápis)
   editTransaction(event: any, transaction: Transaction) {
     this.transactionForm.editTransaction(event, transaction);
   }
 
-  // Ação do botão "Excluir" (Lixeira)
   deleteTransaction(event: Event, transaction: Transaction) {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
@@ -105,11 +188,7 @@ export class TransactionList implements OnInit {
               summary: 'Sucesso',
               detail: 'Transação excluída e saldo estornado.'
             });
-
-            // 1. Recarrega a lista local
             this.loadTransactions(this.filterService.month(), this.filterService.year());
-
-            // 2. Avisa o resto do app (Dashboard/Contas) para atualizar saldos
             this.refreshService.triggerRefresh();
           },
           error: (err) => {

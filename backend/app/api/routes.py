@@ -78,6 +78,10 @@ def read_transactions(month: Optional[int] = None, year: Optional[int] = None, l
 def update_transaction(request: Request, transaction_id: str, transaction: TransactionCreate, current_user: dict = Depends(get_current_user)):
     return transaction_service.update_transaction(transaction_id, transaction, current_user['uid'])
 
+@router.get("/transactions/upcoming", response_model=List[Transaction])
+def read_upcoming_transactions(limit: int = 10, current_user: dict = Depends(get_current_user)):
+    return transaction_service.get_upcoming_transactions(current_user['uid'], limit)
+
 @router.delete("/transactions/{transaction_id}")
 @limiter.limit("10 per minute")
 def delete_transaction(request: Request, transaction_id: str, current_user: dict = Depends(get_current_user)):

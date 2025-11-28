@@ -1,4 +1,5 @@
-<div class="p-6 max-w-6xl mx-auto flex flex-col gap-6">
+<div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
+  <!-- Header & Actions -->
   <div
     class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
   >
@@ -10,69 +11,294 @@
         Gerencie seus pagamentos recorrentes e assinaturas.
       </p>
     </div>
+    <p-button
+      label="Gerenciar Recorrências"
+      icon="pi pi-cog"
+      [outlined]="true"
+    ></p-button>
+  </div>
 
-    <div
-      class="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex flex-col items-end"
-    >
-      <span class="text-xs text-blue-600 font-semibold uppercase"
-        >Custo Mensal Estimado</span
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Income Card (Placeholder logic for now) -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+      <span class="text-sm text-gray-500 font-medium"
+        >Receitas Recorrentes</span
       >
-      <span class="text-xl font-bold text-blue-800">{{
-        totalMonthly() | currency : "BRL"
-      }}</span>
+      <div class="text-2xl font-bold text-green-600 mt-1">R$ 0,00</div>
+      <div class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline">
+        Adicionar receita
+      </div>
+    </div>
+
+    <!-- Expenses Card -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex justify-between items-center mb-1">
+        <span class="text-sm text-gray-500 font-medium"
+          >Despesas Recorrentes</span
+        >
+        <span class="text-sm font-bold text-gray-800"
+          >{{ totalMonthly() | currency : "BRL" }} total</span
+        >
+      </div>
+
+      <p-progressBar
+        [value]="progressPercentage()"
+        [showValue]="false"
+        styleClass="h-2 mb-2"
+      ></p-progressBar>
+
+      <div class="flex justify-between text-xs">
+        <span class="font-medium text-gray-600"
+          >{{ totalPaid() | currency : "BRL" }} pago</span
+        >
+        <span class="font-medium text-gray-600"
+          >{{ totalRemaining() | currency : "BRL" }} restante</span
+        >
+      </div>
+    </div>
+
+    <!-- Credit Cards (Placeholder) -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+      <span class="text-sm text-gray-500 font-medium">Cartões de Crédito</span>
+      <div class="text-sm text-gray-400 italic mt-2">
+        Nenhum cartão vinculado
+      </div>
+      <div class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline">
+        <div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
+          <!-- Header & Actions -->
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+          >
+            <div>
+              <h1 class="text-2xl font-bold text-gray-800">
+                Assinaturas e Recorrências
+              </h1>
+              <p class="text-gray-500">
+                Gerencie seus pagamentos recorrentes e assinaturas.
+              </p>
+            </div>
+            <p-button
+              label="Gerenciar Recorrências"
+              icon="pi pi-cog"
+              [outlined]="true"
+            ></p-button>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Income Card (Placeholder logic for now) -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+            >
+              <span class="text-sm text-gray-500 font-medium"
+                >Receitas Recorrentes</span
+              >
+              <div class="text-2xl font-bold text-green-600 mt-1">R$ 0,00</div>
+              <div
+                class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline"
+              >
+                Adicionar receita
+              </div>
+            </div>
+
+            <!-- Expenses Card -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+            >
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-sm text-gray-500 font-medium"
+                  >Despesas Recorrentes</span
+                >
+                <span class="text-sm font-bold text-gray-800"
+                  >{{ totalMonthly() | currency : "BRL" }} total</span
+                >
+              </div>
+
+              <p-progressBar
+                [value]="progressPercentage()"
+                [showValue]="false"
+                styleClass="h-2 mb-2"
+              ></p-progressBar>
+
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-gray-600"
+                  >{{ totalPaid() | currency : "BRL" }} pago</span
+                >
+                <span class="font-medium text-gray-600"
+                  >{{ totalRemaining() | currency : "BRL" }} restante</span
+                >
+              </div>
+            </div>
+
+            <!-- Credit Cards (Placeholder) -->
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+            >
+              <span class="text-sm text-gray-500 font-medium"
+                >Cartões de Crédito</span
+              >
+              <div class="text-sm text-gray-400 italic mt-2">
+                Nenhum cartão vinculado
+              </div>
+              <div
+                class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline"
+              >
+                Configurar sincronização
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <p-tabs value="0">
+            <p-tablist>
+              <p-tab value="0">Recorrências</p-tab>
+              <p-tab value="1">Mensal</p-tab>
+              <p-tab value="2">Todas as Recorrências</p-tab>
+            </p-tablist>
+
+            <p-tabpanels>
+              <!-- Tab 1: Recurring (Dashboard View) -->
+              <p-tabpanel value="0">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
+                  <!-- Calendar Placeholder (Left/Top) -->
+                  <div
+                    class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-h-[400px] flex items-center justify-center text-gray-400"
+                  >
+                    <div class="text-center">
+                      <i class="pi pi-calendar text-4xl mb-2"></i>
+                      <p>Visualização de Calendário (Em Breve)</p>
+                    </div>
+                  </div>
+
+                  <!-- Upcoming List (Right/Bottom) -->
+                  <div class="lg:col-span-4 flex flex-col gap-4">
+                    <h3 class="font-bold text-gray-800">
+                      Próximos Vencimentos
+                    </h3>
+
+                    <div class="flex flex-col gap-3">
+                      @for (item of projectedRecurrences(); track item.id) {
+                      <div
+                        class="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center shadow-sm"
+                      >
+                        <div class="flex items-center gap-3">
+                          <div
+                            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"
+                          >
+                            <i class="pi pi-receipt"></i>
+                          </div>
+                          <div class="flex flex-col">
+                            <span class="font-medium text-gray-800">{{
+                              item.name
+                            }}</span>
+                            <span class="text-xs text-gray-500"
+                              >{{ item.dueDate | date : "dd MMM" }} ({{
+                                item.periodicity
+                              }})</span
+                            >
+                          </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                          <span class="font-bold text-gray-800">{{
+                            item.amount | currency : "BRL"
+                          }}</span>
+                          <span
+                            class="text-[10px] px-1.5 py-0.5 rounded"
+                            [class.bg-green-100]="item.status === 'paid'"
+                            [class.text-green-700]="item.status === 'paid'"
+                            [class.bg-yellow-100]="item.status === 'pending'"
+                            [class.text-yellow-700]="item.status === 'pending'"
+                          >
+                            {{ item.status === "paid" ? "Pago" : "Pendente" }}
+                          </span>
+                        </div>
+                      </div>
+                      } @if (projectedRecurrences().length === 0) {
+                      <div class="text-center py-8 text-gray-400 italic">
+                        Nenhuma recorrência este mês.
+                      </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </p-tabpanel>
+
+              <!-- Tab 2: Monthly (Full Calendar) -->
+              <p-tabpanel value="1">
+                <div
+                  class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-400"
+                >
+                  <i class="pi pi-calendar-plus text-4xl mb-2"></i>
+                  <p>Visualização Mensal Detalhada (Em Breve)</p>
+                </div>
+              </p-tabpanel>
+
+              <!-- Tab 3: All Recurring (Management Table) -->
+              <p-tabpanel value="2">
+                <div
+                  class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4"
+                >
+                  <p-table
+                    [value]="recurrences()"
+                    [tableStyle]="{ 'min-width': '50rem' }"
+                  >
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Periodicidade</th>
+                        <th>Dia de Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-rec>
+                      <tr>
+                        <td class="font-medium">{{ rec.name }}</td>
+                        <td>{{ rec.amount | currency : "BRL" }}</td>
+                        <td>
+                          <p-tag
+                            [value]="rec.periodicity"
+                            severity="info"
+                          ></p-tag>
+                        </td>
+                        <td>Dia {{ rec.due_day }}</td>
+                        <td>
+                          <p-tag
+                            [value]="rec.active ? 'Ativo' : 'Inativo'"
+                            [severity]="rec.active ? 'success' : 'danger'"
+                          ></p-tag>
+                        </td>
+                        <td>
+                          <p-button
+                            icon="pi pi-times"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="danger"
+                            pTooltip="Cancelar Assinatura"
+                            (onClick)="cancelRecurrence(rec)"
+                          >
+                          </p-button>
+                        </td>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                      <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                          Nenhuma assinatura ativa encontrada.
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+              </p-tabpanel>
+            </p-tabpanels>
+          </p-tabs>
+        </div>
+        <p-toast></p-toast>
+        <p-confirmDialog></p-confirmDialog>
+      </div>
     </div>
   </div>
-
-  <div
-    class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-  >
-    <p-table [value]="recurrences()" [tableStyle]="{ 'min-width': '50rem' }">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Nome</th>
-          <th>Valor</th>
-          <th>Periodicidade</th>
-          <th>Dia de Vencimento</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-rec>
-        <tr>
-          <td class="font-medium">{{ rec.name }}</td>
-          <td>{{ rec.amount | currency : "BRL" }}</td>
-          <td>
-            <p-tag [value]="rec.periodicity" severity="info"></p-tag>
-          </td>
-          <td>Dia {{ rec.due_day }}</td>
-          <td>
-            <p-tag
-              [value]="rec.active ? 'Ativo' : 'Inativo'"
-              [severity]="rec.active ? 'success' : 'danger'"
-            ></p-tag>
-          </td>
-          <td>
-            <p-button
-              icon="pi pi-times"
-              [rounded]="true"
-              [text]="true"
-              severity="danger"
-              pTooltip="Cancelar Assinatura"
-              (onClick)="cancelRecurrence(rec)"
-            >
-            </p-button>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center py-8 text-gray-500">
-            Nenhuma assinatura ativa encontrada.
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
 </div>
-<p-toast></p-toast>
-<p-confirmDialog></p-confirmDialog>

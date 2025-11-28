@@ -53,6 +53,18 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
         raise HTTPException(status_code=404, detail="Category not found")
 
     account = account_service.get_account(transaction_in.account_id)
+    
+    # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO
+    if transaction_in.status == TransactionStatus.PAID:
+        _update_account_balance(
+            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+        )
+    
+    data = transaction_in.model_dump()
+    data['user_id'] = user_id # MARCA DONO
+    
+    update_time, transaction_ref = db.collection(COLLECTION_NAME).add(data)
+    
     return Transaction(
         id=transaction_ref.id, 
         category=category, 
@@ -87,6 +99,12 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
         if transaction_in.recurrence_create_first:
             t_data = transaction_in.model_dump()
             t_data['recurrence_id'] = recurrence.id
+            # Se for a primeira parcela, o status é o que veio no form. Se não, PENDING.
+            if transaction_in.installment_number is None or transaction_in.installment_number == 1:
+                 pass # Usa o status do form
+            else:
+                 t_data['status'] = TransactionStatus.PENDING
+
             t_create = TransactionCreate(**t_data)
             created_transactions.append(create_transaction(t_create, user_id))
             
@@ -168,34 +186,30 @@ def update_transaction(transaction_id: str, transaction_in: TransactionCreate, u
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
     doc = doc_ref.get()
     
-    account = account_service.get_account(transaction_in.account_id)
-    
-    return Transaction(id=transaction_id, category=category, account=account, **data)
-
-def delete_transaction(transaction_id: str, user_id: str):
-    db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
-    
     # Verifica Propriedade
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
         raise HTTPException(status_code=404, detail="Transaction not found")
-from google.cloud import firestore
-from app.core.database import get_db
-from app.schemas.transaction import TransactionCreate, Transaction, TransactionStatus
-from app.schemas.category import Category 
-from app.schemas.account import Account 
-from app.core.date_utils import get_month_range
-from typing import Optional, List
-from datetime import datetime
-import uuid
-from dateutil.relativedelta import relativedelta
+        
+    old_data = doc.to_dict()
+    
+    old_status = old_data.get("status", TransactionStatus.PAID)
+    
+    # Estorna valor antigo APENAS SE ESTAVA PAGO
+    if old_status == TransactionStatus.PAID:
+        _update_account_balance(
+            db, old_data.get("account_id"), old_data.get("amount", 0), old_data.get("type"), user_id, revert=True
+        )
 
-from app.services import category as category_service
-from app.services import account as account_service
-from app.services import recurrence as recurrence_service
-from app.schemas.recurrence import RecurrenceCreate, RecurrencePeriodicity
-from fastapi import HTTPException
+    # Aplica novo valor APENAS SE NOVO STATUS É PAGO
+    if transaction_in.status == TransactionStatus.PAID:
+        _update_account_balance(
+            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+        )
+    
+    data = transaction_in.model_dump()
+    data['user_id'] = user_id
+    doc_ref.set(data)
+    
 
 COLLECTION_NAME = "transactions"
 
@@ -235,6 +249,18 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
         raise HTTPException(status_code=404, detail="Category not found")
 
     account = account_service.get_account(transaction_in.account_id)
+    
+    # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO
+    if transaction_in.status == TransactionStatus.PAID:
+        _update_account_balance(
+            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+        )
+    
+    data = transaction_in.model_dump()
+    data['user_id'] = user_id # MARCA DONO
+    
+    update_time, transaction_ref = db.collection(COLLECTION_NAME).add(data)
+    
     return Transaction(
         id=transaction_ref.id, 
         category=category, 
@@ -269,6 +295,12 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
         if transaction_in.recurrence_create_first:
             t_data = transaction_in.model_dump()
             t_data['recurrence_id'] = recurrence.id
+            # Se for a primeira parcela, o status é o que veio no form. Se não, PENDING.
+            if transaction_in.installment_number is None or transaction_in.installment_number == 1:
+                 pass # Usa o status do form
+            else:
+                 t_data['status'] = TransactionStatus.PENDING
+
             t_create = TransactionCreate(**t_data)
             created_transactions.append(create_transaction(t_create, user_id))
             
@@ -350,6 +382,31 @@ def update_transaction(transaction_id: str, transaction_in: TransactionCreate, u
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
     doc = doc_ref.get()
     
+    # Verifica Propriedade
+    if not doc.exists or doc.to_dict().get('user_id') != user_id:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+        
+    old_data = doc.to_dict()
+    
+    old_status = old_data.get("status", TransactionStatus.PAID)
+    
+    # Estorna valor antigo APENAS SE ESTAVA PAGO
+    if old_status == TransactionStatus.PAID:
+        _update_account_balance(
+            db, old_data.get("account_id"), old_data.get("amount", 0), old_data.get("type"), user_id, revert=True
+        )
+
+    # Aplica novo valor APENAS SE NOVO STATUS É PAGO
+    if transaction_in.status == TransactionStatus.PAID:
+        _update_account_balance(
+            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+        )
+    
+    data = transaction_in.model_dump()
+    data['user_id'] = user_id
+    doc_ref.set(data)
+    
+    category = category_service.get_category(transaction_in.category_id)
     account = account_service.get_account(transaction_in.account_id)
     
     return Transaction(id=transaction_id, category=category, account=account, **data)
@@ -364,10 +421,38 @@ def delete_transaction(transaction_id: str, user_id: str):
         raise HTTPException(status_code=404, detail="Transaction not found")
         
     data = doc.to_dict()
+    installment_group_id = data.get("installment_group_id")
+
+    # Lógica de Exclusão em Grupo (Se for parcelado)
+    if installment_group_id:
+        # Busca todas as parcelas do grupo
+        group_query = db.collection(COLLECTION_NAME)\
+            .where("user_id", "==", user_id)\
+            .where("installment_group_id", "==", installment_group_id)\
+            .stream()
+            
+        deleted_count = 0
+        for t in group_query:
+            t_data = t.to_dict()
+            t_id = t.id
+            t_amount = t_data.get("amount", 0)
+            t_type = t_data.get("type")
+            t_account_id = t_data.get("account_id")
+            t_status = t_data.get("status", TransactionStatus.PAID)
+            
+            # Estorna Saldo APENAS SE ESTAVA PAGO
+            if t_account_id and t_status == TransactionStatus.PAID:
+                _update_account_balance(db, t_account_id, t_amount, t_type, user_id, revert=True)
+            
+            db.collection(COLLECTION_NAME).document(t_id).delete()
+            deleted_count += 1
+            
+        return {"status": "success", "message": f"Deleted {deleted_count} transactions from group"}
+
+    # Lógica Simples (Não é parcelado)
     amount = data.get("amount", 0)
     t_type = data.get("type")
     account_id = data.get("account_id")
-
     status = data.get("status", TransactionStatus.PAID)
 
     # Estorna Saldo APENAS SE ESTAVA PAGO
@@ -377,3 +462,45 @@ def delete_transaction(transaction_id: str, user_id: str):
     doc_ref.delete()
     
     return {"status": "success", "message": "Transaction deleted"}
+
+def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction]:
+    db = get_db()
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Query: user_id == user AND status == pending AND date >= today
+    # Firestore requires composite index for this. 
+    # Simpler approach: Query pending transactions, filter by date in python if dataset is small, 
+    # OR query by date >= today and filter status.
+    # Given we want "upcoming", date is the most important sort.
+    
+    query = db.collection(COLLECTION_NAME)\
+        .where("user_id", "==", user_id)\
+        .where("status", "==", TransactionStatus.PENDING)\
+        .where("date", ">=", today)\
+        .order_by("date", direction=firestore.Query.ASCENDING)\
+        .limit(limit)
+        
+    docs = query.stream()
+    
+    transactions = []
+    for t in docs:
+        data = t.to_dict()
+        
+        cat_id = data.get("category_id")
+        category = category_service.get_category(cat_id)
+        if not category:
+             category = Category(id="deleted", name="?", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+
+        acc_id = data.get("account_id")
+        account = account_service.get_account(acc_id)
+        if not account:
+            account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
+
+        transactions.append(Transaction(
+            id=t.id, 
+            category=category, 
+            account=account, 
+            **data
+        ))
+        
+    return transactions

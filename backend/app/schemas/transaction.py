@@ -58,7 +58,7 @@ class TransactionCreate(TransactionBase):
      recurrence_id: Optional[str] = Field(None, description="ID da recorrência pai")
      installment_group_id: Optional[str] = Field(None, description="ID do grupo de parcelamento")
      installment_number: Optional[int] = Field(None, description="Número da parcela (ex: 1)")
-     installment_number: Optional[int] = Field(None, description="Número da parcela (ex: 1)")
+
      total_installments: Optional[int] = Field(None, description="Total de parcelas (ex: 10)")
      
      # Campos para criar Recorrência (Cenário B)
