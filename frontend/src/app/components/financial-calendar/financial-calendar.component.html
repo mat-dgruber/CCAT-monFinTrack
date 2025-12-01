@@ -1,0 +1,74 @@
+<div
+  class="flex flex-col gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="text-xl font-bold text-gray-800 capitalize">
+      {{ monthLabel() }}
+    </h2>
+    <div class="flex gap-2">
+      <p-button
+        icon="pi pi-chevron-left"
+        [rounded]="true"
+        [text]="true"
+        (onClick)="prevMonth()"
+      ></p-button>
+      <p-button
+        icon="pi pi-chevron-right"
+        [rounded]="true"
+        [text]="true"
+        (onClick)="nextMonth()"
+      ></p-button>
+    </div>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="grid grid-cols-7 gap-2">
+    <!-- Weekday Headers -->
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Dom</div>
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Seg</div>
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Ter</div>
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Qua</div>
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Qui</div>
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Sex</div>
+    <div class="text-center text-sm font-semibold text-gray-500 py-2">Sáb</div>
+
+    <!-- Days -->
+    @for (date of daysInMonth(); track $index) {
+    <div
+      class="min-h-[80px] border border-gray-100 rounded-lg p-1 relative hover:bg-gray-50 transition-colors"
+      [class.bg-gray-50]="!date"
+      [class.opacity-50]="!date"
+    >
+      @if (date) {
+      <span class="text-sm font-medium text-gray-700 block mb-1">{{
+        date.getDate()
+      }}</span>
+
+      <!-- Indicators -->
+      <div class="flex flex-col gap-1">
+        @if (getDayTotal(date, 'income') > 0) {
+        <div
+          class="text-[10px] bg-green-100 text-green-700 px-1 rounded truncate"
+          [pTooltip]="
+            'Receitas: ' + (getDayTotal(date, 'income') | currency : 'BRL')
+          "
+        >
+          + {{ getDayTotal(date, "income") | currency : "BRL" }}
+        </div>
+        } @if (getDayTotal(date, 'expense') > 0) {
+        <div
+          class="text-[10px] bg-red-100 text-red-700 px-1 rounded truncate"
+          [pTooltip]="
+            'Despesas: ' + (getDayTotal(date, 'expense') | currency : 'BRL')
+          "
+        >
+          - {{ getDayTotal(date, "expense") | currency : "BRL" }}
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

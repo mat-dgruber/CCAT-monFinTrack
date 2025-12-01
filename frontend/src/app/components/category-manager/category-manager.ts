@@ -157,14 +157,26 @@ export class CategoryManager implements OnInit {
     if (this.form.valid) {
       const payload = this.form.value as Category;
       if (this.editingId()) {
-        this.categoryService.updateCategory(this.editingId()!, payload).subscribe(() => {
-            this.visible.set(false);
-            this.loadCategories();
+        this.categoryService.updateCategory(this.editingId()!, payload).subscribe({
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Categoria atualizada.' });
+                this.visible.set(false);
+                this.loadCategories();
+            },
+            error: (err) => {
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar categoria.' });
+            }
         });
       } else {
-        this.categoryService.createCategory(payload).subscribe(() => {
-            this.visible.set(false);
-            this.loadCategories();
+        this.categoryService.createCategory(payload).subscribe({
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Categoria criada.' });
+                this.visible.set(false);
+                this.loadCategories();
+            },
+            error: (err) => {
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar categoria.' });
+            }
         });
       }
     }

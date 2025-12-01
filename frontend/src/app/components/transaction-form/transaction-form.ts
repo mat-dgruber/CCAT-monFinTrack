@@ -10,6 +10,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { CheckboxModule } from 'primeng/checkbox';
 import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
@@ -36,6 +37,7 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
     SelectModule, 
     DatePickerModule, 
     SelectButtonModule,
+    CheckboxModule,
     AccountTypePipe
   ],
   templateUrl: './transaction-form.html',
@@ -47,26 +49,22 @@ export class TransactionForm implements OnInit {
   private transactionService = inject(TransactionService);
   private accountService = inject(AccountService);
   private refreshService = inject(RefreshService);
-  private confirmationService = inject(ConfirmationService); // Injeta o ConfirmationService
-  private messageService = inject(MessageService); // Injeta o MessageService
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
 
   visible = signal(false);
   
-  // Lista completa do banco
   categories = signal<Category[]>([]); 
   accounts = signal<Account[]>([]);
   editingId = signal<string | null>(null);
   
   @Output() save = new EventEmitter<void>();
 
-  // Signal para rastrear o tipo atual (expense/income)
   currentType = signal<'expense' | 'income'>('expense');
 
-  // 4. CORREÇÃO: Signal Computado para filtrar a lista automaticamente
   filteredCategories = computed<SelectItemGroup[]>(() => {
       const type = this.currentType();
       const all = this.categories();
-      // Filter roots by type
       const roots = all.filter(c => c.type === type);
       
       return roots.map(root => {
@@ -90,6 +88,18 @@ export class TransactionForm implements OnInit {
     { label: 'Receitas', value: 'income' },
   ];
 
+  modeOptions = [
+    { label: 'Única', value: 'single' },
+    { label: 'Recorrente', value: 'recurrence' },
+    { label: 'Parcelada', value: 'installments' }
+  ];
+
+  periodicityOptions = [
+    { label: 'Mensal', value: 'monthly' },
+    { label: 'Semanal', value: 'weekly' },
+    { label: 'Anual', value: 'yearly' }
+  ];
+
   paymentOptions = [
     { label: 'Cartão de Crédito', value: 'credit_card' },
     { label: 'Débito', value: 'debit_card' },
@@ -104,18 +114,25 @@ export class TransactionForm implements OnInit {
     category: [null, Validators.required],
     account: [null, Validators.required],
     type: ['expense', Validators.required],
-    payment_method: [null, Validators.required]
+    payment_method: [null, Validators.required],
+    
+    mode: ['single'],
+    total_installments: [2],
+    recurrence_periodicity: ['monthly'],
+    recurrence_auto_pay: [false],
+    recurrence_create_first: [true],
+    
+    is_paid: [true],
+    payment_date: [new Date()]
   });
 
   constructor() {
-      // 5. CORREÇÃO: Monitorar mudança no formulário para atualizar o filtro
-      this.form.get('type')?.valueChanges.subscribe(val => {
-          if (val) {
-              this.currentType.set(val); // Atualiza o signal -> Atualiza o computed
-              // Limpa a categoria selecionada pois ela pode não existir no novo tipo
-              this.form.patchValue({ category: null });
-          }
-      });
+    this.form.get('type')?.valueChanges.subscribe(val => {
+        if (val) {
+            this.currentType.set(val);
+            this.form.patchValue({ category: null });
+        }
+    });
   }
 
   ngOnInit() {
@@ -133,34 +150,45 @@ export class TransactionForm implements OnInit {
 
   showDialog() {
     this.editingId.set(null);
-    this.currentType.set('expense'); // Reseta o filtro para despesa
+    this.currentType.set('expense');
     
     this.form.reset({ 
-        type: 'expense', 
-        date: new Date(), 
-        payment_method: null,
-        account: null 
+        type: 'expense',
+        date: new Date(),
+        mode: 'single',
+        total_installments: 2,
+        recurrence_periodicity: 'monthly',
+        recurrence_auto_pay: false,
+        recurrence_create_first: true,
+        is_paid: true,
+        payment_date: new Date()
     });
     
-    this.loadAccounts();
     this.visible.set(true);
   }
 
   editTransaction(event: Event, transaction: Transaction) {
     event.stopPropagation(); 
     this.editingId.set(transaction.id);
-    
-    // 6. CORREÇÃO: Sincronizar o filtro com o tipo da transação editada
     this.currentType.set(transaction.type);
+
+    let mode = 'single';
+    if (transaction.installment_group_id) mode = 'installments';
+    if (transaction.recurrence_id) mode = 'recurrence';
 
     this.form.patchValue({
         description: transaction.description,
         amount: transaction.amount,
-        date: new Date(transaction.date), 
+        date: new Date(transaction.date),
+        category: transaction.category,
+        account: transaction.account,
         type: transaction.type,
         payment_method: transaction.payment_method,
-        category: transaction.category,
-        account: transaction.account 
+        mode: mode,
+        total_installments: transaction.total_installments || 2,
+        recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
+        is_paid: transaction.status === 'paid' || !transaction.status,
+        payment_date: transaction.payment_date ? new Date(transaction.payment_date) : new Date(transaction.date)
     });
 
     this.visible.set(true);
@@ -170,11 +198,22 @@ export class TransactionForm implements OnInit {
     if (this.form.valid) {
       const formValue = this.form.value;
       
-      const payload = {
+      const payload: any = {
         ...formValue,
         category_id: formValue.category.id,
-        account_id: formValue.account.id
+        account_id: formValue.account.id,
+        status: formValue.is_paid ? 'paid' : 'pending',
+        payment_date: formValue.is_paid ? formValue.payment_date : null
       };
+
+      if (formValue.mode === 'recurrence') {
+          payload.is_recurrence = true;
+      } else if (formValue.mode === 'installments') {
+          // total_installments is already in formValue
+      } else {
+          payload.total_installments = null;
+          payload.is_recurrence = false;
+      }
 
       const onSave = () => {
           this.visible.set(false);
@@ -185,13 +224,25 @@ export class TransactionForm implements OnInit {
 
       if (this.editingId()) {
         this.transactionService.updateTransaction(this.editingId()!, payload).subscribe({
-            next: onSave,
-            error: (err) => console.error('Erro ao atualizar', err)
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação atualizada.' });
+                onSave();
+            },
+            error: (err) => {
+                console.error('Erro ao atualizar', err);
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar transação.' });
+            }
         });
       } else {
         this.transactionService.createTransaction(payload).subscribe({
-            next: onSave,
-            error: (err) => console.error('Erro ao criar', err)
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação criada.' });
+                onSave();
+            },
+            error: (err) => {
+                console.error('Erro ao criar', err);
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar transação.' });
+            }
         });
       }
     }

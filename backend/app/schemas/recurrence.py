@@ -1,0 +1,53 @@
+from pydantic import BaseModel, Field, field_validator
+from datetime import datetime, date
+from typing import Optional
+from enum import Enum
+from app.core.validators import sanitize_html
+
+class RecurrencePeriodicity(str, Enum):
+    MONTHLY = "monthly"
+    WEEKLY = "weekly"
+    YEARLY = "yearly"
+
+class RecurrenceBase(BaseModel):
+    name: str = Field(..., min_length=3, description="Nome da recorrência (ex: Netflix)")
+    amount: float = Field(..., gt=0, description="Valor fixo da recorrência")
+    category_id: str = Field(..., description="ID da categoria")
+    account_id: str = Field(..., description="ID da conta")
+    payment_method_id: Optional[str] = Field(None, description="ID da forma de pagamento (não usado diretamente na lógica, mas útil para UI)")
+    periodicity: RecurrencePeriodicity = Field(..., description="Periodicidade")
+    auto_pay: bool = Field(False, description="Se true, gera como PAGO. Se false, PENDENTE.")
+    due_day: int = Field(..., ge=1, le=31, description="Dia base de vencimento")
+    due_month: Optional[int] = Field(None, ge=1, le=12, description="Mês de vencimento para recorrências anuais")
+    active: bool = Field(True, description="Se a recorrência está ativa")
+
+    @field_validator('name')
+    @classmethod
+    def clean_name(cls, v):
+        return sanitize_html(v)
+
+class RecurrenceCreate(RecurrenceBase):
+    pass
+
+class RecurrenceUpdate(BaseModel):
+    name: Optional[str] = None
+    amount: Optional[float] = None
+    category_id: Optional[str] = None
+    account_id: Optional[str] = None
+    payment_method_id: Optional[str] = None
+    periodicity: Optional[RecurrencePeriodicity] = None
+    auto_pay: Optional[bool] = None
+    due_day: Optional[int] = None
+    due_month: Optional[int] = None
+    active: Optional[bool] = None
+    last_processed_at: Optional[datetime] = None
+
+class Recurrence(RecurrenceBase):
+    id: str
+    user_id: str
+    created_at: datetime = Field(default_factory=datetime.now)
+    last_processed_at: Optional[datetime] = None
+    cancellation_date: Optional[date] = None
+
+    class Config:
+        from_attributes = True
