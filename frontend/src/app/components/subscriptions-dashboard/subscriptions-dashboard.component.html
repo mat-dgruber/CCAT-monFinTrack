@@ -203,7 +203,7 @@
       <!-- Tab 2: All Recurring (Management Table) -->
       <p-tabpanel value="2">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-          <p-table [value]="recurrences()" [tableStyle]="{ 'min-width': '50rem' }">
+          <p-table [value]="activeRecurrences()" [tableStyle]="{ 'min-width': '50rem' }">
             <ng-template pTemplate="header">
               <tr>
                 <th>Nome</th>
