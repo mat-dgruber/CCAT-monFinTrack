@@ -1,8 +1,6 @@
 <div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
   <!-- Header & Actions -->
-  <div
-    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-  >
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-800">
         Assinaturas e Recorrências
@@ -11,294 +9,310 @@
         Gerencie seus pagamentos recorrentes e assinaturas.
       </p>
     </div>
-    <p-button
-      label="Gerenciar Recorrências"
-      icon="pi pi-cog"
-      [outlined]="true"
-    ></p-button>
+    <p-button label="Nova Recorrência" icon="pi pi-plus" (onClick)="showDialog()"></p-button>
   </div>
 
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <!-- Income Card (Placeholder logic for now) -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <span class="text-sm text-gray-500 font-medium"
-        >Receitas Recorrentes</span
-      >
+      <span class="text-sm text-gray-500 font-medium">Receitas Recorrentes</span>
       <div class="text-2xl font-bold text-green-600 mt-1">R$ 0,00</div>
-      <div class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline">
-        Adicionar receita
+    </div>
+
+    <!-- Expenses Summary Card (New) -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+      <span class="text-sm text-gray-500 font-medium">Total Despesas Recorrentes</span>
+      <div class="text-2xl font-bold text-red-600 mt-1">{{ totalMonthly() | currency : "BRL" }}</div>
+      <div class="text-xs text-gray-400 mt-2">
+        Total previsto para o mês
       </div>
     </div>
 
     <!-- Expenses Card -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <div class="flex justify-between items-center mb-1">
-        <span class="text-sm text-gray-500 font-medium"
-          >Despesas Recorrentes</span
-        >
-        <span class="text-sm font-bold text-gray-800"
-          >{{ totalMonthly() | currency : "BRL" }} total</span
-        >
+        <span class="text-sm text-gray-500 font-medium">Despesas Recorrentes</span>
+        <span class="text-sm font-bold text-gray-800">{{ totalMonthly() | currency : "BRL" }} total</span>
       </div>
 
-      <p-progressBar
-        [value]="progressPercentage()"
-        [showValue]="false"
-        styleClass="h-2 mb-2"
-      ></p-progressBar>
+      <p-progressBar [value]="progressPercentage()" [showValue]="false" styleClass="h-2 mb-2"></p-progressBar>
 
       <div class="flex justify-between text-xs">
-        <span class="font-medium text-gray-600"
-          >{{ totalPaid() | currency : "BRL" }} pago</span
-        >
-        <span class="font-medium text-gray-600"
-          >{{ totalRemaining() | currency : "BRL" }} restante</span
-        >
-      </div>
-    </div>
-
-    <!-- Credit Cards (Placeholder) -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <span class="text-sm text-gray-500 font-medium">Cartões de Crédito</span>
-      <div class="text-sm text-gray-400 italic mt-2">
-        Nenhum cartão vinculado
-      </div>
-      <div class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline">
-        <div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
-          <!-- Header & Actions -->
-          <div
-            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-          >
-            <div>
-              <h1 class="text-2xl font-bold text-gray-800">
-                Assinaturas e Recorrências
-              </h1>
-              <p class="text-gray-500">
-                Gerencie seus pagamentos recorrentes e assinaturas.
-              </p>
-            </div>
-            <p-button
-              label="Gerenciar Recorrências"
-              icon="pi pi-cog"
-              [outlined]="true"
-            ></p-button>
-          </div>
-
-          <!-- Summary Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Income Card (Placeholder logic for now) -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-            >
-              <span class="text-sm text-gray-500 font-medium"
-                >Receitas Recorrentes</span
-              >
-              <div class="text-2xl font-bold text-green-600 mt-1">R$ 0,00</div>
-              <div
-                class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline"
-              >
-                Adicionar receita
-              </div>
-            </div>
-
-            <!-- Expenses Card -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-            >
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-sm text-gray-500 font-medium"
-                  >Despesas Recorrentes</span
-                >
-                <span class="text-sm font-bold text-gray-800"
-                  >{{ totalMonthly() | currency : "BRL" }} total</span
-                >
-              </div>
-
-              <p-progressBar
-                [value]="progressPercentage()"
-                [showValue]="false"
-                styleClass="h-2 mb-2"
-              ></p-progressBar>
-
-              <div class="flex justify-between text-xs">
-                <span class="font-medium text-gray-600"
-                  >{{ totalPaid() | currency : "BRL" }} pago</span
-                >
-                <span class="font-medium text-gray-600"
-                  >{{ totalRemaining() | currency : "BRL" }} restante</span
-                >
-              </div>
-            </div>
-
-            <!-- Credit Cards (Placeholder) -->
-            <div
-              class="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-            >
-              <span class="text-sm text-gray-500 font-medium"
-                >Cartões de Crédito</span
-              >
-              <div class="text-sm text-gray-400 italic mt-2">
-                Nenhum cartão vinculado
-              </div>
-              <div
-                class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline"
-              >
-                Configurar sincronização
-              </div>
-            </div>
-          </div>
-
-          <!-- Tabs -->
-          <p-tabs value="0">
-            <p-tablist>
-              <p-tab value="0">Recorrências</p-tab>
-              <p-tab value="1">Mensal</p-tab>
-              <p-tab value="2">Todas as Recorrências</p-tab>
-            </p-tablist>
-
-            <p-tabpanels>
-              <!-- Tab 1: Recurring (Dashboard View) -->
-              <p-tabpanel value="0">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
-                  <!-- Calendar Placeholder (Left/Top) -->
-                  <div
-                    class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-h-[400px] flex items-center justify-center text-gray-400"
-                  >
-                    <div class="text-center">
-                      <i class="pi pi-calendar text-4xl mb-2"></i>
-                      <p>Visualização de Calendário (Em Breve)</p>
-                    </div>
-                  </div>
-
-                  <!-- Upcoming List (Right/Bottom) -->
-                  <div class="lg:col-span-4 flex flex-col gap-4">
-                    <h3 class="font-bold text-gray-800">
-                      Próximos Vencimentos
-                    </h3>
-
-                    <div class="flex flex-col gap-3">
-                      @for (item of projectedRecurrences(); track item.id) {
-                      <div
-                        class="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center shadow-sm"
-                      >
-                        <div class="flex items-center gap-3">
-                          <div
-                            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"
-                          >
-                            <i class="pi pi-receipt"></i>
-                          </div>
-                          <div class="flex flex-col">
-                            <span class="font-medium text-gray-800">{{
-                              item.name
-                            }}</span>
-                            <span class="text-xs text-gray-500"
-                              >{{ item.dueDate | date : "dd MMM" }} ({{
-                                item.periodicity
-                              }})</span
-                            >
-                          </div>
-                        </div>
-                        <div class="flex flex-col items-end">
-                          <span class="font-bold text-gray-800">{{
-                            item.amount | currency : "BRL"
-                          }}</span>
-                          <span
-                            class="text-[10px] px-1.5 py-0.5 rounded"
-                            [class.bg-green-100]="item.status === 'paid'"
-                            [class.text-green-700]="item.status === 'paid'"
-                            [class.bg-yellow-100]="item.status === 'pending'"
-                            [class.text-yellow-700]="item.status === 'pending'"
-                          >
-                            {{ item.status === "paid" ? "Pago" : "Pendente" }}
-                          </span>
-                        </div>
-                      </div>
-                      } @if (projectedRecurrences().length === 0) {
-                      <div class="text-center py-8 text-gray-400 italic">
-                        Nenhuma recorrência este mês.
-                      </div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </p-tabpanel>
-
-              <!-- Tab 2: Monthly (Full Calendar) -->
-              <p-tabpanel value="1">
-                <div
-                  class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-400"
-                >
-                  <i class="pi pi-calendar-plus text-4xl mb-2"></i>
-                  <p>Visualização Mensal Detalhada (Em Breve)</p>
-                </div>
-              </p-tabpanel>
-
-              <!-- Tab 3: All Recurring (Management Table) -->
-              <p-tabpanel value="2">
-                <div
-                  class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4"
-                >
-                  <p-table
-                    [value]="recurrences()"
-                    [tableStyle]="{ 'min-width': '50rem' }"
-                  >
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Periodicidade</th>
-                        <th>Dia de Vencimento</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-rec>
-                      <tr>
-                        <td class="font-medium">{{ rec.name }}</td>
-                        <td>{{ rec.amount | currency : "BRL" }}</td>
-                        <td>
-                          <p-tag
-                            [value]="rec.periodicity"
-                            severity="info"
-                          ></p-tag>
-                        </td>
-                        <td>Dia {{ rec.due_day }}</td>
-                        <td>
-                          <p-tag
-                            [value]="rec.active ? 'Ativo' : 'Inativo'"
-                            [severity]="rec.active ? 'success' : 'danger'"
-                          ></p-tag>
-                        </td>
-                        <td>
-                          <p-button
-                            icon="pi pi-times"
-                            [rounded]="true"
-                            [text]="true"
-                            severity="danger"
-                            pTooltip="Cancelar Assinatura"
-                            (onClick)="cancelRecurrence(rec)"
-                          >
-                          </p-button>
-                        </td>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="emptymessage">
-                      <tr>
-                        <td colspan="6" class="text-center py-8 text-gray-500">
-                          Nenhuma assinatura ativa encontrada.
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-              </p-tabpanel>
-            </p-tabpanels>
-          </p-tabs>
-        </div>
-        <p-toast></p-toast>
-        <p-confirmDialog></p-confirmDialog>
+        <span class="font-medium text-gray-600">{{ totalPaid() | currency : "BRL" }} pago</span>
+        <span class="font-medium text-gray-600">{{ totalRemaining() | currency : "BRL" }} restante</span>
       </div>
     </div>
   </div>
+
+  <!-- Tabs -->
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0">Recorrências</p-tab>
+      <p-tab value="1">Mensal</p-tab>
+      <p-tab value="2">Todas as Recorrências</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- Tab 0: Calendar View -->
+      <p-tabpanel value="0">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
+          <!-- Calendar (Left/Top) -->
+          <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-h-[400px]">
+            <!-- Calendar Header -->
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-bold text-gray-800 capitalize">
+                {{ monthLabel() }}
+              </h2>
+              <div class="flex gap-2">
+                <p-button icon="pi pi-chevron-left" [rounded]="true" [text]="true" (onClick)="prevMonth()"></p-button>
+                <p-button icon="pi pi-chevron-right" [rounded]="true" [text]="true" (onClick)="nextMonth()"></p-button>
+              </div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="grid grid-cols-7 gap-2">
+              <!-- Weekday Headers -->
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Dom</div>
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Seg</div>
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Ter</div>
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Qua</div>
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Qui</div>
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Sex</div>
+              <div class="text-center text-sm font-semibold text-gray-500 py-2">Sáb</div>
+
+              <!-- Days -->
+              @for (date of daysInMonth(); track $index) {
+              <div
+                class="min-h-[80px] border border-gray-100 rounded-lg p-1 relative hover:bg-gray-50 transition-colors flex flex-col gap-1"
+                [class.bg-gray-50]="!date" [class.opacity-50]="!date">
+                @if (date) {
+                <span class="text-sm font-medium text-gray-700 block mb-1">{{ date.getDate() }}</span>
+
+                <!-- Recurrences for the day -->
+                @for (rec of getRecurrencesForDay(date); track rec.id) {
+                <div class="text-[10px] px-1 rounded truncate cursor-pointer"
+                  [class.bg-green-100]="rec.status === 'paid'" [class.text-green-700]="rec.status === 'paid'"
+                  [class.bg-yellow-100]="rec.status === 'pending'" [class.text-yellow-700]="rec.status === 'pending'"
+                  [pTooltip]="rec.name + ': ' + (rec.amount | currency : 'BRL')" (click)="showDialog(rec)">
+                  {{ rec.name }}
+                </div>
+                }
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- Upcoming List (Right/Bottom) -->
+          <div class="lg:col-span-4 flex flex-col gap-4">
+            <h3 class="font-bold text-gray-800">
+              Próximos Vencimentos
+            </h3>
+
+            <div class="flex flex-col gap-3">
+              @for (item of projectedRecurrences(); track item.id) {
+              <div class="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center shadow-sm">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                    <i class="pi pi-receipt"></i>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-medium text-gray-800">{{ item.name }}</span>
+                    <span class="text-xs text-gray-500">{{ item.dueDate | date : "dd MMM" }} ({{ item.periodicity |
+                      periodicity }})</span>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="font-bold text-gray-800">{{ item.amount | currency : "BRL" }}</span>
+
+                  <div class="flex gap-1">
+                    <span class="text-[10px] px-1.5 py-0.5 rounded cursor-pointer"
+                      [class.bg-green-100]="item.status === 'paid'" [class.text-green-700]="item.status === 'paid'"
+                      [class.bg-yellow-100]="item.status === 'pending'"
+                      [class.text-yellow-700]="item.status === 'pending'"
+                      (click)="item.status === 'paid' ? markAsUnpaid(item) : markAsPaid(item)"
+                      pTooltip="Clique para alterar status">
+                      {{ item.status === "paid" ? "Pago" : "Pendente" }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              }
+              @if (projectedRecurrences().length === 0) {
+              <div class="text-center py-8 text-gray-400 italic">
+                Nenhuma recorrência este mês.
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 1: Detailed Monthly View -->
+      <p-tabpanel value="1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Detalhamento Mensal - {{ monthLabel() }}</h3>
+          </div>
+
+          <p-table [value]="projectedRecurrences()" [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-rec>
+              <tr>
+                <td>{{ rec.dueDate | date : "dd/MM/yyyy" }}</td>
+                <td class="font-medium">{{ rec.name }}</td>
+                <td>{{ rec.amount | currency : "BRL" }}</td>
+                <td>
+                  <span class="text-xs px-2 py-1 rounded-full font-semibold"
+                    [class.bg-green-100]="rec.status === 'paid'" [class.text-green-700]="rec.status === 'paid'"
+                    [class.bg-yellow-100]="rec.status === 'pending'" [class.text-yellow-700]="rec.status === 'pending'">
+                    {{ rec.status === "paid" ? "Pago" : "Pendente" }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success"
+                      pTooltip="Marcar como Pago" *ngIf="rec.status !== 'paid'" (onClick)="markAsPaid(rec)"></p-button>
+                    <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="warn"
+                      pTooltip="Marcar como Pendente" *ngIf="rec.status === 'paid'"
+                      (onClick)="markAsUnpaid(rec)"></p-button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center py-8 text-gray-500">
+                  Nenhuma recorrência para este mês.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 2: All Recurring (Management Table) -->
+      <p-tabpanel value="2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+          <p-table [value]="recurrences()" [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nome</th>
+                <th>Valor</th>
+                <th>Periodicidade</th>
+                <th>Dia de Vencimento</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-rec>
+              <tr>
+                <td class="font-medium">{{ rec.name }}</td>
+                <td>{{ rec.amount | currency : "BRL" }}</td>
+                <td>
+                  <p-tag [value]="rec.periodicity | periodicity" severity="info"></p-tag>
+                </td>
+                <td>Dia {{ rec.due_day }}</td>
+                <td>
+                  <p-tag [value]="rec.active ? 'Ativo' : 'Inativo'"
+                    [severity]="rec.active ? 'success' : 'danger'"></p-tag>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" pTooltip="Editar"
+                      (onClick)="showDialog(rec)"></p-button>
+                    <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger"
+                      pTooltip="Cancelar Assinatura" (onClick)="cancelRecurrence(rec)"></p-button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center py-8 text-gray-500">
+                  Nenhuma assinatura ativa encontrada.
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <!-- Dialog -->
+  <p-dialog [(visible)]="displayDialog" [header]="dialogHeader" [modal]="true" [style]="{width: '450px'}"
+    styleClass="p-fluid">
+    <ng-template pTemplate="content">
+      <form [formGroup]="recurrenceForm" class="flex flex-col gap-4 mt-2">
+        <div class="flex justify-center mb-2">
+          <p-selectButton [options]="typeOptions" [(ngModel)]="selectedType" [ngModelOptions]="{standalone: true}"
+            optionLabel="label" optionValue="value"></p-selectButton>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="name" class="font-semibold">Nome</label>
+          <input pInputText id="name" formControlName="name" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="amount" class="font-semibold">Valor</label>
+          <p-inputNumber id="amount" formControlName="amount" mode="currency" currency="BRL" locale="pt-BR"
+            styleClass="w-full"></p-inputNumber>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label for="periodicity" class="font-semibold">Periodicidade</label>
+            <p-select id="periodicity" [options]="periodicityOptions" formControlName="periodicity" optionLabel="label"
+              optionValue="value" styleClass="w-full"></p-select>
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="due_day" class="font-semibold">Dia Vencimento</label>
+            <p-select id="due_day" [options]="dayOptions" formControlName="due_day" optionLabel="label"
+              optionValue="value" placeholder="Selecione o dia" styleClass="w-full"></p-select>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2" *ngIf="recurrenceForm.get('periodicity')?.value === 'yearly'">
+          <label for="due_month" class="font-semibold">Mês de Vencimento</label>
+          <p-select id="due_month" [options]="monthOptions" formControlName="due_month" optionLabel="label"
+            optionValue="value" placeholder="Selecione o mês" styleClass="w-full"></p-select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="category_id" class="font-semibold">Categoria</label>
+          <p-select id="category_id" [options]="filteredCategories()" formControlName="category_id" optionLabel="name"
+            optionValue="id" placeholder="Selecione uma categoria" styleClass="w-full"></p-select>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="account_id" class="font-semibold">Conta</label>
+          <p-select id="account_id" [options]="accounts()" formControlName="account_id" optionLabel="name"
+            optionValue="id" placeholder="Selecione uma conta" styleClass="w-full"></p-select>
+        </div>
+
+        <div class="flex items-center gap-2 mt-2">
+          <p-checkbox id="auto_pay" formControlName="auto_pay" [binary]="true"></p-checkbox>
+          <label for="auto_pay">Pagamento Automático</label>
+        </div>
+      </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="displayDialog = false"></p-button>
+      <p-button label="Salvar" icon="pi pi-check" (onClick)="saveRecurrence()"
+        [disabled]="recurrenceForm.invalid"></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
 </div>

@@ -14,9 +14,17 @@ export class RecurrenceService {
   getRecurrences(activeOnly: boolean = false): Observable<Recurrence[]> {
     let params = new HttpParams();
     if (activeOnly) {
-        params = params.set('active_only', 'true');
+      params = params.set('active_only', 'true');
     }
     return this.http.get<Recurrence[]>(this.apiUrl, { params });
+  }
+
+  createRecurrence(recurrence: Recurrence): Observable<Recurrence> {
+    return this.http.post<Recurrence>(this.apiUrl, recurrence);
+  }
+
+  updateRecurrence(id: string, recurrence: Partial<Recurrence>): Observable<Recurrence> {
+    return this.http.put<Recurrence>(`${this.apiUrl}/${id}`, recurrence);
   }
 
   cancelRecurrence(id: string): Observable<Recurrence> {

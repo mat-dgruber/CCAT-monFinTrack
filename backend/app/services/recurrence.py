@@ -86,7 +86,7 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
     
     doc_ref.update({
         "active": False,
-        "cancellation_date": datetime.now()
+        "cancellation_date": datetime.now().date().isoformat()
     })
     
     updated_doc = doc_ref.get()

@@ -1,3 +1,9 @@
+export enum RecurrencePeriodicity {
+    MONTHLY = 'monthly',
+    WEEKLY = 'weekly',
+    YEARLY = 'yearly'
+}
+
 export interface Recurrence {
     id: string;
     user_id: string;
@@ -9,6 +15,7 @@ export interface Recurrence {
     periodicity: string;
     auto_pay: boolean;
     due_day: number;
+    due_month?: number;
     active: boolean;
     created_at: Date;
     last_processed_at?: Date;

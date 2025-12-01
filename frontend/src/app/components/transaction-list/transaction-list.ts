@@ -56,10 +56,20 @@ export class TransactionList implements OnInit {
   categories = signal<Category[]>([]);
   flatCategories = signal<any[]>([]); // Categorias formatadas para o dropdown
   selectedCategory = signal<Category | null>(null);
-  
+
   // Novos Estados
   recurrences = signal<Recurrence[]>([]);
   upcomingTransactions = signal<Transaction[]>([]);
+
+  // Filtros de Data
+  filterOptions = [
+    { label: 'Este Mês', value: 'this_month' },
+    { label: 'Esta Semana', value: 'this_week' },
+    { label: 'Mês Passado', value: 'last_month' },
+    { label: 'Este Ano', value: 'this_year' },
+    { label: 'Todas', value: 'all' }
+  ];
+  selectedFilter = signal<string>('this_month');
 
   // Transações Filtradas (Computado)
   transactions = computed(() => {
@@ -74,7 +84,7 @@ export class TransactionList implements OnInit {
     }
 
     // Se for categoria pai, traz ela E suas filhas
-    return all.filter(t => 
+    return all.filter(t =>
       t.category_id === cat.id || t.category?.parent_id === cat.id
     );
   });
@@ -83,7 +93,9 @@ export class TransactionList implements OnInit {
     effect(() => {
       const m = this.filterService.month();
       const y = this.filterService.year();
-      this.refreshService.refreshSignal(); 
+      const filter = this.selectedFilter(); // React to filter changes
+
+      this.refreshService.refreshSignal();
 
       this.loadTransactions(m, y);
       this.loadRecurrences();
@@ -107,10 +119,10 @@ export class TransactionList implements OnInit {
 
   processCategoriesForDropdown(categories: Category[]) {
     const flattened: any[] = [];
-    
+
     // Separa pais e filhos
     const parents = categories.filter(c => !c.parent_id);
-    
+
     parents.forEach(parent => {
       // Adiciona o Pai
       flattened.push({
@@ -136,7 +148,41 @@ export class TransactionList implements OnInit {
   loadTransactions(m?: number, y?: number) {
     const month = m ?? this.filterService.month();
     const year = y ?? this.filterService.year();
+    const filter = this.selectedFilter();
 
+    let startDate: string | undefined;
+    let endDate: string | undefined;
+
+    if (filter === 'this_month') {
+      // Default behavior: use month/year from filterService
+      // No need to set startDate/endDate, backend uses month/year
+    } else if (filter === 'all') {
+      // Send nothing to get all (backend needs to handle no month/year/dates as "all" or we send explicit nulls)
+      // Actually backend requires month/year OR dates. If we want ALL, we might need to not send month/year.
+      // But getTransactions signature expects month/year.
+      // Let's modify getTransactions to allow nulls or handle it here.
+      // If filter is 'all', we pass undefined for month/year/dates.
+      this.transactionService.getTransactions(undefined, undefined, undefined, undefined, undefined).subscribe({
+        next: (data) => this.rawTransactions.set(data),
+        error: (err) => console.error(err)
+      });
+      return;
+    } else {
+      // Calculate dates for other filters
+      const range = this.calculateDateRange(filter);
+      if (range) {
+        startDate = range.start.toISOString();
+        endDate = range.end.toISOString();
+        // When using specific dates, we ignore the global month/year selector
+        this.transactionService.getTransactions(undefined, undefined, undefined, startDate, endDate).subscribe({
+          next: (data) => this.rawTransactions.set(data),
+          error: (err) => console.error(err)
+        });
+        return;
+      }
+    }
+
+    // Default fallback (This Month)
     this.transactionService.getTransactions(month, year).subscribe({
       next: (data) => {
         this.rawTransactions.set(data);
@@ -147,17 +193,48 @@ export class TransactionList implements OnInit {
     });
   }
 
+  calculateDateRange(filter: string): { start: Date, end: Date } | null {
+    const now = new Date();
+    const start = new Date(now);
+    const end = new Date(now);
+
+    if (filter === 'this_week') {
+      const day = now.getDay(); // 0 (Sun) - 6 (Sat)
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+      start.setDate(diff);
+      start.setHours(0, 0, 0, 0);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+    } else if (filter === 'last_month') {
+      start.setMonth(now.getMonth() - 1);
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      end.setMonth(now.getMonth());
+      end.setDate(0); // Last day of previous month
+      end.setHours(23, 59, 59, 999);
+    } else if (filter === 'this_year') {
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+      end.setMonth(11, 31);
+      end.setHours(23, 59, 59, 999);
+    } else {
+      return null;
+    }
+
+    return { start, end };
+  }
+
   loadRecurrences() {
     this.recurrenceService.getRecurrences(true).subscribe({
-        next: (data) => this.recurrences.set(data),
-        error: (err) => console.error('Erro ao carregar recorrências', err)
+      next: (data) => this.recurrences.set(data),
+      error: (err) => console.error('Erro ao carregar recorrências', err)
     });
   }
 
   loadUpcomingTransactions() {
     this.transactionService.getUpcomingTransactions().subscribe({
-        next: (data) => this.upcomingTransactions.set(data),
-        error: (err) => console.error('Erro ao carregar transações futuras', err)
+      next: (data) => this.upcomingTransactions.set(data),
+      error: (err) => console.error('Erro ao carregar transações futuras', err)
     });
   }
 

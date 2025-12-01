@@ -129,13 +129,12 @@ async def process_recurrences():
                 description=f"{rec_data.get('name')} ({next_due.strftime('%m/%Y')})",
                 amount=rec_data.get("amount"),
                 date=next_due,
-                type=TransactionType.EXPENSE, # Assumindo despesa por padrão para recorrências? Ou pegamos da categoria?
-                # Recorrência não tem 'type' salvo. Deveria ter.
-                # Vou assumir Expense.
-                payment_method=PaymentMethod.OTHER, # Deveria vir da recorrência
+                type=TransactionType.EXPENSE, 
+                payment_method=PaymentMethod.OTHER, 
                 category_id=rec_data.get("category_id"),
                 account_id=rec_data.get("account_id"),
-                recurrence_id=rec_id
+                recurrence_id=rec_id,
+                status=TransactionStatus.PAID if rec_data.get("auto_pay") else TransactionStatus.PENDING
             )
             
             # Hack para Payment Method se tiver salvo

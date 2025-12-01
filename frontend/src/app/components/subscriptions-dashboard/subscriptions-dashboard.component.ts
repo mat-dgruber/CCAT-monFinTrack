@@ -1,29 +1,58 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+
+// PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TabsModule } from 'primeng/tabs';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
+import { CheckboxModule } from 'primeng/checkbox';
+import { SelectButtonModule } from 'primeng/selectbutton';
+
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { RecurrenceService } from '../../services/recurrence.service';
-import { Recurrence } from '../../models/recurrence.model';
+import { TransactionService } from '../../services/transaction.service';
+import { Recurrence, RecurrencePeriodicity } from '../../models/recurrence.model';
+import { Transaction } from '../../models/transaction.model';
+
+import { CategoryService } from '../../services/category.service';
+import { AccountService } from '../../services/account.service';
+import { Category } from '../../models/category.model';
+import { Account } from '../../models/account.model';
+import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
 
 @Component({
   selector: 'app-subscriptions-dashboard',
   standalone: true,
   imports: [
-    CommonModule, 
-    ButtonModule, 
-    TableModule, 
+    CommonModule,
+    ButtonModule,
+    TableModule,
     TagModule,
     TabsModule,
     ProgressBarModule,
     ConfirmDialogModule,
-    ToastModule
+    ToastModule,
+    TooltipModule,
+    DialogModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
+    CheckboxModule,
+    SelectButtonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    PeriodicityPipe
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
@@ -31,94 +60,389 @@ import { Recurrence } from '../../models/recurrence.model';
 })
 export class SubscriptionsDashboardComponent implements OnInit {
   private recurrenceService = inject(RecurrenceService);
+  private transactionService = inject(TransactionService);
+  private categoryService = inject(CategoryService);
+  private accountService = inject(AccountService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private fb = inject(FormBuilder);
 
   recurrences = signal<Recurrence[]>([]);
+  transactions = signal<Transaction[]>([]);
+  categories = signal<Category[]>([]);
+  accounts = signal<Account[]>([]);
   currentDate = signal(new Date());
 
-  // Projeção de Recorrências para o Mês Atual
+  // Dialog State
+  displayDialog = false;
+  dialogHeader = '';
+  recurrenceForm: FormGroup;
+  isEditMode = false;
+  currentRecurrenceId: string | null = null;
+  selectedType: 'expense' | 'income' = 'expense';
+
+  typeOptions = [
+    { label: 'Despesa', value: 'expense' },
+    { label: 'Receita', value: 'income' }
+  ];
+
+
+  periodicityOptions = [
+    { label: 'Mensal', value: RecurrencePeriodicity.MONTHLY },
+    { label: 'Anual', value: RecurrencePeriodicity.YEARLY },
+    { label: 'Semanal', value: RecurrencePeriodicity.WEEKLY }
+  ];
+
+  dayOptions = Array.from({ length: 31 }, (_, i) => ({ label: `Dia ${i + 1}`, value: i + 1 }));
+
+  monthOptions = [
+    { label: 'Janeiro', value: 1 },
+    { label: 'Fevereiro', value: 2 },
+    { label: 'Março', value: 3 },
+    { label: 'Abril', value: 4 },
+    { label: 'Maio', value: 5 },
+    { label: 'Junho', value: 6 },
+    { label: 'Julho', value: 7 },
+    { label: 'Agosto', value: 8 },
+    { label: 'Setembro', value: 9 },
+    { label: 'Outubro', value: 10 },
+    { label: 'Novembro', value: 11 },
+    { label: 'Dezembro', value: 12 }
+  ];
+
+  constructor() {
+    this.recurrenceForm = this.fb.group({
+      name: ['', Validators.required],
+      amount: [0, [Validators.required, Validators.min(0.01)]],
+      periodicity: [RecurrencePeriodicity.MONTHLY, Validators.required],
+      due_day: [1, [Validators.required, Validators.min(1), Validators.max(31)]],
+      due_month: [null],
+      category_id: ['', Validators.required],
+      account_id: ['', Validators.required],
+      auto_pay: [false],
+      active: [true]
+    });
+
+    // Reload transactions whenever the current date changes
+    effect(() => {
+      this.loadTransactions();
+    });
+  }
+
+  ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
+    this.loadRecurrences();
+    this.loadTransactions();
+    this.loadCategories();
+    this.loadAccounts();
+  }
+
+  loadRecurrences() {
+    this.recurrenceService.getRecurrences(true).subscribe(data => {
+      this.recurrences.set(data);
+    });
+  }
+
+  loadTransactions() {
+    const date = this.currentDate();
+    this.transactionService.getTransactions(date.getMonth() + 1, date.getFullYear()).subscribe(data => {
+      this.transactions.set(data);
+    });
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories().subscribe(data => {
+      this.categories.set(data);
+    });
+  }
+
+  loadAccounts() {
+    this.accountService.getAccounts().subscribe(data => {
+      this.accounts.set(data);
+    });
+  }
+
+  // Filter categories based on selected type
+  filteredCategories = computed(() => {
+    return this.categories().filter(c => c.type === this.selectedType);
+  });
+
+  // Projeção de Recorrências Unificada com Transações Reais
   projectedRecurrences = computed(() => {
     const active = this.recurrences().filter(r => r.active);
     const date = this.currentDate();
     const month = date.getMonth();
     const year = date.getFullYear();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const currentTransactions = this.transactions();
 
-    return active.map(r => {
-        // Lógica simplificada: assume mensal para todos por enquanto ou usa due_day
-        // Se due_day > dias no mês, ajusta para último dia
-        let day = r.due_day;
-        if (day > daysInMonth) day = daysInMonth;
-        
-        const dueDate = new Date(year, month, day);
-        const isPaid = dueDate < new Date(); // Simplificação: se já passou, tá pago (ou pendente se integrarmos com transações reais)
-        
-        return {
-            ...r,
-            dueDate: dueDate,
-            status: isPaid ? 'paid' : 'pending'
-        };
+    return active.filter(r => {
+      // Filter out yearly recurrences that are not in the current month
+      if (r.periodicity === RecurrencePeriodicity.YEARLY) {
+        // If due_month is set, use it. Otherwise, fallback to creation month.
+        if (r.due_month) {
+          return r.due_month === month + 1; // month is 0-indexed, due_month is 1-indexed
+        }
+
+        // Fallback to creation date if due_month is not set
+        const createdAt = new Date(r.created_at);
+        return createdAt.getMonth() === month;
+      }
+      return true;
+    }).map(r => {
+      let day = r.due_day;
+      if (day > daysInMonth) day = daysInMonth;
+
+      const dueDate = new Date(year, month, day);
+
+      // Tenta encontrar uma transação vinculada a esta recorrência neste mês
+      const linkedTransaction = currentTransactions.find(t => t.recurrence_id === r.id);
+
+      let status = 'pending';
+      let transactionId = null;
+
+      if (linkedTransaction) {
+        status = linkedTransaction.status === 'paid' ? 'paid' : 'pending';
+        transactionId = linkedTransaction.id;
+      } else {
+        // Se não tem transação, verifica se já venceu
+        if (dueDate < new Date() && !r.auto_pay) {
+          // status = 'overdue'; // Podemos adicionar status de atrasado
+        }
+      }
+
+      return {
+        ...r,
+        dueDate: dueDate,
+        status: status,
+        transactionId: transactionId,
+        originalTransaction: linkedTransaction
+      };
     }).sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   });
 
-  // Totais
-  totalMonthly = computed(() => {
-      return this.recurrences()
-        .filter(r => r.active)
-        .reduce((acc, r) => acc + r.amount, 0);
+  // Calendar Logic
+  daysInMonth = computed(() => {
+    const date = this.currentDate();
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const days = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
+
+    const result = [];
+    // Empty slots for previous month
+    for (let i = 0; i < firstDayIndex; i++) {
+      result.push(null);
+    }
+    // Days of current month
+    for (let i = 1; i <= days; i++) {
+      result.push(new Date(year, month, i));
+    }
+    return result;
   });
 
-  totalPaid = computed(() => {
-      return this.projectedRecurrences()
-        .filter(r => r.status === 'paid')
-        .reduce((acc, r) => acc + r.amount, 0);
+  monthLabel = computed(() => {
+    return this.currentDate().toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
   });
 
-  totalRemaining = computed(() => {
-      return this.projectedRecurrences()
-        .filter(r => r.status === 'pending')
-        .reduce((acc, r) => acc + r.amount, 0);
-  });
-
-  progressPercentage = computed(() => {
-      const total = this.totalMonthly();
-      if (total === 0) return 0;
-      return (this.totalPaid() / total) * 100;
-  });
-
-  constructor() {}
-
-  ngOnInit() {
-    this.loadRecurrences();
+  prevMonth() {
+    const date = this.currentDate();
+    this.currentDate.set(new Date(date.getFullYear(), date.getMonth() - 1, 1));
   }
 
-  loadRecurrences() {
-    this.recurrenceService.getRecurrences(true).subscribe(data => {
-        this.recurrences.set(data);
+  nextMonth() {
+    const date = this.currentDate();
+    this.currentDate.set(new Date(date.getFullYear(), date.getMonth() + 1, 1));
+  }
+
+  getRecurrencesForDay(date: Date | null): any[] {
+    if (!date) return [];
+    return this.projectedRecurrences().filter(r => {
+      const rDate = r.dueDate;
+      return rDate.getDate() === date.getDate() &&
+        rDate.getMonth() === date.getMonth() &&
+        rDate.getFullYear() === date.getFullYear();
     });
   }
 
-  cancelRecurrence(recurrence: Recurrence) {
-      this.confirmationService.confirm({
-          message: `Tem certeza que deseja cancelar a assinatura "${recurrence.name}"?`,
-          header: 'Confirmar Cancelamento',
-          icon: 'pi pi-exclamation-triangle',
-          acceptLabel: 'Sim, Cancelar',
-          rejectLabel: 'Não',
-          acceptButtonStyleClass: 'p-button-danger p-button-text',
-          rejectButtonStyleClass: 'p-button-text',
-          accept: () => {
-              this.recurrenceService.cancelRecurrence(recurrence.id).subscribe({
-                  next: () => {
-                      this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Assinatura cancelada.' });
-                      this.loadRecurrences();
-                  },
-                  error: () => {
-                      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao cancelar assinatura.' });
-                  }
-              });
+  // Totais
+  totalMonthly = computed(() => {
+    const date = this.currentDate();
+    const month = date.getMonth() + 1; // 1-indexed for comparison
+
+    return this.recurrences()
+      .filter(r => {
+        if (!r.active) return false;
+        if (r.periodicity === RecurrencePeriodicity.YEARLY) {
+          if (r.due_month) {
+            return r.due_month === month;
           }
+          const createdAt = new Date(r.created_at);
+          return createdAt.getMonth() + 1 === month;
+        }
+        return true;
+      })
+      .reduce((acc, r) => acc + r.amount, 0);
+  });
+
+  totalPaid = computed(() => {
+    return this.projectedRecurrences()
+      .filter(r => r.status === 'paid')
+      .reduce((acc, r) => acc + r.amount, 0);
+  });
+
+  totalRemaining = computed(() => {
+    return this.projectedRecurrences()
+      .filter(r => r.status === 'pending') // ou overdue
+      .reduce((acc, r) => acc + r.amount, 0);
+  });
+
+  progressPercentage = computed(() => {
+    const total = this.totalMonthly();
+    if (total === 0) return 0;
+    return (this.totalPaid() / total) * 100;
+  });
+
+  // Actions
+  showDialog(recurrence?: Recurrence) {
+    this.displayDialog = true;
+
+    if (recurrence) {
+      this.isEditMode = true;
+      this.dialogHeader = 'Editar Recorrência';
+      this.currentRecurrenceId = recurrence.id;
+      this.recurrenceForm.patchValue(recurrence);
+
+      // Try to determine type from category if editing
+      const category = this.categories().find(c => c.id === recurrence.category_id);
+      if (category) {
+        this.selectedType = category.type as 'expense' | 'income';
+      } else {
+        this.selectedType = 'expense'; // Default fallback
+      }
+
+    } else {
+      this.isEditMode = false;
+      this.dialogHeader = 'Nova Recorrência';
+      this.currentRecurrenceId = null;
+      this.selectedType = 'expense'; // Default for new
+      this.recurrenceForm.reset({
+        periodicity: RecurrencePeriodicity.MONTHLY,
+        due_day: 1,
+        active: true,
+        auto_pay: false
       });
+    }
+  }
+
+  saveRecurrence() {
+    if (this.recurrenceForm.invalid) return;
+
+    const formValue = this.recurrenceForm.value;
+
+    if (this.isEditMode && this.currentRecurrenceId) {
+      this.recurrenceService.updateRecurrence(this.currentRecurrenceId, formValue).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Recorrência atualizada.' });
+          this.displayDialog = false;
+          this.loadRecurrences();
+        },
+        error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar.' })
+      });
+    } else {
+      this.recurrenceService.createRecurrence(formValue).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Recorrência criada.' });
+          this.displayDialog = false;
+          this.loadRecurrences();
+        },
+        error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar.' })
+      });
+    }
+  }
+
+  cancelRecurrence(recurrence: Recurrence) {
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja cancelar a assinatura "${recurrence.name}"?`,
+      header: 'Confirmar Cancelamento',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sim, Cancelar',
+      rejectLabel: 'Não',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.recurrenceService.cancelRecurrence(recurrence.id).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Assinatura cancelada.' });
+            this.loadRecurrences();
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao cancelar assinatura.' });
+          }
+        });
+      }
+    });
+  }
+
+  markAsPaid(item: any) {
+    if (item.transactionId && item.originalTransaction) {
+      const payload = {
+        description: item.originalTransaction.description,
+        amount: item.originalTransaction.amount,
+        date: item.originalTransaction.date,
+        type: item.originalTransaction.type,
+        payment_method: item.originalTransaction.payment_method,
+        category_id: item.originalTransaction.category.id,
+        account_id: item.originalTransaction.account.id,
+        status: 'paid',
+        recurrence_id: item.originalTransaction.recurrence_id
+      };
+
+      this.transactionService.updateTransaction(item.transactionId, payload as any).subscribe(() => {
+        this.loadTransactions();
+      });
+    } else {
+      const rec = this.recurrences().find(r => r.id === item.id);
+      if (!rec) return;
+
+      const newTransaction: any = {
+        description: `${rec.name} (${item.dueDate.getMonth() + 1}/${item.dueDate.getFullYear()})`,
+        amount: rec.amount,
+        date: item.dueDate,
+        type: 'expense', // TODO: Use correct type from category
+        payment_method: 'other',
+        category_id: rec.category_id,
+        account_id: rec.account_id,
+        recurrence_id: rec.id,
+        status: 'paid'
+      };
+
+      this.transactionService.createTransaction(newTransaction).subscribe(() => {
+        this.loadTransactions();
+      });
+    }
+  }
+
+  markAsUnpaid(item: any) {
+    if (item.transactionId && item.originalTransaction) {
+      const payload = {
+        description: item.originalTransaction.description,
+        amount: item.originalTransaction.amount,
+        date: item.originalTransaction.date,
+        type: item.originalTransaction.type,
+        payment_method: item.originalTransaction.payment_method,
+        category_id: item.originalTransaction.category.id,
+        account_id: item.originalTransaction.account.id,
+        status: 'pending',
+        recurrence_id: item.originalTransaction.recurrence_id
+      };
+
+      this.transactionService.updateTransaction(item.transactionId, payload as any).subscribe(() => {
+        this.loadTransactions();
+      });
+    }
   }
 }

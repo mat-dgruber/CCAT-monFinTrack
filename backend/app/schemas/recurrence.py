@@ -14,10 +14,11 @@ class RecurrenceBase(BaseModel):
     amount: float = Field(..., gt=0, description="Valor fixo da recorrência")
     category_id: str = Field(..., description="ID da categoria")
     account_id: str = Field(..., description="ID da conta")
-    payment_method_id: str = Field(..., description="ID da forma de pagamento (não usado diretamente na lógica, mas útil para UI)")
+    payment_method_id: Optional[str] = Field(None, description="ID da forma de pagamento (não usado diretamente na lógica, mas útil para UI)")
     periodicity: RecurrencePeriodicity = Field(..., description="Periodicidade")
     auto_pay: bool = Field(False, description="Se true, gera como PAGO. Se false, PENDENTE.")
     due_day: int = Field(..., ge=1, le=31, description="Dia base de vencimento")
+    due_month: Optional[int] = Field(None, ge=1, le=12, description="Mês de vencimento para recorrências anuais")
     active: bool = Field(True, description="Se a recorrência está ativa")
 
     @field_validator('name')
@@ -37,6 +38,7 @@ class RecurrenceUpdate(BaseModel):
     periodicity: Optional[RecurrencePeriodicity] = None
     auto_pay: Optional[bool] = None
     due_day: Optional[int] = None
+    due_month: Optional[int] = None
     active: Optional[bool] = None
     last_processed_at: Optional[datetime] = None
 

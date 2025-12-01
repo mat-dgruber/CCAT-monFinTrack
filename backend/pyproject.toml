@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "bleach>=6.3.0",
+    "dateutil",
     "fastapi>=0.121.2",
     "firebase-admin>=7.1.0",
     "pydantic>=2.12.4",

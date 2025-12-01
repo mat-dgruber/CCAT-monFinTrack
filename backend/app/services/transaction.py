@@ -309,7 +309,7 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
     # CENÁRIO C: Simples (Default)
     return [create_transaction(transaction_in, user_id)]
 
-def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[int] = None, limit: Optional[int] = None) -> list[Transaction]:
+def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[int] = None, limit: Optional[int] = None, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> list[Transaction]:
     db = get_db()
     # FILTRO DO USUÁRIO
     query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
@@ -317,9 +317,8 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
 
     transactions = []
     
-    start_date = None
-    end_date = None
-    if month and year:
+    # Se não vieram datas específicas, mas veio mês/ano, calcula o range
+    if not start_date and not end_date and month and year:
         start_date, end_date = get_month_range(month, year)
 
     for t in all_transactions:
