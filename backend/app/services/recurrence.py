@@ -43,9 +43,19 @@ def list_recurrences(user_id: str, active_only: bool = False) -> List[Recurrence
         query = query.where("active", "==", True)
         
     docs = query.stream()
-    return [Recurrence(id=doc.id, **doc.to_dict()) for doc in docs]
+    results = []
+    for doc in docs:
+        try:
+            results.append(Recurrence(id=doc.id, **doc.to_dict()))
+        except Exception as e:
+            print(f"Error parsing recurrence {doc.id}: {e}")
+            # Optionally continue or raise. For debugging, printing is good.
+            # If we want to avoid 500 for the user, we can skip the bad record:
+            continue
+            
+    return results
 
-def update_recurrence(recurrence_id: str, recurrence_in: RecurrenceUpdate, user_id: str) -> Recurrence:
+def update_recurrence(recurrence_id: str, recurrence_in: RecurrenceUpdate, user_id: str, scope: str = "all") -> Recurrence:
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(recurrence_id)
     doc = doc_ref.get()
@@ -53,6 +63,41 @@ def update_recurrence(recurrence_id: str, recurrence_in: RecurrenceUpdate, user_
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
         raise HTTPException(status_code=404, detail="Recurrence not found")
         
+    current_data = doc.to_dict()
+    
+    # If scope is "future", we cancel the current one and create a new one
+    if scope == "future":
+        # 1. Cancel current recurrence
+        now = datetime.now()
+        doc_ref.update({
+            "active": False,
+            "cancellation_date": now.date().isoformat()
+        })
+        
+        # 2. Create new recurrence with updated data
+        new_data = current_data.copy()
+        # Remove system fields that should be reset
+        new_data.pop('id', None)
+        new_data.pop('created_at', None)
+        new_data.pop('cancellation_date', None)
+        
+        # Apply updates
+        update_data = recurrence_in.model_dump(exclude_unset=True)
+        if 'periodicity' in update_data and update_data['periodicity']:
+            update_data['periodicity'] = update_data['periodicity'].value
+            
+        new_data.update(update_data)
+        
+        # Set new creation date and ensure active
+        new_data['created_at'] = now
+        new_data['active'] = True
+        
+        # Create the new document
+        _, new_ref = db.collection(COLLECTION_NAME).add(new_data)
+        
+        return Recurrence(id=new_ref.id, **new_data)
+
+    # Default "all": update in place
     data = recurrence_in.model_dump(exclude_unset=True)
     
     if 'periodicity' in data and data['periodicity']:

@@ -141,7 +141,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   }
 
   loadRecurrences() {
-    this.recurrenceService.getRecurrences(true).subscribe(data => {
+    this.recurrenceService.getRecurrences(false).subscribe(data => {
       this.recurrences.set(data);
     });
   }
@@ -170,16 +170,36 @@ export class SubscriptionsDashboardComponent implements OnInit {
     return this.categories().filter(c => c.type === this.selectedType);
   });
 
+  // Active Recurrences for Management Tab
+  activeRecurrences = computed(() => {
+    return this.recurrences().filter(r => r.active);
+  });
+
   // Projeção de Recorrências Unificada com Transações Reais
   projectedRecurrences = computed(() => {
-    const active = this.recurrences().filter(r => r.active);
+    // We now use ALL recurrences (active and inactive) to show history correctly
+    const allRecurrences = this.recurrences();
     const date = this.currentDate();
     const month = date.getMonth();
     const year = date.getFullYear();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Start and End of the current view month
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
     const currentTransactions = this.transactions();
 
-    return active.filter(r => {
+    return allRecurrences.filter(r => {
+      const createdAt = new Date(r.created_at);
+      const cancellationDate = r.cancellation_date ? new Date(r.cancellation_date) : null;
+
+      // 1. Must be created before or during this month
+      if (createdAt > endOfMonth) return false;
+
+      // 2. If cancelled, must be cancelled AFTER the start of this month
+      // (i.e. it was still active for at least part of this month)
+      if (cancellationDate && cancellationDate < startOfMonth) return false;
+
       // Filter out yearly recurrences that are not in the current month
       if (r.periodicity === RecurrencePeriodicity.YEARLY) {
         // If due_month is set, use it. Otherwise, fallback to creation month.
@@ -188,7 +208,6 @@ export class SubscriptionsDashboardComponent implements OnInit {
         }
 
         // Fallback to creation date if due_month is not set
-        const createdAt = new Date(r.created_at);
         return createdAt.getMonth() === month;
       }
       return true;
@@ -198,30 +217,47 @@ export class SubscriptionsDashboardComponent implements OnInit {
 
       const dueDate = new Date(year, month, day);
 
-      // Tenta encontrar uma transação vinculada a esta recorrência neste mês
-      const linkedTransaction = currentTransactions.find(t => t.recurrence_id === r.id);
+      // Check if there is a real transaction for this recurrence in this month
+      const transaction = currentTransactions.find(t => {
+        if (t.recurrence_id !== r.id) return false;
+        const tDate = new Date(t.date);
+        return tDate.getMonth() === month && tDate.getFullYear() === year;
+      });
 
-      let status = 'pending';
-      let transactionId = null;
-
-      if (linkedTransaction) {
-        status = linkedTransaction.status === 'paid' ? 'paid' : 'pending';
-        transactionId = linkedTransaction.id;
-      } else {
-        // Se não tem transação, verifica se já venceu
-        if (dueDate < new Date() && !r.auto_pay) {
-          // status = 'overdue'; // Podemos adicionar status de atrasado
-        }
+      if (transaction) {
+        return {
+          id: r.id,
+          name: transaction.description, // Use transaction description
+          amount: transaction.amount,
+          dueDate: new Date(transaction.date),
+          status: transaction.status, // 'paid' or 'pending'
+          periodicity: r.periodicity,
+          transactionId: transaction.id,
+          originalTransaction: transaction,
+          active: r.active
+        };
       }
 
+      // If cancelled before due date and not paid, don't show
+      const cancellationDate = r.cancellation_date ? new Date(r.cancellation_date) : null;
+      if (cancellationDate && cancellationDate < dueDate) {
+        return null;
+      }
+
+      // Virtual projection
       return {
-        ...r,
+        id: r.id,
+        name: r.name,
+        amount: r.amount,
         dueDate: dueDate,
-        status: status,
-        transactionId: transactionId,
-        originalTransaction: linkedTransaction
+        status: r.auto_pay ? 'paid' : 'pending',
+        periodicity: r.periodicity,
+        transactionId: null,
+        active: r.active
       };
-    }).sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    })
+      .filter(item => item !== null) // Remove nulls (cancelled before due date)
+      .sort((a, b) => a!.dueDate.getTime() - b!.dueDate.getTime()) as any[]; // Cast to remove null type
   });
 
   // Calendar Logic
@@ -270,22 +306,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
 
   // Totais
   totalMonthly = computed(() => {
-    const date = this.currentDate();
-    const month = date.getMonth() + 1; // 1-indexed for comparison
-
-    return this.recurrences()
-      .filter(r => {
-        if (!r.active) return false;
-        if (r.periodicity === RecurrencePeriodicity.YEARLY) {
-          if (r.due_month) {
-            return r.due_month === month;
-          }
-          const createdAt = new Date(r.created_at);
-          return createdAt.getMonth() + 1 === month;
-        }
-        return true;
-      })
-      .reduce((acc, r) => acc + r.amount, 0);
+    return this.projectedRecurrences().reduce((acc, curr) => acc + curr.amount, 0);
   });
 
   totalPaid = computed(() => {
@@ -296,7 +317,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
 
   totalRemaining = computed(() => {
     return this.projectedRecurrences()
-      .filter(r => r.status === 'pending') // ou overdue
+      .filter(r => r.status === 'pending')
       .reduce((acc, r) => acc + r.amount, 0);
   });
 
@@ -344,13 +365,21 @@ export class SubscriptionsDashboardComponent implements OnInit {
     const formValue = this.recurrenceForm.value;
 
     if (this.isEditMode && this.currentRecurrenceId) {
-      this.recurrenceService.updateRecurrence(this.currentRecurrenceId, formValue).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Recorrência atualizada.' });
-          this.displayDialog = false;
-          this.loadRecurrences();
+      // Ask user for scope: All or Future
+      this.confirmationService.confirm({
+        message: 'Deseja aplicar as alterações em todos os registros ou apenas nos próximos?',
+        header: 'Atualizar Recorrência',
+        icon: 'pi pi-question-circle',
+        acceptLabel: 'Apenas Próximos',
+        rejectLabel: 'Todos',
+        acceptButtonStyleClass: 'p-button-outlined p-button-info',
+        rejectButtonStyleClass: 'p-button-text p-button-secondary',
+        accept: () => {
+          this.updateRecurrence(this.currentRecurrenceId!, formValue, 'future');
         },
-        error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar.' })
+        reject: () => {
+          this.updateRecurrence(this.currentRecurrenceId!, formValue, 'all');
+        }
       });
     } else {
       this.recurrenceService.createRecurrence(formValue).subscribe({
@@ -362,6 +391,17 @@ export class SubscriptionsDashboardComponent implements OnInit {
         error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar.' })
       });
     }
+  }
+
+  updateRecurrence(id: string, data: any, scope: 'all' | 'future') {
+    this.recurrenceService.updateRecurrence(id, data, scope).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Recorrência atualizada.' });
+        this.displayDialog = false;
+        this.loadRecurrences();
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar.' })
+    });
   }
 
   cancelRecurrence(recurrence: Recurrence) {

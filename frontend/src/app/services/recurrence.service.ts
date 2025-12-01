@@ -23,8 +23,9 @@ export class RecurrenceService {
     return this.http.post<Recurrence>(this.apiUrl, recurrence);
   }
 
-  updateRecurrence(id: string, recurrence: Partial<Recurrence>): Observable<Recurrence> {
-    return this.http.put<Recurrence>(`${this.apiUrl}/${id}`, recurrence);
+  updateRecurrence(id: string, recurrence: Partial<Recurrence>, scope: 'all' | 'future' = 'all'): Observable<Recurrence> {
+    let params = new HttpParams().set('scope', scope);
+    return this.http.put<Recurrence>(`${this.apiUrl}/${id}`, recurrence, { params });
   }
 
   cancelRecurrence(id: string): Observable<Recurrence> {
