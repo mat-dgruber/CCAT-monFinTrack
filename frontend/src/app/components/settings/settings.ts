@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { UserPreferenceService } from '../../services/user-preference.service';
+import { UserPreference } from '../../models/user-preference.model';
 
 // PrimeNG Imports
 import { CardModule } from 'primeng/card';
@@ -48,10 +50,14 @@ export class Settings {
   router = inject(Router);
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
+  preferenceService = inject(UserPreferenceService);
+
+  preferences: UserPreference | null = null;
+
 
   displayName = signal('');
   email = signal('');
-  
+
   // Profile
   birthday = signal<Date | null>(null);
   selectedTimezone = signal<string>('Europe/Paris');
@@ -76,9 +82,17 @@ export class Settings {
       this.displayName.set(user.displayName || '');
       this.email.set(user.email || '');
     }
-    
+
     // Sync local state with service
     this.selectedTheme.set(this.themeService.darkMode() ? 'dark' : 'light');
+
+    this.preferenceService.preferences$.subscribe(prefs => {
+      this.preferences = prefs;
+      if (prefs) {
+        this.selectedTheme.set(prefs.theme);
+        // Sync other fields if needed, e.g. language
+      }
+    });
   }
 
   async updateProfile() {
@@ -91,12 +105,12 @@ export class Settings {
     // For this iteration, I'll skip implementing the actual update call in AuthService if it's not there,
     // or I can quickly add it. 
     // Let's check AuthService again. It imports updateProfile from firebase/auth but only uses it in register.
-    
+
     // I will implement a simple placeholder for now or add it to AuthService if needed.
     // Actually, I can just use the one from firebase/auth if I import it, but cleaner to go through service.
     // Let's assume for now I'll just show a toast saying "Profile Updated" 
     // since the requirement was "Gerenciar perfil".
-    
+
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Profile updated successfully' });
   }
 
@@ -112,7 +126,16 @@ export class Settings {
   }
 
   onThemeChange() {
-    if (this.selectedTheme() === 'dark') {
+    const newTheme = this.selectedTheme();
+
+    // Update Service
+    if (this.preferences) {
+      this.preferences.theme = newTheme;
+      this.preferenceService.updatePreferences({ theme: newTheme }).subscribe();
+    }
+
+    // Update Local Theme Service
+    if (newTheme === 'dark') {
       if (!this.themeService.darkMode()) {
         this.themeService.toggleTheme();
       }
@@ -120,6 +143,33 @@ export class Settings {
       if (this.themeService.darkMode()) {
         this.themeService.toggleTheme();
       }
+    }
+  }
+
+  onLanguageChange(event: any) {
+    if (this.preferences) {
+      this.preferences.language = event.value;
+      this.preferenceService.updatePreferences({ language: event.value }).subscribe();
+    }
+  }
+
+  onNotificationChange(event: any) {
+    if (this.preferences) {
+      this.preferenceService.updatePreferences({ notifications_enabled: this.preferences.notifications_enabled }).subscribe();
+    }
+  }
+
+  onUpload(event: any) {
+    const file = event.files[0];
+    if (file) {
+      this.preferenceService.uploadAvatar(file).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Avatar atualizado!' });
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar avatar.' });
+        }
+      });
     }
   }
 
