@@ -1,8 +1,12 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 // Mantemos o Async para performance no Angular 20
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
+
+registerLocaleData(localePt);
 
 // --- NOVOS IMPORTS DO PRIMENG ---
 import { providePrimeNG } from 'primeng/config';
@@ -21,13 +25,14 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
       withInterceptors([jwtInterceptor])),
+    { provide: LOCALE_ID, useValue: 'pt-BR' },
 
 
     providePrimeNG({
-                    theme: {
-                        preset: Aura
-                    }
-                })
+      theme: {
+        preset: Aura
+      }
+    })
 
     , ConfirmationService, MessageService // <--- Adicione aqui
   ]

@@ -87,6 +87,56 @@ export class TransactionManager implements OnInit {
 
   // UI State
   loading = signal(false);
+  selectedDatePreset = signal<string | null>(null);
+
+  datePresets = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Esse Mês', value: 'this-month' },
+    { label: 'Mês Passado', value: 'last-month' },
+    { label: 'Essa Semana', value: 'this-week' },
+    { label: 'Esse Ano', value: 'this-year' },
+    { label: 'Personalizado', value: 'custom' }
+  ];
+
+  onPresetChange() {
+    const preset = this.selectedDatePreset();
+    const now = new Date();
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    switch (preset) {
+      case 'this-month':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'last-month':
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0);
+        break;
+      case 'this-week':
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        start = new Date(now.setDate(diff));
+        end = new Date(now.setDate(start.getDate() + 6));
+        break;
+      case 'this-year':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date(now.getFullYear(), 11, 31);
+        break;
+      case 'all':
+        this.filterDateRange.set(null);
+        this.loadData();
+        return;
+      case 'custom':
+        // Do nothing, wait for date picker
+        return;
+    }
+
+    if (start && end) {
+      this.filterDateRange.set([start, end]);
+      this.onDateRangeChange();
+    }
+  }
 
   // Computed Stats
   stats = computed(() => {
@@ -133,11 +183,8 @@ export class TransactionManager implements OnInit {
   clear(table: Table) {
     table.clear();
     this.filterDateRange.set(null);
-    // Reload default data if needed, or just let table clear local filters
-    // If date range was used to FETCH data, clearing it might imply re-fetching default range?
-    // Let's assume "Clear" button in table is for TABLE filters.
-    // But if we want to reset everything including date fetch:
-    // this.loadData();
+    this.selectedDatePreset.set('all');
+    this.loadData();
   }
 
   onFilter(event: any) {
@@ -171,10 +218,9 @@ export class TransactionManager implements OnInit {
     // To be safe, let's fetch current year?
     // Let's just fetch current month for now to be safe, and let user change range.
 
-    this.transactionService.getTransactions(now.getMonth() + 1, now.getFullYear()).subscribe({
+    this.transactionService.getTransactions().subscribe({
       next: (data) => {
-        this.transactions.set(data);
-        this.currentViewTransactions.set(data);
+        this.processTransactions(data);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
@@ -195,13 +241,54 @@ export class TransactionManager implements OnInit {
       // Pass undefined for month/year to avoid conflict if backend prioritizes them
       this.transactionService.getTransactions(undefined, undefined, undefined, start, end).subscribe({
         next: (data) => {
-          this.transactions.set(data);
-          this.currentViewTransactions.set(data);
+          this.processTransactions(data);
           this.loading.set(false);
         },
         error: () => this.loading.set(false)
       });
     }
+  }
+
+  private processTransactions(data: Transaction[]) {
+    // 1. Sort by Date Descending
+    const sorted = [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // 2. Calculate Grouping Flags
+    let lastYear = -1;
+    let lastMonth = -1;
+
+    const processed = sorted.map(t => {
+      const d = new Date(t.date);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const dateGroup = d.toISOString().split('T')[0];
+
+      const isNewYear = year !== lastYear;
+      const isNewMonth = month !== lastMonth || isNewYear; // New year implies new month
+
+      if (isNewYear) lastYear = year;
+      if (isNewMonth) lastMonth = month;
+
+      return {
+        ...t,
+        dateGroup,
+        isNewYear,
+        isNewMonth,
+        yearLabel: isNewYear ? year.toString() : undefined,
+        monthLabel: isNewMonth ? this.getMonthName(month) : undefined
+      };
+    });
+
+    this.transactions.set(processed);
+    this.currentViewTransactions.set(processed);
+  }
+
+  private getMonthName(monthIndex: number): string {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return months[monthIndex];
   }
 
   openNew() {

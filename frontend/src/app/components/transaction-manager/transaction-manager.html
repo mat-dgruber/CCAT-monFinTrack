@@ -20,6 +20,7 @@
         <div class="flex-1 overflow-hidden p-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
                 <p-table #dt [value]="transactions()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+                    rowGroupMode="subheader" groupRowsBy="dateGroup" sortField="dateGroup" [sortOrder]="-1"
                     [loading]="loading()" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
                     [globalFilterFields]="['description', 'category.name', 'amount', 'account.name']"
                     (onFilter)="onFilter($event)">
@@ -28,10 +29,6 @@
                             <div class="flex items-center gap-2">
                                 <p-button label="Limpar" [outlined]="true" icon="pi pi-filter-slash"
                                     (onClick)="clear(dt)"></p-button>
-                                <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range" [readonlyInput]="true"
-                                    placeholder="Período de Visualização" dateFormat="dd/mm/yy" [showIcon]="true"
-                                    (onSelect)="onDateRangeChange()" styleClass="w-80" inputStyleClass="w-full">
-                                </p-datepicker>
                             </div>
                             <p-iconfield>
                                 <p-inputicon styleClass="pi pi-search" />
@@ -48,7 +45,29 @@
                                 <div class="flex items-center gap-2">
                                     Data
                                     <p-sortIcon field="date"></p-sortIcon>
-                                    <p-columnFilter type="date" field="date" display="menu"></p-columnFilter>
+                                    <p-columnFilter field="date" display="menu" [showMatchModes]="false"
+                                        [showOperator]="false" [showAddButton]="false" [showApplyButton]="false"
+                                        [showClearButton]="false">
+                                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                            <div class="flex flex-col gap-2 min-w-[300px]">
+                                                <span class="font-bold mb-2">Período</span>
+                                                <p-select [ngModel]="selectedDatePreset()" [options]="datePresets"
+                                                    (onChange)="selectedDatePreset.set($event.value); onPresetChange()"
+                                                    placeholder="Selecione um período" styleClass="w-full">
+                                                </p-select>
+
+                                                <div *ngIf="selectedDatePreset() === 'custom'" class="mt-2">
+                                                    <span class="font-bold mb-2 block">Intervalo Personalizado</span>
+                                                    <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range"
+                                                        [readonlyInput]="true" placeholder="Selecione as datas"
+                                                        dateFormat="dd/mm/yy" [showIcon]="true"
+                                                        (onSelect)="onDateRangeChange()" styleClass="w-full"
+                                                        inputStyleClass="w-full" appendTo="body">
+                                                    </p-datepicker>
+                                                </div>
+                                            </div>
+                                        </ng-template>
+                                    </p-columnFilter>
                                 </div>
                             </th>
                             <th pSortableColumn="category.name">
@@ -101,6 +120,32 @@
                                 </div>
                             </th>
                             <th style="width: 100px"></th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="groupheader" let-t>
+                        <tr pRowGroupHeader>
+                            <td colspan="6">
+                                <div class="flex flex-col gap-2 py-2">
+                                    <!-- Year Separator -->
+                                    <div *ngIf="t.isNewYear" class="flex items-center gap-4 mt-4 mb-2">
+                                        <div class="h-px bg-gray-300 flex-1"></div>
+                                        <span class="text-2xl font-bold text-gray-400">{{t.yearLabel}}</span>
+                                        <div class="h-px bg-gray-300 flex-1"></div>
+                                    </div>
+
+                                    <!-- Month Separator -->
+                                    <div *ngIf="t.isNewMonth" class="flex items-center gap-2 mt-2 mb-1">
+                                        <span class="text-xl font-bold text-blue-600 capitalize">{{t.monthLabel}}</span>
+                                        <div class="h-px bg-blue-100 flex-1"></div>
+                                    </div>
+
+                                    <!-- Day Header -->
+                                    <div class="flex items-center gap-2 font-bold text-gray-800">
+                                        <div class="w-1 h-6 bg-blue-500 rounded-full"></div>
+                                        <span class="text-lg uppercase">{{t.date | date:'dd MMM' : '' : 'pt-BR'}}</span>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-t>

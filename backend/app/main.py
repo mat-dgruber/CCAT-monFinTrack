@@ -38,6 +38,14 @@ app.add_middleware(
 #  Adicione as rotas ao app principal
 app.include_router(api_router, prefix="/api")
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Mount Static Files
+os.makedirs("app/static/profile_images", exist_ok=True)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+
 @app.on_event("startup")
 async def startup_event():
      db = get_db()

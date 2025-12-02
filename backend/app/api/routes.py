@@ -1,28 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
+from app.api import user_preference
 from typing import List, Optional
 from datetime import datetime
 
 from app.core.limiter import limiter
 
 from app.schemas.category import Category, CategoryCreate, CategoryType
-from app.schemas.transaction import Transaction, TransactionCreate
-from app.schemas.account import Account, AccountCreate
-from app.schemas.budget import Budget, BudgetCreate
-from app.schemas.dashboard import DashboardSummary
-from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
-
-from app.services import category as category_service
-from app.services import transaction as transaction_service
-from app.services import account as account_service
-from app.services import budget as budget_service
-from app.services import dashboard as dashboard_service
-from app.services import recurrence as recurrence_service
-
-from app.core.security import get_current_user
-
-router = APIRouter()
-
-# --- CONTAS (ACCOUNTS) ---
 @router.post("/accounts", response_model=Account)
 @limiter.limit("10 per minute")
 def create_new_account(request: Request, account: AccountCreate, current_user: dict = Depends(get_current_user)):
@@ -160,3 +143,5 @@ def update_recurrence(recurrence_id: str, recurrence: RecurrenceUpdate, scope: s
 @router.patch("/recurrences/{recurrence_id}/cancel", response_model=Recurrence)
 def cancel_recurrence(recurrence_id: str, current_user: dict = Depends(get_current_user)):
     return recurrence_service.cancel_recurrence(recurrence_id, current_user['uid'])
+
+router.include_router(user_preference.router, prefix="/preferences", tags=["User Preferences"])
