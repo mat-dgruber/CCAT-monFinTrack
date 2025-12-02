@@ -13,4 +13,9 @@ export interface DashboardWidget {
   showSummary: boolean;
   title?: string;
   colSpan?: number; // 1 or 2
+
+  // New Features
+  compareWithPrevious?: boolean;
+  showForecast?: boolean;
+  enableDrillDown?: boolean;
 }
