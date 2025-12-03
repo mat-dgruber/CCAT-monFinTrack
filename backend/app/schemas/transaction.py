@@ -41,6 +41,7 @@ class TransactionBase(BaseModel):
      installment_group_id: Optional[str] = None
      installment_number: Optional[int] = None
      total_installments: Optional[int] = None
+     is_auto_pay: bool = Field(False, description="Se o pagamento é automático (via recorrência)")
 
      # --- BLOCO DE PROTEÇÃO XSS ---
      @field_validator('description')

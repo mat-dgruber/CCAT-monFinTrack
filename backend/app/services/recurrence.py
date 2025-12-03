@@ -136,3 +136,27 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
     
     updated_doc = doc_ref.get()
     return Recurrence(id=updated_doc.id, **updated_doc.to_dict())
+
+def delete_all_recurrences(user_id: str):
+    db = get_db()
+    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    
+    batch = db.batch()
+    count = 0
+    deleted_count = 0
+    
+    for doc in docs:
+        batch.delete(doc.reference)
+        count += 1
+        
+        if count >= 400:
+            batch.commit()
+            batch = db.batch()
+            deleted_count += count
+            count = 0
+            
+    if count > 0:
+        batch.commit()
+        deleted_count += count
+        
+    return deleted_count

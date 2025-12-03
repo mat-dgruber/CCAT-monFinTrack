@@ -358,44 +358,48 @@ interface SankeyLink {
       <!-- Summary Area -->
       <div *ngIf="widgetConfig.showSummary" class="flex-grow flex flex-col gap-6 p-4 overflow-auto min-h-[300px] bg-white rounded">
         <!-- Summary Cards -->
-        <div class="space-y-4">
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div class="text-sm text-gray-500 mb-1">Total de Transações</div>
-                <div class="text-2xl font-bold text-gray-900">{{summaryStats.totalTransactions}}</div>
+        <div class="flex flex-col gap-4 h-full">
+            <!-- Main Stats Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 flex flex-col justify-center">
+                    <div class="text-xs text-gray-500 mb-1">Total Transações</div>
+                    <div class="text-lg font-bold text-gray-900">{{summaryStats.totalTransactions}}</div>
+                </div>
+
+                <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 flex flex-col justify-center">
+                    <div class="text-xs text-blue-600 mb-1">Saldo</div>
+                    <div class="text-lg font-bold text-blue-700">{{summaryStats.net | currency:'BRL'}}</div>
+                </div>
+
+                <div class="p-3 bg-red-50 rounded-xl border border-red-100 flex flex-col justify-center">
+                    <div class="text-xs text-red-600 mb-1">Despesas</div>
+                    <div class="text-lg font-bold text-red-700">{{summaryStats.totalExpense | currency:'BRL'}}</div>
+                </div>
+
+                <div class="p-3 bg-green-50 rounded-xl border border-green-100 flex flex-col justify-center">
+                    <div class="text-xs text-green-600 mb-1">Receitas</div>
+                    <div class="text-lg font-bold text-green-700">{{summaryStats.totalIncome | currency:'BRL'}}</div>
+                </div>
             </div>
 
-            <div class="p-4 bg-red-50 rounded-xl border border-red-100">
-                <div class="text-sm text-red-600 mb-1">Total Despesas</div>
-                <div class="text-2xl font-bold text-red-700">{{summaryStats.totalExpense | currency:'BRL'}}</div>
-            </div>
+            <div class="border-t border-gray-100"></div>
 
-            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
-                <div class="text-sm text-green-600 mb-1">Total Receitas</div>
-                <div class="text-2xl font-bold text-green-700">{{summaryStats.totalIncome | currency:'BRL'}}</div>
-            </div>
-
-            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-sm text-blue-600 mb-1">Saldo do Período</div>
-                <div class="text-2xl font-bold text-blue-700">{{summaryStats.net | currency:'BRL'}}</div>
-            </div>
-
-            <div class="border-t border-gray-100 my-2"></div>
-
-            <div class="space-y-3">
-                <div class="flex justify-between items-center text-sm">
+            <!-- Detailed Stats Grid -->
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div class="flex justify-between items-center">
                     <span class="text-gray-500">Maior Despesa</span>
                     <span class="font-medium text-gray-900">{{summaryStats.maxExpense | currency:'BRL'}}</span>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Média (Valor)</span>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Média</span>
                     <span class="font-medium text-gray-900">{{summaryStats.avgTx | currency:'BRL'}}</span>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Primeira Data</span>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Início</span>
                     <span class="font-medium text-gray-900">{{summaryStats.firstDate | date:'dd/MM/yy'}}</span>
                 </div>
-                    <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Última Data</span>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Fim</span>
                     <span class="font-medium text-gray-900">{{summaryStats.lastDate | date:'dd/MM/yy'}}</span>
                 </div>
             </div>

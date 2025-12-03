@@ -10,6 +10,8 @@ import { Login } from '../login/login';
 
 import { AuthService } from '../../services/auth.service';
 
+import { UserPreferenceService } from '../../services/user-preference.service';
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -25,6 +27,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class Home {
   authService = inject(AuthService);
+  userPreferenceService = inject(UserPreferenceService);
 
   firstName = computed(() => {
     const user = this.authService.currentUser();

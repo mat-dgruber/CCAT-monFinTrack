@@ -20,10 +20,11 @@
         <div class="flex-1 overflow-hidden p-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
                 <p-table #dt [value]="transactions()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
-                    rowGroupMode="subheader" groupRowsBy="dateGroup" sortField="dateGroup" [sortOrder]="-1"
-                    [loading]="loading()" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
+                    rowGroupMode="subheader" [groupRowsBy]="currentGroupField()" [sortField]="currentSortField()"
+                    [sortOrder]="-1" [loading]="loading()" styleClass="p-datatable-sm" [scrollable]="true"
+                    scrollHeight="flex"
                     [globalFilterFields]="['description', 'category.name', 'amount', 'account.name']"
-                    (onFilter)="onFilter($event)">
+                    (onFilter)="onFilter($event)" (onSort)="onSort($event)">
                     <ng-template pTemplate="caption">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex items-center gap-2">
@@ -111,6 +112,13 @@
                                     </p-columnFilter>
                                 </div>
                             </th>
+                            <th pSortableColumn="status">
+                                <div class="flex items-center gap-2">
+                                    Status
+                                    <p-sortIcon field="status"></p-sortIcon>
+                                    <p-columnFilter type="text" field="status" display="menu"></p-columnFilter>
+                                </div>
+                            </th>
                             <th pSortableColumn="amount" class="text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     Valor
@@ -124,7 +132,7 @@
                     </ng-template>
                     <ng-template pTemplate="groupheader" let-t>
                         <tr pRowGroupHeader>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="flex flex-col gap-2 py-2">
                                     <!-- Year Separator -->
                                     <div *ngIf="t.isNewYear" class="flex items-center gap-4 mt-4 mb-2">
@@ -169,6 +177,14 @@
                                     {{ t.account?.name || 'Conta' }}
                                 </span>
                             </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
+                                        [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true"></p-tag>
+                                    <i *ngIf="t.is_auto_pay" class="pi pi-sync text-blue-500"
+                                        pTooltip="Pagamento Automático"></i>
+                                </div>
+                            </td>
                             <td class="text-right">
                                 <span
                                     [class]="t.type === 'expense' ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
@@ -177,6 +193,10 @@
                             </td>
                             <td>
                                 <div class="flex justify-end gap-1">
+                                    <p-button [icon]="t.status === 'paid' ? 'pi pi-clock' : 'pi pi-check'" [text]="true"
+                                        [rounded]="true" [severity]="t.status === 'paid' ? 'warn' : 'success'"
+                                        [pTooltip]="t.status === 'paid' ? 'Marcar como Pendente' : 'Marcar como Pago'"
+                                        (onClick)="toggleStatus($event, t)"></p-button>
                                     <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
                                         (onClick)="editTransaction(t)"></p-button>
                                     <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
@@ -187,7 +207,7 @@
                     </ng-template>
                     <ng-template pTemplate="emptymessage">
                         <tr>
-                            <td colspan="6" class="text-center p-8 text-gray-500">
+                            <td colspan="7" class="text-center p-8 text-gray-500">
                                 <i class="pi pi-inbox text-4xl mb-2 block text-gray-300"></i>
                                 Nenhuma transação encontrada.
                             </td>

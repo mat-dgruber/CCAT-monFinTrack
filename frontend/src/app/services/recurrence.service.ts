@@ -31,4 +31,8 @@ export class RecurrenceService {
   cancelRecurrence(id: string): Observable<Recurrence> {
     return this.http.patch<Recurrence>(`${this.apiUrl}/${id}/cancel`, {});
   }
+
+  skipRecurrence(id: string, date: Date): Observable<Recurrence> {
+    return this.http.post<Recurrence>(`${this.apiUrl}/${id}/skip`, { date: date.toISOString().split('T')[0] });
+  }
 }

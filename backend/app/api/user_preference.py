@@ -35,3 +35,8 @@ def upload_avatar(
     preference_service.update_preferences(user_id, UserPreferenceCreate(profile_image_url=url))
     
     return {"url": url}
+
+@router.post("/reset")
+def reset_account(current_user: dict = Depends(get_current_user)):
+    user_id = current_user['uid']
+    return preference_service.reset_account(user_id)

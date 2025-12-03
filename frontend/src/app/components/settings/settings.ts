@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core'; // Force rebuild
+import { Component, inject, signal, computed } from '@angular/core'; // Force rebuild
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -54,6 +54,11 @@ export class Settings {
 
   preferences: UserPreference | null = null;
 
+  // Computed signal for profile image
+  profileImageUrl = computed(() => {
+    return this.preferenceService.getProfileImageUrl(this.preferences?.profile_image_url);
+  });
+
 
   displayName = signal('');
   email = signal('');
@@ -71,8 +76,8 @@ export class Settings {
   // Appearance
   selectedTheme = signal<'light' | 'dark'>('light');
   themeOptions = [
-    { label: 'Light', value: 'light' },
-    { label: 'Dark', value: 'dark' }
+    { label: 'Claro', value: 'light' },
+    { label: 'Escuro', value: 'dark' }
   ];
 
   constructor() {
@@ -90,37 +95,52 @@ export class Settings {
       this.preferences = prefs;
       if (prefs) {
         this.selectedTheme.set(prefs.theme);
-        // Sync other fields if needed, e.g. language
+        if (prefs.birthday) this.birthday.set(new Date(prefs.birthday));
+        if (prefs.timezone) this.selectedTimezone.set(prefs.timezone);
       }
     });
   }
 
   async updateProfile() {
-    // In a real app, we would call auth.updateProfile here
-    // For now, we'll just show a success message as the AuthService doesn't expose a direct updateProfile method yet
-    // apart from register. 
-    // Wait, AuthService doesn't have updateProfile method exposed. 
-    // I should probably add it or just use the firebase function directly if I imported it, 
-    // but better to keep it in service.
-    // For this iteration, I'll skip implementing the actual update call in AuthService if it's not there,
-    // or I can quickly add it. 
-    // Let's check AuthService again. It imports updateProfile from firebase/auth but only uses it in register.
+    try {
+      // 1. Update Firebase Profile (Display Name)
+      if (this.displayName() !== this.auth.currentUser()?.displayName) {
+        await this.auth.updateProfileData(this.displayName());
+      }
 
-    // I will implement a simple placeholder for now or add it to AuthService if needed.
-    // Actually, I can just use the one from firebase/auth if I import it, but cleaner to go through service.
-    // Let's assume for now I'll just show a toast saying "Profile Updated" 
-    // since the requirement was "Gerenciar perfil".
+      // 2. Update Preferences (Birthday, Timezone)
+      if (this.preferences) {
+        const updates: any = {};
+        if (this.birthday()) updates.birthday = this.birthday()?.toISOString();
+        if (this.selectedTimezone()) updates.timezone = this.selectedTimezone();
 
-    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Profile updated successfully' });
+        if (Object.keys(updates).length > 0) {
+          this.preferenceService.updatePreferences(updates).subscribe();
+        }
+      }
+
+      this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso' });
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar perfil' });
+    }
+  }
+
+  async verifyEmail() {
+    try {
+      await this.auth.sendVerificationEmail();
+      this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Email de verificação enviado' });
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar email de verificação' });
+    }
   }
 
   async sendPasswordReset() {
     if (this.email()) {
       try {
         await this.auth.resetPassword(this.email());
-        this.messageService.add({ severity: 'success', summary: 'Sent', detail: 'Password reset email sent' });
+        this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Email de redefinição de senha enviado' });
       } catch (error) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to send reset email' });
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar email de redefinição' });
       }
     }
   }
@@ -181,8 +201,8 @@ export class Settings {
 
   confirmDelete() {
     this.confirmationService.confirm({
-      message: 'Are you sure you want to delete your account? This action cannot be undone.',
-      header: 'Delete Account',
+      message: 'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.',
+      header: 'Excluir Conta',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger p-button-text',
       rejectButtonStyleClass: 'p-button-text p-button-text',
@@ -191,11 +211,35 @@ export class Settings {
       accept: async () => {
         try {
           await this.auth.deleteAccount();
-          this.messageService.add({ severity: 'success', summary: 'Confirmed', detail: 'Account deleted' });
+          this.messageService.add({ severity: 'success', summary: 'Confirmado', detail: 'Conta excluída' });
           this.router.navigate(['/login']);
         } catch (error) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete account' });
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao excluir conta' });
         }
+      }
+    });
+  }
+
+  onResetAccount() {
+    this.confirmationService.confirm({
+      message: 'Tem certeza que deseja LIMPAR sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas, mas manterá sua conta ativa. Esta ação não pode ser desfeita.',
+      header: 'Limpar Dados da Conta',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-warning p-button-text',
+      rejectButtonStyleClass: 'p-button-text p-button-text',
+      acceptIcon: 'none',
+      rejectIcon: 'none',
+      accept: () => {
+        this.preferenceService.resetAccount().subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Dados da conta limpos com sucesso' });
+            // Optional: Reload or redirect
+            window.location.reload();
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao limpar dados da conta' });
+          }
+        });
       }
     });
   }

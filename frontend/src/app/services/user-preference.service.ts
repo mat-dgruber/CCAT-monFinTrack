@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, tap, catchError } from 'rxjs';
 import { UserPreference, UserPreferenceCreate } from '../models/user-preference.model';
-import { environment } from '../../environments/environment'; // Assuming env file exists, or hardcode API URL
+import { environment } from '../../environments/environment';
 
 @Injectable({
      providedIn: 'root'
 })
 export class UserPreferenceService {
-     private apiUrl = 'http://localhost:8000/api/preferences'; // Adjust if needed
+     private apiUrl = `${environment.apiUrl}/preferences`;
      private preferencesSubject = new BehaviorSubject<UserPreference | null>(null);
      preferences$ = this.preferencesSubject.asObservable();
 
@@ -86,6 +86,21 @@ export class UserPreferenceService {
                     }
                })
           );
+     }
+
+     resetAccount(): Observable<any> {
+          return this.http.post(`${this.apiUrl}/reset`, {});
+     }
+
+     getProfileImageUrl(path: string | undefined | null): string {
+          if (!path) return 'assets/default-avatar.png';
+          if (path.startsWith('http')) return path;
+
+          // Construct absolute URL from environment.apiUrl
+          // environment.apiUrl is like 'http://localhost:8000/api'
+          // We need 'http://localhost:8000' + path (which is like '/static/...')
+          const baseUrl = environment.apiUrl.replace('/api', '');
+          return `${baseUrl}${path}`;
      }
 
      private updateLocalState(prefs: UserPreference) {

@@ -177,6 +177,8 @@
                     [class.bg-yellow-100]="rec.status === 'pending'" [class.text-yellow-700]="rec.status === 'pending'">
                     {{ rec.status === "paid" ? "Pago" : "Pendente" }}
                   </span>
+                  <i *ngIf="rec.active && (rec.originalTransaction?.is_auto_pay || (!rec.originalTransaction && rec.status === 'paid'))"
+                    class="pi pi-sync text-xs text-blue-500 ml-2" pTooltip="Pagamento Automático"></i>
                 </td>
                 <td>
                   <div class="flex gap-2">
@@ -185,6 +187,8 @@
                     <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="warn"
                       pTooltip="Marcar como Pendente" *ngIf="rec.status === 'paid'"
                       (onClick)="markAsUnpaid(rec)"></p-button>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                      pTooltip="Excluir Ocorrência" (onClick)="deleteOccurrence(rec)"></p-button>
                   </div>
                 </td>
               </tr>
@@ -210,7 +214,9 @@
                 <th>Valor</th>
                 <th>Periodicidade</th>
                 <th>Dia de Vencimento</th>
-                <th>Status</th>
+                <th>Auto Pay</th>
+                <th>Status (Mês)</th>
+                <th>Status Assinatura</th>
                 <th>Ações</th>
               </tr>
             </ng-template>
@@ -222,6 +228,29 @@
                   <p-tag [value]="rec.periodicity | periodicity" severity="info"></p-tag>
                 </td>
                 <td>Dia {{ rec.due_day }}</td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <p-button [icon]="rec.auto_pay ? 'pi pi-sync' : 'pi pi-ban'" [rounded]="true" [text]="true"
+                      [severity]="rec.auto_pay ? 'success' : 'secondary'"
+                      [pTooltip]="rec.auto_pay ? 'Desativar Auto-Pay' : 'Ativar Auto-Pay'"
+                      (onClick)="toggleAutoPay(rec)"></p-button>
+                    <span class="text-sm text-gray-600">{{ rec.auto_pay ? 'Sim' : 'Não' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="flex items-center gap-2" *ngIf="getRecurrenceStatus(rec) !== 'n/a'">
+                    <span class="text-xs px-2 py-1 rounded-full font-semibold"
+                      [class.bg-green-100]="getRecurrenceStatus(rec) === 'paid'"
+                      [class.text-green-700]="getRecurrenceStatus(rec) === 'paid'"
+                      [class.bg-yellow-100]="getRecurrenceStatus(rec) === 'pending'"
+                      [class.text-yellow-700]="getRecurrenceStatus(rec) === 'pending'">
+                      {{ getRecurrenceStatus(rec) === 'paid' ? 'Pago' : 'Pendente' }}
+                    </span>
+                    <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="secondary"
+                      pTooltip="Alternar Status" (onClick)="toggleRecurrenceStatus(rec)"></p-button>
+                  </div>
+                  <span *ngIf="getRecurrenceStatus(rec) === 'n/a'" class="text-gray-400 text-xs">N/A</span>
+                </td>
                 <td>
                   <p-tag [value]="rec.active ? 'Ativo' : 'Inativo'"
                     [severity]="rec.active ? 'success' : 'danger'"></p-tag>
@@ -238,7 +267,7 @@
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="6" class="text-center py-8 text-gray-500">
+                <td colspan="8" class="text-center py-8 text-gray-500">
                   Nenhuma assinatura ativa encontrada.
                 </td>
               </tr>

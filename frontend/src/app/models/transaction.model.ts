@@ -14,23 +14,18 @@ export interface Transaction {
   payment_method: string;
   status?: 'paid' | 'pending';
   payment_date?: Date;
-
-  // Novos campos
-  installment_group_id?: string;
-  installment_number?: number;
-  total_installments?: number;
-
-  recurrence_id?: string;
-  is_recurrence?: boolean;
-  recurrence_periodicity?: string;
-
-  category_id?: string;
-  account_id?: string;
-
-  // Grouping properties
   dateGroup?: string;
   isNewYear?: boolean;
   isNewMonth?: boolean;
   yearLabel?: string;
   monthLabel?: string;
+  recurrence_id?: string;
+  is_recurrence?: boolean;
+  recurrence_periodicity?: string;
+  total_installments?: number;
+  current_installment?: number;
+  installment_id?: string;
+  installment_group_id?: string;
+  category_id?: string;
+  is_auto_pay?: boolean;
 }

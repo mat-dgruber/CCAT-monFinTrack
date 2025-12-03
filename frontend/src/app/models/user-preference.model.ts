@@ -4,6 +4,8 @@ export interface UserPreference {
      theme: 'light' | 'dark';
      notifications_enabled: boolean;
      profile_image_url?: string;
+     birthday?: string; // ISO string
+     timezone?: string;
      version: number;
      updated_at: string;
 }
@@ -13,4 +15,6 @@ export interface UserPreferenceCreate {
      theme?: 'light' | 'dark';
      notifications_enabled?: boolean;
      profile_image_url?: string;
+     birthday?: string;
+     timezone?: string;
 }

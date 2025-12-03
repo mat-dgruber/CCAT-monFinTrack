@@ -67,3 +67,36 @@ def save_profile_image(user_id: str, file: UploadFile) -> str:
     # Return the relative URL
     # Assuming we mount /static at root or /api/static
     return f"/static/profile_images/{filename}"
+
+def reset_account(user_id: str):
+    """
+    Deletes all user data (transactions, recurrences, budgets, accounts, custom categories).
+    Preserves user profile and preferences.
+    """
+    from app.services import (
+        transaction as transaction_service,
+        recurrence as recurrence_service,
+        budget as budget_service,
+        category as category_service,
+        account as account_service
+    )
+    
+    # 1. Transactions
+    transaction_service.delete_all_transactions(user_id)
+    
+    # 2. Recurrences
+    recurrence_service.delete_all_recurrences(user_id)
+    
+    # 3. Budgets
+    budget_service.delete_all_budgets(user_id)
+    
+    # 4. Custom Categories
+    category_service.delete_all_custom_categories(user_id)
+    
+    # 5. Accounts
+    account_service.delete_all_accounts(user_id)
+    
+    # 6. Reset Preferences (Optional - keeping it simple for now, maybe just update timestamp)
+    update_preferences(user_id, UserPreferenceCreate(updated_at=datetime.now()))
+    
+    return {"status": "success", "message": "Account reset successfully"}

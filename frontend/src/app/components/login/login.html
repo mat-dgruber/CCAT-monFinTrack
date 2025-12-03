@@ -1,132 +1,67 @@
 <div class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
   <p-toast></p-toast>
 
-  <p-card
-    [style]="{ width: '100%', maxWidth: '450px' }"
-    styleClass="shadow-lg border-none"
-  >
+  <p-card [style]="{ width: '100%', maxWidth: '450px' }" styleClass="shadow-lg border-none">
     <div class="text-center mb-6">
-      <i class="pi pi-wallet text-4xl text-blue-600 mb-2"></i>
+      <img src="assets/logo-ccat.png" alt="Logo" class="h-32 mb-4 mx-auto" />
       <h2 class="text-2xl font-bold text-gray-800">monFinTrack</h2>
       <p class="text-gray-500">
         {{
-          isRegisterMode()
-            ? "Crie sua conta grátis"
-            : "Faça login para continuar"
+        isRegisterMode()
+        ? "Crie sua conta grátis"
+        : "Faça login para continuar"
         }}
       </p>
     </div>
 
-    <form
-      [formGroup]="form"
-      (ngSubmit)="onSubmit()"
-      class="flex flex-col gap-4"
-    >
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
       @if (isRegisterMode()) {
       <div class="flex flex-col gap-2">
-        <label for="name" class="font-semibold text-gray-600"
-          >Nome Completo</label
-        >
-        <input
-          pInputText
-          id="name"
-          formControlName="name"
-          placeholder="Seu nome"
-          class="w-full"
-        />
+        <label for="name" class="font-semibold text-gray-600">Nome Completo</label>
+        <input pInputText id="name" formControlName="name" placeholder="Seu nome" class="w-full" />
       </div>
       }
 
       <div class="flex flex-col gap-2">
         <label for="email" class="font-semibold text-gray-600">Email</label>
-        <input
-          pInputText
-          id="email"
-          formControlName="email"
-          placeholder="seu@email.com"
-          class="w-full"
-        />
+        <input pInputText id="email" formControlName="email" placeholder="seu@email.com" class="w-full" />
       </div>
 
       <div class="flex flex-col gap-2">
         <label for="password" class="font-semibold text-gray-600">Senha</label>
-        <p-password
-          id="password"
-          formControlName="password"
-          [feedback]="false"
-          [toggleMask]="true"
-          placeholder="******"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-        >
+        <p-password id="password" formControlName="password" [feedback]="false" [toggleMask]="true" placeholder="******"
+          styleClass="w-full" inputStyleClass="w-full">
         </p-password>
 
         @if (showPasswordRequirements) {
         <div [@slideFade] class="overflow-hidden">
-          <div
-            class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-2 text-xs shadow-sm transition-all"
-          >
+          <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mt-2 text-xs shadow-sm transition-all">
             <p class="font-bold mb-2 text-gray-500">Sua senha deve ter:</p>
 
             <ul class="flex flex-col gap-1">
-              <li
-                [class.text-green-600]="hasMinLength"
-                [class.text-gray-400]="!hasMinLength"
-                class="flex items-center gap-2 transition-colors duration-300"
-              >
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="hasMinLength"
-                  [class.pi-circle]="!hasMinLength"
-                ></i>
+              <li [class.text-green-600]="hasMinLength" [class.text-gray-400]="!hasMinLength"
+                class="flex items-center gap-2 transition-colors duration-300">
+                <i class="pi" [class.pi-check-circle]="hasMinLength" [class.pi-circle]="!hasMinLength"></i>
                 Pelo menos 8 caracteres
               </li>
-              <li
-                [class.text-green-600]="hasUpper"
-                [class.text-gray-400]="!hasUpper"
-                class="flex items-center gap-2 transition-colors duration-300"
-              >
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="hasUpper"
-                  [class.pi-circle]="!hasUpper"
-                ></i>
+              <li [class.text-green-600]="hasUpper" [class.text-gray-400]="!hasUpper"
+                class="flex items-center gap-2 transition-colors duration-300">
+                <i class="pi" [class.pi-check-circle]="hasUpper" [class.pi-circle]="!hasUpper"></i>
                 Letra Maiúscula
               </li>
-              <li
-                [class.text-green-600]="hasLower"
-                [class.text-gray-400]="!hasLower"
-                class="flex items-center gap-2 transition-colors duration-300"
-              >
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="hasLower"
-                  [class.pi-circle]="!hasLower"
-                ></i>
+              <li [class.text-green-600]="hasLower" [class.text-gray-400]="!hasLower"
+                class="flex items-center gap-2 transition-colors duration-300">
+                <i class="pi" [class.pi-check-circle]="hasLower" [class.pi-circle]="!hasLower"></i>
                 Letra Minúscula
               </li>
-              <li
-                [class.text-green-600]="hasNumber"
-                [class.text-gray-400]="!hasNumber"
-                class="flex items-center gap-2 transition-colors duration-300"
-              >
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="hasNumber"
-                  [class.pi-circle]="!hasNumber"
-                ></i>
+              <li [class.text-green-600]="hasNumber" [class.text-gray-400]="!hasNumber"
+                class="flex items-center gap-2 transition-colors duration-300">
+                <i class="pi" [class.pi-check-circle]="hasNumber" [class.pi-circle]="!hasNumber"></i>
                 Número
               </li>
-              <li
-                [class.text-green-600]="hasSpecial"
-                [class.text-gray-400]="!hasSpecial"
-                class="flex items-center gap-2 transition-colors duration-300"
-              >
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="hasSpecial"
-                  [class.pi-circle]="!hasSpecial"
-                ></i>
+              <li [class.text-green-600]="hasSpecial" [class.text-gray-400]="!hasSpecial"
+                class="flex items-center gap-2 transition-colors duration-300">
+                <i class="pi" [class.pi-check-circle]="hasSpecial" [class.pi-circle]="!hasSpecial"></i>
                 Caractere Especial (@$!%*?&)
               </li>
             </ul>
@@ -137,22 +72,12 @@
 
       @if (isRegisterMode()) {
       <div class="flex flex-col gap-2">
-        <label for="confirm" class="font-semibold text-gray-600"
-          >Confirmar Senha</label
-        >
-        <p-password
-          id="confirm"
-          formControlName="confirmPassword"
-          [feedback]="false"
-          [toggleMask]="true"
-          placeholder="Repita a senha"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          [ngClass]="{
+        <label for="confirm" class="font-semibold text-gray-600">Confirmar Senha</label>
+        <p-password id="confirm" formControlName="confirmPassword" [feedback]="false" [toggleMask]="true"
+          placeholder="Repita a senha" styleClass="w-full" inputStyleClass="w-full" [ngClass]="{
             'ng-invalid ng-dirty':
               form.hasError('mismatch') && form.get('confirmPassword')?.dirty
-          }"
-        >
+          }">
         </p-password>
 
         @if (form.hasError('mismatch') && form.get('confirmPassword')?.dirty) {
@@ -165,27 +90,21 @@
       <div class="flex items-center mt-2">
         <p-checkbox formControlName="termsAccepted" [binary]="true" inputId="terms"></p-checkbox>
         <label for="terms" class="ml-2 text-sm text-gray-600">
-          Li e aceito os <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Termos</a> e <a href="/privacy-policy" target="_blank" class="text-blue-600 hover:underline">Política de Privacidade</a>.
+          Li e aceito os <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Termos</a> e <a
+            href="/privacy-policy" target="_blank" class="text-blue-600 hover:underline">Política de Privacidade</a>.
         </label>
       </div>
       } @if (!isRegisterMode()) {
       <div class="flex justify-end">
-        <a
-          (click)="showForgotPassword.set(true)"
-          class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
-        >
+        <a (click)="showForgotPassword.set(true)"
+          class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">
           Esqueceu a senha?
         </a>
       </div>
       }
 
-      <p-button
-        [label]="isRegisterMode() ? 'Criar Conta' : 'Entrar'"
-        [loading]="isLoading()"
-        type="submit"
-        styleClass="w-full mt-2"
-        [disabled]="form.invalid || (isRegisterMode() && !isPasswordStrong)"
-      >
+      <p-button [label]="isRegisterMode() ? 'Criar Conta' : 'Entrar'" [loading]="isLoading()" type="submit"
+        styleClass="w-full mt-2" [disabled]="form.invalid || (isRegisterMode() && !isPasswordStrong)">
       </p-button>
     </form>
 
@@ -193,22 +112,15 @@
       <span class="text-gray-500 text-sm">
         {{ isRegisterMode() ? "Já tem uma conta?" : "Não tem conta ainda?" }}
       </span>
-      <a
-        (click)="toggleMode()"
-        class="text-blue-600 font-bold text-sm cursor-pointer hover:underline ml-1 transition-colors"
-      >
+      <a (click)="toggleMode()"
+        class="text-blue-600 font-bold text-sm cursor-pointer hover:underline ml-1 transition-colors">
         {{ isRegisterMode() ? "Fazer Login" : "Cadastre-se" }}
       </a>
     </div>
   </p-card>
 </div>
 
-<p-dialog
-  header="Redefinir Senha"
-  [modal]="true"
-  [(visible)]="showForgotPassword"
-  [style]="{ width: '25rem' }"
->
+<p-dialog header="Redefinir Senha" [modal]="true" [(visible)]="showForgotPassword" [style]="{ width: '25rem' }">
   <div class="flex flex-col gap-4 pt-2">
     <p class="text-gray-600 text-sm">
       Digite seu e-mail abaixo. Enviaremos um link para você criar uma nova
@@ -217,27 +129,13 @@
 
     <div class="flex flex-col gap-2">
       <label for="resetEmail" class="font-semibold text-gray-700">E-mail</label>
-      <input
-        pInputText
-        id="resetEmail"
-        [(ngModel)]="resetEmail"
-        [ngModelOptions]="{ standalone: true }"
-        placeholder="seu@email.com"
-        class="w-full"
-      />
+      <input pInputText id="resetEmail" [(ngModel)]="resetEmail" [ngModelOptions]="{ standalone: true }"
+        placeholder="seu@email.com" class="w-full" />
     </div>
 
     <div class="flex justify-end gap-2 mt-2">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        (onClick)="showForgotPassword.set(false)"
-      ></p-button>
-      <p-button
-        label="Enviar Link"
-        (onClick)="sendResetLink()"
-        [loading]="isLoading()"
-      ></p-button>
+      <p-button label="Cancelar" severity="secondary" (onClick)="showForgotPassword.set(false)"></p-button>
+      <p-button label="Enviar Link" (onClick)="sendResetLink()" [loading]="isLoading()"></p-button>
     </div>
   </div>
 </p-dialog>
