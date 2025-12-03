@@ -80,10 +80,12 @@ export class AuthService {
     const credential = await signInWithEmailAndPassword(this.auth, email, pass);
 
     // 5. Verificação de Segurança no Login
+    /*
     if (!credential.user.emailVerified) {
       await signOut(this.auth); // Chuta o usuário para fora
       throw new Error('email-not-verified'); // Lança erro específico
     }
+    */
 
     // Salva o timestamp do login
     localStorage.setItem('loginTimestamp', Date.now().toString());
