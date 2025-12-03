@@ -139,3 +139,16 @@
     </div>
   </div>
 </p-dialog>
+<p-dialog header="Verificação em Duas Etapas" [(visible)]="showMfaDialog" [modal]="true" [style]="{width: '400px'}" [closable]="false">
+  <div class="flex flex-col items-center gap-4">
+    <p>Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
+    
+    <div class="flex flex-col gap-2 w-full">
+      <input pInputText id="loginMfaToken" [(ngModel)]="mfaToken" class="w-full text-center text-xl tracking-widest" maxlength="6" placeholder="000000" (keyup.enter)="verifyMfaLogin()">
+    </div>
+    
+    <div class="flex justify-end gap-2 w-full mt-4">
+      <p-button label="Verificar" (onClick)="verifyMfaLogin()" [loading]="isLoading()" [disabled]="mfaToken().length !== 6"></p-button>
+    </div>
+  </div>
+</p-dialog>

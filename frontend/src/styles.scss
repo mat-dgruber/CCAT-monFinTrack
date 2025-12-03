@@ -15,29 +15,54 @@
 @import "primeicons/primeicons.css";
 
 /* 4. Configurações globais */
+:root {
+    --surface-ground: #f8fafc;
+    --surface-card: #ffffff;
+    --surface-overlay: #ffffff;
+    --surface-border: #e5e7eb;
+    --surface-hover: #f3f4f6;
+    --text-color: #1f2937;
+    --text-color-secondary: #6b7280;
+    --primary-color: #3b82f6;
+    --primary-color-text: #ffffff;
+    --mask-bg: rgba(0, 0, 0, 0.4);
+}
+
+.dark-theme {
+    --surface-ground: #0f172a;
+    --surface-card: #1e293b;
+    --surface-overlay: #1e293b;
+    --surface-border: #334155;
+    --surface-hover: #334155;
+    --text-color: #f8fafc;
+    --text-color-secondary: #94a3b8;
+    --primary-color: #60a5fa;
+    --primary-color-text: #0f172a;
+    --mask-bg: rgba(0, 0, 0, 0.6);
+}
+
 html,
 body {
      height: 100%;
-     background-color: #f8fafc;
-     /* Slate-50 do Tailwind */
+     background-color: var(--surface-ground);
+     color: var(--text-color);
      font-family: var(--font-family);
-     /* Usa a fonte do tema Aura */
 }
 
-/* 5. Global PrimeNG Overrides (Force Light Theme for Overlays) */
+/* 5. Global PrimeNG Overrides */
 
 /* Dropdown Panel/Overlay */
 .p-select-overlay, .p-dropdown-panel {
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    background: var(--surface-overlay) !important;
+    border: 1px solid var(--surface-border) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
     
     .p-select-option, .p-dropdown-item {
-        color: #1f2937 !important;
+        color: var(--text-color) !important;
         
         &:not(.p-highlight):not(.p-disabled):hover {
-            background: #f3f4f6 !important;
-            color: #1f2937 !important;
+            background: var(--surface-hover) !important;
+            color: var(--text-color) !important;
         }
         
         &.p-highlight {
@@ -47,40 +72,52 @@ body {
     }
 }
 
+/* Dark Mode Specific Overrides for Highlight */
+.dark-theme {
+    .p-select-overlay, .p-dropdown-panel {
+        .p-select-option, .p-dropdown-item {
+            &.p-highlight {
+                background: rgba(59, 130, 246, 0.16) !important;
+                color: var(--primary-color) !important;
+            }
+        }
+    }
+}
+
 /* Datepicker Panel Styles */
 .p-datepicker {
-    background: #ffffff !important;
-    border: 1px solid #d1d5db !important;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
-    color: #1f2937 !important;
+    background: var(--surface-overlay) !important;
+    border: 1px solid var(--surface-border) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-color) !important;
     
     .p-datepicker-header {
-        background: #ffffff !important;
-        color: #1f2937 !important;
-        border-bottom: 1px solid #e5e7eb !important;
+        background: var(--surface-overlay) !important;
+        color: var(--text-color) !important;
+        border-bottom: 1px solid var(--surface-border) !important;
         padding: 0.5rem !important;
         
         .p-datepicker-title {
-            color: #1f2937 !important;
+            color: var(--text-color) !important;
         }
         
         button {
-            color: #6b7280 !important;
+            color: var(--text-color-secondary) !important;
             &:hover {
-                background: #f3f4f6 !important;
-                color: #1f2937 !important;
+                background: var(--surface-hover) !important;
+                color: var(--text-color) !important;
             }
         }
     }
     
     table {
         th {
-            color: #6b7280 !important;
+            color: var(--text-color-secondary) !important;
         }
         
         td {
             > span {
-                color: #1f2937 !important;
+                color: var(--text-color) !important;
                 
                 &.p-datepicker-today {
                     background: #eff6ff !important;
@@ -88,24 +125,24 @@ body {
                 }
                 
                 &:not(.p-disabled):not(.p-datepicker-other-month):hover {
-                    background: #f3f4f6 !important;
-                    color: #1f2937 !important;
+                    background: var(--surface-hover) !important;
+                    color: var(--text-color) !important;
                 }
             }
             
             /* Force text color for unselected dates */
             > span:not(.p-highlight) {
-                color: #1f2937 !important;
+                color: var(--text-color) !important;
             }
         }
     }
     
     /* Month/Year Picker */
     .p-monthpicker-month, .p-yearpicker-year {
-        color: #1f2937 !important;
+        color: var(--text-color) !important;
         
         &:hover {
-            background: #f3f4f6 !important;
+            background: var(--surface-hover) !important;
         }
         
         &.p-highlight {
@@ -115,66 +152,77 @@ body {
     }
 }
 
+.dark-theme .p-datepicker {
+    table td > span.p-datepicker-today {
+        background: rgba(59, 130, 246, 0.16) !important;
+        color: var(--primary-color) !important;
+    }
+    .p-monthpicker-month.p-highlight, .p-yearpicker-year.p-highlight {
+        background: rgba(59, 130, 246, 0.16) !important;
+        color: var(--primary-color) !important;
+    }
+}
+
 /* Dialog Styles */
 .p-dialog {
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
-    color: #1f2937 !important;
+    background: var(--surface-card) !important;
+    border: 1px solid var(--surface-border) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-color) !important;
 
     .p-dialog-header {
-        background: #ffffff !important;
-        color: #1f2937 !important;
-        border-bottom: 1px solid #e5e7eb !important;
+        background: var(--surface-card) !important;
+        color: var(--text-color) !important;
+        border-bottom: 1px solid var(--surface-border) !important;
         padding: 1.5rem !important;
     }
 
     .p-dialog-content {
-        background: #ffffff !important;
-        color: #1f2937 !important;
+        background: var(--surface-card) !important;
+        color: var(--text-color) !important;
         padding: 0 1.5rem 1.5rem 1.5rem !important;
     }
 
     .p-dialog-footer {
-        background: #ffffff !important;
-        color: #1f2937 !important;
-        border-top: 1px solid #e5e7eb !important;
+        background: var(--surface-card) !important;
+        color: var(--text-color) !important;
+        border-top: 1px solid var(--surface-border) !important;
         padding: 1.5rem !important;
     }
 }
 
 /* Drawer/Sidebar Styles */
 .p-drawer, .p-sidebar {
-    background: #ffffff !important;
-    border-right: 1px solid #e5e7eb !important;
-    color: #1f2937 !important;
+    background: var(--surface-card) !important;
+    border-right: 1px solid var(--surface-border) !important;
+    color: var(--text-color) !important;
 
     .p-drawer-header, .p-sidebar-header {
-        color: #1f2937 !important;
+        color: var(--text-color) !important;
         padding: 1rem !important;
     }
     
     .p-drawer-content, .p-sidebar-content {
-        color: #1f2937 !important;
+        color: var(--text-color) !important;
     }
 }
 
 /* Card Styles */
 .p-card {
-    background: #ffffff !important;
-    color: #1f2937 !important;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
 
     .p-card-title {
-        color: #111827 !important;
+        color: var(--text-color) !important;
         font-weight: 700 !important;
     }
     
     .p-card-subtitle {
-        color: #6b7280 !important;
+        color: var(--text-color-secondary) !important;
     }
     
     .p-card-content {
-        color: #374151 !important;
+        color: var(--text-color) !important;
     }
 }

@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
+import { MFAService } from '../../services/mfa.service';
 import { UserPreference } from '../../models/user-preference.model';
 
 // PrimeNG Imports
@@ -19,6 +20,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { AvatarModule } from 'primeng/avatar';
 import { FileUploadModule } from 'primeng/fileupload';
+import { DialogModule } from 'primeng/dialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
@@ -39,7 +41,9 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     DatePickerModule,
     TagModule,
     AvatarModule,
+    AvatarModule,
     FileUploadModule,
+    DialogModule,
     RouterModule
   ],
   providers: [MessageService, ConfirmationService]
@@ -50,7 +54,9 @@ export class Settings {
   router = inject(Router);
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
+  confirmationService = inject(ConfirmationService);
   preferenceService = inject(UserPreferenceService);
+  mfaService = inject(MFAService);
 
   preferences: UserPreference | null = null;
 
@@ -63,6 +69,13 @@ export class Settings {
   displayName = signal('');
   email = signal('');
 
+  // MFA
+  mfaEnabled = signal(false);
+  showMfaSetupDialog = signal(false);
+  mfaSecret = signal('');
+  qrCodeUrl = signal('');
+  mfaToken = signal('');
+
   // Profile
   birthday = signal<Date | null>(null);
   selectedTimezone = signal<string>('Europe/Paris');
@@ -74,10 +87,11 @@ export class Settings {
   ];
 
   // Appearance
-  selectedTheme = signal<'light' | 'dark'>('light');
+  selectedTheme = signal<'light' | 'dark' | 'system'>('system');
   themeOptions = [
     { label: 'Claro', value: 'light' },
-    { label: 'Escuro', value: 'dark' }
+    { label: 'Escuro', value: 'dark' },
+    { label: 'Sistema', value: 'system' }
   ];
 
   constructor() {
@@ -97,6 +111,63 @@ export class Settings {
         this.selectedTheme.set(prefs.theme);
         if (prefs.birthday) this.birthday.set(new Date(prefs.birthday));
         if (prefs.timezone) this.selectedTimezone.set(prefs.timezone);
+      }
+    });
+
+    this.checkMfaStatus();
+  }
+
+  checkMfaStatus() {
+    this.mfaService.checkMFAStatus().subscribe({
+      next: (res) => this.mfaEnabled.set(res.enabled),
+      error: () => this.mfaEnabled.set(false)
+    });
+  }
+
+  startMfaSetup() {
+    this.mfaService.setupMFA().subscribe({
+      next: (res) => {
+        this.mfaSecret.set(res.secret);
+        this.qrCodeUrl.set(res.qr_code);
+        this.showMfaSetupDialog.set(true);
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao iniciar setup MFA' });
+      }
+    });
+  }
+
+  confirmEnableMFA() {
+    if (!this.mfaToken()) return;
+
+    this.mfaService.enableMFA(this.mfaSecret(), this.mfaToken()).subscribe({
+      next: () => {
+        this.mfaEnabled.set(true);
+        this.showMfaSetupDialog.set(false);
+        this.mfaToken.set('');
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'MFA ativado com sucesso!' });
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Código inválido' });
+      }
+    });
+  }
+
+  disableMFA() {
+    this.confirmationService.confirm({
+      message: 'Tem certeza que deseja desativar o MFA? Sua conta ficará menos segura.',
+      header: 'Desativar MFA',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.mfaService.disableMFA().subscribe({
+          next: () => {
+            this.mfaEnabled.set(false);
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'MFA desativado' });
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao desativar MFA' });
+          }
+        });
       }
     });
   }
@@ -155,7 +226,10 @@ export class Settings {
     }
 
     // Update Local Theme Service
-    if (newTheme === 'dark') {
+    // Check effective theme
+    const isDark = newTheme === 'dark' || (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    if (isDark) {
       if (!this.themeService.darkMode()) {
         this.themeService.toggleTheme();
       }

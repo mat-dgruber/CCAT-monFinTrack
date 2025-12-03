@@ -14,7 +14,18 @@ export class UserPreferenceService {
 
      private readonly STORAGE_KEY = 'user_preferences';
 
+     private mediaQueryListener: () => void;
+
      constructor(private http: HttpClient) {
+          // Initialize listener for system theme changes
+          this.mediaQueryListener = () => {
+               const currentPrefs = this.preferencesSubject.value;
+               if (currentPrefs && currentPrefs.theme === 'system') {
+                    this.applyTheme('system');
+               }
+          };
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this.mediaQueryListener);
+
           this.loadInitialPreferences();
      }
 
@@ -25,7 +36,7 @@ export class UserPreferenceService {
                try {
                     const parsed = JSON.parse(stored);
                     this.preferencesSubject.next(parsed);
-                    this.applyTheme(parsed.theme);
+                    this.applyTheme(parsed.theme || 'light');
                } catch (e) {
                     console.error('Failed to parse stored preferences', e);
                }
@@ -106,13 +117,22 @@ export class UserPreferenceService {
      private updateLocalState(prefs: UserPreference) {
           this.preferencesSubject.next(prefs);
           localStorage.setItem(this.STORAGE_KEY, JSON.stringify(prefs));
-          this.applyTheme(prefs.theme);
+          this.applyTheme(prefs.theme || 'light');
      }
 
-     private applyTheme(theme: 'light' | 'dark') {
-          if (theme === 'dark') {
-               document.body.classList.add('dark-theme');
+     private applyTheme(theme: string) {
+          let effectiveTheme = theme;
+
+          if (theme === 'system') {
+               const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+               effectiveTheme = systemDark ? 'dark' : 'light';
+          }
+
+          if (effectiveTheme === 'dark') {
+               document.documentElement.classList.add('dark'); // Tailwind
+               document.body.classList.add('dark-theme'); // Custom/PrimeNG
           } else {
+               document.documentElement.classList.remove('dark');
                document.body.classList.remove('dark-theme');
           }
      }

@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -19,6 +20,7 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private app = initializeApp(environment.firebaseConfig);
   private auth = getAuth(this.app);
+  private router = inject(Router);
 
   currentUser = signal<User | null>(null);
 
@@ -31,6 +33,25 @@ export class AuthService {
         this.currentUser.set(null);
       }
     });
+
+    // Verifica a sessão periodicamente se houver duração configurada
+    if (environment.sessionDuration > 0) {
+      this.checkSession();
+      // Verifica a cada 1 minuto
+      setInterval(() => this.checkSession(), 60000);
+    }
+  }
+
+  private checkSession() {
+    const loginTimestamp = localStorage.getItem('loginTimestamp');
+    if (loginTimestamp) {
+      const elapsed = Date.now() - parseInt(loginTimestamp, 10);
+      if (elapsed > environment.sessionDuration) {
+        console.log('Sessão expirada. Fazendo logout...');
+        this.logout();
+        this.router.navigate(['/login']);
+      }
+    }
   }
 
   // 1. Cria a conta
@@ -64,10 +85,14 @@ export class AuthService {
       throw new Error('email-not-verified'); // Lança erro específico
     }
 
+    // Salva o timestamp do login
+    localStorage.setItem('loginTimestamp', Date.now().toString());
+
     return credential;
   }
 
   async logout() {
+    localStorage.removeItem('loginTimestamp');
     return await signOut(this.auth);
   }
 

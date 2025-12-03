@@ -18,20 +18,21 @@
       </div>
 
       <!-- Language -->
-      <div class="flex flex-col gap-2">
+      <!--<div class="flex flex-col gap-2">
         <label class="font-medium text-gray-900 dark:text-white">Idioma</label>
         <p-select [options]="[{label: 'Português (Brasil)', value: 'pt-BR'}, {label: 'English (US)', value: 'en-US'}]"
           [ngModel]="preferences?.language" (onChange)="onLanguageChange($event)" optionLabel="label"
           optionValue="value" styleClass="w-full max-w-md">
         </p-select>
-      </div>
+      </div>-->
 
-      <!-- Notifications -->
+      <!-- Notifications (Temporarily Hidden)
       <div class="flex items-center gap-2">
         <p-toggleswitch [ngModel]="preferences?.notifications_enabled"
           (onChange)="onNotificationChange($event)"></p-toggleswitch>
         <label class="font-medium text-gray-900 dark:text-white">Habilitar Notificações</label>
       </div>
+      -->
     </div>
   </p-card>
 
@@ -60,20 +61,20 @@
       </div>
 
       <!-- Birthday -->
-      <div class="flex flex-col gap-2">
+      <!--<div class="flex flex-col gap-2">
         <label for="birthday" class="font-medium text-gray-900 dark:text-white">Data de Nascimento</label>
-        <p-datepicker [(ngModel)]="birthday" [showIcon]="true" inputId="birthday" placeholder="Data"
-          styleClass="w-full">
+        <p-datepicker [(ngModel)]="birthday" [showIcon]="true" inputId="birthday" placeholder="Data">
         </p-datepicker>
-      </div>
+      </div>-->
 
-      <!-- Timezone -->
+      <!-- Timezone (Temporarily Hidden)
       <div class="flex flex-col gap-2">
         <label for="timezone" class="font-medium text-gray-900 dark:text-white">Fuso Horário</label>
         <p-select [options]="timezones" [(ngModel)]="selectedTimezone" optionLabel="label" optionValue="value"
           styleClass="w-full">
         </p-select>
       </div>
+      -->
 
       <!-- Update Button -->
       <div class="mt-2">
@@ -127,13 +128,37 @@
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
           <span class="font-medium text-gray-900 dark:text-white">Autenticação de Dois Fatores</span>
-          <p-tag value="Desativado" severity="warn" styleClass="text-xs bg-orange-100 text-orange-800"></p-tag>
+          <p-tag *ngIf="mfaEnabled()" value="Ativado" severity="success" styleClass="text-xs"></p-tag>
+          <p-tag *ngIf="!mfaEnabled()" value="Desativado" severity="warn"
+            styleClass="text-xs bg-orange-100 text-orange-800"></p-tag>
         </div>
         <span class="text-gray-800 dark:text-gray-100">Proteja sua conta com uma etapa extra de segurança</span>
       </div>
-      <p-button label="Ativar MFA" styleClass="p-button-outlined p-button-secondary" size="small"></p-button>
+      <p-button *ngIf="!mfaEnabled()" label="Ativar MFA" styleClass="p-button-outlined p-button-secondary" size="small"
+        (onClick)="startMfaSetup()"></p-button>
+      <p-button *ngIf="mfaEnabled()" label="Desativar MFA" styleClass="p-button-outlined p-button-danger" size="small"
+        (onClick)="disableMFA()"></p-button>
     </div>
   </p-card>
+
+  <p-dialog header="Configurar MFA" [(visible)]="showMfaSetupDialog" [modal]="true" [style]="{width: '400px'}">
+    <div class="flex flex-col items-center gap-4">
+      <p>Escaneie o QR Code abaixo com seu aplicativo autenticador (Google Authenticator, Authy, etc).</p>
+      <img [src]="qrCodeUrl()" alt="QR Code" class="w-48 h-48 border rounded">
+
+      <div class="flex flex-col gap-2 w-full">
+        <label for="mfaToken">Digite o código de 6 dígitos</label>
+        <input pInputText id="mfaToken" [(ngModel)]="mfaToken" class="w-full text-center text-xl tracking-widest"
+          maxlength="6" placeholder="000000">
+      </div>
+
+      <div class="flex justify-end gap-2 w-full mt-4">
+        <p-button label="Cancelar" styleClass="p-button-text" (onClick)="showMfaSetupDialog.set(false)"></p-button>
+        <p-button label="Verificar e Ativar" (onClick)="confirmEnableMFA()"
+          [disabled]="mfaToken().length !== 6"></p-button>
+      </div>
+    </div>
+  </p-dialog>
 
   <!-- Account Data -->
   <p-card header="Dados da Conta" styleClass="bg-white text-gray-900">
