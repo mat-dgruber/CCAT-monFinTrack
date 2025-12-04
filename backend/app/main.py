@@ -20,9 +20,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # --- CONFIGURAÇÃO DO CORS (LIBERAR O FRONTEND) ---
 # Pega origens do .env OU usa uma lista padrão segura
-# origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://localhost,http://127.0.0.1,http://127.0.0.1:4200")
-# origins = [origin.strip() for origin in origins_str.split(",")]
-origins = ["*"]
+origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://localhost,http://127.0.0.1,http://127.0.0.1:4200")
+origins = [origin.strip() for origin in origins_str.split(",")]
+# origins = ["*"]
 print(f"Allowed origins: {origins}")
 
 app.add_middleware(

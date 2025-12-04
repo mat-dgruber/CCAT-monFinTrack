@@ -1,82 +1,59 @@
 <div class="mb-8">
 
   <div class="flex justify-between items-center mb-6">
-    <h2 class="text-xl font-bold text-gray-800">Metas Mensais</h2>
-    <p-button
-      label="Nova Meta"
-      icon="pi pi-plus"
-      size="small"
-      (onClick)="openNew()"
-    ></p-button>
+    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Metas Mensais</h2>
+    <p-button label="Nova Meta" icon="pi pi-plus" size="small" (onClick)="openNew()"></p-button>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     @for (b of budgets(); track b.id) {
     <div
-      class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all relative group"
-    >
-      <div
-        class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-      >
-        <button
-          (click)="editBudget($event, b)"
-          class="w-8 h-8 rounded-full bg-gray-50 text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
-        >
+      class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all relative group">
+      <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        <button (click)="editBudget($event, b)"
+          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm">
           <i class="pi pi-pencil text-sm"></i>
         </button>
-        <button
-          (click)="deleteBudget($event, b.id!)"
-          class="w-8 h-8 rounded-full bg-gray-50 text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
-        >
+        <button (click)="deleteBudget($event, b.id!)"
+          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm">
           <i class="pi pi-trash text-sm"></i>
         </button>
       </div>
 
       <div class="flex items-center gap-3 mb-4">
-        <div
-          class="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-          [style.backgroundColor]="b.category?.color + '20'"
-          [style.color]="b.category?.color"
-        >
+        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-gray-100 dark:bg-gray-700"
+          [style.backgroundColor]="b.category?.color + '20'" [style.color]="b.category?.color">
           <i [class]="b.category?.icon"></i>
         </div>
-        <div class="font-bold text-lg text-gray-700">
+        <div class="font-bold text-lg text-gray-700 dark:text-gray-200">
           {{ b.category?.name }}
         </div>
       </div>
 
       <div class="flex justify-between text-sm mb-2">
-        <span class="text-gray-500"
-          >Gasto:
-          <strong [class.text-red-500]="b.is_over_budget">{{
+        <span class="text-gray-500 dark:text-gray-400">Gasto:
+          <strong [class.text-red-500]="b.is_over_budget" [class.dark:text-red-400]="b.is_over_budget"
+            class="text-gray-900 dark:text-white">{{
             b.spent | currency : "BRL"
-          }}</strong></span
-        >
-        <span class="text-gray-500"
-          >Meta: <strong>{{ b.amount | currency : "BRL" }}</strong></span
-        >
+            }}</strong></span>
+        <span class="text-gray-500 dark:text-gray-400">Meta: <strong class="text-gray-900 dark:text-white">{{ b.amount |
+            currency : "BRL" }}</strong></span>
       </div>
 
       <div class="relative pt-1">
-        <div class="overflow-hidden h-4 mb-4 text-xs flex rounded bg-gray-100">
-          <div
-            [style.width.%]="b.percentage"
-            [style.backgroundColor]="getProgressColor(b.percentage || 0)"
-            class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500"
-          ></div>
+        <div class="overflow-hidden h-4 mb-4 text-xs flex rounded bg-gray-100 dark:bg-gray-700">
+          <div [style.width.%]="b.percentage" [style.backgroundColor]="getProgressColor(b.percentage || 0)"
+            class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500">
+          </div>
         </div>
-        <div
-          class="text-right text-xs font-bold"
-          [style.color]="getProgressColor(b.percentage || 0)"
-        >
+        <div class="text-right text-xs font-bold" [style.color]="getProgressColor(b.percentage || 0)">
           {{ b.percentage | number : "1.0-0" }}%
         </div>
       </div>
     </div>
     } @if (budgets().length === 0) {
     <div
-      class="col-span-full text-center py-10 text-gray-400 bg-white rounded-xl border border-dashed border-gray-200"
-    >
+      class="col-span-full text-center py-10 text-gray-400 dark:text-gray-500 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
       <i class="pi pi-bullseye text-4xl mb-2 opacity-50"></i>
       <p>Nenhuma meta definida. Que tal criar uma?</p>
     </div>
@@ -84,29 +61,13 @@
   </div>
 </div>
 
-<p-dialog
-  [header]="editingId() ? 'Editar Meta' : 'Nova Meta'"
-  [modal]="true"
-  [(visible)]="visible"
-  [style]="{ width: '25rem' }"
-  [draggable]="false"
-  [resizable]="false"
->
-  <form
-    [formGroup]="form"
-    (ngSubmit)="onSubmit()"
-    class="flex flex-col gap-4 pt-4"
-  >
+<p-dialog [header]="editingId() ? 'Editar Meta' : 'Nova Meta'" [modal]="true" [(visible)]="visible"
+  [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
     <div class="flex flex-col gap-2">
-      <label class="font-semibold text-gray-700">Categoria</label>
-      <p-select
-        [options]="categories()"
-        formControlName="category"
-        optionLabel="name"
-        placeholder="Selecione..."
-        [style]="{ width: '100%' }"
-        appendTo="body"
-      >
+      <label class="font-semibold text-gray-700 dark:text-gray-300">Categoria</label>
+      <p-select [options]="categories()" formControlName="category" optionLabel="name" placeholder="Selecione..."
+        [style]="{ width: '100%' }" appendTo="body">
         <ng-template pTemplate="item" let-cat>
           <div class="flex items-center gap-2">
             <i [class]="cat.icon" [style.color]="cat.color"></i>
@@ -125,24 +86,14 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <label class="font-semibold text-gray-700">Limite Mensal (R$)</label>
-      <p-inputNumber
-        formControlName="amount"
-        mode="currency"
-        currency="BRL"
-        locale="pt-BR"
-        [style]="{ width: '100%' }"
-        inputStyleClass="w-full"
-      >
+      <label class="font-semibold text-gray-700 dark:text-gray-300">Limite Mensal (R$)</label>
+      <p-inputNumber formControlName="amount" mode="currency" currency="BRL" locale="pt-BR" [style]="{ width: '100%' }"
+        inputStyleClass="w-full">
       </p-inputNumber>
     </div>
 
     <div class="flex justify-end mt-4">
-      <p-button
-        label="Salvar Meta"
-        type="submit"
-        [disabled]="form.invalid"
-      ></p-button>
+      <p-button label="Salvar Meta" type="submit" [disabled]="form.invalid"></p-button>
     </div>
   </form>
 </p-dialog>

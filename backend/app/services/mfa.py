@@ -45,19 +45,19 @@ class MFAService:
         Verifica o token e, se válido, salva o segredo no perfil do usuário.
         """
         if self.verify_token(secret, token):
-            self.collection.document(user_id).update({
+            self.collection.document(user_id).set({
                 "mfa_secret": secret,
                 "mfa_enabled": True
-            })
+            }, merge=True)
             return True
         return False
 
     def disable_mfa(self, user_id: str):
         """Desativa o MFA removendo o segredo."""
-        self.collection.document(user_id).update({
+        self.collection.document(user_id).set({
             "mfa_secret": None,
             "mfa_enabled": False
-        })
+        }, merge=True)
 
     def check_mfa_status(self, user_id: str) -> bool:
         """Verifica se o MFA está ativado."""

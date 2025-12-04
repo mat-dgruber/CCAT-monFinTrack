@@ -1,24 +1,23 @@
-<div class="flex h-full bg-gray-50">
+<div class="flex h-full bg-gray-50 dark:bg-slate-900">
     <!-- Main Content Column -->
     <div class="flex-1 flex flex-col h-full overflow-hidden">
         <!-- Header -->
-        <div class="bg-white border-b border-gray-200 p-6 flex flex-col gap-4 shrink-0">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i class="pi pi-list text-blue-600"></i>
-                    Transações
-                </h1>
-                <div class="flex gap-2">
-                    <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true"
-                        (onClick)="exportCSV()"></p-button>
-                    <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()"></p-button>
-                </div>
+        <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <i class="pi pi-list"></i>
+                Transações
+            </h1>
+            <div class="flex gap-2">
+                <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true"
+                    (onClick)="exportCSV()" styleClass="hidden sm:flex"></p-button>
+                <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()">
+                </p-button>
             </div>
         </div>
 
-        <!-- Table Area -->
-        <div class="flex-1 overflow-hidden p-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
+        <div class="flex-1 overflow-hidden p-4 md:p-6">
+            <div
+                class="hidden md:flex bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex-col">
                 <p-table #dt [value]="transactions()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
                     rowGroupMode="subheader" [groupRowsBy]="currentGroupField()" [sortField]="currentSortField()"
                     [sortOrder]="-1" [loading]="loading()" styleClass="p-datatable-sm" [scrollable]="true"
@@ -31,9 +30,10 @@
                                 <p-button label="Limpar" [outlined]="true" icon="pi pi-filter-slash"
                                     (onClick)="clear(dt)"></p-button>
                             </div>
-                            <p-iconfield>
+                            <p-iconfield
+                                class="dark:text-gray-200 dark:border-gray-700 dark:bg-slate-800 dark:shadow-none dark:placeholder-gray-200 dark:placeholder-opacity-100 ">
                                 <p-inputicon styleClass="pi pi-search" />
-                                <input pInputText type="text"
+                                <input pInputText type="text" class="dark:text-gray-200 dark:border-gray-700"
                                     (input)="dt.filterGlobal($any($event.target).value, 'contains')"
                                     placeholder="Pesquisar..." />
                             </p-iconfield>
@@ -54,11 +54,14 @@
                                                 <span class="font-bold mb-2">Período</span>
                                                 <p-select [ngModel]="selectedDatePreset()" [options]="datePresets"
                                                     (onChange)="selectedDatePreset.set($event.value); onPresetChange()"
-                                                    placeholder="Selecione um período" styleClass="w-full">
+                                                    placeholder="Selecione um período" styleClass="w-full"
+                                                    appendTo="body"
+                                                    panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
                                                 </p-select>
 
                                                 <div *ngIf="selectedDatePreset() === 'custom'" class="mt-2">
-                                                    <span class="font-bold mb-2 block">Intervalo Personalizado</span>
+                                                    <span class="font-bold mb-2 block">Intervalo
+                                                        Personalizado</span>
                                                     <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range"
                                                         [readonlyInput]="true" placeholder="Selecione as datas"
                                                         dateFormat="dd/mm/yy" [showIcon]="true"
@@ -79,7 +82,9 @@
                                         <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                             <p-select [ngModel]="value" [options]="categories()"
                                                 (onChange)="filter($any($event).value)" placeholder="Qualquer"
-                                                optionLabel="name" optionValue="name" styleClass="w-full">
+                                                optionLabel="name" optionValue="name" styleClass="w-full"
+                                                appendTo="body"
+                                                panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
                                                 <ng-template let-option pTemplate="item">
                                                     <div class="flex items-center gap-2">
                                                         <i [class]="option.icon" [style.color]="option.color"></i>
@@ -106,7 +111,9 @@
                                         <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                             <p-select [ngModel]="value" [options]="accounts()"
                                                 (onChange)="filter($any($event).value)" placeholder="Qualquer"
-                                                optionLabel="name" optionValue="name" styleClass="w-full">
+                                                optionLabel="name" optionValue="name" styleClass="w-full"
+                                                appendTo="body"
+                                                panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
                                             </p-select>
                                         </ng-template>
                                     </p-columnFilter>
@@ -136,32 +143,35 @@
                                 <div class="flex flex-col gap-2 py-2">
                                     <!-- Year Separator -->
                                     <div *ngIf="t.isNewYear" class="flex items-center gap-4 mt-4 mb-2">
-                                        <div class="h-px bg-gray-300 flex-1"></div>
-                                        <span class="text-2xl font-bold text-gray-400">{{t.yearLabel}}</span>
-                                        <div class="h-px bg-gray-300 flex-1"></div>
+                                        <div class="h-px bg-gray-300 dark:bg-gray-600 flex-1"></div>
+                                        <span
+                                            class="text-2xl font-bold text-gray-400 dark:text-gray-500">{{t.yearLabel}}</span>
+                                        <div class="h-px bg-gray-300 dark:bg-gray-600 flex-1"></div>
                                     </div>
 
                                     <!-- Month Separator -->
                                     <div *ngIf="t.isNewMonth" class="flex items-center gap-2 mt-2 mb-1">
-                                        <span class="text-xl font-bold text-blue-600 capitalize">{{t.monthLabel}}</span>
-                                        <div class="h-px bg-blue-100 flex-1"></div>
+                                        <span
+                                            class="text-xl font-bold text-blue-600 dark:text-blue-400 capitalize">{{t.monthLabel}}</span>
+                                        <div class="h-px bg-blue-100 dark:bg-blue-900/30 flex-1"></div>
                                     </div>
 
                                     <!-- Day Header -->
-                                    <div class="flex items-center gap-2 font-bold text-gray-800">
+                                    <div class="flex items-center gap-2 font-bold text-gray-800 dark:text-gray-200">
                                         <div class="w-1 h-6 bg-blue-500 rounded-full"></div>
-                                        <span class="text-lg uppercase">{{t.date | date:'dd MMM' : '' : 'pt-BR'}}</span>
+                                        <span class="text-lg uppercase">{{t.date | date:'dd MMM' : '' :
+                                            'pt-BR'}}</span>
                                     </div>
                                 </div>
                             </td>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-t>
-                        <tr class="hover:bg-gray-50 transition-colors">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
                             <td>{{t.date | date:'dd/MM/yyyy'}}</td>
                             <td>
                                 <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100"
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700"
                                         [style.backgroundColor]="t.category?.color + '20'">
                                         <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
                                     </div>
@@ -169,11 +179,12 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="font-medium text-gray-900">{{t.description}}</div>
-                                <div class="text-xs text-gray-500">{{t.payment_method | paymentFormat}}</div>
+                                <div class="font-medium text-gray-900 dark:text-white">{{t.description}}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{t.payment_method |
+                                    paymentFormat}}</div>
                             </td>
                             <td>
-                                <span class="text-sm text-gray-600">
+                                <span class="text-sm text-gray-600 dark:text-gray-300">
                                     {{ t.account?.name || 'Conta' }}
                                 </span>
                             </td>
@@ -187,7 +198,7 @@
                             </td>
                             <td class="text-right">
                                 <span
-                                    [class]="t.type === 'expense' ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
+                                    [class]="t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold'">
                                     {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
                                 </span>
                             </td>
@@ -207,66 +218,146 @@
                     </ng-template>
                     <ng-template pTemplate="emptymessage">
                         <tr>
-                            <td colspan="7" class="text-center p-8 text-gray-500">
-                                <i class="pi pi-inbox text-4xl mb-2 block text-gray-300"></i>
+                            <td colspan="7" class="text-center p-8 text-gray-500 dark:text-gray-400">
+                                <i class="pi pi-inbox text-4xl mb-2 block text-gray-300 dark:text-gray-600"></i>
                                 Nenhuma transação encontrada.
                             </td>
                         </tr>
                     </ng-template>
                 </p-table>
             </div>
+
+            <!-- Mobile Card View -->
+            <div class="md:hidden flex flex-col gap-4 h-full overflow-y-auto pb-20">
+                <!-- Mobile Search & Filter -->
+                <div class="flex gap-2 mb-2">
+                    <p-iconfield
+                        class="flex-1 dark:text-gray-200 dark:border-gray-700 dark:bg-slate-800 dark:shadow-none dark:placeholder-gray-200 dark:placeholder-opacity-100">
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" class="w-full dark:text-gray-200 dark:border-gray-700"
+                            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                            placeholder="Pesquisar..." />
+                    </p-iconfield>
+                    <p-button icon="pi pi-filter" [outlined]="true" severity="secondary"></p-button>
+                </div>
+
+                @for (t of transactions(); track t.id) {
+                <div
+                    class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700"
+                                [style.backgroundColor]="t.category?.color + '20'">
+                                <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900 dark:text-white">{{t.description}}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{t.date |
+                                    date:'dd/MM/yyyy'}} •
+                                    {{t.category?.name}}</div>
+                            </div>
+                        </div>
+                        <span
+                            [class]="t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold'">
+                            {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-gray-50 dark:border-gray-700">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                {{ t.account?.name || 'Conta' }}
+                            </span>
+                            <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
+                                [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true"
+                                styleClass="text-xs"></p-tag>
+                        </div>
+                        <div class="flex gap-1">
+                            <button (click)="toggleStatus($event, t)"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <i
+                                    [class]="t.status === 'paid' ? 'pi pi-clock text-orange-500' : 'pi pi-check text-green-500'"></i>
+                            </button>
+                            <button (click)="editTransaction(t)"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                <i class="pi pi-pencil"></i>
+                            </button>
+                            <button (click)="deleteTransaction($event, t)"
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <i class="pi pi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                } @empty {
+                <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+                    <i class="pi pi-inbox text-4xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                    Nenhuma transação encontrada.
+                </div>
+                }
+            </div>
         </div>
     </div>
 
     <!-- Right Sidebar Stats -->
-    <div class="w-80 bg-white border-l border-gray-200 p-6 flex flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0">
-        <h3 class="text-lg font-bold text-gray-800">Resumo</h3>
+    <div
+        class="w-80 bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white">Resumo</h3>
 
         @if (stats(); as s) {
         <div class="space-y-4">
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div class="text-sm text-gray-500 mb-1">Total de Transações</div>
-                <div class="text-2xl font-bold text-gray-900">{{s.totalTransactions}}</div>
+            <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total de Transações</div>
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{s.totalTransactions}}</div>
             </div>
 
-            <div class="p-4 bg-red-50 rounded-xl border border-red-100">
-                <div class="text-sm text-red-600 mb-1">Total Despesas</div>
-                <div class="text-2xl font-bold text-red-700">{{s.totalExpense | currency:'BRL'}}</div>
+            <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
+                <div class="text-sm text-red-600 dark:text-red-400 mb-1">Total Despesas</div>
+                <div class="text-2xl font-bold text-red-700 dark:text-red-400">{{s.totalExpense |
+                    currency:'BRL'}}</div>
             </div>
 
-            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
-                <div class="text-sm text-green-600 mb-1">Total Receitas</div>
-                <div class="text-2xl font-bold text-green-700">{{s.totalIncome | currency:'BRL'}}</div>
+            <div
+                class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
+                <div class="text-sm text-green-600 dark:text-green-400 mb-1">Total Receitas</div>
+                <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{s.totalIncome |
+                    currency:'BRL'}}
+                </div>
             </div>
 
-            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-sm text-blue-600 mb-1">Saldo do Período</div>
-                <div class="text-2xl font-bold text-blue-700">{{s.net | currency:'BRL'}}</div>
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                <div class="text-sm text-blue-600 dark:text-blue-400 mb-1">Saldo do Período</div>
+                <div class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{s.net | currency:'BRL'}}
+                </div>
             </div>
 
-            <div class="border-t border-gray-100 my-2"></div>
+            <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
 
             <div class="space-y-3">
                 <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Maior Despesa</span>
-                    <span class="font-medium text-gray-900">{{s.maxExpense | currency:'BRL'}}</span>
+                    <span class="text-gray-500 dark:text-gray-400">Maior Despesa</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{s.maxExpense |
+                        currency:'BRL'}}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Média (Valor)</span>
-                    <span class="font-medium text-gray-900">{{s.avgTx | currency:'BRL'}}</span>
+                    <span class="text-gray-500 dark:text-gray-400">Média (Valor)</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{s.avgTx | currency:'BRL'}}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Primeira Data</span>
-                    <span class="font-medium text-gray-900">{{s.firstDate | date:'dd/MM/yy'}}</span>
+                    <span class="text-gray-500 dark:text-gray-400">Primeira Data</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{s.firstDate |
+                        date:'dd/MM/yy'}}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Última Data</span>
-                    <span class="font-medium text-gray-900">{{s.lastDate | date:'dd/MM/yy'}}</span>
+                    <span class="text-gray-500 dark:text-gray-400">Última Data</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{s.lastDate |
+                        date:'dd/MM/yy'}}</span>
                 </div>
             </div>
         </div>
         } @else {
-        <div class="text-center text-gray-500 py-10">
+        <div class="text-center text-gray-500 dark:text-gray-400 py-10">
             Sem dados para o filtro selecionado.
         </div>
         }

@@ -12,6 +12,7 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail
 } from 'firebase/auth';
+import { from, switchMap, ReplaySubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -24,13 +25,19 @@ export class AuthService {
 
   currentUser = signal<User | null>(null);
 
+  // Use ReplaySubject(1) to hold the latest auth state and emit immediately to new subscribers
+  private authStateSubject = new ReplaySubject<User | null>(1);
+  authState$ = this.authStateSubject.asObservable();
+
   constructor() {
     onAuthStateChanged(this.auth, (user) => {
       // SÓ aceita o usuário se o email estiver verificado!
       if (user && user.emailVerified) {
         this.currentUser.set(user);
+        this.authStateSubject.next(user);
       } else {
         this.currentUser.set(null);
+        this.authStateSubject.next(null);
       }
     });
 
@@ -80,16 +87,6 @@ export class AuthService {
     const credential = await signInWithEmailAndPassword(this.auth, email, pass);
 
     // 5. Verificação de Segurança no Login
-    /*
-    if (!credential.user.emailVerified) {
-      await signOut(this.auth); // Chuta o usuário para fora
-      throw new Error('email-not-verified'); // Lança erro específico
-    }
-    */
-
-    // Salva o timestamp do login
-    localStorage.setItem('loginTimestamp', Date.now().toString());
-
     return credential;
   }
 

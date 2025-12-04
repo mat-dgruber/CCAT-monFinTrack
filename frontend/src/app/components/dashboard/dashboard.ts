@@ -116,31 +116,36 @@ export class Dashboard implements OnInit {
 
     // 2. Bar Chart (Evolution)
     if (data.evolution) {
-        this.evolutionChartData = {
-            labels: data.evolution.map(e => e.month),
-            datasets: [
-                {
-                    label: 'Receitas',
-                    data: data.evolution.map(e => e.income),
-                    backgroundColor: '#22c55e', // Green
-                    borderColor: '#22c55e',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Despesas',
-                    data: data.evolution.map(e => e.expense),
-                    backgroundColor: '#ef4444', // Red
-                    borderColor: '#ef4444',
-                    borderWidth: 1
-                }
-            ]
-        };
+      this.evolutionChartData = {
+        labels: data.evolution.map(e => e.month),
+        datasets: [
+          {
+            label: 'Receitas',
+            data: data.evolution.map(e => e.income),
+            backgroundColor: '#22c55e', // Green
+            borderColor: '#22c55e',
+            borderWidth: 1
+          },
+          {
+            label: 'Despesas',
+            data: data.evolution.map(e => e.expense),
+            backgroundColor: '#ef4444', // Red
+            borderColor: '#ef4444',
+            borderWidth: 1
+          }
+        ]
+      };
     }
 
     this.initChartOptions(); // Reset options
   }
 
   initChartOptions() {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
+    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
     // Options for Doughnut
     this.chartOptions = {
       cutout: '60%',
@@ -149,7 +154,7 @@ export class Dashboard implements OnInit {
           display: true, // Display legend for doughnut
           labels: {
             usePointStyle: true,
-            color: '#4b5563'
+            color: textColor
           }
         }
       },
@@ -159,39 +164,39 @@ export class Dashboard implements OnInit {
 
     // Options for Evolution Bar Chart
     this.evolutionChartOptions = {
-        maintainAspectRatio: false,
-        responsive: true,
-        plugins: {
-            legend: {
-                labels: {
-                    usePointStyle: true,
-                    color: '#4b5563'
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#6b7280'
-                },
-                grid: {
-                    color: '#f3f4f6',
-                    drawBorder: false
-                }
-            },
-            y: {
-                ticks: {
-                    color: '#6b7280',
-                    callback: function(value: any) {
-                        return 'R$ ' + value; 
-                    }
-                },
-                grid: {
-                    color: '#f3f4f6',
-                    drawBorder: false
-                }
-            }
+      maintainAspectRatio: false,
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            usePointStyle: true,
+            color: textColor
+          }
         }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false
+          }
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary,
+            callback: function (value: any) {
+              return 'R$ ' + value;
+            }
+          },
+          grid: {
+            color: surfaceBorder,
+            drawBorder: false
+          }
+        }
+      }
     };
   }
 
