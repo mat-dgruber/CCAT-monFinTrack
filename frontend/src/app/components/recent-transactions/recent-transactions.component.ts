@@ -8,10 +8,12 @@ import { TransactionForm } from '../transaction-form/transaction-form';
 import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
+import { SkeletonModule } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-recent-transactions',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TransactionForm, PaymentFormatPipe],
+  imports: [CommonModule, ButtonModule, TransactionForm, PaymentFormatPipe, SkeletonModule],
   templateUrl: './recent-transactions.component.html',
   styles: []
 })
@@ -25,6 +27,7 @@ export class RecentTransactionsComponent implements OnInit {
 
   transactions = signal<Transaction[]>([]);
   groupedTransactions = signal<{ date: string; transactions: Transaction[] }[]>([]);
+  loading = signal(true);
 
   constructor() {
     effect(() => {
@@ -38,13 +41,18 @@ export class RecentTransactionsComponent implements OnInit {
   }
 
   loadRecentTransactions() {
+    this.loading.set(true);
     // Fetch last 7 transactions (no month/year filter to get global recent)
     this.transactionService.getTransactions(undefined, undefined, 7).subscribe({
       next: (data) => {
         this.transactions.set(data);
         this.groupTransactionsByDate(data);
+        this.loading.set(false);
       },
-      error: (err) => console.error('Error loading recent transactions', err)
+      error: (err) => {
+        console.error('Error loading recent transactions', err);
+        this.loading.set(false);
+      }
     });
   }
 

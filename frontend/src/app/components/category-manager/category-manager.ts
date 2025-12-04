@@ -11,6 +11,7 @@ import { SelectModule } from 'primeng/select';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
@@ -21,15 +22,16 @@ import { ICON_LIST } from '../../shared/icons';
   selector: 'app-category-manager',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    ButtonModule, 
-    DialogModule, 
-    InputTextModule, 
-    ColorPickerModule, 
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    ColorPickerModule,
     SelectModule,
     SelectButtonModule,
-    TableModule
+    TableModule,
+    SkeletonModule
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss'
@@ -41,6 +43,7 @@ export class CategoryManager implements OnInit {
   private fb = inject(FormBuilder);
 
   categories = signal<Category[]>([]);
+  loading = signal(true);
   visible = signal(false);
   editingId = signal<string | null>(null);
 
@@ -64,19 +67,20 @@ export class CategoryManager implements OnInit {
     const result: any[] = [];
     // Sort categories by type then name
     const sortedCats = [...this.categories()].sort((a, b) => {
-        if (a.type !== b.type) return a.type.localeCompare(b.type);
-        return a.name.localeCompare(b.name);
+      if (a.type !== b.type) return a.type.localeCompare(b.type);
+      return a.name.localeCompare(b.name);
     });
 
     for (const cat of sortedCats) {
-        if (cat.subcategories && cat.subcategories.length > 0) {
-            for (const sub of cat.subcategories) {
-                result.push({ ...sub, parent: cat, isPlaceholder: false });
-            }
-        } else {
-            // Placeholder for empty parents so they show up as headers
-            result.push({ parent: cat, isPlaceholder: true });
+      // Always add parent as a header/placeholder
+      // IMPORTANT: Add 'parent: cat' so that row grouping works and 'row.parent' is not undefined
+      result.push({ ...cat, parent: cat, isPlaceholder: true });
+
+      if (cat.subcategories && cat.subcategories.length > 0) {
+        for (const sub of cat.subcategories) {
+          result.push({ ...sub, parent: cat, isPlaceholder: false });
         }
+      }
     }
     return result;
   });
@@ -103,18 +107,28 @@ export class CategoryManager implements OnInit {
   }
 
   loadCategories() {
-    this.categoryService.getCategories().subscribe(data => this.categories.set(data));
+    this.loading.set(true);
+    this.categoryService.getCategories().subscribe({
+      next: (data) => {
+        this.categories.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar categorias', err);
+        this.loading.set(false);
+      }
+    });
   }
 
   openNew() {
     this.editingId.set(null);
-    this.form.reset({ 
-        name: '', 
-        icon: 'pi pi-tag', 
-        color: '#3b82f6', 
-        type: 'expense', // Padrão
-        is_custom: true,
-        parent_id: null
+    this.form.reset({
+      name: '',
+      icon: 'pi pi-tag',
+      color: '#3b82f6',
+      type: 'expense', // Padrão
+      is_custom: true,
+      parent_id: null
     });
     this.visible.set(true);
   }
@@ -122,34 +136,34 @@ export class CategoryManager implements OnInit {
   editCategory(cat: Category) {
     this.editingId.set(cat.id!);
     this.form.patchValue({
-        name: cat.name,
-        icon: cat.icon,
-        color: cat.color,
-        is_custom: cat.is_custom,
-        type: cat.type,
-        parent_id: cat.parent_id || null
+      name: cat.name,
+      icon: cat.icon,
+      color: cat.color,
+      is_custom: cat.is_custom,
+      type: cat.type,
+      parent_id: cat.parent_id || null
     });
     this.visible.set(true);
   }
 
   deleteCategory(event: Event, id: string) {
     event.stopPropagation(); // Previne clique no card
-    
+
     this.confirmationService.confirm({
-        target: event.target as EventTarget,
-        message: 'Apagar esta categoria?',
-        icon: 'pi pi-exclamation-triangle',
-        accept: () => {
-            this.categoryService.deleteCategory(id).subscribe({
-                next: () => {
-                    this.messageService.add({severity:'success', summary:'Categoria Excluída'});
-                    this.loadCategories();
-                },
-                error: (err) => {
-                     this.messageService.add({severity:'error', summary:'Erro', detail: err.error.detail || 'Não foi possível excluir'});
-                }
-            });
-        }
+      target: event.target as EventTarget,
+      message: 'Apagar esta categoria?',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.categoryService.deleteCategory(id).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Categoria Excluída' });
+            this.loadCategories();
+          },
+          error: (err) => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.error.detail || 'Não foi possível excluir' });
+          }
+        });
+      }
     });
   }
 
@@ -158,25 +172,25 @@ export class CategoryManager implements OnInit {
       const payload = this.form.value as Category;
       if (this.editingId()) {
         this.categoryService.updateCategory(this.editingId()!, payload).subscribe({
-            next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Categoria atualizada.' });
-                this.visible.set(false);
-                this.loadCategories();
-            },
-            error: (err) => {
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar categoria.' });
-            }
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Categoria atualizada.' });
+            this.visible.set(false);
+            this.loadCategories();
+          },
+          error: (err) => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar categoria.' });
+          }
         });
       } else {
         this.categoryService.createCategory(payload).subscribe({
-            next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Categoria criada.' });
-                this.visible.set(false);
-                this.loadCategories();
-            },
-            error: (err) => {
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar categoria.' });
-            }
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Categoria criada.' });
+            this.visible.set(false);
+            this.loadCategories();
+          },
+          error: (err) => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar categoria.' });
+          }
         });
       }
     }
@@ -187,16 +201,16 @@ export class CategoryManager implements OnInit {
   // 2. Cannot be itself (if editing)
   // 3. Cannot be a child of itself (circular - simplistic check)
   getParentOptions() {
-      const currentType = this.form.get('type')?.value;
-      const currentId = this.editingId();
-      
-      return this.flatCategories().filter(c => {
-          if (c.type !== currentType) return false;
-          if (currentId && c.id === currentId) return false;
-          // Prevent selecting a child as parent (Circular dependency prevention level 1)
-          // Ideally we traverse children, but simply blocking if id is in current children is hard without deep traversal.
-          // For now, simple ID check.
-          return true;
-      });
+    const currentType = this.form.get('type')?.value;
+    const currentId = this.editingId();
+
+    return this.flatCategories().filter(c => {
+      if (c.type !== currentType) return false;
+      if (currentId && c.id === currentId) return false;
+      // Prevent selecting a child as parent (Circular dependency prevention level 1)
+      // Ideally we traverse children, but simply blocking if id is in current children is hard without deep traversal.
+      // For now, simple ID check.
+      return true;
+    });
   }
 }

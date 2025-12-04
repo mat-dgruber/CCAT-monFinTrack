@@ -27,6 +27,8 @@ import { BudgetManager } from '../budget-manager/budget-manager';
 import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
 
 
+import { SkeletonModule } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -39,7 +41,8 @@ import { RecentTransactionsComponent } from '../recent-transactions/recent-trans
     MonthSelector,
     AccountManager,
     BudgetManager,
-    RecentTransactionsComponent
+    RecentTransactionsComponent,
+    SkeletonModule
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -53,6 +56,7 @@ export class Dashboard implements OnInit {
 
 
   summary = signal<DashboardSummary | null>(null);
+  loading = signal(true);
 
 
 
@@ -93,9 +97,17 @@ export class Dashboard implements OnInit {
   }
 
   loadDashboard(m: number, y: number) {
-    this.dashboardService.getSummary(m, y).subscribe(data => {
-      this.summary.set(data);
-      this.setupChart(data);
+    this.loading.set(true);
+    this.dashboardService.getSummary(m, y).subscribe({
+      next: (data) => {
+        this.summary.set(data);
+        this.setupChart(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading dashboard', err);
+        this.loading.set(false);
+      }
     });
   }
 

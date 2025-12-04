@@ -5,6 +5,27 @@
   </div>
 
   <div class="flex flex-col gap-6">
+    @if (loading()) {
+    @for (i of [1,2]; track i) {
+    <div>
+      <p-skeleton width="100px" styleClass="mb-3"></p-skeleton>
+      <div class="flex flex-col gap-2">
+        @for (j of [1,2]; track j) {
+        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-50 dark:border-gray-700">
+          <div class="flex items-center gap-3">
+            <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+            <div>
+              <p-skeleton width="150px" styleClass="mb-2"></p-skeleton>
+              <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+            </div>
+          </div>
+          <p-skeleton width="80px"></p-skeleton>
+        </div>
+        }
+      </div>
+    </div>
+    }
+    } @else {
     @for (group of groupedTransactions(); track group.date) {
     <div>
       <div class="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wider pl-2 border-l-4 border-blue-100">
@@ -48,6 +69,7 @@
     <div class="text-center text-gray-400 dark:text-gray-500 py-8 italic">
       Nenhuma transação recente.
     </div>
+    }
     }
   </div>
 

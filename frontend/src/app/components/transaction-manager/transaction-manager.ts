@@ -15,6 +15,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SkeletonModule } from 'primeng/skeleton';
 
 // Services
 import { TransactionService } from '../../services/transaction.service';
@@ -48,7 +49,8 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     TransactionForm,
     PaymentFormatPipe,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    SkeletonModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
@@ -111,7 +113,10 @@ export class TransactionManager implements OnInit {
         this.processTransactions(data);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false)
+      error: () => {
+        this.loading.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar transações' });
+      }
     });
   }
 
@@ -127,7 +132,10 @@ export class TransactionManager implements OnInit {
           this.processTransactions(data);
           this.loading.set(false);
         },
-        error: () => this.loading.set(false)
+        error: () => {
+          this.loading.set(false);
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar transações' });
+        }
       });
     } else {
       this.loadData();

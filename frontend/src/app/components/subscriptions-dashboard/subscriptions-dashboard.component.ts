@@ -31,6 +31,8 @@ import { Category } from '../../models/category.model';
 import { Account } from '../../models/account.model';
 import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
 
+import { SkeletonModule } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-subscriptions-dashboard',
   standalone: true,
@@ -52,7 +54,8 @@ import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
     SelectButtonModule,
     ReactiveFormsModule,
     FormsModule,
-    PeriodicityPipe
+    PeriodicityPipe,
+    SkeletonModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
@@ -72,6 +75,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
   currentDate = signal(new Date());
+  loading = signal(true);
 
   // Dialog State
   displayDialog = false;
@@ -134,6 +138,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   }
 
   loadData() {
+    this.loading.set(true);
     this.loadRecurrences();
     this.loadTransactions();
     this.loadCategories();
@@ -141,8 +146,12 @@ export class SubscriptionsDashboardComponent implements OnInit {
   }
 
   loadRecurrences() {
-    this.recurrenceService.getRecurrences(false).subscribe(data => {
-      this.recurrences.set(data);
+    this.recurrenceService.getRecurrences(false).subscribe({
+      next: (data) => {
+        this.recurrences.set(data);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
     });
   }
 

@@ -128,12 +128,16 @@ export class UserPreferenceService {
                effectiveTheme = systemDark ? 'dark' : 'light';
           }
 
+          // Reset all theme classes first
+          document.documentElement.classList.remove('dark');
+          document.body.classList.remove('dark-theme');
+          document.body.classList.remove('capycro-theme');
+
           if (effectiveTheme === 'dark') {
                document.documentElement.classList.add('dark'); // Tailwind
                document.body.classList.add('dark-theme'); // Custom/PrimeNG
-          } else {
-               document.documentElement.classList.remove('dark');
-               document.body.classList.remove('dark-theme');
+          } else if (effectiveTheme === 'capycro') {
+               document.body.classList.add('capycro-theme');
           }
      }
 }

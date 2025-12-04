@@ -97,8 +97,8 @@ import html2canvas from 'html2canvas';
 
       <!-- Grid Layout -->
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 auto-rows-min">
-        <div *ngFor="let widget of widgets(); let i = index" 
-             class="transition-all duration-300 ease-in-out"
+        @for (widget of widgets(); track widget.id; let i = $index) {
+        <div class="transition-all duration-300 ease-in-out"
              [ngClass]="{
                 'md:col-span-1': !widget.colSpan || widget.colSpan === 1,
                 'md:col-span-2': widget.colSpan === 2,
@@ -125,12 +125,15 @@ import html2canvas from 'html2canvas';
                </app-chart-widget>
            </div>
         </div>
+        }
       </div>
 
-      <div *ngIf="widgets().length === 0" class="text-center py-20 bg-gray-50 dark:bg-slate-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
+      @if (widgets().length === 0) {
+      <div class="text-center py-20 bg-gray-50 dark:bg-slate-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
           <p class="text-gray-500 dark:text-gray-400 mb-4">Nenhum gráfico configurado.</p>
           <p-button label="Criar seu primeiro gráfico" (onClick)="addChart()" severity="secondary"></p-button>
       </div>
+      }
     </div>
   `
 })

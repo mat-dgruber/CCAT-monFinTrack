@@ -42,6 +42,19 @@
     --mask-bg: rgba(0, 0, 0, 0.6);
 }
 
+.capycro-theme {
+    --surface-ground: #fbf9f6;
+    --surface-card: #ffffff;
+    --surface-overlay: #ffffff;
+    --surface-border: #b0b0b0;
+    --surface-hover: #eaeaea;
+    --text-color: #3a3a3a;
+    --text-color-secondary: #757575;
+    --primary-color: #8a9a8b;
+    --primary-color-text: #ffffff;
+    --mask-bg: rgba(0, 0, 0, 0.4);
+}
+
 html,
 body {
     height: 100%;
@@ -64,6 +77,12 @@ body {
         color: var(--text-color) !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
         color: var(--text-color) !important;
+
+        &.p-select-option-selected,
+        &.p-dropdown-item-selected {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+        }
 
         .p-datepicker-header {
             background: var(--surface-overlay) !important;
@@ -106,7 +125,7 @@ body {
                 }
 
                 /* Force text color for unselected dates */
-                >span:not(.p-highlight) {
+                >span:not(.p-highlight):not(.p-datepicker-day-selected) {
                     color: var(--text-color) !important;
                 }
             }
@@ -121,7 +140,9 @@ body {
                 background: var(--surface-hover) !important;
             }
 
-            &.p-highlight {
+            &.p-highlight,
+            &.p-monthpicker-month-selected,
+            &.p-yearpicker-year-selected {
                 background: #eff6ff !important;
                 color: #1d4ed8 !important;
             }
@@ -136,7 +157,16 @@ body {
         }
 
         .p-monthpicker-month.p-highlight,
-        .p-yearpicker-year.p-highlight {
+        .p-monthpicker-month.p-monthpicker-month-selected,
+        .p-yearpicker-year.p-highlight,
+        .p-yearpicker-year.p-yearpicker-year-selected {
+            background: rgba(59, 130, 246, 0.16) !important;
+            color: var(--primary-color) !important;
+        }
+
+        /* Selected Day in Dark Mode */
+        table td>span.p-highlight,
+        table td>span.p-datepicker-day-selected {
             background: rgba(59, 130, 246, 0.16) !important;
             color: var(--primary-color) !important;
         }
@@ -389,6 +419,12 @@ body {
 
                 &:hover {
                     background: var(--surface-hover) !important;
+                }
+
+                &.p-select-option-selected,
+                &.p-dropdown-item-selected {
+                    background: rgba(59, 130, 246, 0.16) !important;
+                    color: var(--primary-color) !important;
                 }
             }
         }

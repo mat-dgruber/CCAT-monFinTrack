@@ -6,6 +6,26 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    @if (loading()) {
+    @for(i of [1,2,3]; track i) {
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div class="flex items-center gap-3 mb-4">
+        <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+        <p-skeleton width="150px" height="1.5rem"></p-skeleton>
+      </div>
+      <div class="flex justify-between mb-2">
+        <p-skeleton width="80px"></p-skeleton>
+        <p-skeleton width="80px"></p-skeleton>
+      </div>
+      <div class="pt-1">
+        <p-skeleton height="1rem" styleClass="mb-4"></p-skeleton>
+        <div class="flex justify-end">
+          <p-skeleton width="40px"></p-skeleton>
+        </div>
+      </div>
+    </div>
+    }
+    } @else {
     @for (b of budgets(); track b.id) {
     <div
       class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all relative group">
@@ -57,6 +77,7 @@
       <i class="pi pi-bullseye text-4xl mb-2 opacity-50"></i>
       <p>Nenhuma meta definida. Que tal criar uma?</p>
     </div>
+    }
     }
   </div>
 </div>

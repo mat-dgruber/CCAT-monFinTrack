@@ -66,11 +66,13 @@
           <span class="font-medium text-gray-700 dark:text-gray-300">Email</span>
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-gray-900 dark:text-white font-medium">{{ email() }}</span>
-            <p-tag *ngIf="auth.currentUser()?.emailVerified" value="Verificado" severity="success"
-              styleClass="text-xs"></p-tag>
-            <p-tag *ngIf="!auth.currentUser()?.emailVerified" value="Não Verificado" severity="warn"
-              styleClass="text-xs cursor-pointer" (click)="verifyEmail()"
+            @if (auth.currentUser()?.emailVerified) {
+            <p-tag value="Verificado" severity="success" styleClass="text-xs"></p-tag>
+            }
+            @if (!auth.currentUser()?.emailVerified) {
+            <p-tag value="Não Verificado" severity="warn" styleClass="text-xs cursor-pointer" (click)="verifyEmail()"
               pTooltip="Clique para enviar email de verificação"></p-tag>
+            }
           </div>
         </div>
         <p-button label="Editar email" styleClass="p-button-outlined p-button-secondary" size="small"></p-button>
@@ -99,18 +101,25 @@
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
           <span class="font-medium text-gray-700 dark:text-gray-300">Status do MFA</span>
-          <p-tag *ngIf="mfaEnabled()" value="Ativado" severity="success" styleClass="text-xs"></p-tag>
-          <p-tag *ngIf="!mfaEnabled()" value="Desativado" severity="warn"
-            styleClass="text-xs bg-orange-100 text-orange-800"></p-tag>
+          @if (mfaEnabled()) {
+          <p-tag value="Ativado" severity="success" styleClass="text-xs"></p-tag>
+          }
+          @if (!mfaEnabled()) {
+          <p-tag value="Desativado" severity="warn" styleClass="text-xs bg-orange-100 text-orange-800"></p-tag>
+          }
         </div>
         <span class="text-sm text-gray-500 dark:text-gray-400">Proteja sua conta com uma camada extra de
           segurança</span>
       </div>
 
-      <p-button *ngIf="!mfaEnabled()" label="Ativar MFA" styleClass="p-button-outlined p-button-secondary" size="small"
+      @if (!mfaEnabled()) {
+      <p-button label="Ativar MFA" styleClass="p-button-outlined p-button-secondary" size="small"
         (onClick)="startMfaSetup()"></p-button>
-      <p-button *ngIf="mfaEnabled()" label="Desativar MFA" styleClass="p-button-outlined p-button-danger" size="small"
+      }
+      @if (mfaEnabled()) {
+      <p-button label="Desativar MFA" styleClass="p-button-outlined p-button-danger" size="small"
         (onClick)="disableMFA()"></p-button>
+      }
     </div>
   </div>
 

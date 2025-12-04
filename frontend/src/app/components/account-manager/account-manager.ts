@@ -10,6 +10,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select'; // Novo Dropdown (v18+)
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
+import { SkeletonModule } from 'primeng/skeleton';
 
 // Serviços e Modelos
 import { AccountService } from '../../services/account.service';
@@ -24,15 +25,16 @@ import { ICON_LIST } from '../../shared/icons';
   selector: 'app-account-manager',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    ButtonModule, 
-    DialogModule, 
-    InputTextModule, 
-    InputNumberModule, 
-    SelectModule, 
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
     ColorPickerModule,
-    AccountTypePipe
+    AccountTypePipe,
+    SkeletonModule
   ],
   templateUrl: './account-manager.html',
   styleUrl: './account-manager.scss'
@@ -47,6 +49,7 @@ export class AccountManager implements OnInit {
 
   // Signals (Estado)
   accounts = signal<Account[]>([]);
+  loading = signal(true);
   visible = signal(false);
   editingId = signal<string | null>(null);
 
@@ -74,10 +77,10 @@ export class AccountManager implements OnInit {
   // Construtor com Efeito (Ouve atualizações do sistema)
   constructor() {
     effect(() => {
-        // Registra dependência do sinal de refresh
-        this.refreshService.refreshSignal(); 
-        // Recarrega quando o sinal muda (ex: nova transação alterou saldo)
-        this.loadAccounts(); 
+      // Registra dependência do sinal de refresh
+      this.refreshService.refreshSignal();
+      // Recarrega quando o sinal muda (ex: nova transação alterou saldo)
+      this.loadAccounts();
     });
   }
 
@@ -86,20 +89,27 @@ export class AccountManager implements OnInit {
   }
 
   loadAccounts() {
+    this.loading.set(true);
     this.accountService.getAccounts().subscribe({
-        next: (data) => this.accounts.set(data),
-        error: (err) => console.error('Erro ao carregar contas', err)
+      next: (data) => {
+        this.accounts.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar contas', err);
+        this.loading.set(false);
+      }
     });
   }
 
   // Abrir modal para Nova Conta
   openNew() {
     this.editingId.set(null);
-    this.form.reset({ 
-        type: 'checking', 
-        balance: 0,
-        icon: 'pi pi-wallet',
-        color: '#3b82f6'
+    this.form.reset({
+      type: 'checking',
+      balance: 0,
+      icon: 'pi pi-wallet',
+      color: '#3b82f6'
     });
     this.visible.set(true);
   }
@@ -110,40 +120,40 @@ export class AccountManager implements OnInit {
     event.preventDefault();
 
     try {
-        this.editingId.set(acc.id!);
-        
-        // Prepara os dados (com fallback se a conta for antiga e não tiver cor/ícone)
-        const dataToPatch = {
-            name: acc.name,
-            type: acc.type,
-            balance: acc.balance,
-            icon: acc.icon || 'pi pi-wallet',
-            color: acc.color || '#3b82f6'
-        };
+      this.editingId.set(acc.id!);
 
-        this.form.patchValue(dataToPatch);
-        this.visible.set(true);
+      // Prepara os dados (com fallback se a conta for antiga e não tiver cor/ícone)
+      const dataToPatch = {
+        name: acc.name,
+        type: acc.type,
+        balance: acc.balance,
+        icon: acc.icon || 'pi pi-wallet',
+        color: acc.color || '#3b82f6'
+      };
+
+      this.form.patchValue(dataToPatch);
+      this.visible.set(true);
     } catch (e) {
-        console.error('Erro ao preparar edição:', e);
+      console.error('Erro ao preparar edição:', e);
     }
   }
 
   // Deletar Conta
   deleteAccount(event: Event, id: string) {
     event.stopPropagation(); // Impede clicar no card de fundo
-    
+
     this.confirmationService.confirm({
-        target: event.target as EventTarget,
-        message: 'Tem certeza? Transações antigas podem ficar sem referência.',
-        icon: 'pi pi-exclamation-triangle',
-        acceptButtonStyleClass: "p-button-danger p-button-text",
-        rejectButtonStyleClass: "p-button-text p-button-plain",
-        accept: () => {
-            this.accountService.deleteAccount(id).subscribe(() => {
-                this.messageService.add({severity:'success', summary:'Conta Excluída'});
-                this.refreshService.triggerRefresh(); // Avisa o dashboard
-            });
-        }
+      target: event.target as EventTarget,
+      message: 'Tem certeza? Transações antigas podem ficar sem referência.',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: "p-button-danger p-button-text",
+      rejectButtonStyleClass: "p-button-text p-button-plain",
+      accept: () => {
+        this.accountService.deleteAccount(id).subscribe(() => {
+          this.messageService.add({ severity: 'success', summary: 'Conta Excluída' });
+          this.refreshService.triggerRefresh(); // Avisa o dashboard
+        });
+      }
     });
   }
 
@@ -151,17 +161,17 @@ export class AccountManager implements OnInit {
   saveAccount() {
     if (this.form.valid) {
       const payload = this.form.value as Account;
-      
+
       const onSave = () => {
-          this.visible.set(false);
-          this.form.reset();
-          this.refreshService.triggerRefresh(); // Avisa dashboard e lista
+        this.visible.set(false);
+        this.form.reset();
+        this.refreshService.triggerRefresh(); // Avisa dashboard e lista
       };
 
       if (this.editingId()) {
-          this.accountService.updateAccount(this.editingId()!, payload).subscribe(onSave);
+        this.accountService.updateAccount(this.editingId()!, payload).subscribe(onSave);
       } else {
-          this.accountService.createAccount(payload).subscribe(onSave);
+        this.accountService.createAccount(payload).subscribe(onSave);
       }
     }
   }

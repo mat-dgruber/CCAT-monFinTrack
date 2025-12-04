@@ -87,10 +87,11 @@ export class Settings {
   ];
 
   // Appearance
-  selectedTheme = signal<'light' | 'dark' | 'system'>('system');
+  selectedTheme = signal<'light' | 'dark' | 'system' | 'capycro'>('system');
   themeOptions = [
     { label: 'Claro', value: 'light' },
     { label: 'Escuro', value: 'dark' },
+    { label: 'CapyCro', value: 'capycro' },
     { label: 'Sistema', value: 'system' }
   ];
 
