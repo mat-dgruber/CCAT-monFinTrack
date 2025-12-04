@@ -585,7 +585,7 @@ export class ChartWidgetComponent implements OnInit {
     exportChart() {
         const element = this.elementRef.nativeElement.querySelector('.relative'); // Target the chart container
         if (element) {
-            html2canvas(element).then(canvas => {
+            html2canvas(element).then((canvas: HTMLCanvasElement) => {
                 const link = document.createElement('a');
                 link.download = `chart-${this.widgetConfig.title || 'export'}.png`;
                 link.href = canvas.toDataURL();

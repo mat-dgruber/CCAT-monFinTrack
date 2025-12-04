@@ -54,7 +54,7 @@ export class Settings {
   router = inject(Router);
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
-  confirmationService = inject(ConfirmationService);
+
   preferenceService = inject(UserPreferenceService);
   mfaService = inject(MFAService);
 

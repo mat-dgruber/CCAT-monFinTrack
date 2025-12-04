@@ -235,7 +235,7 @@ export class AdvancedGraphicsComponent {
   // --- Export Logic ---
   exportAllPNG() {
     if (this.dashboardGrid) {
-      html2canvas(this.dashboardGrid.nativeElement).then(canvas => {
+      html2canvas(this.dashboardGrid.nativeElement).then((canvas: HTMLCanvasElement) => {
         const link = document.createElement('a');
         link.download = `dashboard-export-${new Date().toISOString().slice(0, 10)}.png`;
         link.href = canvas.toDataURL();

@@ -4,8 +4,8 @@ import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 
 export interface MFASetupResponse {
-     secret: str;
-     qr_code: str;
+     secret: string;
+     qr_code: string;
 }
 
 export interface MFAStatusResponse {

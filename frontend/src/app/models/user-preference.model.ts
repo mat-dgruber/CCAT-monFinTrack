@@ -1,7 +1,7 @@
 export interface UserPreference {
      user_id: string;
      language: string;
-     theme: 'light' | 'dark';
+     theme: 'light' | 'dark' | 'system';
      notifications_enabled: boolean;
      profile_image_url?: string;
      birthday?: string; // ISO string
@@ -12,7 +12,7 @@ export interface UserPreference {
 
 export interface UserPreferenceCreate {
      language?: string;
-     theme?: 'light' | 'dark';
+     theme?: 'light' | 'dark' | 'system';
      notifications_enabled?: boolean;
      profile_image_url?: string;
      birthday?: string;
