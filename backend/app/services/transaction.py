@@ -99,9 +99,32 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
         if transaction_in.recurrence_create_first:
             t_data = transaction_in.model_dump()
             t_data['recurrence_id'] = recurrence.id
-            # Se for a primeira parcela, o status é o que veio no form. Se não, PENDING.
+            t_data['is_auto_pay'] = transaction_in.recurrence_auto_pay
+            
+            # Lógica de Status para Recorrência
+            # Se auto_pay=True:
+            #   - Data <= Hoje: PAGO (simula o worker rodando hoje)
+            #   - Data > Hoje: PENDENTE
+            # Se auto_pay=False:
+            #   - Data > Hoje: PENDENTE (sempre, pois é futuro)
+            #   - Data <= Hoje: Respeita o que veio do form (pode ter marcado "Pago")
+            
+            today = datetime.now().date()
+            # Garante que t_date é date
+            t_date = transaction_in.date.date() if isinstance(transaction_in.date, datetime) else transaction_in.date
+            
+            if transaction_in.recurrence_auto_pay:
+                if t_date <= today:
+                     t_data['status'] = TransactionStatus.PAID
+                else:
+                     t_data['status'] = TransactionStatus.PENDING
+            else:
+                 if t_date > today:
+                      t_data['status'] = TransactionStatus.PENDING
+            
+            # Se for a primeira parcela, o status é o que definimos acima.
             if transaction_in.installment_number is None or transaction_in.installment_number == 1:
-                 pass # Usa o status do form
+                 pass 
             else:
                  t_data['status'] = TransactionStatus.PENDING
 
@@ -306,6 +329,44 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
             
         return created_transactions
 
+    # CENÁRIO B: Recorrência (Sem parcelas)
+    if transaction_in.recurrence_periodicity:
+        recurrence_data = RecurrenceCreate(
+            name=transaction_in.description,
+            amount=transaction_in.amount,
+            category_id=transaction_in.category_id,
+            account_id=transaction_in.account_id,
+            payment_method_id=transaction_in.payment_method.value,
+            periodicity=RecurrencePeriodicity(transaction_in.recurrence_periodicity),
+            auto_pay=transaction_in.recurrence_auto_pay,
+            due_day=transaction_in.date.day,
+            active=True
+        )
+        
+        recurrence = recurrence_service.create_recurrence(recurrence_data, user_id)
+        
+        if transaction_in.recurrence_create_first:
+            t_data = transaction_in.model_dump()
+            t_data['recurrence_id'] = recurrence.id
+            
+            # Lógica de Auto-Pay para a primeira transação
+            # Se auto-pay estiver ativo, e a data for futura, deve nascer PENDENTE.
+            # Se for hoje ou passado, respeita o status do form (provavelmente PAGO se o user marcou).
+            if transaction_in.recurrence_auto_pay:
+                today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                t_date = transaction_in.date
+                if t_date.tzinfo:
+                    t_date = t_date.replace(tzinfo=None)
+                t_date = t_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                
+                if t_date > today:
+                    t_data['status'] = TransactionStatus.PENDING
+            
+            t_create = TransactionCreate(**t_data)
+            created_transactions.append(create_transaction(t_create, user_id))
+            
+        return created_transactions
+
     # CENÁRIO C: Simples (Default)
     return [create_transaction(transaction_in, user_id)]
 
@@ -354,12 +415,12 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         cat_id = data.get("category_id")
         category = category_service.get_category(cat_id)
         if not category:
-             category = Category(id="deleted", name="?", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+             category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
 
         acc_id = data.get("account_id")
         account = account_service.get_account(acc_id)
         if not account:
-            account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
+            account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="")
 
         transactions.append(Transaction(
             id=t.id, 
@@ -503,3 +564,27 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
         ))
         
     return transactions
+
+def delete_all_transactions(user_id: str):
+    db = get_db()
+    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    
+    batch = db.batch()
+    count = 0
+    deleted_count = 0
+    
+    for doc in docs:
+        batch.delete(doc.reference)
+        count += 1
+        
+        if count >= 400:
+            batch.commit()
+            batch = db.batch()
+            deleted_count += count
+            count = 0
+            
+    if count > 0:
+        batch.commit()
+        deleted_count += count
+        
+    return deleted_count

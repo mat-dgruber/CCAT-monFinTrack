@@ -1,8 +1,9 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router'; // Import Router
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 
-// Animações  
+// Animações
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 // PrimeNG
@@ -17,12 +18,13 @@ import { DividerModule } from 'primeng/divider'; // Opcional, para visual
 import { DialogModule } from 'primeng/dialog';
 
 import { AuthService } from '../../services/auth.service';
+import { MFAService } from '../../services/mfa.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, ReactiveFormsModule, CardModule, ButtonModule, 
+    CommonModule, FormsModule, ReactiveFormsModule, CardModule, ButtonModule,
     InputTextModule, PasswordModule, ToastModule, DividerModule, DialogModule, CheckboxModule
   ],
   templateUrl: './login.html',
@@ -46,11 +48,17 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private messageService = inject(MessageService);
+  private mfaService = inject(MFAService);
+  private router = inject(Router);
 
   isRegisterMode = signal(false);
   isLoading = signal(false);
   showForgotPassword = signal(false);
   resetEmail = '';
+
+  // MFA
+  showMfaDialog = signal(false);
+  mfaToken = signal('');
 
   // --- Definição do Formulário ---
   form = this.fb.group({
@@ -65,10 +73,10 @@ export class Login {
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
     const password = control.get('password')?.value;
     const confirm = control.get('confirmPassword')?.value;
-    
+
     // Só valida se estivermos no modo registro e os campos tiverem valor
     if (!password || !confirm) return null;
-    
+
     return password === confirm ? null : { mismatch: true };
   }
 
@@ -90,26 +98,26 @@ export class Login {
 
   // Valida se a senha atende TODOS os requisitos
   get isPasswordStrong() {
-      return this.hasMinLength && this.hasUpper && this.hasLower && this.hasNumber && this.hasSpecial;
+    return this.hasMinLength && this.hasUpper && this.hasLower && this.hasNumber && this.hasSpecial;
   }
 
   toggleMode() {
     this.isRegisterMode.update(v => !v);
     this.form.reset();
-    
+
     // Ajusta validadores dinamicamente
     const nameControl = this.form.get('name');
     const confirmControl = this.form.get('confirmPassword');
     const termsControl = this.form.get('termsAccepted');
 
     if (this.isRegisterMode()) {
-        nameControl?.setValidators([Validators.required, Validators.minLength(3)]);
-        confirmControl?.setValidators([Validators.required]);
-        termsControl?.setValidators([Validators.requiredTrue]);
+      nameControl?.setValidators([Validators.required, Validators.minLength(3)]);
+      confirmControl?.setValidators([Validators.required]);
+      termsControl?.setValidators([Validators.requiredTrue]);
     } else {
-        nameControl?.clearValidators();
-        confirmControl?.clearValidators();
-        termsControl?.clearValidators();
+      nameControl?.clearValidators();
+      confirmControl?.clearValidators();
+      termsControl?.clearValidators();
     }
     nameControl?.updateValueAndValidity();
     confirmControl?.updateValueAndValidity();
@@ -118,11 +126,11 @@ export class Login {
 
   async onSubmit() {
     if (this.form.invalid) return;
-    
+
     // Segurança extra: no cadastro, senha TEM que ser forte
     if (this.isRegisterMode() && !this.isPasswordStrong) {
-        this.messageService.add({ severity: 'warn', summary: 'Senha Fraca', detail: 'Sua senha não atende aos requisitos.' });
-        return;
+      this.messageService.add({ severity: 'warn', summary: 'Senha Fraca', detail: 'Sua senha não atende aos requisitos.' });
+      return;
     }
 
     this.isLoading.set(true);
@@ -132,26 +140,40 @@ export class Login {
       if (this.isRegisterMode()) {
         // CADASTRO
         await this.authService.register(email!, password!, name!);
-        
-        this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Conta Criada!', 
-            detail: 'Enviamos um email de confirmação. Verifique sua caixa de entrada antes de logar.', 
-            life: 8000 
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Conta Criada!',
+          detail: 'Enviamos um email de confirmação. Verifique sua caixa de entrada antes de logar.',
+          life: 8000
         });
-        
+
         // Volta para tela de login
-        this.toggleMode(); 
+        this.toggleMode();
 
       } else {
         // LOGIN
         await this.authService.login(email!, password!);
-        // Se passar daqui, o AuthStateChanged no app.ts vai redirecionar
+
+        // Verificar se MFA está ativado
+        try {
+          const mfaStatus = await this.mfaService.checkMFAStatus().toPromise();
+          if (mfaStatus?.enabled) {
+            this.showMfaDialog.set(true);
+            this.isLoading.set(false); // Stop loading to show dialog
+            return; // Wait for MFA verification
+          }
+        } catch (e) {
+          // Ignore error (MFA not enabled or check failed)
+        }
+
+        // Login bem sucedido sem MFA
+        this.router.navigate(['/']);
       }
     } catch (error: any) {
       console.error(error);
       let msg = 'Ocorreu um erro.';
-      
+
       if (error.message === 'email-not-verified') msg = 'Por favor, verifique seu email antes de entrar.';
       else if (error.code === 'auth/invalid-credential') msg = 'Email ou senha incorretos.';
       else if (error.code === 'auth/email-already-in-use') msg = 'Este email já está em uso.';
@@ -164,28 +186,45 @@ export class Login {
 
   async sendResetLink() {
     if (!this.resetEmail || !this.resetEmail.includes('@')) {
-        this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Digite um e-mail válido.' });
-        return;
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Digite um e-mail válido.' });
+      return;
     }
 
     this.isLoading.set(true);
-    
+
     try {
-        await this.authService.resetPassword(this.resetEmail);
-        this.messageService.add({ 
-            severity: 'success', 
-            summary: 'E-mail Enviado', 
-            detail: 'Verifique sua caixa de entrada para redefinir a senha.' 
-        });
-        this.showForgotPassword.set(false);
-        this.resetEmail = ''; // Limpa o campo
+      await this.authService.resetPassword(this.resetEmail);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'E-mail Enviado',
+        detail: 'Verifique sua caixa de entrada para redefinir a senha.'
+      });
+      this.showForgotPassword.set(false);
+      this.resetEmail = ''; // Limpa o campo
     } catch (error: any) {
-        console.error(error);
-        let msg = 'Erro ao enviar e-mail.';
-        if (error.code === 'auth/user-not-found') msg = 'E-mail não cadastrado.';
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: msg });
+      console.error(error);
+      let msg = 'Erro ao enviar e-mail.';
+      if (error.code === 'auth/user-not-found') msg = 'E-mail não cadastrado.';
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: msg });
     } finally {
-        this.isLoading.set(false);
+      this.isLoading.set(false);
     }
+  }
+
+  verifyMfaLogin() {
+    if (this.mfaToken().length !== 6) return;
+
+    this.isLoading.set(true);
+    this.mfaService.verifyLogin(this.mfaToken()).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Login realizado com sucesso!' });
+        this.showMfaDialog.set(false);
+        this.router.navigate(['/']);
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Código MFA inválido.' });
+        this.isLoading.set(false);
+      }
+    });
   }
 }

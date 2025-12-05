@@ -31,6 +31,8 @@ import { Category } from '../../models/category.model';
 import { Account } from '../../models/account.model';
 import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
 
+import { SkeletonModule } from 'primeng/skeleton';
+
 @Component({
   selector: 'app-subscriptions-dashboard',
   standalone: true,
@@ -52,7 +54,8 @@ import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
     SelectButtonModule,
     ReactiveFormsModule,
     FormsModule,
-    PeriodicityPipe
+    PeriodicityPipe,
+    SkeletonModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
@@ -72,6 +75,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
   currentDate = signal(new Date());
+  loading = signal(true);
 
   // Dialog State
   displayDialog = false;
@@ -134,6 +138,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   }
 
   loadData() {
+    this.loading.set(true);
     this.loadRecurrences();
     this.loadTransactions();
     this.loadCategories();
@@ -141,8 +146,12 @@ export class SubscriptionsDashboardComponent implements OnInit {
   }
 
   loadRecurrences() {
-    this.recurrenceService.getRecurrences(false).subscribe(data => {
-      this.recurrences.set(data);
+    this.recurrenceService.getRecurrences(false).subscribe({
+      next: (data) => {
+        this.recurrences.set(data);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
     });
   }
 
@@ -245,6 +254,16 @@ export class SubscriptionsDashboardComponent implements OnInit {
       }
 
       // Virtual projection
+      const isSkipped = r.skipped_dates?.some(sd => {
+        const skippedDate = new Date(sd);
+        // Compare only YYYY-MM-DD
+        return skippedDate.getFullYear() === dueDate.getFullYear() &&
+          skippedDate.getMonth() === dueDate.getMonth() &&
+          skippedDate.getDate() === dueDate.getDate();
+      });
+
+      if (isSkipped) return null;
+
       return {
         id: r.id,
         name: r.name,
@@ -256,7 +275,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
         active: r.active
       };
     })
-      .filter(item => item !== null) // Remove nulls (cancelled before due date)
+      .filter(item => item !== null) // Remove nulls (cancelled before due date or skipped)
       .sort((a, b) => a!.dueDate.getTime() - b!.dueDate.getTime()) as any[]; // Cast to remove null type
   });
 
@@ -404,6 +423,25 @@ export class SubscriptionsDashboardComponent implements OnInit {
     });
   }
 
+  toggleAutoPay(recurrence: Recurrence) {
+    const newStatus = !recurrence.auto_pay;
+    // We update 'all' scope because auto_pay is a rule for the recurrence definition
+    this.recurrenceService.updateRecurrence(recurrence.id, { auto_pay: newStatus }, 'all').subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: `Pagamento automático ${newStatus ? 'ativado' : 'desativado'}`
+        });
+        this.loadRecurrences();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar status.' });
+        // Revert local state if needed, but loadRecurrences will fix it
+      }
+    });
+  }
+
   cancelRecurrence(recurrence: Recurrence) {
     this.confirmationService.confirm({
       message: `Tem certeza que deseja cancelar a assinatura "${recurrence.name}"?`,
@@ -448,11 +486,14 @@ export class SubscriptionsDashboardComponent implements OnInit {
       const rec = this.recurrences().find(r => r.id === item.id);
       if (!rec) return;
 
+      const category = this.categories().find(c => c.id === rec.category_id);
+      const type = category ? category.type : 'expense';
+
       const newTransaction: any = {
         description: `${rec.name} (${item.dueDate.getMonth() + 1}/${item.dueDate.getFullYear()})`,
         amount: rec.amount,
         date: item.dueDate,
-        type: 'expense', // TODO: Use correct type from category
+        type: type,
         payment_method: 'other',
         category_id: rec.category_id,
         account_id: rec.account_id,
@@ -484,5 +525,54 @@ export class SubscriptionsDashboardComponent implements OnInit {
         this.loadTransactions();
       });
     }
+  }
+
+  getRecurrenceStatus(recurrence: Recurrence): 'paid' | 'pending' | 'n/a' {
+    const item = this.projectedRecurrences().find(p => p.id === recurrence.id);
+    return item ? item.status : 'n/a';
+  }
+
+  toggleRecurrenceStatus(recurrence: Recurrence) {
+    const item = this.projectedRecurrences().find(p => p.id === recurrence.id);
+    if (!item) return;
+
+    if (item.status === 'paid') {
+      this.markAsUnpaid(item);
+    } else {
+      this.markAsPaid(item);
+    }
+  }
+
+  deleteOccurrence(item: any) {
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja excluir esta ocorrência de "${item.name}"?`,
+      header: 'Confirmar Exclusão',
+      icon: 'pi pi-trash',
+      acceptLabel: 'Sim, Excluir',
+      rejectLabel: 'Não',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        if (item.transactionId) {
+          // Real Transaction: Delete it
+          this.transactionService.deleteTransaction(item.transactionId).subscribe({
+            next: () => {
+              this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação excluída.' });
+              this.loadTransactions();
+            },
+            error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao excluir transação.' })
+          });
+        } else {
+          // Virtual Recurrence: Skip it
+          this.recurrenceService.skipRecurrence(item.id, item.dueDate).subscribe({
+            next: () => {
+              this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Ocorrência removida.' });
+              this.loadRecurrences(); // Reload to get updated skipped_dates
+            },
+            error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao remover ocorrência.' })
+          });
+        }
+      }
+    });
   }
 }

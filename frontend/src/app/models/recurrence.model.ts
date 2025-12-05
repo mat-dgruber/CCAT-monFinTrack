@@ -20,4 +20,5 @@ export interface Recurrence {
     created_at: Date;
     last_processed_at?: Date;
     cancellation_date?: Date;
+    skipped_dates?: string[];
 }

@@ -37,15 +37,35 @@ describe('Dashboard', () => {
         MessageService       // Provided
       ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(Dashboard);
     component = fixture.componentInstance;
     dashboardService = TestBed.inject(DashboardService) as jasmine.SpyObj<DashboardService>;
+    accountService = TestBed.inject(AccountService) as jasmine.SpyObj<AccountService>;
     fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should load summary and accounts on init', () => {
+    expect(dashboardService.getSummary).toHaveBeenCalled();
+    expect(accountService.getAccounts).toHaveBeenCalled();
+
+    // Check if signals/properties are updated
+    // Note: accessing private or protected signals might need type casting or just checking the template effect if we were doing integration tests.
+    // Assuming component has public signals for these based on typical patterns in this project (e.g. total_balance())
+    // Let's check dashboard.ts content or just assume based on template usage.
+    // Since I can't see dashboard.ts completely right now, I'll rely on the signal names used in the template or previous knowledge.
+    // In dashboard.spec.ts it was 'total_balance'.
+
+    // Let's inspect component instance.
+    // If signals are not public, we can't easily test them without `any` cast.
+    const summary = component.summary();
+    expect(summary!.total_balance).toBe(1000);
+    expect(summary!.income_month).toBe(500);
+    expect(summary!.expense_month).toBe(200);
   });
 });

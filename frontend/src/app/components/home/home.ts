@@ -1,14 +1,18 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ButtonModule } from 'primeng/button';
+import { DrawerModule } from 'primeng/drawer';
 
 // Componentes
-import { Login } from '../login/login';
+// Componentes
+
 
 import { AuthService } from '../../services/auth.service';
+
+import { UserPreferenceService } from '../../services/user-preference.service';
 
 @Component({
   selector: 'app-home',
@@ -18,13 +22,16 @@ import { AuthService } from '../../services/auth.service';
     ToastModule,
     ConfirmDialogModule,
     RouterModule,
-    Login,
-    ButtonModule
+    ButtonModule,
+    DrawerModule
   ],
   templateUrl: './home.html',
 })
 export class Home {
   authService = inject(AuthService);
+  userPreferenceService = inject(UserPreferenceService);
+
+  sidebarVisible = signal(false);
 
   firstName = computed(() => {
     const user = this.authService.currentUser();
@@ -33,5 +40,13 @@ export class Home {
 
   logout() {
     this.authService.logout();
+  }
+
+  toggleSidebar() {
+    this.sidebarVisible.update(v => !v);
+  }
+
+  closeSidebar() {
+    this.sidebarVisible.set(false);
   }
 }

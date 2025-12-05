@@ -1,18 +1,143 @@
-<p-toast></p-toast>
-<p-confirmDialog></p-confirmDialog>
-@if (authService.currentUser()) {
+<div class="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden">
 
-<div class="flex h-screen bg-gray-50 overflow-hidden">
-  <!-- Sidebar -->
-  <aside class="w-64 bg-white shadow-md flex flex-col z-20">
+  <!-- Mobile Header -->
+  <div
+    class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 z-30">
+    <div class="flex items-center gap-3">
+      <button (click)="toggleSidebar()"
+        class="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+        <i class="pi pi-bars text-xl"></i>
+      </button>
+      <div class="flex items-center gap-2">
+        <img src="assets/logo-ccat.png" alt="monFinTrack Logo" class="h-6 w-auto" />
+        <h1 class="text-lg font-bold text-gray-800 dark:text-white tracking-tight">monFinTrack</h1>
+      </div>
+    </div>
+    <div
+      class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-sm shadow-sm overflow-hidden">
+      @if (userPreferenceService.preferences$ | async; as prefs) {
+      @if (prefs.profile_image_url) {
+      <img [src]="userPreferenceService.getProfileImageUrl(prefs.profile_image_url)" alt="Profile"
+        class="w-full h-full object-cover" />
+      } @else {
+      {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
+      }
+      } @else {
+      {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
+      }
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar (Drawer) -->
+  <p-drawer [(visible)]="sidebarVisible"
+    styleClass="w-64 p-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800"
+    [showCloseIcon]="false">
+    <ng-template pTemplate="content">
+      <div class="flex flex-col h-full">
+        <!-- Logo -->
+        <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100 dark:border-gray-700 shrink-0">
+          <img src="assets/logo-ccat.png" alt="monFinTrack Logo" class="h-8 w-auto" />
+          <h1 class="text-xl font-bold text-gray-800 dark:text-white tracking-tight">
+            monFinTrack
+          </h1>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto py-6 px-3">
+          <ul class="space-y-1">
+            <li>
+              <a routerLink="/dashboard" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-home"></i>
+                <span class="font-medium">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/transactions" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-list"></i>
+                <span class="font-medium">Transações</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/subscriptions" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-calendar-plus"></i>
+                <span class="font-medium">Assinaturas</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/categories" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-tags"></i>
+                <span class="font-medium">Categorias</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/advanced-graphics" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-chart-bar"></i>
+                <span class="font-medium">Gráficos Avançados</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/settings" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-cog"></i>
+                <span class="font-medium">Configurações</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="border-t border-gray-100 dark:border-gray-700 p-4 shrink-0">
+          <div class="flex items-center gap-3 px-4 py-3 mb-2">
+            <div
+              class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold shadow-sm overflow-hidden">
+              @if (userPreferenceService.preferences$ | async; as prefs) {
+              @if (prefs.profile_image_url) {
+              <img [src]="userPreferenceService.getProfileImageUrl(prefs.profile_image_url)" alt="Profile"
+                class="w-full h-full object-cover" />
+              } @else {
+              {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
+              }
+              } @else {
+              {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                {{ authService.currentUser()?.displayName }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {{ authService.currentUser()?.email }}
+              </p>
+            </div>
+          </div>
+          <button (click)="logout()"
+            class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+            <i class="pi pi-sign-out"></i>
+            <span>Sair da conta</span>
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <!-- Desktop Sidebar -->
+  <aside
+    class="hidden lg:flex w-64 bg-white dark:bg-slate-800 shadow-md dark:shadow-none dark:border-r dark:border-gray-700 flex-col z-20">
     <!-- Logo -->
-    <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
-      <img
-        src="assets/logo-ccat.png"
-        alt="monFinTrack Logo"
-        class="h-8 w-auto"
-      />
-      <h1 class="text-xl font-bold text-gray-800 tracking-tight">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100 dark:border-gray-700 shrink-0">
+      <img src="assets/logo-ccat.png" alt="monFinTrack Logo" class="h-8 w-auto" />
+      <h1 class="text-xl font-bold text-gray-800 dark:text-white tracking-tight">
         monFinTrack
       </h1>
     </div>
@@ -21,61 +146,46 @@
     <nav class="flex-1 overflow-y-auto py-6 px-3">
       <ul class="space-y-1">
         <li>
-          <a
-            routerLink="/dashboard"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <a routerLink="/dashboard" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-home"></i>
             <span class="font-medium">Dashboard</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/transactions"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <a routerLink="/transactions"
+            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-list"></i>
             <span class="font-medium">Transações</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/subscriptions"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <a routerLink="/subscriptions"
+            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-calendar-plus"></i>
             <span class="font-medium">Assinaturas</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/categories"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <a routerLink="/categories" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-tags"></i>
             <span class="font-medium">Categorias</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/advanced-graphics"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <a routerLink="/advanced-graphics"
+            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-chart-bar"></i>
             <span class="font-medium">Gráficos Avançados</span>
           </a>
         </li>
         <li>
-          <a
-            routerLink="/settings"
-            routerLinkActive="bg-blue-50 text-blue-600"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <a routerLink="/settings" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-cog"></i>
             <span class="font-medium">Configurações</span>
           </a>
@@ -84,26 +194,32 @@
     </nav>
 
     <!-- User Profile -->
-    <div class="border-t border-gray-100 p-4">
+    <div class="border-t border-gray-100 dark:border-gray-700 p-4 shrink-0">
       <div class="flex items-center gap-3 px-4 py-3 mb-2">
         <div
-          class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm"
-        >
+          class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold shadow-sm overflow-hidden">
+          @if (userPreferenceService.preferences$ | async; as prefs) {
+          @if (prefs.profile_image_url) {
+          <img [src]="userPreferenceService.getProfileImageUrl(prefs.profile_image_url)" alt="Profile"
+            class="w-full h-full object-cover" />
+          } @else {
           {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
+          }
+          } @else {
+          {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
+          }
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-gray-900 truncate">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
             {{ authService.currentUser()?.displayName }}
           </p>
-          <p class="text-xs text-gray-500 truncate">
+          <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
             {{ authService.currentUser()?.email }}
           </p>
         </div>
       </div>
-      <button
-        (click)="logout()"
-        class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-      >
+      <button (click)="logout()"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
         <i class="pi pi-sign-out"></i>
         <span>Sair da conta</span>
       </button>
@@ -111,30 +227,20 @@
   </aside>
 
   <!-- Page Content -->
-  <main class="flex-1 overflow-y-auto p-8 scroll-smooth flex flex-col">
+  <main class="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth flex flex-col pt-20 lg:pt-8">
     <div class="max-w-7xl mx-auto w-full flex-1">
       <router-outlet></router-outlet>
     </div>
 
     <footer
-      class="mt-12 py-6 text-center text-sm text-gray-400 border-t border-gray-100"
-    >
+      class="mt-12 py-6 text-center text-sm text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700">
       <div class="flex items-center justify-center gap-4 mb-2">
-        <a routerLink="/terms" class="hover:text-gray-600 transition-colors"
-          >Termos</a
-        >
-        <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-        <a
-          routerLink="/privacy-policy"
-          class="hover:text-gray-600 transition-colors"
-          >Privacidade</a
-        >
+        <a routerLink="/terms" class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Termos</a>
+        <span class="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
+        <a routerLink="/privacy-policy"
+          class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Privacidade</a>
       </div>
-      <p>&copy; 2025 monFinTrack. Todos os direitos reservados.</p>
+      <p>&copy; 2025 CapyCro. AvecTech. Todos os direitos reservados.</p>
     </footer>
   </main>
 </div>
-
-} @else {
-<app-login></app-login>
-}

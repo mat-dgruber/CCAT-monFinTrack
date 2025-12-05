@@ -1,257 +1,344 @@
 <div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
-  <!-- Header & Actions -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">
-        Assinaturas e Recorrências
-      </h1>
-      <p class="text-gray-500">
-        Gerencie seus pagamentos recorrentes e assinaturas.
-      </p>
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Assinaturas e Recorrências</h2>
+      <p class="text-gray-500 dark:text-gray-400">Gerencie seus pagamentos recorrentes e previsões.</p>
     </div>
     <p-button label="Nova Recorrência" icon="pi pi-plus" (onClick)="showDialog()"></p-button>
   </div>
 
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <!-- Income Card (Placeholder logic for now) -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <span class="text-sm text-gray-500 font-medium">Receitas Recorrentes</span>
-      <div class="text-2xl font-bold text-green-600 mt-1">R$ 0,00</div>
+    @if (loading()) {
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+      <p-skeleton width="150px" height="2rem"></p-skeleton>
     </div>
-
-    <!-- Expenses Summary Card (New) -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <span class="text-sm text-gray-500 font-medium">Total Despesas Recorrentes</span>
-      <div class="text-2xl font-bold text-red-600 mt-1">{{ totalMonthly() | currency : "BRL" }}</div>
-      <div class="text-xs text-gray-400 mt-2">
-        Total previsto para o mês
-      </div>
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+      <p-skeleton width="150px" height="2rem"></p-skeleton>
     </div>
-
-    <!-- Expenses Card -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <div class="flex justify-between items-center mb-1">
-        <span class="text-sm text-gray-500 font-medium">Despesas Recorrentes</span>
-        <span class="text-sm font-bold text-gray-800">{{ totalMonthly() | currency : "BRL" }} total</span>
-      </div>
-
-      <p-progressBar [value]="progressPercentage()" [showValue]="false" styleClass="h-2 mb-2"></p-progressBar>
-
-      <div class="flex justify-between text-xs">
-        <span class="font-medium text-gray-600">{{ totalPaid() | currency : "BRL" }} pago</span>
-        <span class="font-medium text-gray-600">{{ totalRemaining() | currency : "BRL" }} restante</span>
-      </div>
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+      <p-skeleton width="150px" height="2rem"></p-skeleton>
     </div>
+    } @else {
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Mensal (Estimado)</div>
+      <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ totalMonthly() | currency:'BRL' }}</div>
+    </div>
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="text-sm text-green-600 dark:text-green-400 mb-1">Já Pago</div>
+      <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{ totalPaid() | currency:'BRL' }}</div>
+    </div>
+    <div class="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="text-sm text-orange-600 dark:text-orange-400 mb-1">A Pagar</div>
+      <div class="text-2xl font-bold text-orange-700 dark:text-orange-400">{{ totalRemaining() | currency:'BRL' }}</div>
+    </div>
+    }
   </div>
 
-  <!-- Tabs -->
-  <p-tabs value="0">
+  <!-- Progress Bar -->
+  <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+    <div class="flex justify-between mb-2 text-sm">
+      <span class="text-gray-600 dark:text-gray-300">Progresso do Mês</span>
+      <span class="font-bold text-gray-900 dark:text-white">{{ progressPercentage() | number:'1.0-0' }}%</span>
+    </div>
+    @if (loading()) {
+    <p-skeleton width="100%" height="1rem"></p-skeleton>
+    } @else {
+    <p-progressBar [value]="progressPercentage()" [showValue]="false" styleClass="h-4"></p-progressBar>
+    }
+  </div>
+
+  <!-- Main Content Tabs -->
+  <p-tabs value="calendar">
     <p-tablist>
-      <p-tab value="0">Recorrências</p-tab>
-      <p-tab value="1">Mensal</p-tab>
-      <p-tab value="2">Todas as Recorrências</p-tab>
+      <p-tab value="calendar">
+        <i class="pi pi-calendar mr-2"></i>
+        Visão Mensal
+      </p-tab>
+      <p-tab value="list">
+        <i class="pi pi-list mr-2"></i>
+        Gerenciar Assinaturas
+      </p-tab>
     </p-tablist>
 
     <p-tabpanels>
-      <!-- Tab 0: Calendar View -->
-      <p-tabpanel value="0">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
-          <!-- Calendar (Left/Top) -->
-          <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-h-[400px]">
-            <!-- Calendar Header -->
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold text-gray-800 capitalize">
-                {{ monthLabel() }}
-              </h2>
-              <div class="flex gap-2">
-                <p-button icon="pi pi-chevron-left" [rounded]="true" [text]="true" (onClick)="prevMonth()"></p-button>
-                <p-button icon="pi pi-chevron-right" [rounded]="true" [text]="true" (onClick)="nextMonth()"></p-button>
-              </div>
+      <!-- Calendar View -->
+      <p-tabpanel value="calendar">
+        <div class="flex flex-col gap-4">
+          <!-- Month Navigation -->
+          <div
+            class="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <p-button icon="pi pi-chevron-left" [text]="true" [rounded]="true" (onClick)="prevMonth()"></p-button>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white capitalize">{{ monthLabel() }}</h3>
+            <p-button icon="pi pi-chevron-right" [text]="true" [rounded]="true" (onClick)="nextMonth()"></p-button>
+          </div>
+
+          <!-- Calendar Grid -->
+          <div class="grid grid-cols-7 gap-2 md:gap-4">
+            <!-- Weekday Headers -->
+            @for (day of ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; track day) {
+            <div class="text-center font-bold text-gray-500 dark:text-gray-400 text-sm py-2">
+              {{ day }}
             </div>
+            }
 
-            <!-- Calendar Grid -->
-            <div class="grid grid-cols-7 gap-2">
-              <!-- Weekday Headers -->
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Dom</div>
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Seg</div>
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Ter</div>
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Qua</div>
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Qui</div>
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Sex</div>
-              <div class="text-center text-sm font-semibold text-gray-500 py-2">Sáb</div>
+            <!-- Days -->
+            @if (loading()) {
+            @for(i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]; track i) {
+            <div
+              class="min-h-[100px] bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-gray-700 p-2 flex flex-col gap-2">
+              <div class="flex justify-between">
+                <p-skeleton width="20px"></p-skeleton>
+              </div>
+              <p-skeleton width="100%" height="1.5rem"></p-skeleton>
+            </div>
+            }
+            } @else {
+            @for (date of daysInMonth(); track $index) {
+            <div
+              class="min-h-[100px] bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-gray-700 p-2 flex flex-col gap-1 transition-colors hover:border-blue-300 dark:hover:border-blue-700"
+              [class.bg-gray-50]="!date" [class.dark:bg-slate-900]="!date">
 
-              <!-- Days -->
-              @for (date of daysInMonth(); track $index) {
+              @if (date) {
+              <span class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 block text-right">{{ date.getDate()
+                }}</span>
+
+              @for (item of getRecurrencesForDay(date); track item.id) {
               <div
-                class="min-h-[80px] border border-gray-100 rounded-lg p-1 relative hover:bg-gray-50 transition-colors flex flex-col gap-1"
-                [class.bg-gray-50]="!date" [class.opacity-50]="!date">
-                @if (date) {
-                <span class="text-sm font-medium text-gray-700 block mb-1">{{ date.getDate() }}</span>
+                class="text-xs p-1.5 rounded cursor-pointer border-l-2 mb-1 shadow-sm transition-all hover:brightness-95"
+                [class.bg-green-100]="item.status === 'paid'" [class.text-green-800]="item.status === 'paid'"
+                [class.border-green-500]="item.status === 'paid'" [class.bg-yellow-50]="item.status === 'pending'"
+                [class.text-yellow-800]="item.status === 'pending'"
+                [class.border-yellow-500]="item.status === 'pending'" [class.dark:bg-green-900]="item.status === 'paid'"
+                [class.dark:text-green-100]="item.status === 'paid'"
+                [class.dark:bg-yellow-900]="item.status === 'pending'"
+                [class.dark:text-yellow-100]="item.status === 'pending'" (click)="toggleRecurrenceStatus(item)">
+                <!-- Changed to toggle status on click -->
 
-                <!-- Recurrences for the day -->
-                @for (rec of getRecurrencesForDay(date); track rec.id) {
-                <div class="text-[10px] px-1 rounded truncate cursor-pointer"
-                  [class.bg-green-100]="rec.status === 'paid'" [class.text-green-700]="rec.status === 'paid'"
-                  [class.bg-yellow-100]="rec.status === 'pending'" [class.text-yellow-700]="rec.status === 'pending'"
-                  [pTooltip]="rec.name + ': ' + (rec.amount | currency : 'BRL')" (click)="showDialog(rec)">
-                  {{ rec.name }}
+                <div class="flex justify-between items-center">
+                  <span class="truncate font-medium">{{ item.name }}</span>
+                  @if (item.status === 'paid') {
+                  <i class="pi pi-check-circle text-[10px]"></i>
+                  }
                 </div>
-                }
-                }
+                <div class="font-bold mt-0.5">{{ item.amount | currency:'BRL' }}</div>
               </div>
               }
+              }
             </div>
+            }
+            }
           </div>
 
-          <!-- Upcoming List (Right/Bottom) -->
-          <div class="lg:col-span-4 flex flex-col gap-4">
-            <h3 class="font-bold text-gray-800">
-              Próximos Vencimentos
-            </h3>
+          <!-- Detailed List for Selected Month -->
+          <div
+            class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-4">
+            <div class="p-4 border-b border-gray-100 dark:border-gray-700 font-bold text-gray-800 dark:text-white">
+              Detalhes do Mês
+            </div>
+            @if (loading()) {
+            <div class="p-4 space-y-3">
+              <p-skeleton height="3rem"></p-skeleton>
+              <p-skeleton height="3rem"></p-skeleton>
+              <p-skeleton height="3rem"></p-skeleton>
+            </div>
+            } @else {
+            <!-- Desktop Table -->
+            <div class="hidden md:block">
+              <p-table [value]="projectedRecurrences()" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Dia</th>
+                    <th>Nome</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item>
+                  <tr>
+                    <td class="font-bold text-gray-600 dark:text-gray-300">{{ item.dueDate | date:'dd' }}</td>
+                    <td>
+                      <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+                      <div class="text-xs text-gray-500">{{ item.periodicity | periodicity }}</div>
+                    </td>
+                    <td class="font-bold" [class.text-green-600]="item.status === 'paid'">{{ item.amount |
+                      currency:'BRL'
+                      }}</td>
+                    <td>
+                      <p-tag [severity]="item.status === 'paid' ? 'success' : 'warn'"
+                        [value]="item.status === 'paid' ? 'Pago' : 'Pendente'"></p-tag>
+                    </td>
+                    <td>
+                      <div class="flex gap-2">
+                        <p-button [icon]="item.status === 'paid' ? 'pi pi-undo' : 'pi pi-check'" [text]="true"
+                          [rounded]="true" [severity]="item.status === 'paid' ? 'secondary' : 'success'"
+                          [pTooltip]="item.status === 'paid' ? 'Marcar como Pendente' : 'Marcar como Pago'"
+                          (onClick)="toggleRecurrenceStatus(item)"></p-button>
 
-            <div class="flex flex-col gap-3">
+                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+                          pTooltip="Excluir/Pular esta ocorrência" (onClick)="deleteOccurrence(item)"></p-button>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="5" class="text-center p-4 text-gray-500">Nenhuma recorrência prevista para este mês.
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+
+            <!-- Mobile List -->
+            <div class="md:hidden flex flex-col gap-3 p-4">
               @for (item of projectedRecurrences(); track item.id) {
-              <div class="bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center shadow-sm">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                    <i class="pi pi-receipt"></i>
+              <div
+                class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col gap-3 shadow-sm">
+                <div class="flex justify-between items-start">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg w-12 h-12 p-1">
+                      <span class="text-xs text-gray-500 dark:text-gray-400 uppercase">{{ item.dueDate | date:'MMM'
+                        }}</span>
+                      <span class="text-lg font-bold text-gray-900 dark:text-white">{{ item.dueDate | date:'dd'
+                        }}</span>
+                    </div>
+                    <div>
+                      <div class="font-bold text-gray-900 dark:text-white">{{ item.name }}</div>
+                      <div class="text-xs text-gray-500">{{ item.periodicity | periodicity }}</div>
+                    </div>
                   </div>
-                  <div class="flex flex-col">
-                    <span class="font-medium text-gray-800">{{ item.name }}</span>
-                    <span class="text-xs text-gray-500">{{ item.dueDate | date : "dd MMM" }} ({{ item.periodicity |
-                      periodicity }})</span>
+                  <div class="text-right">
+                    <div class="font-bold text-lg" [class.text-green-600]="item.status === 'paid'">{{ item.amount |
+                      currency:'BRL' }}</div>
+                    <p-tag [severity]="item.status === 'paid' ? 'success' : 'warn'"
+                      [value]="item.status === 'paid' ? 'Pago' : 'Pendente'" styleClass="text-xs"></p-tag>
                   </div>
                 </div>
-                <div class="flex flex-col items-end gap-1">
-                  <span class="font-bold text-gray-800">{{ item.amount | currency : "BRL" }}</span>
 
-                  <div class="flex gap-1">
-                    <span class="text-[10px] px-1.5 py-0.5 rounded cursor-pointer"
-                      [class.bg-green-100]="item.status === 'paid'" [class.text-green-700]="item.status === 'paid'"
-                      [class.bg-yellow-100]="item.status === 'pending'"
-                      [class.text-yellow-700]="item.status === 'pending'"
-                      (click)="item.status === 'paid' ? markAsUnpaid(item) : markAsPaid(item)"
-                      pTooltip="Clique para alterar status">
-                      {{ item.status === "paid" ? "Pago" : "Pendente" }}
-                    </span>
-                  </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-50 dark:border-gray-700">
+                  <p-button [icon]="item.status === 'paid' ? 'pi pi-undo' : 'pi pi-check'" [text]="true"
+                    [rounded]="true" [severity]="item.status === 'paid' ? 'secondary' : 'success'"
+                    (onClick)="toggleRecurrenceStatus(item)"></p-button>
+                  <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+                    (onClick)="deleteOccurrence(item)"></p-button>
                 </div>
               </div>
-              }
-              @if (projectedRecurrences().length === 0) {
-              <div class="text-center py-8 text-gray-400 italic">
-                Nenhuma recorrência este mês.
-              </div>
+              } @empty {
+              <div class="text-center p-8 text-gray-500">Nenhuma recorrência prevista para este mês.</div>
               }
             </div>
+            }
           </div>
         </div>
       </p-tabpanel>
 
-      <!-- Tab 1: Detailed Monthly View -->
-      <p-tabpanel value="1">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Detalhamento Mensal - {{ monthLabel() }}</h3>
+      <!-- Management List -->
+      <p-tabpanel value="list">
+        <div
+          class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          @if (loading()) {
+          <div class="p-4 space-y-3">
+            <p-skeleton height="3rem"></p-skeleton>
+            <p-skeleton height="3rem"></p-skeleton>
+            <p-skeleton height="3rem"></p-skeleton>
+          </div>
+          } @else {
+          <!-- Desktop Table -->
+          <div class="hidden md:block">
+            <p-table [value]="activeRecurrences()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Nome</th>
+                  <th>Valor</th>
+                  <th>Periodicidade</th>
+                  <th>Dia Venc.</th>
+                  <th>Auto Pag.</th>
+                  <th>Ações</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-rec>
+                <tr>
+                  <td class="font-bold text-gray-800 dark:text-white">{{ rec.name }}</td>
+                  <td>{{ rec.amount | currency:'BRL' }}</td>
+                  <td><p-tag [value]="rec.periodicity | periodicity" severity="info"></p-tag></td>
+                  <td>Dia {{ rec.due_day }}</td>
+                  <td>
+                    <i class="pi" [class.pi-check-circle]="rec.auto_pay" [class.pi-times-circle]="!rec.auto_pay"
+                      [class.text-green-500]="rec.auto_pay" [class.text-gray-400]="!rec.auto_pay"></i>
+                  </td>
+                  <td>
+                    <div class="flex gap-2">
+                      <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
+                        (onClick)="showDialog(rec)"></p-button>
+                      <p-button icon="pi pi-power-off" [text]="true" [rounded]="true" severity="danger"
+                        pTooltip="Cancelar Assinatura" (onClick)="cancelRecurrence(rec)"></p-button>
+                      <p-button [icon]="rec.auto_pay ? 'pi pi-ban' : 'pi pi-sync'" [text]="true" [rounded]="true"
+                        [severity]="rec.auto_pay ? 'warn' : 'info'"
+                        [pTooltip]="rec.auto_pay ? 'Desativar Auto Pag.' : 'Ativar Auto Pag.'"
+                        (onClick)="toggleAutoPay(rec)"></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center p-4 text-gray-500">Nenhuma assinatura ativa.</td>
+                </tr>
+              </ng-template>
+            </p-table>
           </div>
 
-          <p-table [value]="projectedRecurrences()" [tableStyle]="{ 'min-width': '50rem' }">
-            <ng-template pTemplate="header">
-              <tr>
-                <th>Data</th>
-                <th>Nome</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-rec>
-              <tr>
-                <td>{{ rec.dueDate | date : "dd/MM/yyyy" }}</td>
-                <td class="font-medium">{{ rec.name }}</td>
-                <td>{{ rec.amount | currency : "BRL" }}</td>
-                <td>
-                  <span class="text-xs px-2 py-1 rounded-full font-semibold"
-                    [class.bg-green-100]="rec.status === 'paid'" [class.text-green-700]="rec.status === 'paid'"
-                    [class.bg-yellow-100]="rec.status === 'pending'" [class.text-yellow-700]="rec.status === 'pending'">
-                    {{ rec.status === "paid" ? "Pago" : "Pendente" }}
-                  </span>
-                </td>
-                <td>
-                  <div class="flex gap-2">
-                    <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success"
-                      pTooltip="Marcar como Pago" *ngIf="rec.status !== 'paid'" (onClick)="markAsPaid(rec)"></p-button>
-                    <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="warn"
-                      pTooltip="Marcar como Pendente" *ngIf="rec.status === 'paid'"
-                      (onClick)="markAsUnpaid(rec)"></p-button>
+          <!-- Mobile List -->
+          <div class="md:hidden flex flex-col gap-3 p-4">
+            @for (rec of activeRecurrences(); track rec.id) {
+            <div
+              class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col gap-3 shadow-sm">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-bold text-gray-900 dark:text-white">{{ rec.name }}</div>
+                  <div class="text-xs text-gray-500 flex items-center gap-2">
+                    <p-tag [value]="rec.periodicity | periodicity" severity="info" styleClass="text-xs"></p-tag>
+                    <span>Dia {{ rec.due_day }}</span>
                   </div>
-                </td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="5" class="text-center py-8 text-gray-500">
-                  Nenhuma recorrência para este mês.
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-      </p-tabpanel>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold text-lg">{{ rec.amount | currency:'BRL' }}</div>
+                  @if (rec.auto_pay) {
+                  <div class="text-xs text-green-600 flex items-center justify-end gap-1">
+                    <i class="pi pi-sync"></i> Auto
+                  </div>
+                  }
+                </div>
+              </div>
 
-      <!-- Tab 2: All Recurring (Management Table) -->
-      <p-tabpanel value="2">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-          <p-table [value]="activeRecurrences()" [tableStyle]="{ 'min-width': '50rem' }">
-            <ng-template pTemplate="header">
-              <tr>
-                <th>Nome</th>
-                <th>Valor</th>
-                <th>Periodicidade</th>
-                <th>Dia de Vencimento</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-rec>
-              <tr>
-                <td class="font-medium">{{ rec.name }}</td>
-                <td>{{ rec.amount | currency : "BRL" }}</td>
-                <td>
-                  <p-tag [value]="rec.periodicity | periodicity" severity="info"></p-tag>
-                </td>
-                <td>Dia {{ rec.due_day }}</td>
-                <td>
-                  <p-tag [value]="rec.active ? 'Ativo' : 'Inativo'"
-                    [severity]="rec.active ? 'success' : 'danger'"></p-tag>
-                </td>
-                <td>
-                  <div class="flex gap-2">
-                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" pTooltip="Editar"
-                      (onClick)="showDialog(rec)"></p-button>
-                    <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger"
-                      pTooltip="Cancelar Assinatura" (onClick)="cancelRecurrence(rec)"></p-button>
-                  </div>
-                </td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="6" class="text-center py-8 text-gray-500">
-                  Nenhuma assinatura ativa encontrada.
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
+              <div class="flex justify-end gap-2 pt-2 border-t border-gray-50 dark:border-gray-700">
+                <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
+                  (onClick)="showDialog(rec)"></p-button>
+                <p-button icon="pi pi-power-off" [text]="true" [rounded]="true" severity="danger"
+                  (onClick)="cancelRecurrence(rec)"></p-button>
+                <p-button [icon]="rec.auto_pay ? 'pi pi-ban' : 'pi pi-sync'" [text]="true" [rounded]="true"
+                  [severity]="rec.auto_pay ? 'warn' : 'info'" (onClick)="toggleAutoPay(rec)"></p-button>
+              </div>
+            </div>
+            } @empty {
+            <div class="text-center p-4 text-gray-500">Nenhuma assinatura ativa.</div>
+            }
+          </div>
+          }
         </div>
       </p-tabpanel>
     </p-tabpanels>
   </p-tabs>
 
   <!-- Dialog -->
-  <p-dialog [(visible)]="displayDialog" [header]="dialogHeader" [modal]="true" [style]="{width: '450px'}"
-    styleClass="p-fluid">
+  <p-dialog [header]="dialogHeader" [(visible)]="displayDialog" [modal]="true" [style]="{width: '30rem'}"
+    [draggable]="false" [resizable]="false">
     <ng-template pTemplate="content">
       <form [formGroup]="recurrenceForm" class="flex flex-col gap-4 mt-2">
         <div class="flex justify-center mb-2">
@@ -261,43 +348,50 @@
 
         <div class="flex flex-col gap-2">
           <label for="name" class="font-semibold">Nome</label>
-          <input pInputText id="name" formControlName="name" />
+          <input pInputText id="name" formControlName="name" class="w-full" />
         </div>
 
         <div class="flex flex-col gap-2">
           <label for="amount" class="font-semibold">Valor</label>
           <p-inputNumber id="amount" formControlName="amount" mode="currency" currency="BRL" locale="pt-BR"
-            styleClass="w-full"></p-inputNumber>
+            styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div class="flex flex-col gap-2">
             <label for="periodicity" class="font-semibold">Periodicidade</label>
             <p-select id="periodicity" [options]="periodicityOptions" formControlName="periodicity" optionLabel="label"
-              optionValue="value" styleClass="w-full"></p-select>
+              optionValue="value" styleClass="w-full" appendTo="body"
+              panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
           </div>
           <div class="flex flex-col gap-2">
             <label for="due_day" class="font-semibold">Dia Vencimento</label>
             <p-select id="due_day" [options]="dayOptions" formControlName="due_day" optionLabel="label"
-              optionValue="value" placeholder="Selecione o dia" styleClass="w-full"></p-select>
+              optionValue="value" placeholder="Selecione o dia" styleClass="w-full" appendTo="body"
+              panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
           </div>
         </div>
 
-        <div class="flex flex-col gap-2" *ngIf="recurrenceForm.get('periodicity')?.value === 'yearly'">
+        @if (recurrenceForm.get('periodicity')?.value === 'yearly') {
+        <div class="flex flex-col gap-2">
           <label for="due_month" class="font-semibold">Mês de Vencimento</label>
           <p-select id="due_month" [options]="monthOptions" formControlName="due_month" optionLabel="label"
-            optionValue="value" placeholder="Selecione o mês" styleClass="w-full"></p-select>
+            optionValue="value" placeholder="Selecione o mês" styleClass="w-full" appendTo="body"
+            panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
         </div>
+        }
 
         <div class="flex flex-col gap-2">
           <label for="category_id" class="font-semibold">Categoria</label>
           <p-select id="category_id" [options]="filteredCategories()" formControlName="category_id" optionLabel="name"
-            optionValue="id" placeholder="Selecione uma categoria" styleClass="w-full"></p-select>
+            optionValue="id" placeholder="Selecione uma categoria" styleClass="w-full" appendTo="body"
+            panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
         </div>
         <div class="flex flex-col gap-2">
           <label for="account_id" class="font-semibold">Conta</label>
           <p-select id="account_id" [options]="accounts()" formControlName="account_id" optionLabel="name"
-            optionValue="id" placeholder="Selecione uma conta" styleClass="w-full"></p-select>
+            optionValue="id" placeholder="Selecione uma conta" styleClass="w-full" appendTo="body"
+            panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
         </div>
 
         <div class="flex items-center gap-2 mt-2">

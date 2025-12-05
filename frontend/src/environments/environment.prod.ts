@@ -10,5 +10,6 @@ export const environment = {
     messagingSenderId: "605486079278",
     appId: "1:605486079278:web:5bf39b2d2cb032bf962ebf",
     measurementId: "G-9B3JJ3LY34"
-  }
+  },
+  sessionDuration: 14400000 // 4 horas em ms
 };

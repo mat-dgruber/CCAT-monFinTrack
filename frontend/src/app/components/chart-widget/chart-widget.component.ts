@@ -81,12 +81,12 @@ interface SankeyLink {
         SkeletonModule
     ],
     template: `
-    <div class="bg-white rounded-lg shadow-md p-4 flex flex-col h-full relative transition-all hover:shadow-lg">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md dark:shadow-none dark:border dark:border-gray-700 p-4 flex flex-col h-full relative transition-all hover:shadow-lg">
       <!-- Toolbar -->
-      <div class="flex flex-wrap gap-2 mb-2 items-center justify-between border-b border-gray-100 pb-2">
+      <div class="flex flex-wrap gap-2 mb-2 items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
         <div class="flex flex-wrap gap-2 items-center">
              <!-- Title (Optional) or Type Icon -->
-             <div class="font-semibold text-gray-700 flex items-center gap-2">
+             <div class="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
                 <i class="pi" [ngClass]="{
                     'pi-chart-pie': widgetConfig.type === 'pie' || widgetConfig.type === 'doughnut',
                     'pi-chart-bar': widgetConfig.type === 'bar',
@@ -96,7 +96,7 @@ interface SankeyLink {
                     'pi-share-alt': widgetConfig.type === 'sankey'
                 }"></i>
                 <span *ngIf="widgetConfig.title">{{ widgetConfig.title }}</span>
-                <span *ngIf="!widgetConfig.title" class="text-sm text-gray-500 capitalize">{{ getChartLabel(widgetConfig.type) }}</span>
+                <span *ngIf="!widgetConfig.title" class="text-sm text-gray-500 dark:text-gray-400 capitalize">{{ getChartLabel(widgetConfig.type) }}</span>
              </div>
         </div>
 
@@ -114,52 +114,52 @@ interface SankeyLink {
 
             <!-- Settings Button -->
             <button pButton icon="pi pi-cog" class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8" (click)="op.toggle($event)" pTooltip="Configurações"></button>
-            <p-popover #op>
-                <div class="flex flex-col gap-4 w-72 p-1">
-                    <span class="font-semibold text-sm text-gray-700 border-b pb-1">Configuração do Gráfico</span>
+            <p-popover #op styleClass="dark:bg-slate-800 dark:border-slate-800">
+                <div class="flex flex-col gap-4 w-72 p-1 dark:bg-slate-800 dark:text-gray-200 dark:shadow-none dark:border-slate-800">
+                    <span class="font-semibold text-sm text-gray-700 dark:bg-slate-800 dark:text-gray-200 dark:shadow-none dark:border-slate-800 border-b pb-1">Configuração do Gráfico</span>
                     
                     <!-- Filters moved here -->
                     <div class="flex flex-col gap-2">
-                        <label class="text-xs text-gray-500">Tipo de Gráfico</label>
-                        <p-select [options]="chartTypes" [(ngModel)]="widgetConfig.type" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full"></p-select>
+                        <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Tipo de Gráfico</label>
+                        <p-select [options]="chartTypes" [(ngModel)]="widgetConfig.type" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
                     </div>
 
                     <div class="flex flex-col gap-2">
-                        <label class="text-xs text-gray-500">Período</label>
-                        <p-select [options]="datePresets" [(ngModel)]="widgetConfig.datePreset" (onChange)="onDatePresetChange()" optionLabel="label" optionValue="value" size="small" styleClass="w-full"></p-select>
+                        <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Período</label>
+                        <p-select [options]="datePresets" [(ngModel)]="widgetConfig.datePreset" (onChange)="onDatePresetChange()" optionLabel="label" optionValue="value" size="small" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
                     </div>
 
                     <div class="flex flex-col gap-2" *ngIf="widgetConfig.datePreset === 'custom'">
-                        <label class="text-xs text-gray-500">Data Personalizada</label>
+                        <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Data Personalizada</label>
                         <p-datepicker [(ngModel)]="widgetConfig.customDateRange" selectionMode="range" (onSelect)="updateChart()" [readonlyInput]="true" placeholder="Selecione Data" size="small" styleClass="w-full"></p-datepicker>
                     </div>
 
                     <div class="flex flex-col gap-2">
-                        <label class="text-xs text-gray-500">Filtrar Valor</label>
-                        <p-select [options]="valueFilterOptions" [(ngModel)]="widgetConfig.valueFilter" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full"></p-select>
+                        <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Filtrar Valor</label>
+                        <p-select [options]="valueFilterOptions" [(ngModel)]="widgetConfig.valueFilter" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
                     </div>
 
                     <div class="flex flex-col gap-2" *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'sankey'">
-                        <label class="text-xs text-gray-500">Agrupar Por</label>
-                        <p-select [options]="groupingOptions" [(ngModel)]="widgetConfig.groupBy" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full"></p-select>
+                        <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Agrupar Por</label>
+                        <p-select [options]="groupingOptions" [(ngModel)]="widgetConfig.groupBy" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
                     </div>
 
-                    <div class="border-t border-gray-100 my-1"></div>
+                    <div class="border-t border-gray-100 dark:border-gray-700 dark:border-slate-800 my-1"></div>
 
                     <!-- Advanced Features -->
                     <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium">Comparar (Período Anterior)</span>
+                        <span class="text-sm font-medium dark:text-gray-200 dark:border-slate-800">Comparar (Período Anterior)</span>
                         <p-toggleButton [(ngModel)]="widgetConfig.compareWithPrevious" (onChange)="updateChart()" onLabel="Sim" offLabel="Não" size="small" styleClass="w-16 text-xs"></p-toggleButton>
                     </div>
                     <div class="flex justify-between items-center" *ngIf="widgetConfig.type === 'line'">
-                        <span class="text-sm font-medium">Previsão (Tendência)</span>
+                        <span class="text-sm font-medium dark:text-gray-200 dark:border-slate-800">Previsão (Tendência)</span>
                         <p-toggleButton [(ngModel)]="widgetConfig.showForecast" (onChange)="updateChart()" onLabel="Sim" offLabel="Não" size="small" styleClass="w-16 text-xs"></p-toggleButton>
                     </div>
                     
-                    <div class="border-t border-gray-100 my-1"></div>
+                    <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
 
                     <div class="flex justify-between items-center">
-                         <span class="text-sm font-medium">Resumo em Texto</span>
+                         <span class="text-sm font-medium dark:text-gray-200">Resumo em Texto</span>
                          <p-toggleButton [(ngModel)]="widgetConfig.showSummary" onLabel="Sim" offLabel="Não" size="small" styleClass="w-16 text-xs"></p-toggleButton>
                     </div>
 
@@ -176,7 +176,7 @@ interface SankeyLink {
       <div class="flex-grow relative min-h-[300px] overflow-hidden flex flex-col" [class.hidden]="widgetConfig.showSummary">
         <!-- Loading Skeleton -->
         <!-- Loading Skeleton -->
-        <div *ngIf="isLoading()" class="absolute inset-0 bg-white z-50 flex flex-col gap-4 p-4">
+        <div *ngIf="isLoading()" class="absolute inset-0 bg-white dark:bg-slate-800 z-50 flex flex-col gap-4 p-4">
             <div class="flex justify-between items-end h-full gap-2">
                 <p-skeleton height="40%" width="10%"></p-skeleton>
                 <p-skeleton height="70%" width="10%"></p-skeleton>
@@ -196,19 +196,19 @@ interface SankeyLink {
 
         <!-- Treemap v1.0 -->
         <!-- Treemap v1.1 (Drill-down) -->
-        <div *ngIf="widgetConfig.type === 'treemap'" class="relative w-full h-full bg-gray-50 rounded overflow-hidden flex flex-col">
+        <div *ngIf="widgetConfig.type === 'treemap'" class="relative w-full h-full bg-gray-50 dark:bg-slate-900 rounded overflow-hidden flex flex-col">
             <!-- Breadcrumbs -->
-            <div class="flex items-center gap-2 p-2 bg-white border-b border-gray-100 text-xs text-gray-600" *ngIf="treemapPath.length > 0">
+            <div class="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400" *ngIf="treemapPath.length > 0">
                 <span class="cursor-pointer hover:text-blue-600 hover:underline" (click)="resetTreemapDrilldown()">Todas</span>
                 <ng-container *ngFor="let item of treemapPath; let last = last">
                     <i class="pi pi-chevron-right text-[10px]"></i>
-                    <span [class.font-bold]="last" [class.text-gray-900]="last">{{ item }}</span>
+                    <span [class.font-bold]="last" [class.text-gray-900]="last" [class.dark:text-white]="last">{{ item }}</span>
                 </ng-container>
             </div>
 
             <div class="relative flex-grow w-full overflow-hidden">
                 <div *ngFor="let node of treemapData; trackBy: trackByLabel"
-                     class="absolute border border-white flex flex-col items-center justify-center text-center p-1 transition-all duration-500 ease-in-out hover:brightness-110 cursor-pointer hover:z-10 hover:shadow-lg"
+                     class="absolute border border-white dark:border-slate-800 flex flex-col items-center justify-center text-center p-1 transition-all duration-500 ease-in-out hover:brightness-110 cursor-pointer hover:z-10 hover:shadow-lg"
                      [style.left.%]="node.x"
                      [style.top.%]="node.y"
                      [style.width.%]="node.w"
@@ -222,7 +222,7 @@ interface SankeyLink {
                      <span *ngIf="node.h > 15" class="text-white text-[10px] opacity-90 drop-shadow-md">{{ node.formattedValue }}</span>
                 </div>
                 
-                <div *ngIf="treemapData.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400">
+                <div *ngIf="treemapData.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-50">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="3" y1="9" x2="21" y2="9"></line>
@@ -237,24 +237,24 @@ interface SankeyLink {
         <div *ngIf="widgetConfig.type === 'boxplot'" class="w-full h-full flex flex-col overflow-y-auto pr-2">
             <div *ngFor="let item of boxPlotData" class="flex items-center mb-4 h-12 group">
                 <!-- Label -->
-                <div class="w-32 text-xs text-gray-600 font-medium truncate text-right pr-3" [title]="item.label">
+                <div class="w-32 text-xs text-gray-600 dark:text-gray-400 font-medium truncate text-right pr-3" [title]="item.label">
                     {{ item.label }}
                 </div>
                 
                 <!-- Plot Area -->
-                <div class="flex-grow relative h-full bg-gray-50 rounded border-l border-gray-200">
+                <div class="flex-grow relative h-full bg-gray-50 dark:bg-slate-900 rounded border-l border-gray-200 dark:border-gray-700">
                     <!-- Whisker Line (Min to Max) -->
-                    <div class="absolute top-1/2 h-[2px] bg-gray-300 -translate-y-1/2 transition-all duration-500"
+                    <div class="absolute top-1/2 h-[2px] bg-gray-300 dark:bg-gray-600 -translate-y-1/2 transition-all duration-500"
                          [style.left.%]="getBoxPlotPercent(item.min)"
                          [style.width.%]="getBoxPlotPercent(item.max - item.min)">
                     </div>
                     
                     <!-- Whisker Caps -->
-                    <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 -translate-y-1/2 transition-all duration-500" [style.left.%]="getBoxPlotPercent(item.min)"></div>
-                    <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 -translate-y-1/2 transition-all duration-500" [style.left.%]="getBoxPlotPercent(item.max)"></div>
+                    <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 dark:bg-gray-500 -translate-y-1/2 transition-all duration-500" [style.left.%]="getBoxPlotPercent(item.min)"></div>
+                    <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 dark:bg-gray-500 -translate-y-1/2 transition-all duration-500" [style.left.%]="getBoxPlotPercent(item.max)"></div>
 
                     <!-- Box (Q1 to Q3) -->
-                    <div class="absolute top-1/2 h-6 -translate-y-1/2 border border-gray-400 opacity-80 hover:opacity-100 transition-all duration-500"
+                    <div class="absolute top-1/2 h-6 -translate-y-1/2 border border-gray-400 dark:border-gray-500 opacity-80 hover:opacity-100 transition-all duration-500"
                          [style.backgroundColor]="item.color"
                          [style.left.%]="getBoxPlotPercent(item.q1)"
                          [style.width.%]="getBoxPlotPercent(item.q3 - item.q1)"
@@ -268,7 +268,7 @@ interface SankeyLink {
                     </div>
                 </div>
             </div>
-             <div *ngIf="boxPlotData.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400">
+             <div *ngIf="boxPlotData.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-50">
                      <line x1="12" y1="20" x2="12" y2="10"></line>
                      <line x1="18" y1="20" x2="18" y2="4"></line>
@@ -279,12 +279,12 @@ interface SankeyLink {
         </div>
 
         <!-- Sankey Diagram v1.2 (Zoom/Pan) -->
-        <div *ngIf="widgetConfig.type === 'sankey'" class="w-full h-full bg-white rounded overflow-hidden relative flex items-center justify-center">
+        <div *ngIf="widgetConfig.type === 'sankey'" class="w-full h-full bg-white dark:bg-slate-800 rounded overflow-hidden relative flex items-center justify-center">
              <!-- Reset Zoom Button -->
              <button *ngIf="sankeyScale !== 1 || sankeyX !== 0 || sankeyY !== 0" 
                      pButton 
                      icon="pi pi-refresh" 
-                     class="p-button-rounded p-button-text p-button-sm absolute top-2 right-2 z-10 bg-white/80 hover:bg-white shadow-sm" 
+                     class="p-button-rounded p-button-text p-button-sm absolute top-2 right-2 z-10 bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 shadow-sm" 
                      (click)="resetZoom()" 
                      pTooltip="Resetar Zoom">
              </button>
@@ -356,47 +356,51 @@ interface SankeyLink {
       </div>
 
       <!-- Summary Area -->
-      <div *ngIf="widgetConfig.showSummary" class="flex-grow flex flex-col gap-6 p-4 overflow-auto min-h-[300px] bg-white rounded">
+      <div *ngIf="widgetConfig.showSummary" class="flex-grow flex flex-col gap-6 p-4 overflow-auto min-h-[300px] bg-white dark:bg-slate-800 rounded">
         <!-- Summary Cards -->
-        <div class="space-y-4">
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div class="text-sm text-gray-500 mb-1">Total de Transações</div>
-                <div class="text-2xl font-bold text-gray-900">{{summaryStats.totalTransactions}}</div>
-            </div>
-
-            <div class="p-4 bg-red-50 rounded-xl border border-red-100">
-                <div class="text-sm text-red-600 mb-1">Total Despesas</div>
-                <div class="text-2xl font-bold text-red-700">{{summaryStats.totalExpense | currency:'BRL'}}</div>
-            </div>
-
-            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
-                <div class="text-sm text-green-600 mb-1">Total Receitas</div>
-                <div class="text-2xl font-bold text-green-700">{{summaryStats.totalIncome | currency:'BRL'}}</div>
-            </div>
-
-            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-sm text-blue-600 mb-1">Saldo do Período</div>
-                <div class="text-2xl font-bold text-blue-700">{{summaryStats.net | currency:'BRL'}}</div>
-            </div>
-
-            <div class="border-t border-gray-100 my-2"></div>
-
-            <div class="space-y-3">
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Maior Despesa</span>
-                    <span class="font-medium text-gray-900">{{summaryStats.maxExpense | currency:'BRL'}}</span>
+        <div class="flex flex-col gap-4 h-full">
+            <!-- Main Stats Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 bg-gray-50 dark:bg-slate-700 rounded-xl border border-gray-100 dark:border-gray-600 flex flex-col justify-center">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Transações</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white">{{summaryStats.totalTransactions}}</div>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Média (Valor)</span>
-                    <span class="font-medium text-gray-900">{{summaryStats.avgTx | currency:'BRL'}}</span>
+
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col justify-center">
+                    <div class="text-xs text-blue-600 dark:text-blue-400 mb-1">Saldo</div>
+                    <div class="text-lg font-bold text-blue-700 dark:text-blue-300">{{summaryStats.net | currency:'BRL'}}</div>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Primeira Data</span>
-                    <span class="font-medium text-gray-900">{{summaryStats.firstDate | date:'dd/MM/yy'}}</span>
+
+                <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 flex flex-col justify-center">
+                    <div class="text-xs text-red-600 dark:text-red-400 mb-1">Despesas</div>
+                    <div class="text-lg font-bold text-red-700 dark:text-red-300">{{summaryStats.totalExpense | currency:'BRL'}}</div>
                 </div>
-                    <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Última Data</span>
-                    <span class="font-medium text-gray-900">{{summaryStats.lastDate | date:'dd/MM/yy'}}</span>
+
+                <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 flex flex-col justify-center">
+                    <div class="text-xs text-green-600 dark:text-green-400 mb-1">Receitas</div>
+                    <div class="text-lg font-bold text-green-700 dark:text-green-300">{{summaryStats.totalIncome | currency:'BRL'}}</div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+            <!-- Detailed Stats Grid -->
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Maior Despesa</span>
+                    <span class="font-medium text-gray-900 dark:text-gray-200">{{summaryStats.maxExpense | currency:'BRL'}}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Média</span>
+                    <span class="font-medium text-gray-900 dark:text-gray-200">{{summaryStats.avgTx | currency:'BRL'}}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Início</span>
+                    <span class="font-medium text-gray-900 dark:text-gray-200">{{summaryStats.firstDate | date:'dd/MM/yy'}}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Fim</span>
+                    <span class="font-medium text-gray-900 dark:text-gray-200">{{summaryStats.lastDate | date:'dd/MM/yy'}}</span>
                 </div>
             </div>
         </div>
@@ -581,7 +585,7 @@ export class ChartWidgetComponent implements OnInit {
     exportChart() {
         const element = this.elementRef.nativeElement.querySelector('.relative'); // Target the chart container
         if (element) {
-            html2canvas(element).then(canvas => {
+            html2canvas(element).then((canvas: HTMLCanvasElement) => {
                 const link = document.createElement('a');
                 link.download = `chart-${this.widgetConfig.title || 'export'}.png`;
                 link.href = canvas.toDataURL();

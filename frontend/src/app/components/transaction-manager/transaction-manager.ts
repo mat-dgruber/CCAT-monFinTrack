@@ -15,6 +15,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SkeletonModule } from 'primeng/skeleton';
 
 // Services
 import { TransactionService } from '../../services/transaction.service';
@@ -48,7 +49,8 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     TransactionForm,
     PaymentFormatPipe,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    SkeletonModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
@@ -68,13 +70,15 @@ export class TransactionManager implements OnInit {
   accounts = signal<Account[]>([]);
 
   // Filters
-  // Filters
   filterDateRange = signal<Date[] | null>(null);
+
+  // Mobile Filters
+  mobileFilterVisible = signal(false);
+  mobileCategoryFilter = signal<Category | null>(null);
+  mobileAccountFilter = signal<Account | null>(null);
 
   // View State for Stats
   currentViewTransactions = signal<Transaction[]>([]);
-
-
 
   paymentMethods = [
     { label: 'Cartão de Crédito', value: 'credit_card' },
@@ -87,6 +91,101 @@ export class TransactionManager implements OnInit {
 
   // UI State
   loading = signal(false);
+  selectedDatePreset = signal<string | null>(null);
+
+  datePresets = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Esse Mês', value: 'this-month' },
+    { label: 'Mês Passado', value: 'last-month' },
+    { label: 'Essa Semana', value: 'this-week' },
+    { label: 'Esse Ano', value: 'this-year' },
+    { label: 'Personalizado', value: 'custom' }
+  ];
+
+  ngOnInit() {
+    this.loadData();
+
+    // Load metadata
+    this.categoryService.getCategories().subscribe(cats => this.categories.set(cats));
+    this.accountService.getAccounts().subscribe(accs => this.accounts.set(accs));
+  }
+
+  loadData() {
+    this.loading.set(true);
+    // Fetch all transactions by default
+    this.transactionService.getTransactions().subscribe({
+      next: (data: Transaction[]) => {
+        this.processTransactions(data);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar transações' });
+      }
+    });
+  }
+
+  onDateRangeChange() {
+    const range = this.filterDateRange();
+    if (range && range[0] && range[1]) {
+      this.loading.set(true);
+      const start = range[0].toISOString();
+      const end = range[1].toISOString();
+
+      this.transactionService.getTransactions(undefined, undefined, undefined, start, end).subscribe({
+        next: (data: Transaction[]) => {
+          this.processTransactions(data);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loading.set(false);
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar transações' });
+        }
+      });
+    } else {
+      this.loadData();
+    }
+  }
+
+  onPresetChange() {
+    const preset = this.selectedDatePreset();
+    const now = new Date();
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    switch (preset) {
+      case 'this-month':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'last-month':
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0);
+        break;
+      case 'this-week':
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        start = new Date(now.setDate(diff));
+        end = new Date(now.setDate(start.getDate() + 6));
+        break;
+      case 'this-year':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date(now.getFullYear(), 11, 31);
+        break;
+      case 'all':
+        this.filterDateRange.set(null);
+        this.loadData();
+        return;
+      case 'custom':
+        // Do nothing, wait for date picker
+        return;
+    }
+
+    if (start && end) {
+      this.filterDateRange.set([start, end]);
+      this.onDateRangeChange();
+    }
+  }
 
   // Computed Stats
   stats = computed(() => {
@@ -130,78 +229,129 @@ export class TransactionManager implements OnInit {
     };
   });
 
+  // Sorting & Grouping
+  // Sorting & Grouping
+  currentSortField = signal<string>('dateGroup');
+  currentSortOrder = signal<number>(-1);
+  currentGroupField = signal<string | null>('dateGroup');
+
   clear(table: Table) {
     table.clear();
     this.filterDateRange.set(null);
-    // Reload default data if needed, or just let table clear local filters
-    // If date range was used to FETCH data, clearing it might imply re-fetching default range?
-    // Let's assume "Clear" button in table is for TABLE filters.
-    // But if we want to reset everything including date fetch:
-    // this.loadData();
-  }
+    this.selectedDatePreset.set('all');
+    this.currentSortField.set('dateGroup');
+    this.currentSortOrder.set(-1);
+    this.currentGroupField.set('dateGroup');
+    // Clear mobile filters too
+    this.mobileCategoryFilter.set(null);
+    this.mobileAccountFilter.set(null);
 
-  onFilter(event: any) {
-    this.currentViewTransactions.set(event.filteredValue);
-  }
-
-  ngOnInit() {
     this.loadData();
   }
 
-  loadData() {
-    this.loading.set(true);
-    // Load dependencies
-    this.categoryService.getCategories().subscribe(c => this.categories.set(c));
-    this.accountService.getAccounts().subscribe(a => this.accounts.set(a));
+  applyMobileFilters() {
+    // Apply Date Range (handled by existing onDateRangeChange/onPresetChange if bound)
+    // We just need to apply local filters for Category and Account
 
-    // Load Transactions - Initially maybe current month or all?
-    // User wants "History", let's try to load a broad range or default to current month.
-    // For now, let's load current month + previous month? Or just default to current.
-    // Ideally we want to load EVERYTHING if we want "Advanced History" client side, or rely on server.
-    // Let's try loading with no filters -> implies "all" if backend supports it.
-    // If backend requires month/year, we default to now.
+    let filtered = this.transactions();
 
-    const now = new Date();
-    // this.transactionService.getTransactions(now.getMonth() + 1, now.getFullYear()).subscribe({
-    // But we modified service to take startDate/endDate.
-    // Let's try to fetch a large range or just everything.
+    // 1. Apply Category Filter
+    const cat = this.mobileCategoryFilter();
+    if (cat) {
+      filtered = filtered.filter(t => t.category?.name === cat.name);
+    }
 
-    // If I pass nothing, what does backend do?
-    // Assuming backend defaults to current month if params missing.
-    // To be safe, let's fetch current year?
-    // Let's just fetch current month for now to be safe, and let user change range.
+    // 2. Apply Account Filter
+    const acc = this.mobileAccountFilter();
+    if (acc) {
+      filtered = filtered.filter(t => t.account?.name === acc.name);
+    }
 
-    this.transactionService.getTransactions(now.getMonth() + 1, now.getFullYear()).subscribe({
-      next: (data) => {
-        this.transactions.set(data);
-        this.currentViewTransactions.set(data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false)
+    // 3. Update View
+    this.recalculateGroupingFlags(filtered);
+    this.currentViewTransactions.set(filtered);
+    this.mobileFilterVisible.set(false);
+  }
+
+  clearMobileFilters() {
+    this.mobileCategoryFilter.set(null);
+    this.mobileAccountFilter.set(null);
+    this.selectedDatePreset.set('all');
+    this.filterDateRange.set(null);
+
+    // Reset to full list
+    this.loadData();
+    this.mobileFilterVisible.set(false);
+  }
+
+  onFilter(event: any) {
+    const filtered = event.filteredValue;
+    this.recalculateGroupingFlags(filtered);
+    this.currentViewTransactions.set(filtered);
+  }
+
+  onSort(event: any) {
+    const field = event.field;
+    const order = event.order;
+
+    this.currentSortField.set(field);
+    this.currentSortOrder.set(order);
+
+    // Only group rows if sorting by date
+    if (field === 'date' || field === 'dateGroup') {
+      this.currentGroupField.set('dateGroup');
+    } else {
+      this.currentGroupField.set(null);
+    }
+
+    if (event.data) {
+      this.recalculateGroupingFlags(event.data);
+    }
+  }
+
+  private processTransactions(data: Transaction[]) {
+    // 1. Sort by Date Descending (Default)
+    const sorted = [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    this.recalculateGroupingFlags(sorted);
+    this.transactions.set(sorted);
+    this.currentViewTransactions.set(sorted);
+  }
+
+  private recalculateGroupingFlags(list: Transaction[]) {
+    let lastYear = -1;
+    let lastMonth = -1;
+
+    // We must mutate the objects in the list to update flags based on the current list order.
+    // Since objects are references, this updates the data source too, which is fine for view flags.
+    list.forEach(t => {
+      const d = new Date(t.date);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+
+      // Ensure dateGroup is set (it should be, but just in case)
+      if (!t.dateGroup) {
+        t.dateGroup = d.toISOString().split('T')[0];
+      }
+
+      const isNewYear = year !== lastYear;
+      const isNewMonth = month !== lastMonth || isNewYear;
+
+      if (isNewYear) lastYear = year;
+      if (isNewMonth) lastMonth = month;
+
+      t.isNewYear = isNewYear;
+      t.isNewMonth = isNewMonth;
+      t.yearLabel = isNewYear ? year.toString() : undefined;
+      t.monthLabel = isNewMonth ? this.getMonthName(month) : undefined;
     });
   }
 
-  // Method to reload when filters change (if we implement server-side filtering later)
-  // For now, client side filtering on the loaded set.
-  // But if user picks a date range outside current month, we need to refetch.
-
-  onDateRangeChange() {
-    const dates = this.filterDateRange();
-    if (dates && dates[0]) {
-      const start = dates[0].toISOString().split('T')[0];
-      const end = dates[1] ? dates[1].toISOString().split('T')[0] : start;
-
-      this.loading.set(true);
-      // Pass undefined for month/year to avoid conflict if backend prioritizes them
-      this.transactionService.getTransactions(undefined, undefined, undefined, start, end).subscribe({
-        next: (data) => {
-          this.transactions.set(data);
-          this.currentViewTransactions.set(data);
-          this.loading.set(false);
-        },
-        error: () => this.loading.set(false)
-      });
-    }
+  private getMonthName(monthIndex: number): string {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return months[monthIndex];
   }
 
   openNew() {
@@ -212,6 +362,48 @@ export class TransactionManager implements OnInit {
     // We use a mock event because editTransaction expects an Event to stop propagation
     const mockEvent = { stopPropagation: () => { } } as any;
     this.transactionForm.editTransaction(mockEvent, t);
+  }
+
+  toggleStatus(event: Event, t: Transaction) {
+    event.stopPropagation();
+    const newStatus = t.status === 'paid' ? 'pending' : 'paid';
+    const updatedData = { ...t, status: newStatus };
+
+    // We need to send the full object or what the backend expects.
+    // The backend update_transaction expects TransactionCreate schema.
+    // We should ensure we are sending compatible data.
+    // However, frontend models might have extra fields (like category object instead of id).
+    // Let's rely on the service to handle or send what we have.
+    // Usually we should send IDs.
+
+    const payload: any = { ...t };
+    if (t.category) payload.category_id = t.category.id;
+    if (t.account) payload.account_id = t.account.id;
+    payload.status = newStatus;
+
+    // Remove objects to avoid circular or validation issues if backend is strict
+    delete payload.category;
+    delete payload.account;
+    delete payload.dateGroup;
+    delete payload.isNewYear;
+    delete payload.isNewMonth;
+    delete payload.yearLabel;
+    delete payload.monthLabel;
+
+    this.transactionService.updateTransaction(t.id, payload).subscribe({
+      next: (updated) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Status Atualizado',
+          detail: `Transação marcada como ${newStatus === 'paid' ? 'Paga' : 'Pendente'}`
+        });
+
+        // Update local state
+        this.transactions.update(list => list.map(item => item.id === t.id ? { ...item, status: newStatus } : item));
+        this.currentViewTransactions.update(list => list.map(item => item.id === t.id ? { ...item, status: newStatus } : item));
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar status' })
+    });
   }
 
   deleteTransaction(event: Event, t: Transaction) {

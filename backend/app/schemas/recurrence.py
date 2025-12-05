@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from app.core.validators import sanitize_html
 
@@ -20,6 +20,7 @@ class RecurrenceBase(BaseModel):
     due_day: int = Field(..., ge=1, le=31, description="Dia base de vencimento")
     due_month: Optional[int] = Field(None, ge=1, le=12, description="Mês de vencimento para recorrências anuais")
     active: bool = Field(True, description="Se a recorrência está ativa")
+    skipped_dates: List[date] = Field(default_factory=list, description="Lista de datas (vencimentos) puladas/excluídas")
 
     @field_validator('name')
     @classmethod

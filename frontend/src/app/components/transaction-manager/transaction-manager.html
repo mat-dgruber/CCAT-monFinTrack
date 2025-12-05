@@ -1,211 +1,500 @@
-<div class="flex h-full bg-gray-50">
-    <!-- Main Content Column -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden">
-        <!-- Header -->
-        <div class="bg-white border-b border-gray-200 p-6 flex flex-col gap-4 shrink-0">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i class="pi pi-list text-blue-600"></i>
-                    Transações
-                </h1>
-                <div class="flex gap-2">
-                    <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true"
-                        (onClick)="exportCSV()"></p-button>
-                    <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()"></p-button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Table Area -->
-        <div class="flex-1 overflow-hidden p-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
-                <p-table #dt [value]="transactions()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
-                    [loading]="loading()" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
-                    [globalFilterFields]="['description', 'category.name', 'amount', 'account.name']"
-                    (onFilter)="onFilter($event)">
-                    <ng-template pTemplate="caption">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex items-center gap-2">
-                                <p-button label="Limpar" [outlined]="true" icon="pi pi-filter-slash"
-                                    (onClick)="clear(dt)"></p-button>
-                                <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range" [readonlyInput]="true"
-                                    placeholder="Período de Visualização" dateFormat="dd/mm/yy" [showIcon]="true"
-                                    (onSelect)="onDateRangeChange()" styleClass="w-80" inputStyleClass="w-full">
-                                </p-datepicker>
-                            </div>
-                            <p-iconfield>
-                                <p-inputicon styleClass="pi pi-search" />
-                                <input pInputText type="text"
-                                    (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-                                    placeholder="Pesquisar..." />
-                            </p-iconfield>
-                        </div>
-                    </ng-template>
-
-                    <ng-template pTemplate="header">
-                        <tr>
-                            <th pSortableColumn="date">
-                                <div class="flex items-center gap-2">
-                                    Data
-                                    <p-sortIcon field="date"></p-sortIcon>
-                                    <p-columnFilter type="date" field="date" display="menu"></p-columnFilter>
-                                </div>
-                            </th>
-                            <th pSortableColumn="category.name">
-                                <div class="flex items-center gap-2">
-                                    Categoria
-                                    <p-sortIcon field="category.name"></p-sortIcon>
-                                    <p-columnFilter type="text" field="category.name" display="menu">
-                                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                            <p-select [ngModel]="value" [options]="categories()"
-                                                (onChange)="filter($any($event).value)" placeholder="Qualquer"
-                                                optionLabel="name" optionValue="name" styleClass="w-full">
-                                                <ng-template let-option pTemplate="item">
-                                                    <div class="flex items-center gap-2">
-                                                        <i [class]="option.icon" [style.color]="option.color"></i>
-                                                        <span>{{option.name}}</span>
-                                                    </div>
-                                                </ng-template>
-                                            </p-select>
-                                        </ng-template>
-                                    </p-columnFilter>
-                                </div>
-                            </th>
-                            <th pSortableColumn="description">
-                                <div class="flex items-center gap-2">
-                                    Descrição
-                                    <p-sortIcon field="description"></p-sortIcon>
-                                    <p-columnFilter type="text" field="description" display="menu"></p-columnFilter>
-                                </div>
-                            </th>
-                            <th pSortableColumn="account.name">
-                                <div class="flex items-center gap-2">
-                                    Conta
-                                    <p-sortIcon field="account.name"></p-sortIcon>
-                                    <p-columnFilter type="text" field="account.name" display="menu">
-                                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                            <p-select [ngModel]="value" [options]="accounts()"
-                                                (onChange)="filter($any($event).value)" placeholder="Qualquer"
-                                                optionLabel="name" optionValue="name" styleClass="w-full">
-                                            </p-select>
-                                        </ng-template>
-                                    </p-columnFilter>
-                                </div>
-                            </th>
-                            <th pSortableColumn="amount" class="text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    Valor
-                                    <p-sortIcon field="amount"></p-sortIcon>
-                                    <p-columnFilter type="numeric" field="amount" display="menu"
-                                        currency="BRL"></p-columnFilter>
-                                </div>
-                            </th>
-                            <th style="width: 100px"></th>
-                        </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-t>
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td>{{t.date | date:'dd/MM/yyyy'}}</td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100"
-                                        [style.backgroundColor]="t.category?.color + '20'">
-                                        <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
-                                    </div>
-                                    <span class="text-sm font-medium">{{t.category?.name}}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="font-medium text-gray-900">{{t.description}}</div>
-                                <div class="text-xs text-gray-500">{{t.payment_method | paymentFormat}}</div>
-                            </td>
-                            <td>
-                                <span class="text-sm text-gray-600">
-                                    {{ t.account?.name || 'Conta' }}
-                                </span>
-                            </td>
-                            <td class="text-right">
-                                <span
-                                    [class]="t.type === 'expense' ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
-                                    {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="flex justify-end gap-1">
-                                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
-                                        (onClick)="editTransaction(t)"></p-button>
-                                    <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
-                                        (onClick)="deleteTransaction($event, t)"></p-button>
-                                </div>
-                            </td>
-                        </tr>
-                    </ng-template>
-                    <ng-template pTemplate="emptymessage">
-                        <tr>
-                            <td colspan="6" class="text-center p-8 text-gray-500">
-                                <i class="pi pi-inbox text-4xl mb-2 block text-gray-300"></i>
-                                Nenhuma transação encontrada.
-                            </td>
-                        </tr>
-                    </ng-template>
-                </p-table>
-            </div>
-        </div>
+<div class="flex h-full bg-gray-50 dark:bg-slate-900">
+  <!-- Main Content Column -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden">
+    <!-- Header -->
+    <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+        <i class="pi pi-list"></i>
+        Transações
+      </h1>
+      <div class="flex gap-2">
+        <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true"
+          (onClick)="exportCSV()" styleClass="hidden sm:flex"></p-button>
+        <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()">
+        </p-button>
+      </div>
     </div>
 
-    <!-- Right Sidebar Stats -->
-    <div class="w-80 bg-white border-l border-gray-200 p-6 flex flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0">
-        <h3 class="text-lg font-bold text-gray-800">Resumo</h3>
-
-        @if (stats(); as s) {
-        <div class="space-y-4">
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div class="text-sm text-gray-500 mb-1">Total de Transações</div>
-                <div class="text-2xl font-bold text-gray-900">{{s.totalTransactions}}</div>
+    <div class="flex-1 overflow-hidden p-4 md:p-6">
+      <!-- Desktop Table -->
+      <div
+        class="hidden md:flex bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex-col">
+        <p-table #dt [value]="$any(loading() ? [1,2,3,4,5,6,7,8] : transactions())" [paginator]="true" [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]" rowGroupMode="subheader"
+          [groupRowsBy]="loading() ? null : currentGroupField()" [sortField]="loading() ? null : currentSortField()"
+          [sortOrder]="-1" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
+          [globalFilterFields]="['description', 'category.name', 'amount', 'account.name']"
+          (onFilter)="onFilter($event)" (onSort)="onSort($event)">
+          <ng-template pTemplate="caption">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <p-button label="Limpar" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clear(dt)"
+                  [disabled]="loading()"></p-button>
+              </div>
+              <p-iconfield
+                class="dark:text-gray-200 dark:border-gray-700 dark:bg-slate-800 dark:shadow-none dark:placeholder-gray-200 dark:placeholder-opacity-100 ">
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" class="dark:text-gray-200 dark:border-gray-700"
+                  (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar..."
+                  [disabled]="loading()" />
+              </p-iconfield>
             </div>
+          </ng-template>
 
-            <div class="p-4 bg-red-50 rounded-xl border border-red-100">
-                <div class="text-sm text-red-600 mb-1">Total Despesas</div>
-                <div class="text-2xl font-bold text-red-700">{{s.totalExpense | currency:'BRL'}}</div>
-            </div>
+          <ng-template pTemplate="header">
+            <tr>
+              <th>
+                <div class="flex items-center gap-2">
+                  Data
+                  <p-columnFilter field="date" display="menu" [showMatchModes]="false" [showOperator]="false"
+                    [showAddButton]="false" [showApplyButton]="false" [showClearButton]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <div class="flex flex-col gap-2 min-w-[300px]">
+                        <span class="font-bold mb-2">Período</span>
+                        <p-select [ngModel]="selectedDatePreset()" [options]="datePresets"
+                          (onChange)="selectedDatePreset.set($event.value); onPresetChange()"
+                          placeholder="Selecione um período" styleClass="w-full" appendTo="body"
+                          panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                        </p-select>
 
-            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
-                <div class="text-sm text-green-600 mb-1">Total Receitas</div>
-                <div class="text-2xl font-bold text-green-700">{{s.totalIncome | currency:'BRL'}}</div>
-            </div>
-
-            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div class="text-sm text-blue-600 mb-1">Saldo do Período</div>
-                <div class="text-2xl font-bold text-blue-700">{{s.net | currency:'BRL'}}</div>
-            </div>
-
-            <div class="border-t border-gray-100 my-2"></div>
-
-            <div class="space-y-3">
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Maior Despesa</span>
-                    <span class="font-medium text-gray-900">{{s.maxExpense | currency:'BRL'}}</span>
+                        <div *ngIf="selectedDatePreset() === 'custom'" class="mt-2">
+                          <span class="font-bold mb-2 block">Intervalo
+                            Personalizado</span>
+                          <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range" [readonlyInput]="true"
+                            placeholder="Selecione as datas" dateFormat="dd/mm/yy" [showIcon]="true"
+                            (onSelect)="onDateRangeChange()" styleClass="w-full" inputStyleClass="w-full"
+                            appendTo="body">
+                          </p-datepicker>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </p-columnFilter>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Média (Valor)</span>
-                    <span class="font-medium text-gray-900">{{s.avgTx | currency:'BRL'}}</span>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  Categoria
+                  <p-columnFilter type="text" field="category.name" display="menu">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select [ngModel]="value" [options]="categories()" (onChange)="filter($any($event).value)"
+                        placeholder="Qualquer" optionLabel="name" optionValue="name" styleClass="w-full" appendTo="body"
+                        panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                        <ng-template let-option pTemplate="item">
+                          <div class="flex items-center gap-2">
+                            <i [class]="option.icon" [style.color]="option.color"></i>
+                            <span>{{option.name}}</span>
+                          </div>
+                        </ng-template>
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Primeira Data</span>
-                    <span class="font-medium text-gray-900">{{s.firstDate | date:'dd/MM/yy'}}</span>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  Descrição
+                  <p-columnFilter type="text" field="description" display="menu"></p-columnFilter>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-500">Última Data</span>
-                    <span class="font-medium text-gray-900">{{s.lastDate | date:'dd/MM/yy'}}</span>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  Conta
+                  <p-columnFilter type="text" field="account.name" display="menu">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select [ngModel]="value" [options]="accounts()" (onChange)="filter($any($event).value)"
+                        placeholder="Qualquer" optionLabel="name" optionValue="name" styleClass="w-full" appendTo="body"
+                        panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
                 </div>
-            </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  Status
+                  <p-columnFilter type="text" field="status" display="menu"></p-columnFilter>
+                </div>
+              </th>
+              <th class="text-right">
+                <div class="flex items-center justify-end gap-2">
+                  Valor
+                  <p-columnFilter type="numeric" field="amount" display="menu" currency="BRL"></p-columnFilter>
+                </div>
+              </th>
+              <th style="width: 100px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="groupheader" let-t>
+            @if (!loading()) {
+            <tr pRowGroupHeader>
+              <td colspan="7">
+                <div class="flex flex-col gap-2 py-2">
+                  <!-- Year Separator -->
+                  <div *ngIf="t.isNewYear" class="flex items-center gap-4 mt-4 mb-2">
+                    <div class="h-px bg-gray-300 dark:bg-gray-600 flex-1"></div>
+                    <span class="text-2xl font-bold text-gray-400 dark:text-gray-500">{{t.yearLabel}}</span>
+                    <div class="h-px bg-gray-300 dark:bg-gray-600 flex-1"></div>
+                  </div>
+
+                  <!-- Month Separator -->
+                  <div *ngIf="t.isNewMonth" class="flex items-center gap-2 mt-2 mb-1">
+                    <span class="text-xl font-bold text-blue-600 dark:text-blue-400 capitalize">{{t.monthLabel}}</span>
+                    <div class="h-px bg-blue-100 dark:bg-blue-900/30 flex-1"></div>
+                  </div>
+
+                  <!-- Day Header -->
+                  <div class="flex items-center gap-2 font-bold text-gray-800 dark:text-gray-200">
+                    <div class="w-1 h-6 bg-blue-500 rounded-full"></div>
+                    <span class="text-lg uppercase">{{t.date | date:'dd MMM' : '' :
+                      'pt-BR'}}</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            }
+          </ng-template>
+          <ng-template pTemplate="body" let-t>
+            @if (loading()) {
+            <tr>
+              <td><p-skeleton width="80px"></p-skeleton></td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                  <p-skeleton width="100px"></p-skeleton>
+                </div>
+              </td>
+              <td>
+                <div class="flex flex-col gap-1">
+                  <p-skeleton width="150px"></p-skeleton>
+                  <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+                </div>
+              </td>
+              <td><p-skeleton width="80px"></p-skeleton></td>
+              <td><p-skeleton width="60px" borderRadius="16px"></p-skeleton></td>
+              <td class="text-right">
+                <div class="flex justify-end"><p-skeleton width="80px"></p-skeleton></div>
+              </td>
+              <td>
+                <div class="flex justify-end gap-1">
+                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                </div>
+              </td>
+            </tr>
+            } @else {
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+              <td>{{t.date | date:'dd/MM/yyyy'}}</td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700"
+                    [style.backgroundColor]="t.category?.color + '20'">
+                    <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
+                  </div>
+                  <span class="text-sm font-medium">{{t.category?.name}}</span>
+                </div>
+              </td>
+              <td>
+                <div class="font-medium text-gray-900 dark:text-white">{{t.description}}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{t.payment_method |
+                  paymentFormat}}</div>
+              </td>
+              <td>
+                <span class="text-sm text-gray-600 dark:text-gray-300">
+                  {{ t.account?.name || 'Conta' }}
+                </span>
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
+                    [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true"></p-tag>
+                  <i *ngIf="t.is_auto_pay" class="pi pi-sync text-blue-500" pTooltip="Pagamento Automático"></i>
+                </div>
+              </td>
+              <td class="text-right">
+                <span
+                  [class]="t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold'">
+                  {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
+                </span>
+              </td>
+              <td>
+                <div class="flex justify-end gap-1">
+                  <p-button [icon]="t.status === 'paid' ? 'pi pi-clock' : 'pi pi-check'" [text]="true" [rounded]="true"
+                    [severity]="t.status === 'paid' ? 'warn' : 'success'"
+                    [pTooltip]="t.status === 'paid' ? 'Marcar como Pendente' : 'Marcar como Pago'"
+                    (onClick)="toggleStatus($event, t)"></p-button>
+                  <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
+                    (onClick)="editTransaction(t)"></p-button>
+                  <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+                    (onClick)="deleteTransaction($event, t)"></p-button>
+                </div>
+              </td>
+            </tr>
+            }
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center p-8 text-gray-500 dark:text-gray-400">
+                <i class="pi pi-inbox text-4xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+                Nenhuma transação encontrada.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Mobile Card View -->
+      <div class="md:hidden flex flex-col gap-4 h-full overflow-y-auto pb-20">
+        <!-- Mobile Search & Filter -->
+        <div class="flex gap-2 mb-2">
+          <p-iconfield
+            class="flex-1 dark:text-gray-200 dark:border-gray-700 dark:bg-slate-800 dark:shadow-none dark:placeholder-gray-200 dark:placeholder-opacity-100">
+            <p-inputicon styleClass="pi pi-search" />
+            <input pInputText type="text" class="w-full dark:text-gray-200 dark:border-gray-700"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar..." />
+          </p-iconfield>
+          <p-button icon="pi pi-filter" [outlined]="true" severity="secondary"
+            (onClick)="mobileFilterVisible.set(true)"></p-button>
         </div>
-        } @else {
-        <div class="text-center text-gray-500 py-10">
-            Sem dados para o filtro selecionado.
+
+        @if (loading()) {
+        @for (i of [1,2,3,4,5]; track i) {
+        <div
+          class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-3">
+              <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+              <div>
+                <p-skeleton width="150px" styleClass="mb-2"></p-skeleton>
+                <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+              </div>
+            </div>
+            <p-skeleton width="80px"></p-skeleton>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-gray-50 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+              <p-skeleton width="60px" height="1.5rem" borderRadius="16px"></p-skeleton>
+              <p-skeleton width="60px" height="1.5rem" borderRadius="16px"></p-skeleton>
+            </div>
+            <div class="flex gap-1">
+              <p-skeleton shape="circle" size="2rem"></p-skeleton>
+              <p-skeleton shape="circle" size="2rem"></p-skeleton>
+              <p-skeleton shape="circle" size="2rem"></p-skeleton>
+            </div>
+          </div>
         </div>
         }
-    </div>
+        } @else {
+        @for (t of currentViewTransactions(); track t.id) {
+        <div
+          class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700"
+                [style.backgroundColor]="t.category?.color + '20'">
+                <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
+              </div>
+              <div>
+                <div class="font-bold text-gray-900 dark:text-white">{{t.description}}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{t.date |
+                  date:'dd/MM/yyyy'}} •
+                  {{t.category?.name}}</div>
+              </div>
+            </div>
+            <span
+              [class]="t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold'">
+              {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
+            </span>
+          </div>
 
-    <app-transaction-form (save)="onDateRangeChange()"></app-transaction-form>
+          <div class="flex justify-between items-center pt-2 border-t border-gray-50 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+              <span
+                class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                {{ t.account?.name || 'Conta' }}
+              </span>
+              <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
+                [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true" styleClass="text-xs"></p-tag>
+            </div>
+            <div class="flex gap-1">
+              <button (click)="toggleStatus($event, t)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                label="Marcar como Pago">
+                <i [class]="t.status === 'paid' ? 'pi pi-clock text-orange-500' : 'pi pi-check text-green-500'"></i>
+              </button>
+              <button (click)="editTransaction(t)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                label="Editar">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button (click)="deleteTransaction($event, t)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                label="Excluir">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        } @empty {
+        <div class="text-center py-10 text-gray-500 dark:text-gray-400">
+          <i class="pi pi-inbox text-4xl mb-2 block text-gray-300 dark:text-gray-600"></i>
+          Nenhuma transação encontrada.
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar Stats -->
+  <div
+    class="w-80 bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0">
+    <h3 class="text-lg font-bold text-gray-800 dark:text-white">Resumo</h3>
+
+    @if (loading()) {
+    <div class="space-y-4">
+      <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      </div>
+      <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
+        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      </div>
+      <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
+        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      </div>
+      <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      </div>
+      <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+      <div class="space-y-3">
+        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+            width="80px"></p-skeleton></div>
+        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+            width="80px"></p-skeleton></div>
+        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+            width="80px"></p-skeleton></div>
+        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+            width="80px"></p-skeleton></div>
+      </div>
+    </div>
+    } @else if (stats(); as s) {
+    <div class="space-y-4">
+      <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total de Transações</div>
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{s.totalTransactions}}</div>
+      </div>
+
+      <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
+        <div class="text-sm text-red-600 dark:text-red-400 mb-1">Total Despesas</div>
+        <div class="text-2xl font-bold text-red-700 dark:text-red-400">{{s.totalExpense |
+          currency:'BRL'}}</div>
+      </div>
+
+      <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
+        <div class="text-sm text-green-600 dark:text-green-400 mb-1">Total Receitas</div>
+        <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{s.totalIncome |
+          currency:'BRL'}}
+        </div>
+      </div>
+
+      <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+        <div class="text-sm text-blue-600 dark:text-blue-400 mb-1">Saldo do Período</div>
+        <div class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{s.net | currency:'BRL'}}
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+
+      <div class="space-y-3">
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Maior Despesa</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{s.maxExpense |
+            currency:'BRL'}}</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Média (Valor)</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{s.avgTx | currency:'BRL'}}</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Primeira Data</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{s.firstDate |
+            date:'dd/MM/yy'}}</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Última Data</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{s.lastDate |
+            date:'dd/MM/yy'}}</span>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <div class="text-center text-gray-500 dark:text-gray-400 py-10">
+      Sem dados para o filtro selecionado.
+    </div>
+    }
+  </div>
+
+  <app-transaction-form (save)="onDateRangeChange()"></app-transaction-form>
+
+  <!-- Mobile Filter Drawer -->
+  <p-drawer [(visible)]="mobileFilterVisible" [modal]="true" position="bottom" styleClass="!h-[80vh]"
+    header="Filtrar Transações">
+    <ng-template pTemplate="content">
+      <div class="flex flex-col gap-6 h-full">
+        <!-- Date Filter -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Período</span>
+          <p-select [ngModel]="selectedDatePreset()" [options]="datePresets"
+            (onChange)="selectedDatePreset.set($event.value); onPresetChange()" placeholder="Selecione um período"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+
+          <div *ngIf="selectedDatePreset() === 'custom'" class="mt-2">
+            <span class="font-bold mb-2 block text-sm text-gray-600 dark:text-gray-400">Intervalo Personalizado</span>
+            <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range" [readonlyInput]="true"
+              placeholder="Selecione as datas" dateFormat="dd/mm/yy" [showIcon]="true" (onSelect)="onDateRangeChange()"
+              styleClass="w-full" inputStyleClass="w-full" appendTo="body">
+            </p-datepicker>
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Categoria</span>
+          <p-select [ngModel]="mobileCategoryFilter()" [options]="categories()"
+            (onChange)="mobileCategoryFilter.set($event.value)" placeholder="Qualquer" optionLabel="name"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+            <ng-template let-option pTemplate="item">
+              <div class="flex items-center gap-2">
+                <i [class]="option.icon" [style.color]="option.color"></i>
+                <span>{{option.name}}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Account Filter -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Conta</span>
+          <p-select [ngModel]="mobileAccountFilter()" [options]="accounts()"
+            (onChange)="mobileAccountFilter.set($event.value)" placeholder="Qualquer" optionLabel="name"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+          <p-button label="Limpar Filters" [outlined]="true" severity="secondary" styleClass="w-full"
+            (onClick)="clearMobileFilters()"></p-button>
+          <p-button label="Aplicar Filters" styleClass="w-full" (onClick)="applyMobileFilters()"></p-button>
+        </div>
+      </div>
+    </ng-template>
+  </p-drawer>
 </div>

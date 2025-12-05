@@ -3,26 +3,27 @@ from typing import List, Optional
 from datetime import datetime
 
 from app.core.limiter import limiter
+from app.core.security import get_current_user
+from app.api import user_preference
 
+from app.services import (
+    account as account_service,
+    category as category_service,
+    transaction as transaction_service,
+    budget as budget_service,
+    dashboard as dashboard_service,
+    recurrence as recurrence_service
+)
+
+from app.schemas.account import Account, AccountCreate
 from app.schemas.category import Category, CategoryCreate, CategoryType
 from app.schemas.transaction import Transaction, TransactionCreate
-from app.schemas.account import Account, AccountCreate
 from app.schemas.budget import Budget, BudgetCreate
 from app.schemas.dashboard import DashboardSummary
 from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
 
-from app.services import category as category_service
-from app.services import transaction as transaction_service
-from app.services import account as account_service
-from app.services import budget as budget_service
-from app.services import dashboard as dashboard_service
-from app.services import recurrence as recurrence_service
-
-from app.core.security import get_current_user
-
 router = APIRouter()
 
-# --- CONTAS (ACCOUNTS) ---
 @router.post("/accounts", response_model=Account)
 @limiter.limit("10 per minute")
 def create_new_account(request: Request, account: AccountCreate, current_user: dict = Depends(get_current_user)):
@@ -160,3 +161,55 @@ def update_recurrence(recurrence_id: str, recurrence: RecurrenceUpdate, scope: s
 @router.patch("/recurrences/{recurrence_id}/cancel", response_model=Recurrence)
 def cancel_recurrence(recurrence_id: str, current_user: dict = Depends(get_current_user)):
     return recurrence_service.cancel_recurrence(recurrence_id, current_user['uid'])
+
+@router.post("/recurrences/{recurrence_id}/skip", response_model=Recurrence)
+def skip_recurrence(
+    recurrence_id: str, 
+    date_data: dict, # Expecting {"date": "YYYY-MM-DD"}
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Pula uma ocorrência específica de uma recorrência.
+    Adiciona a data à lista de skipped_dates.
+    """
+    try:
+        skip_date_str = date_data.get("date")
+        if not skip_date_str:
+            raise HTTPException(status_code=400, detail="Date is required")
+            
+        # Parse date
+        if isinstance(skip_date_str, str):
+            # Handle ISO format with potential time component
+            if 'T' in skip_date_str:
+                 skip_date = datetime.fromisoformat(skip_date_str.replace('Z', '+00:00')).date()
+            else:
+                 skip_date = datetime.fromisoformat(skip_date_str).date()
+        else:
+            skip_date = skip_date_str
+
+        recurrence = recurrence_service.get_recurrence(recurrence_id, current_user['uid'])
+        if not recurrence:
+            raise HTTPException(status_code=404, detail="Recurrence not found")
+            
+        # Add to skipped_dates if not present
+        current_skipped = recurrence.skipped_dates or []
+        if skip_date not in current_skipped:
+            current_skipped.append(skip_date)
+            
+            # Update in DB
+            recurrence_service.update_recurrence(
+                recurrence_id, 
+                RecurrenceUpdate(skipped_dates=current_skipped),
+                current_user['uid']
+            )
+            
+        return recurrence_service.get_recurrence(recurrence_id, current_user['uid'])
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from app.api import mfa_routes
+router.include_router(mfa_routes.router, prefix="/mfa", tags=["MFA"])
+router.include_router(user_preference.router, prefix="/preferences", tags=["User Preferences"])

@@ -14,73 +14,91 @@ import html2canvas from 'html2canvas';
   imports: [CommonModule, ButtonModule, ChartWidgetComponent, FormsModule, SelectModule, ToolbarModule],
   template: `
     <div class="p-6" #dashboardGrid>
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Gráficos Avançados</h1>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Gráficos Avançados</h1>
+            <p class="text-gray-500 dark:text-gray-400">
+                Visualize seus dados financeiros com gráficos interativos e detalhados.
+            </p>
+        </div>
         <div class="flex gap-2">
-            <p-button
-                label="Adicionar Gráfico"
-                icon="pi pi-plus"
-                (onClick)="addChart()">
+            <p-button (onClick)="addChart()">
+                <ng-template pTemplate="content">
+                    <i class="pi pi-plus mr-2"></i>
+                    <span class="hidden md:inline">Adicionar Gráfico</span>
+                    <span class="md:hidden">Novo</span>
+                </ng-template>
             </p-button>
         </div>
       </div>
 
       <!-- Global Toolbar -->
-      <p-toolbar styleClass="mb-6 rounded-xl border-none shadow-sm bg-white">
-          <div class="p-toolbar-group-start flex gap-4 items-center flex-wrap">
-              <span class="font-semibold text-gray-600">Filtros Globais:</span>
+      <div class="mb-6 rounded-xl shadow-sm bg-white dark:bg-slate-800 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-gray-100 dark:border-gray-700">
+          <!-- Left Side (Filters) -->
+          <div class="flex flex-col md:flex-row gap-4 md:items-center w-full md:w-auto">
+              <span class="font-semibold text-gray-600 dark:text-gray-300">Filtros Globais:</span>
               
-              <p-select 
-                  [options]="datePresets" 
-                  [(ngModel)]="globalDatePreset" 
-                  optionLabel="label" 
-                  optionValue="value" 
-                  placeholder="Data"
-                  size="small"
-                  styleClass="w-40">
-              </p-select>
+              <div class="grid grid-cols-2 md:flex gap-2 w-full md:w-auto">
+                  <p-select 
+                      [options]="datePresets" 
+                      [(ngModel)]="globalDatePreset" 
+                      optionLabel="label" 
+                      optionValue="value" 
+                      placeholder="Data"
+                      size="small"
+                      styleClass="w-full md:w-40"
+                      appendTo="body"
+                      panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                  </p-select>
 
-              <p-select 
-                  [options]="chartTypes" 
-                  [(ngModel)]="globalType" 
-                  optionLabel="label" 
-                  optionValue="value" 
-                  placeholder="Tipo"
-                  size="small"
-                  styleClass="w-40">
-              </p-select>
+                  <p-select 
+                      [options]="chartTypes" 
+                      [(ngModel)]="globalType" 
+                      optionLabel="label" 
+                      optionValue="value" 
+                      placeholder="Tipo"
+                      size="small"
+                      styleClass="w-full md:w-40"
+                      appendTo="body"
+                      panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                  </p-select>
+              </div>
 
               <p-button 
                   label="Aplicar a Todos" 
                   icon="pi pi-check" 
                   size="small" 
                   (onClick)="applyGlobalFilters()"
-                  [outlined]="true">
+                  [outlined]="true"
+                  styleClass="w-full md:w-auto">
               </p-button>
           </div>
 
-           <div class="p-toolbar-group-end flex gap-2">
+           <!-- Right Side (Exports) -->
+           <div class="grid grid-cols-2 md:flex gap-2 w-full md:w-auto">
               <p-button 
                   label="Exportar PNG" 
                   icon="pi pi-image" 
                   size="small" 
                   severity="secondary"
-                  (onClick)="exportAllPNG()">
+                  (onClick)="exportAllPNG()"
+                  styleClass="w-full md:w-auto">
               </p-button>
                <p-button 
                   label="Exportar CSV" 
                   icon="pi pi-file-excel" 
                   size="small" 
                   severity="secondary"
-                  (onClick)="exportAllCSV()">
+                  (onClick)="exportAllCSV()"
+                  styleClass="w-full md:w-auto">
               </p-button>
           </div>
-      </p-toolbar>
+      </div>
 
       <!-- Grid Layout -->
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 auto-rows-min">
-        <div *ngFor="let widget of widgets(); let i = index" 
-             class="transition-all duration-300 ease-in-out"
+        @for (widget of widgets(); track widget.id; let i = $index) {
+        <div class="transition-all duration-300 ease-in-out"
              [ngClass]="{
                 'md:col-span-1': !widget.colSpan || widget.colSpan === 1,
                 'md:col-span-2': widget.colSpan === 2,
@@ -96,8 +114,8 @@ import html2canvas from 'html2canvas';
            
            <div class="h-full relative group">
                <!-- Drag Handle Overlay (Visible on Hover) -->
-               <div class="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-4 bg-gray-200 rounded-b-md cursor-move z-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" title="Arrastar para reordenar">
-                   <i class="pi pi-bars text-[10px] text-gray-500"></i>
+               <div class="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded-b-md cursor-move z-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" title="Arrastar para reordenar">
+                   <i class="pi pi-bars text-[10px] text-gray-500 dark:text-gray-400"></i>
                </div>
 
                <app-chart-widget
@@ -107,12 +125,15 @@ import html2canvas from 'html2canvas';
                </app-chart-widget>
            </div>
         </div>
+        }
       </div>
 
-      <div *ngIf="widgets().length === 0" class="text-center py-20 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <p class="text-gray-500 mb-4">Nenhum gráfico configurado.</p>
+      @if (widgets().length === 0) {
+      <div class="text-center py-20 bg-gray-50 dark:bg-slate-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700">
+          <p class="text-gray-500 dark:text-gray-400 mb-4">Nenhum gráfico configurado.</p>
           <p-button label="Criar seu primeiro gráfico" (onClick)="addChart()" severity="secondary"></p-button>
       </div>
+      }
     </div>
   `
 })
@@ -235,7 +256,7 @@ export class AdvancedGraphicsComponent {
   // --- Export Logic ---
   exportAllPNG() {
     if (this.dashboardGrid) {
-      html2canvas(this.dashboardGrid.nativeElement).then(canvas => {
+      html2canvas(this.dashboardGrid.nativeElement).then((canvas: HTMLCanvasElement) => {
         const link = document.createElement('a');
         link.download = `dashboard-export-${new Date().toISOString().slice(0, 10)}.png`;
         link.href = canvas.toDataURL();

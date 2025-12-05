@@ -8,10 +8,10 @@ import { FilterService } from '../../services/filter.service';
   standalone: true,
   imports: [CommonModule, ButtonModule],
   template: `
-    <div class="flex items-center gap-4 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200">
+    <div class="flex items-center gap-4 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm border border-gray-200 dark:border-gray-700">
         <p-button icon="pi pi-chevron-left" [text]="true" [rounded]="true" (onClick)="filterService.prevMonth()"></p-button>
         
-        <span class="font-bold text-gray-700 capitalize min-w-[150px] text-center select-none">
+        <span class="font-bold text-gray-700 dark:text-white capitalize min-w-[150px] text-center select-none">
             {{ filterService.displayDate }}
         </span>
         

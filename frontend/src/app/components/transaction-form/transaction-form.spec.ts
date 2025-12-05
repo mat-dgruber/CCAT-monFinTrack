@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { TransactionForm } from './transaction-form';
 
@@ -8,9 +10,10 @@ describe('TransactionForm', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TransactionForm]
+      imports: [TransactionForm, HttpClientTestingModule],
+      providers: [ConfirmationService, MessageService]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(TransactionForm);
     component = fixture.componentInstance;

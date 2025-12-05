@@ -9,17 +9,18 @@ import { environment } from '../../../environments/environment';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-email-verification',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, ProgressSpinnerModule, RouterModule],
+  imports: [CommonModule, CardModule, ButtonModule, ProgressSpinnerModule, RouterModule, SkeletonModule],
   templateUrl: './email-verification.html'
 })
 export class EmailVerification implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  
+
   // Status da validação
   status = signal<'loading' | 'success' | 'error'>('loading');
   errorMessage = signal('');

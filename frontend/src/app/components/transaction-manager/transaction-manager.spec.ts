@@ -6,17 +6,21 @@ import { CategoryService } from '../../services/category.service';
 import { AccountService } from '../../services/account.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { Transaction } from '../../models/transaction.model';
-import { Category } from '../../models/category.model';
-import { Account } from '../../models/account.model';
+import { Table } from 'primeng/table';
+
+// Register locale data
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
+registerLocaleData(localePt);
 
 describe('TransactionManager', () => {
   let component: TransactionManager;
   let fixture: ComponentFixture<TransactionManager>;
   let transactionService: jasmine.SpyObj<TransactionService>;
 
-  const mockTransactions: Transaction[] = [
+  const mockTransactions: any[] = [
     {
       id: '1',
       description: 'Compra Supermercado',
@@ -25,9 +29,7 @@ describe('TransactionManager', () => {
       type: 'expense',
       payment_method: 'credit_card',
       category: { id: 'c1', name: 'Alimentação', icon: 'pi pi-apple', color: 'red', type: 'expense', is_custom: false },
-      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' },
-      category_id: 'c1',
-      account_id: 'a1'
+      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' }
     },
     {
       id: '2',
@@ -37,26 +39,12 @@ describe('TransactionManager', () => {
       type: 'income',
       payment_method: 'bank_transfer',
       category: { id: 'c2', name: 'Salário', icon: 'pi pi-money-bill', color: 'green', type: 'income', is_custom: false },
-      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' },
-      category_id: 'c2',
-      account_id: 'a1'
-    },
-    {
-      id: '3',
-      description: 'Uber',
-      amount: 25.00,
-      date: '2023-10-28',
-      type: 'expense',
-      payment_method: 'credit_card',
-      category: { id: 'c3', name: 'Transporte', icon: 'pi pi-car', color: 'blue', type: 'expense', is_custom: false },
-      account: { id: 'a2', name: 'Cartão Nubank', type: 'credit_card', balance: 0, color: 'purple' },
-      category_id: 'c3',
-      account_id: 'a2'
+      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' }
     }
   ];
 
   beforeEach(async () => {
-    const transactionServiceSpy = jasmine.createSpyObj('TransactionService', ['getTransactions', 'deleteTransaction']);
+    const transactionServiceSpy = jasmine.createSpyObj('TransactionService', ['getTransactions', 'deleteTransaction', 'updateTransaction']);
     const categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getCategories']);
     const accountServiceSpy = jasmine.createSpyObj('AccountService', ['getAccounts']);
 
@@ -74,7 +62,7 @@ describe('TransactionManager', () => {
         MessageService
       ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(TransactionManager);
     component = fixture.componentInstance;
@@ -88,34 +76,65 @@ describe('TransactionManager', () => {
 
   it('should load data on init', () => {
     expect(transactionService.getTransactions).toHaveBeenCalled();
-    expect(component.transactions().length).toBe(3);
+    expect(component.transactions().length).toBe(2);
   });
 
-  it('should filter by description', () => {
-    component.filterDescription.set('supermercado');
-    const filtered = component.filteredTransactions();
-    expect(filtered.length).toBe(1);
-    expect(filtered[0].id).toBe('1');
-  });
+  it('should handle date range change', () => {
+    const start = new Date('2023-01-01');
+    const end = new Date('2023-01-31');
+    component.filterDateRange.set([start, end]);
 
-  it('should filter by payment method', () => {
-    component.filterPaymentMethod.set('credit_card');
-    const filtered = component.filteredTransactions();
-    expect(filtered.length).toBe(2); // Items 1 and 3
-    expect(filtered.find(t => t.id === '1')).toBeTruthy();
-    expect(filtered.find(t => t.id === '3')).toBeTruthy();
+    component.onDateRangeChange();
+
+    expect(transactionService.getTransactions).toHaveBeenCalledWith(undefined, undefined, undefined, start.toISOString(), end.toISOString());
   });
 
   it('should clear filters', () => {
-    // Set some filters
-    component.filterDescription.set('Something');
-    component.filterPaymentMethod.set('pix');
-    
-    // Clear
-    component.clearFilters();
+    // Mock Table
+    const tableSpy = jasmine.createSpyObj('Table', ['clear']);
+    component.filterDateRange.set([new Date(), new Date()]);
 
-    expect(component.filterDescription()).toBe('');
-    expect(component.filterPaymentMethod()).toBeNull();
-    expect(transactionService.getTransactions).toHaveBeenCalledTimes(2); // Once on init, once on clear
+    component.clear(tableSpy);
+
+    expect(tableSpy.clear).toHaveBeenCalled();
+    expect(component.filterDateRange()).toBeNull();
+    expect(transactionService.getTransactions).toHaveBeenCalled();
+  });
+
+  it('should handle error on load', () => {
+    transactionService.getTransactions.and.returnValue(throwError(() => new Error('Error')));
+    component.loadData();
+    expect(component.loading()).toBeFalse();
+    // Verify message service call if possible, but it requires spying on MessageService in beforeEach
+    // We didn't spy on it, but provided it. To test it we would need to spy.
+  });
+
+  it('should delete transaction', () => {
+    const t = mockTransactions[0];
+
+    // Mock ConfirmationService
+    // Since we provided ConfirmationService, we can modify how it works? 
+    // Actually we injected the real service? No, we provided it in providers array, so it is the real one or a mock if we provided one.
+    // In TestBed specific providers usually override.
+    // Ideally we spy on confirmationService.confirm
+
+    // Let's rely on deleteTransaction call.
+    // The component calls confirmationService.confirm. The accept callback calls service.delete.
+    // Testing this requires mocking the confirm method to immediately call accept.
+
+    // For now, let's skip complex interaction test or assume it's covered by manual testing.
+    // Or we can mock the private service by casting.
+
+    const confirmationService = TestBed.inject(ConfirmationService);
+    spyOn(confirmationService, 'confirm').and.callFake((config: any) => {
+      config.accept();
+      return this as any; // return type fix
+    });
+
+    transactionService.deleteTransaction.and.returnValue(of(void 0));
+
+    component.deleteTransaction({ target: {} } as any, t);
+
+    expect(transactionService.deleteTransaction).toHaveBeenCalledWith(t.id);
   });
 });

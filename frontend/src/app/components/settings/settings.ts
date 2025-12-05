@@ -1,9 +1,12 @@
-import { Component, inject, signal } from '@angular/core'; // Force rebuild
+import { Component, inject, signal, computed } from '@angular/core'; // Force rebuild
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { UserPreferenceService } from '../../services/user-preference.service';
+import { MFAService } from '../../services/mfa.service';
+import { UserPreference } from '../../models/user-preference.model';
 
 // PrimeNG Imports
 import { CardModule } from 'primeng/card';
@@ -17,6 +20,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { AvatarModule } from 'primeng/avatar';
 import { FileUploadModule } from 'primeng/fileupload';
+import { DialogModule } from 'primeng/dialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
@@ -37,7 +41,9 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     DatePickerModule,
     TagModule,
     AvatarModule,
+    AvatarModule,
     FileUploadModule,
+    DialogModule,
     RouterModule
   ],
   providers: [MessageService, ConfirmationService]
@@ -49,9 +55,27 @@ export class Settings {
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
 
+  preferenceService = inject(UserPreferenceService);
+  mfaService = inject(MFAService);
+
+  preferences: UserPreference | null = null;
+
+  // Computed signal for profile image
+  profileImageUrl = computed(() => {
+    return this.preferenceService.getProfileImageUrl(this.preferences?.profile_image_url);
+  });
+
+
   displayName = signal('');
   email = signal('');
-  
+
+  // MFA
+  mfaEnabled = signal(false);
+  showMfaSetupDialog = signal(false);
+  mfaSecret = signal('');
+  qrCodeUrl = signal('');
+  mfaToken = signal('');
+
   // Profile
   birthday = signal<Date | null>(null);
   selectedTimezone = signal<string>('Europe/Paris');
@@ -63,10 +87,12 @@ export class Settings {
   ];
 
   // Appearance
-  selectedTheme = signal<'light' | 'dark'>('light');
+  selectedTheme = signal<'light' | 'dark' | 'system' | 'capycro'>('system');
   themeOptions = [
-    { label: 'Light', value: 'light' },
-    { label: 'Dark', value: 'dark' }
+    { label: 'Claro', value: 'light' },
+    { label: 'Escuro', value: 'dark' },
+    { label: 'CapyCro', value: 'capycro' },
+    { label: 'Sistema', value: 'system' }
   ];
 
   constructor() {
@@ -76,43 +102,135 @@ export class Settings {
       this.displayName.set(user.displayName || '');
       this.email.set(user.email || '');
     }
-    
+
     // Sync local state with service
     this.selectedTheme.set(this.themeService.darkMode() ? 'dark' : 'light');
+
+    this.preferenceService.preferences$.subscribe(prefs => {
+      this.preferences = prefs;
+      if (prefs) {
+        this.selectedTheme.set(prefs.theme);
+        if (prefs.birthday) this.birthday.set(new Date(prefs.birthday));
+        if (prefs.timezone) this.selectedTimezone.set(prefs.timezone);
+      }
+    });
+
+    this.checkMfaStatus();
+  }
+
+  checkMfaStatus() {
+    this.mfaService.checkMFAStatus().subscribe({
+      next: (res) => this.mfaEnabled.set(res.enabled),
+      error: () => this.mfaEnabled.set(false)
+    });
+  }
+
+  startMfaSetup() {
+    this.mfaService.setupMFA().subscribe({
+      next: (res) => {
+        this.mfaSecret.set(res.secret);
+        this.qrCodeUrl.set(res.qr_code);
+        this.showMfaSetupDialog.set(true);
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao iniciar setup MFA' });
+      }
+    });
+  }
+
+  confirmEnableMFA() {
+    if (!this.mfaToken()) return;
+
+    this.mfaService.enableMFA(this.mfaSecret(), this.mfaToken()).subscribe({
+      next: () => {
+        this.mfaEnabled.set(true);
+        this.showMfaSetupDialog.set(false);
+        this.mfaToken.set('');
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'MFA ativado com sucesso!' });
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Código inválido' });
+      }
+    });
+  }
+
+  disableMFA() {
+    this.confirmationService.confirm({
+      message: 'Tem certeza que deseja desativar o MFA? Sua conta ficará menos segura.',
+      header: 'Desativar MFA',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.mfaService.disableMFA().subscribe({
+          next: () => {
+            this.mfaEnabled.set(false);
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'MFA desativado' });
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao desativar MFA' });
+          }
+        });
+      }
+    });
   }
 
   async updateProfile() {
-    // In a real app, we would call auth.updateProfile here
-    // For now, we'll just show a success message as the AuthService doesn't expose a direct updateProfile method yet
-    // apart from register. 
-    // Wait, AuthService doesn't have updateProfile method exposed. 
-    // I should probably add it or just use the firebase function directly if I imported it, 
-    // but better to keep it in service.
-    // For this iteration, I'll skip implementing the actual update call in AuthService if it's not there,
-    // or I can quickly add it. 
-    // Let's check AuthService again. It imports updateProfile from firebase/auth but only uses it in register.
-    
-    // I will implement a simple placeholder for now or add it to AuthService if needed.
-    // Actually, I can just use the one from firebase/auth if I import it, but cleaner to go through service.
-    // Let's assume for now I'll just show a toast saying "Profile Updated" 
-    // since the requirement was "Gerenciar perfil".
-    
-    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Profile updated successfully' });
+    try {
+      // 1. Update Firebase Profile (Display Name)
+      if (this.displayName() !== this.auth.currentUser()?.displayName) {
+        await this.auth.updateProfileData(this.displayName());
+      }
+
+      // 2. Update Preferences (Birthday, Timezone)
+      if (this.preferences) {
+        const updates: any = {};
+        if (this.birthday()) updates.birthday = this.birthday()?.toISOString();
+        if (this.selectedTimezone()) updates.timezone = this.selectedTimezone();
+
+        if (Object.keys(updates).length > 0) {
+          this.preferenceService.updatePreferences(updates).subscribe();
+        }
+      }
+
+      this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso' });
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar perfil' });
+    }
+  }
+
+  async verifyEmail() {
+    try {
+      await this.auth.sendVerificationEmail();
+      this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Email de verificação enviado' });
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar email de verificação' });
+    }
   }
 
   async sendPasswordReset() {
     if (this.email()) {
       try {
         await this.auth.resetPassword(this.email());
-        this.messageService.add({ severity: 'success', summary: 'Sent', detail: 'Password reset email sent' });
+        this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Email de redefinição de senha enviado' });
       } catch (error) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to send reset email' });
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar email de redefinição' });
       }
     }
   }
 
   onThemeChange() {
-    if (this.selectedTheme() === 'dark') {
+    const newTheme = this.selectedTheme();
+
+    // Update Service
+    if (this.preferences) {
+      this.preferences.theme = newTheme;
+      this.preferenceService.updatePreferences({ theme: newTheme }).subscribe();
+    }
+
+    // Update Local Theme Service
+    // Check effective theme
+    const isDark = newTheme === 'dark' || (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    if (isDark) {
       if (!this.themeService.darkMode()) {
         this.themeService.toggleTheme();
       }
@@ -120,6 +238,33 @@ export class Settings {
       if (this.themeService.darkMode()) {
         this.themeService.toggleTheme();
       }
+    }
+  }
+
+  onLanguageChange(event: any) {
+    if (this.preferences) {
+      this.preferences.language = event.value;
+      this.preferenceService.updatePreferences({ language: event.value }).subscribe();
+    }
+  }
+
+  onNotificationChange(event: any) {
+    if (this.preferences) {
+      this.preferenceService.updatePreferences({ notifications_enabled: this.preferences.notifications_enabled }).subscribe();
+    }
+  }
+
+  onUpload(event: any) {
+    const file = event.files[0];
+    if (file) {
+      this.preferenceService.uploadAvatar(file).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Avatar atualizado!' });
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar avatar.' });
+        }
+      });
     }
   }
 
@@ -131,8 +276,8 @@ export class Settings {
 
   confirmDelete() {
     this.confirmationService.confirm({
-      message: 'Are you sure you want to delete your account? This action cannot be undone.',
-      header: 'Delete Account',
+      message: 'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.',
+      header: 'Excluir Conta',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger p-button-text',
       rejectButtonStyleClass: 'p-button-text p-button-text',
@@ -141,11 +286,35 @@ export class Settings {
       accept: async () => {
         try {
           await this.auth.deleteAccount();
-          this.messageService.add({ severity: 'success', summary: 'Confirmed', detail: 'Account deleted' });
+          this.messageService.add({ severity: 'success', summary: 'Confirmado', detail: 'Conta excluída' });
           this.router.navigate(['/login']);
         } catch (error) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete account' });
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao excluir conta' });
         }
+      }
+    });
+  }
+
+  onResetAccount() {
+    this.confirmationService.confirm({
+      message: 'Tem certeza que deseja LIMPAR sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas, mas manterá sua conta ativa. Esta ação não pode ser desfeita.',
+      header: 'Limpar Dados da Conta',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-warning p-button-text',
+      rejectButtonStyleClass: 'p-button-text p-button-text',
+      acceptIcon: 'none',
+      rejectIcon: 'none',
+      accept: () => {
+        this.preferenceService.resetAccount().subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Dados da conta limpos com sucesso' });
+            // Optional: Reload or redirect
+            window.location.reload();
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao limpar dados da conta' });
+          }
+        });
       }
     });
   }
