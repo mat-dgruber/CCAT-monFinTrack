@@ -1,6 +1,8 @@
 services:
   backend:
+    container_name: monfintrack-backend
     build: ./backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
@@ -11,7 +13,9 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=app/certs/serviceAccountKey.json
 
   frontend:
+    container_name: monfintrack-frontend
     build: ./frontend
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:

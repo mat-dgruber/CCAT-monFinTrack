@@ -7,7 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 
 // Componentes
-import { Login } from '../login/login';
+// Componentes
+
 
 import { AuthService } from '../../services/auth.service';
 
@@ -21,7 +22,6 @@ import { UserPreferenceService } from '../../services/user-preference.service';
     ToastModule,
     ConfirmDialogModule,
     RouterModule,
-    Login,
     ButtonModule,
     DrawerModule
   ],

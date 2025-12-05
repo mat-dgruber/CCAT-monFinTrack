@@ -1,8 +1,9 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router'; // Import Router
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 
-// Animações  
+// Animações
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 // PrimeNG
@@ -48,6 +49,7 @@ export class Login {
   private authService = inject(AuthService);
   private messageService = inject(MessageService);
   private mfaService = inject(MFAService);
+  private router = inject(Router);
 
   isRegisterMode = signal(false);
   isLoading = signal(false);
@@ -165,7 +167,8 @@ export class Login {
           // Ignore error (MFA not enabled or check failed)
         }
 
-        // Se passar daqui, o AuthStateChanged no app.ts vai redirecionar
+        // Login bem sucedido sem MFA
+        this.router.navigate(['/']);
       }
     } catch (error: any) {
       console.error(error);
@@ -216,7 +219,7 @@ export class Login {
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Login realizado com sucesso!' });
         this.showMfaDialog.set(false);
-        // AuthStateChanged will handle redirect
+        this.router.navigate(['/']);
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Código MFA inválido.' });

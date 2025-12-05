@@ -31,11 +31,13 @@
       class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all relative group">
       <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
         <button (click)="editBudget($event, b)"
-          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm">
+          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+          label="Editar">
           <i class="pi pi-pencil text-sm"></i>
         </button>
         <button (click)="deleteBudget($event, b.id!)"
-          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm">
+          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+          label="Excluir">
           <i class="pi pi-trash text-sm"></i>
         </button>
       </div>

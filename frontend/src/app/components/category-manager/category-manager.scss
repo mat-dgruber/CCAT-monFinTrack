@@ -1,38 +1,38 @@
 :host ::ng-deep {
     .p-datatable {
         .p-datatable-header {
-            background: #ffffff;
-            color: #1f2937;
-            border-color: #e5e7eb;
+            background: var(--surface-card);
+            color: var(--text-color);
+            border-color: var(--surface-border);
         }
 
-        .p-datatable-thead > tr > th {
-            background: #ffffff;
-            color: #1f2937;
-            border-color: #e5e7eb;
+        .p-datatable-thead>tr>th {
+            background: var(--surface-card);
+            color: var(--text-color);
+            border-color: var(--surface-border);
         }
 
-        .p-datatable-tbody > tr {
-            background: #ffffff;
-            color: #1f2937;
-            
-            > td {
-                border-color: #e5e7eb;
+        .p-datatable-tbody>tr {
+            background: var(--surface-card);
+            color: var(--text-color);
+
+            >td {
+                border-color: var(--surface-border);
             }
         }
 
         .p-rowgroup-header {
-            background: #f9fafb !important; // gray-50
-            color: #1f2937 !important;
-            
+            background: var(--surface-ground) !important;
+            color: var(--text-color) !important;
+
             td {
-                background: #f9fafb !important;
-                border-color: #e5e7eb;
+                background: var(--surface-ground) !important;
+                border-color: var(--surface-border);
             }
         }
 
-        .p-datatable-tbody > tr:not(.p-rowgroup-header):hover {
-            background: #f9fafb !important;
+        .p-datatable-tbody>tr:not(.p-rowgroup-header):hover {
+            background: var(--surface-hover) !important;
         }
     }
 }

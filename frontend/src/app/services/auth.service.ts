@@ -1,26 +1,15 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  User,
-  onAuthStateChanged,
-  updateProfile,
-  sendEmailVerification,
-  sendPasswordResetEmail
-} from 'firebase/auth';
+import { User, UserCredential } from 'firebase/auth';
 import { from, switchMap, ReplaySubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { FirebaseWrapperService } from './firebase-wrapper.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private app = initializeApp(environment.firebaseConfig);
-  private auth = getAuth(this.app);
+  private firebaseWrapper = inject(FirebaseWrapperService);
   private router = inject(Router);
 
   currentUser = signal<User | null>(null);
@@ -30,7 +19,7 @@ export class AuthService {
   authState$ = this.authStateSubject.asObservable();
 
   constructor() {
-    onAuthStateChanged(this.auth, (user) => {
+    this.firebaseWrapper.onAuthStateChanged((user) => {
       // SÓ aceita o usuário se o email estiver verificado!
       if (user && user.emailVerified) {
         this.currentUser.set(user);
@@ -63,10 +52,10 @@ export class AuthService {
 
   // 1. Cria a conta
   async register(email: string, pass: string, name: string) {
-    const credential = await createUserWithEmailAndPassword(this.auth, email, pass);
+    const credential = await this.firebaseWrapper.createUserWithEmailAndPassword(email, pass);
 
     if (credential.user) {
-      await updateProfile(credential.user, { displayName: name });
+      await this.firebaseWrapper.updateProfile(credential.user, { displayName: name });
 
       // CONFIGURAÇÃO DO LINK MÁGICO
       const actionCodeSettings = {
@@ -76,15 +65,15 @@ export class AuthService {
       };
 
       // Passamos as configurações aqui
-      await sendEmailVerification(credential.user, actionCodeSettings);
+      await this.firebaseWrapper.sendEmailVerification(credential.user, actionCodeSettings);
 
-      await signOut(this.auth);
+      await this.firebaseWrapper.signOut();
     }
     return credential;
   }
 
   async login(email: string, pass: string) {
-    const credential = await signInWithEmailAndPassword(this.auth, email, pass);
+    const credential = await this.firebaseWrapper.signInWithEmailAndPassword(email, pass);
 
     // 5. Verificação de Segurança no Login
     return credential;
@@ -92,39 +81,40 @@ export class AuthService {
 
   async logout() {
     localStorage.removeItem('loginTimestamp');
-    return await signOut(this.auth);
+    await this.firebaseWrapper.signOut();
+    this.router.navigate(['/login']);
   }
 
   async resetPassword(email: string) {
-    return await sendPasswordResetEmail(this.auth, email);
+    return await this.firebaseWrapper.sendPasswordResetEmail(email);
   }
 
   async deleteAccount() {
-    const user = this.auth.currentUser;
+    const user = this.firebaseWrapper.getAuth().currentUser;
     if (user) {
-      return await user.delete();
+      return await this.firebaseWrapper.deleteUser(user);
     }
     throw new Error('No user logged in');
   }
 
   async updateProfileData(displayName?: string, photoURL?: string) {
-    const user = this.auth.currentUser;
+    const user = this.firebaseWrapper.getAuth().currentUser;
     if (!user) throw new Error('No user logged in');
 
-    return await updateProfile(user, {
-      displayName: displayName || user.displayName,
-      photoURL: photoURL || user.photoURL
+    return await this.firebaseWrapper.updateProfile(user, {
+      displayName: displayName || user.displayName || undefined,
+      photoURL: photoURL || user.photoURL || undefined
     });
   }
 
   async sendVerificationEmail() {
-    const user = this.auth.currentUser;
+    const user = this.firebaseWrapper.getAuth().currentUser;
     if (!user) throw new Error('No user logged in');
 
     const actionCodeSettings = {
       url: `${environment.appUrl}/verify-email`,
       handleCodeInApp: true
     };
-    return await sendEmailVerification(user, actionCodeSettings);
+    return await this.firebaseWrapper.sendEmailVerification(user, actionCodeSettings);
   }
 }

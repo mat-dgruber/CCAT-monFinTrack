@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { AccountManager } from './account-manager';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 describe('AccountManager', () => {
   let component: AccountManager;
@@ -8,9 +10,10 @@ describe('AccountManager', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AccountManager]
+      imports: [AccountManager, HttpClientTestingModule, NoopAnimationsModule],
+      providers: [ConfirmationService, MessageService]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(AccountManager);
     component = fixture.componentInstance;

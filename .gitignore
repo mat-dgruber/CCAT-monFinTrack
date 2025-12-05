@@ -23,7 +23,9 @@ yarn-error.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history/*
+.history/
+*.swp
+*.swo
 
 # Build artifacts
 build/
@@ -43,12 +45,13 @@ __pycache__/
 .venv/
 htmlcov/
 *.sqlite3
+.coverage
+coverage.xml
 
 # Angular
 .angular/
 .sass-cache/
-
-# Coverage
+connect.lock
 coverage/
 
 # Service Account Keys
@@ -56,3 +59,11 @@ coverage/
 
 # Firebase Rules
 firestore.rules
+
+# LLMS
+llms-full.txt
+llms.txt
+
+# Docker
+.docker/
+
