@@ -72,6 +72,11 @@ export class TransactionManager implements OnInit {
   // Filters
   filterDateRange = signal<Date[] | null>(null);
 
+  // Mobile Filters
+  mobileFilterVisible = signal(false);
+  mobileCategoryFilter = signal<Category | null>(null);
+  mobileAccountFilter = signal<Account | null>(null);
+
   // View State for Stats
   currentViewTransactions = signal<Transaction[]>([]);
 
@@ -237,7 +242,46 @@ export class TransactionManager implements OnInit {
     this.currentSortField.set('dateGroup');
     this.currentSortOrder.set(-1);
     this.currentGroupField.set('dateGroup');
+    // Clear mobile filters too
+    this.mobileCategoryFilter.set(null);
+    this.mobileAccountFilter.set(null);
+
     this.loadData();
+  }
+
+  applyMobileFilters() {
+    // Apply Date Range (handled by existing onDateRangeChange/onPresetChange if bound)
+    // We just need to apply local filters for Category and Account
+
+    let filtered = this.transactions();
+
+    // 1. Apply Category Filter
+    const cat = this.mobileCategoryFilter();
+    if (cat) {
+      filtered = filtered.filter(t => t.category?.name === cat.name);
+    }
+
+    // 2. Apply Account Filter
+    const acc = this.mobileAccountFilter();
+    if (acc) {
+      filtered = filtered.filter(t => t.account?.name === acc.name);
+    }
+
+    // 3. Update View
+    this.recalculateGroupingFlags(filtered);
+    this.currentViewTransactions.set(filtered);
+    this.mobileFilterVisible.set(false);
+  }
+
+  clearMobileFilters() {
+    this.mobileCategoryFilter.set(null);
+    this.mobileAccountFilter.set(null);
+    this.selectedDatePreset.set('all');
+    this.filterDateRange.set(null);
+
+    // Reset to full list
+    this.loadData();
+    this.mobileFilterVisible.set(false);
   }
 
   onFilter(event: any) {

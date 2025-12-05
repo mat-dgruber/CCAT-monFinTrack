@@ -43,10 +43,9 @@
 
           <ng-template pTemplate="header">
             <tr>
-              <th pSortableColumn="date">
+              <th>
                 <div class="flex items-center gap-2">
                   Data
-                  <p-sortIcon field="date"></p-sortIcon>
                   <p-columnFilter field="date" display="menu" [showMatchModes]="false" [showOperator]="false"
                     [showAddButton]="false" [showApplyButton]="false" [showClearButton]="false">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
@@ -72,10 +71,9 @@
                   </p-columnFilter>
                 </div>
               </th>
-              <th pSortableColumn="category.name">
+              <th>
                 <div class="flex items-center gap-2">
                   Categoria
-                  <p-sortIcon field="category.name"></p-sortIcon>
                   <p-columnFilter type="text" field="category.name" display="menu">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                       <p-select [ngModel]="value" [options]="categories()" (onChange)="filter($any($event).value)"
@@ -92,17 +90,15 @@
                   </p-columnFilter>
                 </div>
               </th>
-              <th pSortableColumn="description">
+              <th>
                 <div class="flex items-center gap-2">
                   Descrição
-                  <p-sortIcon field="description"></p-sortIcon>
                   <p-columnFilter type="text" field="description" display="menu"></p-columnFilter>
                 </div>
               </th>
-              <th pSortableColumn="account.name">
+              <th>
                 <div class="flex items-center gap-2">
                   Conta
-                  <p-sortIcon field="account.name"></p-sortIcon>
                   <p-columnFilter type="text" field="account.name" display="menu">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                       <p-select [ngModel]="value" [options]="accounts()" (onChange)="filter($any($event).value)"
@@ -113,17 +109,15 @@
                   </p-columnFilter>
                 </div>
               </th>
-              <th pSortableColumn="status">
+              <th>
                 <div class="flex items-center gap-2">
                   Status
-                  <p-sortIcon field="status"></p-sortIcon>
                   <p-columnFilter type="text" field="status" display="menu"></p-columnFilter>
                 </div>
               </th>
-              <th pSortableColumn="amount" class="text-right">
+              <th class="text-right">
                 <div class="flex items-center justify-end gap-2">
                   Valor
-                  <p-sortIcon field="amount"></p-sortIcon>
                   <p-columnFilter type="numeric" field="amount" display="menu" currency="BRL"></p-columnFilter>
                 </div>
               </th>
@@ -259,7 +253,8 @@
             <input pInputText type="text" class="w-full dark:text-gray-200 dark:border-gray-700"
               (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar..." />
           </p-iconfield>
-          <p-button icon="pi pi-filter" [outlined]="true" severity="secondary"></p-button>
+          <p-button icon="pi pi-filter" [outlined]="true" severity="secondary"
+            (onClick)="mobileFilterVisible.set(true)"></p-button>
         </div>
 
         @if (loading()) {
@@ -290,7 +285,7 @@
         </div>
         }
         } @else {
-        @for (t of transactions(); track t.id) {
+        @for (t of currentViewTransactions(); track t.id) {
         <div
           class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
           <div class="flex justify-between items-start">
@@ -444,4 +439,62 @@
   </div>
 
   <app-transaction-form (save)="onDateRangeChange()"></app-transaction-form>
+
+  <!-- Mobile Filter Drawer -->
+  <p-drawer [(visible)]="mobileFilterVisible" [modal]="true" position="bottom" styleClass="!h-[80vh]"
+    header="Filtrar Transações">
+    <ng-template pTemplate="content">
+      <div class="flex flex-col gap-6 h-full">
+        <!-- Date Filter -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Período</span>
+          <p-select [ngModel]="selectedDatePreset()" [options]="datePresets"
+            (onChange)="selectedDatePreset.set($event.value); onPresetChange()" placeholder="Selecione um período"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+
+          <div *ngIf="selectedDatePreset() === 'custom'" class="mt-2">
+            <span class="font-bold mb-2 block text-sm text-gray-600 dark:text-gray-400">Intervalo Personalizado</span>
+            <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range" [readonlyInput]="true"
+              placeholder="Selecione as datas" dateFormat="dd/mm/yy" [showIcon]="true" (onSelect)="onDateRangeChange()"
+              styleClass="w-full" inputStyleClass="w-full" appendTo="body">
+            </p-datepicker>
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Categoria</span>
+          <p-select [ngModel]="mobileCategoryFilter()" [options]="categories()"
+            (onChange)="mobileCategoryFilter.set($event.value)" placeholder="Qualquer" optionLabel="name"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+            <ng-template let-option pTemplate="item">
+              <div class="flex items-center gap-2">
+                <i [class]="option.icon" [style.color]="option.color"></i>
+                <span>{{option.name}}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Account Filter -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Conta</span>
+          <p-select [ngModel]="mobileAccountFilter()" [options]="accounts()"
+            (onChange)="mobileAccountFilter.set($event.value)" placeholder="Qualquer" optionLabel="name"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+          <p-button label="Limpar Filters" [outlined]="true" severity="secondary" styleClass="w-full"
+            (onClick)="clearMobileFilters()"></p-button>
+          <p-button label="Aplicar Filters" styleClass="w-full" (onClick)="applyMobileFilters()"></p-button>
+        </div>
+      </div>
+    </ng-template>
+  </p-drawer>
 </div>
