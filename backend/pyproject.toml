@@ -15,4 +15,5 @@ dependencies = [
     "python-multipart",
     "slowapi>=0.1.9",
     "uvicorn>=0.38.0",
+    "pyotp>=2.9.0",
 ]

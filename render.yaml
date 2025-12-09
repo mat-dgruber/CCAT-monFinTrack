@@ -1,0 +1,22 @@
+# Exported from Render on 2025-12-09T10:54:43Z
+version: "1"
+projects:
+- name: CCAT_monFinTrack
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: ccat-monFinTrack-api
+      runtime: python
+      repo: https://github.com/mat-dgruber/ccat-monFinTrack
+      plan: free
+      envVars:
+      - key: ENVIRONMENT
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      region: virginia
+      buildCommand: pip install -r requirements.txt
+      startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+      autoDeployTrigger: commit
+      rootDir: backend
