@@ -16,4 +16,6 @@ dependencies = [
     "slowapi>=0.1.9",
     "uvicorn>=0.38.0",
     "pyotp>=2.9.0",
+    "qrcode>=8.0",
+    "pillow>=10.0.0",
 ]
