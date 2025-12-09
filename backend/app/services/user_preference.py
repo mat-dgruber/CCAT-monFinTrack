@@ -1,12 +1,10 @@
 import os
-import shutil
 from fastapi import UploadFile
 from app.core.database import get_db
 from app.schemas.user_preference import UserPreference, UserPreferenceCreate
 from datetime import datetime
 
 COLLECTION_NAME = "user_preferences"
-STATIC_DIR = "app/static/profile_images"
 
 def get_preferences(user_id: str) -> UserPreference:
     db = get_db()
@@ -50,23 +48,24 @@ def update_preferences(user_id: str, data: UserPreferenceCreate) -> UserPreferen
     # Fetch full updated doc to return
     return UserPreference(**doc_ref.get().to_dict())
 
+from firebase_admin import storage
+
 def save_profile_image(user_id: str, file: UploadFile) -> str:
-    # Ensure directory exists
-    os.makedirs(STATIC_DIR, exist_ok=True)
+    # Get the storage bucket
+    bucket = storage.bucket()
     
-    # Define file path: user_id.jpg (or original extension)
-    # For simplicity, we can force jpg or keep original extension.
-    # Let's keep it simple and use the user_id as filename to avoid clutter.
+    # Define file path in bucket
     extension = os.path.splitext(file.filename)[1]
-    filename = f"{user_id}{extension}"
-    file_path = os.path.join(STATIC_DIR, filename)
+    blob_name = f"profile_images/{user_id}{extension}"
+    blob = bucket.blob(blob_name)
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
-    # Return the relative URL
-    # Assuming we mount /static at root or /api/static
-    return f"/static/profile_images/{filename}"
+    # Upload the file
+    blob.upload_from_file(file.file, content_type=file.content_type)
+    
+    # Make it public (or generate signed URL)
+    blob.make_public()
+    
+    return blob.public_url
 
 def reset_account(user_id: str):
     """
