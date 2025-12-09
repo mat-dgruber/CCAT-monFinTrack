@@ -26,7 +26,9 @@ def get_db():
                 print("❌ Erro: Nenhuma credencial encontrada.")
                 return None
 
-            firebase_admin.initialize_app(cred)
+            firebase_admin.initialize_app(cred, {
+                'storageBucket': os.getenv("STORAGE_BUCKET", "ccat-monfintrack.firebasestorage.app")
+            })
             print("✅ Conexão com Firestore estabelecida!")
             
         return firestore.client()
