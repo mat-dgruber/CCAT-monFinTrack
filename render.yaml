@@ -1,22 +1,16 @@
-# Exported from Render on 2025-12-09T10:54:43Z
-version: "1"
-projects:
-- name: CCAT_monFinTrack
-  environments:
-  - name: Production
-    services:
-    - type: web
-      name: ccat-monFinTrack-api
-      runtime: python
-      repo: https://github.com/mat-dgruber/ccat-monFinTrack
-      plan: free
-      envVars:
-      - key: ENVIRONMENT
+services:
+  - type: web
+    name: monfintrack-backend
+    env: docker
+    region: oregon
+    plan: free
+    rootDir: backend
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: ALLOWED_ORIGINS
         sync: false
       - key: FIREBASE_CREDENTIALS_JSON
         sync: false
-      region: virginia
-      buildCommand: pip install -r requirements.txt
-      startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
-      autoDeployTrigger: commit
-      rootDir: backend
