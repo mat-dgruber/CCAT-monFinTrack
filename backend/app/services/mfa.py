@@ -5,9 +5,9 @@ import base64
 from app.core.database import get_db
 
 class MFAService:
-    def __init__(self):
-        self.db = get_db()
-        self.collection = self.db.collection('users')
+    def _get_collection(self):
+        db = get_db()
+        return db.collection('users')
 
     def generate_secret(self) -> str:
         """Gera um segredo aleatório base32."""
@@ -45,7 +45,7 @@ class MFAService:
         Verifica o token e, se válido, salva o segredo no perfil do usuário.
         """
         if self.verify_token(secret, token):
-            self.collection.document(user_id).set({
+            self._get_collection().document(user_id).set({
                 "mfa_secret": secret,
                 "mfa_enabled": True
             }, merge=True)
@@ -54,14 +54,14 @@ class MFAService:
 
     def disable_mfa(self, user_id: str):
         """Desativa o MFA removendo o segredo."""
-        self.collection.document(user_id).set({
+        self._get_collection().document(user_id).set({
             "mfa_secret": None,
             "mfa_enabled": False
         }, merge=True)
 
     def check_mfa_status(self, user_id: str) -> bool:
         """Verifica se o MFA está ativado."""
-        doc = self.collection.document(user_id).get()
+        doc = self._get_collection().document(user_id).get()
         if doc.exists:
             data = doc.to_dict()
             return data.get("mfa_enabled", False)
@@ -69,7 +69,7 @@ class MFAService:
 
     def get_user_secret(self, user_id: str) -> str:
         """Recupera o segredo MFA do usuário."""
-        doc = self.collection.document(user_id).get()
+        doc = self._get_collection().document(user_id).get()
         if doc.exists:
             data = doc.to_dict()
             return data.get("mfa_secret")
