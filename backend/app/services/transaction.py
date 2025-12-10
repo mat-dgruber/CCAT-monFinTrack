@@ -189,6 +189,10 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         if not account:
             account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
 
+        if 'title' not in data and 'description' in data:
+             data['title'] = data.pop('description')
+             data['description'] = None
+
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
@@ -302,7 +306,7 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
     if transaction_in.total_installments and transaction_in.total_installments > 1:
         group_id = str(uuid.uuid4())
         recurrence_data = RecurrenceCreate(
-            name=transaction_in.description,
+            name=transaction_in.title,
             amount=transaction_in.amount,
             category_id=transaction_in.category_id,
             account_id=transaction_in.account_id,
@@ -332,7 +336,7 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
     # CENÁRIO B: Recorrência (Sem parcelas)
     if transaction_in.recurrence_periodicity:
         recurrence_data = RecurrenceCreate(
-            name=transaction_in.description,
+            name=transaction_in.title,
             amount=transaction_in.amount,
             category_id=transaction_in.category_id,
             account_id=transaction_in.account_id,
@@ -555,6 +559,10 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
         account = account_service.get_account(acc_id)
         if not account:
             account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
+
+        if 'title' not in data and 'description' in data:
+             data['title'] = data.pop('description')
+             data['description'] = None
 
         transactions.append(Transaction(
             id=t.id, 

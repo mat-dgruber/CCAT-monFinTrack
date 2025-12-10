@@ -33,7 +33,8 @@ export const routes: Routes = [
       { path: 'transactions', component: TransactionManager },
       { path: 'calendar', component: FinancialCalendarComponent },
       { path: 'subscriptions', component: SubscriptionsDashboardComponent },
-      { path: 'advanced-graphics', component: AdvancedGraphicsComponent }
+      { path: 'advanced-graphics', component: AdvancedGraphicsComponent },
+      { path: 'budgets', component: BudgetManager }
     ]
   },
   { path: 'verify-email', component: EmailVerification },

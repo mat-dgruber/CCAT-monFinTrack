@@ -28,7 +28,8 @@ class TransactionStatus(str, Enum):
 
 # 2. Base: Campos comuns que não dependem de relacionamento
 class TransactionBase(BaseModel):
-     description: str = Field(..., min_length=3, description="Descrição da transação")
+     title: str = Field(..., min_length=3, description="Título da transação")
+     description: Optional[str] = Field(None, description="Descrição detalhada")
      amount: float = Field(..., gt=0, description="Valor da transação")
      date: datetime = Field(default_factory=datetime.now, description="Data da transação")
      type: TransactionType = Field(default=TransactionType.EXPENSE, description="Tipo: Despesa ou Receita")
@@ -44,7 +45,7 @@ class TransactionBase(BaseModel):
      is_auto_pay: bool = Field(False, description="Se o pagamento é automático (via recorrência)")
 
      # --- BLOCO DE PROTEÇÃO XSS ---
-     @field_validator('description')
+     @field_validator('title', 'description')
      @classmethod # No Pydantic v2 usamos @classmethod as vezes, mas field_validator cuida disso
      def clean_description(cls, v):
           return sanitize_html(v)

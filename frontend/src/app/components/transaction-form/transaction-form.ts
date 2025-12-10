@@ -11,6 +11,7 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TextareaModule } from 'primeng/textarea';
 import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
@@ -28,16 +29,17 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
   selector: 'app-transaction-form',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    DialogModule, 
-    ButtonModule, 
-    InputTextModule, 
-    InputNumberModule, 
-    SelectModule, 
-    DatePickerModule, 
+    CommonModule,
+    ReactiveFormsModule,
+    DialogModule,
+    ButtonModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
+    DatePickerModule,
     SelectButtonModule,
     CheckboxModule,
+    TextareaModule,
     AccountTypePipe
   ],
   templateUrl: './transaction-form.html',
@@ -53,11 +55,11 @@ export class TransactionForm implements OnInit {
   private messageService = inject(MessageService);
 
   visible = signal(false);
-  
-  categories = signal<Category[]>([]); 
+
+  categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
   editingId = signal<string | null>(null);
-  
+
   @Output() save = new EventEmitter<void>();
 
   currentType = signal<'expense' | 'income'>('expense');
@@ -66,10 +68,10 @@ export class TransactionForm implements OnInit {
       const type = this.currentType();
       const all = this.categories();
       const roots = all.filter(c => c.type === type);
-      
+
       return roots.map(root => {
           const items = [root, ...(root.subcategories || [])];
-          
+
           return {
               label: root.name,
               value: root.id,
@@ -108,20 +110,21 @@ export class TransactionForm implements OnInit {
   ];
 
   form: FormGroup = this.fb.group({
-    description: ['', [Validators.required, Validators.minLength(3)]],
+    title: ['', [Validators.required, Validators.minLength(3)]],
+    description: [''],
     amount: [null, [Validators.required, Validators.min(0.01)]],
     date: [new Date(), Validators.required],
     category: [null, Validators.required],
     account: [null, Validators.required],
     type: ['expense', Validators.required],
     payment_method: [null, Validators.required],
-    
+
     mode: ['single'],
     total_installments: [2],
     recurrence_periodicity: ['monthly'],
     recurrence_auto_pay: [false],
     recurrence_create_first: [true],
-    
+
     is_paid: [true],
     payment_date: [new Date()]
   });
@@ -151,8 +154,8 @@ export class TransactionForm implements OnInit {
   showDialog() {
     this.editingId.set(null);
     this.currentType.set('expense');
-    
-    this.form.reset({ 
+
+    this.form.reset({
         type: 'expense',
         date: new Date(),
         mode: 'single',
@@ -163,12 +166,12 @@ export class TransactionForm implements OnInit {
         is_paid: true,
         payment_date: new Date()
     });
-    
+
     this.visible.set(true);
   }
 
   editTransaction(event: Event, transaction: Transaction) {
-    event.stopPropagation(); 
+    event.stopPropagation();
     this.editingId.set(transaction.id);
     this.currentType.set(transaction.type);
 
@@ -177,6 +180,7 @@ export class TransactionForm implements OnInit {
     if (transaction.recurrence_id) mode = 'recurrence';
 
     this.form.patchValue({
+        title: transaction.title,
         description: transaction.description,
         amount: transaction.amount,
         date: new Date(transaction.date),
@@ -197,7 +201,7 @@ export class TransactionForm implements OnInit {
   onSubmit() {
     if (this.form.valid) {
       const formValue = this.form.value;
-      
+
       const payload: any = {
         ...formValue,
         category_id: formValue.category.id,
