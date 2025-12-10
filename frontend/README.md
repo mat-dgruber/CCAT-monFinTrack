@@ -8,6 +8,22 @@ This is the frontend for the MonFinTrack application, a personal finance tracker
 - TypeScript
 - SCSS
 
+## 🚀 Deployment
+
+The application is configured for deployment to **Firebase Hosting**.
+
+1.  **Build:**
+    ```bash
+    npm run build
+    ```
+    This generates the production artifacts in `dist/frontend/browser`.
+
+2.  **Deploy:**
+    From the root directory (where `firebase.json` resides):
+    ```bash
+    firebase deploy
+    ```
+
 ## Getting Started
 
 ### Prerequisites

@@ -15,6 +15,7 @@ RUN npm run build -- --configuration production
 FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the build output. Note: The 'application' builder in Angular 17+ creates a 'browser' subdirectory.
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
 EXPOSE 80

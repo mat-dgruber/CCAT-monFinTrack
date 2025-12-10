@@ -32,6 +32,19 @@ MonFinTrack is a robust personal finance tracking application designed to help y
 - **Database**: Firebase (Firestore)
 - **Authentication**: Firebase Auth
 
+## 🚀 Production Deployment
+
+### Frontend (Firebase Hosting)
+The frontend is hosted on **Firebase Hosting**.
+1. Navigate to the frontend directory: `cd frontend`
+2. Build for production: `npm run build`
+3. Deploy: `firebase deploy` (or `cd .. && firebase deploy`)
+
+### Backend (Render)
+The backend is hosted on **Render** and configured for auto-deploy via Docker.
+- **Push to Main:** Simply push your changes to the `main` branch on GitHub. Render will automatically build the Docker image and deploy it.
+- **Manual Start (Local Docker):** See the "Getting Started with Docker" section below.
+
 ## 🚀 Getting Started with Docker
 
 The easiest way to run the application is using Docker Compose.
