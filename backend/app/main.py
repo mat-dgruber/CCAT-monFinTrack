@@ -60,11 +60,21 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.on_event("startup")
 async def startup_event():
-     db = get_db()
-     if db:
-          print("✅ Conexão com Firestore estabelecida com sucesso!")
-     else:
-          print("❌ Erro ao conectar ao Firestore.")
+     try:
+         db = get_db()
+         print("✅ Conexão com Firestore estabelecida com sucesso na inicialização!")
+     except Exception as e:
+         print(f"❌ Erro CRÍTICO ao conectar ao Firestore na inicialização: {e}")
+         # Não vamos crashar o app aqui para permitir que /health responda,
+         # mas rotas que usam DB vão falhar.
+
+@app.get("/health")
+def health_check():
+    try:
+        get_db()
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
 
 
 @app.get("/")
