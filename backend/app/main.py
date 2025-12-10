@@ -19,10 +19,22 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # --- CONFIGURAÇÃO DO CORS (LIBERAR O FRONTEND) ---
-# Pega origens do .env OU usa uma lista padrão segura
-origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200,http://localhost,http://127.0.0.1,http://127.0.0.1:4200, https://ccat-monfintrack.web.app")
-origins = [origin.strip() for origin in origins_str.split(",")]
-# origins = ["*"]
+# Pega origens do .env
+env_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+env_origins = [origin.strip() for origin in env_origins_str.split(",") if origin.strip()]
+
+# Lista de origens padrão (sempre permitidas)
+default_origins = [
+    "http://localhost:4200",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://127.0.0.1:4200",
+    "https://ccat-monfintrack.web.app",
+    "https://ccat-monfintrack.firebaseapp.com"
+]
+
+# Combina as listas (removendo duplicatas)
+origins = list(set(env_origins + default_origins))
 print(f"Allowed origins: {origins}")
 
 app.add_middleware(
