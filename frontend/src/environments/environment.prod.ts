@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://monfintrack-backend.onrender.com/api',
+  apiUrl: 'https://ccat-monfintrack-api.onrender.com/api',
   appUrl: 'https://ccat-monfintrack.web.app',
   firebaseConfig: {
     apiKey: "AIzaSyCMmJapjjZLp0h3TyI7v3r2z9FSD-pxfeQ",

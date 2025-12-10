@@ -30,6 +30,7 @@ default_origins = [
     "http://127.0.0.1",
     "http://127.0.0.1:4200",
     "https://ccat-monfintrack.web.app",
+    "https://ccat-monfintrack.web.app/",
     "https://ccat-monfintrack.firebaseapp.com"
 ]
 
