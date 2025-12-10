@@ -23,7 +23,7 @@
           [rowsPerPageOptions]="[10, 25, 50]" rowGroupMode="subheader"
           [groupRowsBy]="loading() ? null : currentGroupField()" [sortField]="loading() ? null : currentSortField()"
           [sortOrder]="-1" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
-          [globalFilterFields]="['description', 'category.name', 'amount', 'account.name']"
+          [globalFilterFields]="['title', 'description', 'category.name', 'amount', 'account.name']"
           (onFilter)="onFilter($event)" (onSort)="onSort($event)">
           <ng-template pTemplate="caption">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -92,8 +92,8 @@
               </th>
               <th>
                 <div class="flex items-center gap-2">
-                  Descrição
-                  <p-columnFilter type="text" field="description" display="menu"></p-columnFilter>
+                  Título
+                  <p-columnFilter type="text" field="title" display="menu"></p-columnFilter>
                 </div>
               </th>
               <th>
@@ -195,7 +195,7 @@
                 </div>
               </td>
               <td>
-                <div class="font-medium text-gray-900 dark:text-white">{{t.description}}</div>
+                <div class="font-medium text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">{{t.title}}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{t.payment_method |
                   paymentFormat}}</div>
               </td>
@@ -295,7 +295,7 @@
                 <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
               </div>
               <div>
-                <div class="font-bold text-gray-900 dark:text-white">{{t.description}}</div>
+                <div class="font-bold text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">{{t.title}}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{t.date |
                   date:'dd/MM/yyyy'}} •
                   {{t.category?.name}}</div>
@@ -497,4 +497,6 @@
       </div>
     </ng-template>
   </p-drawer>
+
+  <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
 </div>

@@ -30,7 +30,22 @@ MonFinTrack is a robust personal finance tracking application designed to help y
 
 - **Framework**: FastAPI (Python 3.13)
 - **Database**: Firebase (Firestore)
+### Backend
+
+- **Framework**: FastAPI (Python 3.13)
+- **Database**: Firebase (Firestore)
 - **Authentication**: Firebase Auth
+
+## ⚙️ CI/CD Configuration
+
+The project is configured with **GitHub Actions** for continuous integration and deployment.
+
+### Secrets Required
+To enable automated deployment to Firebase Hosting, you must add the following secret to your GitHub Repository:
+1. Go to **Settings** > **Secrets and variables** > **Actions**.
+2. Click **New repository secret**.
+3. Name: `FIREBASE_TOKEN`
+4. Value: The output of running `firebase login:ci` locally.
 
 ## 🚀 Production Deployment
 

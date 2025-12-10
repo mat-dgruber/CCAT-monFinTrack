@@ -5,7 +5,8 @@ export type TransactionType = CategoryType;
 
 export interface Transaction {
   id: string;
-  description: string;
+  title: string;
+  description?: string;
   amount: number;
   date: Date; // ou string, dependendo de como vem do back
   type: 'expense' | 'income';

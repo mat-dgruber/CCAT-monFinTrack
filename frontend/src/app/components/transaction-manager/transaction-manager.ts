@@ -16,6 +16,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Services
 import { TransactionService } from '../../services/transaction.service';
@@ -50,7 +51,8 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     PaymentFormatPipe,
     IconFieldModule,
     InputIconModule,
-    SkeletonModule
+    SkeletonModule,
+    ConfirmDialogModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
@@ -408,7 +410,6 @@ export class TransactionManager implements OnInit {
 
   deleteTransaction(event: Event, t: Transaction) {
     this.confirmationService.confirm({
-      target: event.target as EventTarget,
       message: 'Apagar esta transação?',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
@@ -434,8 +435,8 @@ export class TransactionManager implements OnInit {
     // Simple client side CSV
     const data = this.currentViewTransactions();
     const csvContent = "data:text/csv;charset=utf-8,"
-      + "Data,Descrição,Categoria,Valor,Tipo\n"
-      + data.map((e: Transaction) => `${e.date},${e.description},${e.category?.name},${e.amount},${e.type}`).join("\n");
+      + "Data,Título,Descrição,Categoria,Valor,Tipo\n"
+      + data.map((e: Transaction) => `${e.date},${e.title},${e.description || ''},${e.category?.name},${e.amount},${e.type}`).join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
