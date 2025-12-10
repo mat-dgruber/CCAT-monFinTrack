@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { UserPreferenceService } from './services/user-preference.service';
 
 
 @Component({
@@ -8,11 +9,12 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [
     CommonModule,
-    CommonModule,
     RouterModule
   ],
 
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {}
+export class App {
+  constructor(private userPrefs: UserPreferenceService) {}
+}

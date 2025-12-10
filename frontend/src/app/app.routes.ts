@@ -4,6 +4,7 @@ import { Login } from './components/login/login'; // Import login
 import { EmailVerification } from './components/email-verification/email-verification';
 import { Terms } from './components/legal/terms/terms';
 import { PrivacyPolicy } from './components/legal/privacy-policy/privacy-policy';
+import { Contact } from './components/legal/contact/contact';
 import { Settings } from './components/settings/settings';
 import { AccountManager } from './components/account-manager/account-manager';
 import { CategoryManager } from './components/category-manager/category-manager';
@@ -38,5 +39,6 @@ export const routes: Routes = [
   { path: 'verify-email', component: EmailVerification },
   { path: 'terms', component: Terms },
   { path: 'privacy-policy', component: PrivacyPolicy },
+  { path: 'contact', component: Contact },
   { path: '**', redirectTo: '' }
 ];
