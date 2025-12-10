@@ -14,7 +14,7 @@ Este é o backend do projeto **monFinTrack**, uma aplicação para gerenciamento
 
 Antes de começar, você precisará ter instalado em sua máquina:
 
-- [Python 3.10+](https://www.python.org/downloads/)
+- [Python 3.13+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/)
 
 ## 🔧 Instalação e Configuração
@@ -50,6 +50,8 @@ Com o ambiente virtual ativado, instale as dependências listadas no `requiremen
 
 ```bash
 pip install -r requirements.txt
+# OR using uv (faster)
+uv pip install -r requirements.txt
 ```
 
 > **Nota:** Se você utiliza `uv`, o projeto também contém um arquivo `uv.lock`.

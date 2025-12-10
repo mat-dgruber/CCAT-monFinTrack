@@ -1,3 +1,4 @@
+# Base image matching the version specified in render.yaml
 FROM python:3.13-slim
 
 WORKDIR /app

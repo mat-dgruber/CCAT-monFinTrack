@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ThemeService } from '../../services/theme.service';
+// import { ThemeService } from '../../services/theme.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { MFAService } from '../../services/mfa.service';
 import { UserPreference } from '../../models/user-preference.model';
@@ -50,7 +50,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 })
 export class Settings {
   auth = inject(AuthService);
-  themeService = inject(ThemeService);
+  // themeService = inject(ThemeService); // Removed in favor of UserPreferenceService
   router = inject(Router);
   messageService = inject(MessageService);
   confirmationService = inject(ConfirmationService);
@@ -91,7 +91,7 @@ export class Settings {
   themeOptions = [
     { label: 'Claro', value: 'light' },
     { label: 'Escuro', value: 'dark' },
-    { label: 'CapyCro', value: 'capycro' },
+    // { label: 'CapyCro', value: 'capycro' },
     { label: 'Sistema', value: 'system' }
   ];
 
@@ -104,7 +104,7 @@ export class Settings {
     }
 
     // Sync local state with service
-    this.selectedTheme.set(this.themeService.darkMode() ? 'dark' : 'light');
+    // this.selectedTheme.set(this.themeService.darkMode() ? 'dark' : 'light'); // Removed
 
     this.preferenceService.preferences$.subscribe(prefs => {
       this.preferences = prefs;
@@ -135,6 +135,14 @@ export class Settings {
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao iniciar setup MFA' });
       }
+    });
+  }
+
+  copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      this.messageService.add({ severity: 'success', summary: 'Copiado', detail: 'Código copiado para a área de transferência!' });
+    }, () => {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao copiar código.' });
     });
   }
 
@@ -220,25 +228,17 @@ export class Settings {
   onThemeChange() {
     const newTheme = this.selectedTheme();
 
-    // Update Service
+    // 1. Update Service (which updates LocalStorage and behavior subject)
     if (this.preferences) {
-      this.preferences.theme = newTheme;
+      // Optimistically update local state if needed, but the service subscription should handle it
       this.preferenceService.updatePreferences({ theme: newTheme }).subscribe();
-    }
-
-    // Update Local Theme Service
-    // Check effective theme
-    const isDark = newTheme === 'dark' || (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    if (isDark) {
-      if (!this.themeService.darkMode()) {
-        this.themeService.toggleTheme();
-      }
     } else {
-      if (this.themeService.darkMode()) {
-        this.themeService.toggleTheme();
-      }
+        // If no preferences loaded yet, try to set it anyway (e.g. guest or initial load issue)
+        // This handles cases where user changes theme before preferences fetch completes
+         // But strictly speaking we should have preferences.
     }
+
+    // The service's tap/next will trigger applyTheme, so we don't need manual DOM manipulation here anymore.
   }
 
   onLanguageChange(event: any) {

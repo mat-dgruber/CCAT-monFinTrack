@@ -1,0 +1,223 @@
+<div
+  class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300"
+  style="background-color: var(--surface-ground)"
+>
+  <p-toast></p-toast>
+
+  <div class="max-w-4xl mx-auto">
+    <!-- Header / Navigation -->
+    <div class="mb-6 flex items-center justify-between">
+      <p-button
+        label="Voltar"
+        icon="pi pi-arrow-left"
+        [text]="true"
+        (onClick)="goBack()"
+        class="!px-0"
+        styleClass="text-[var(--text-color)] hover:bg-[var(--surface-hover)]"
+      ></p-button>
+    </div>
+
+    <div
+      class="rounded-2xl shadow-xl overflow-hidden"
+      style="
+        background-color: var(--surface-card);
+        border: 1px solid var(--surface-border);
+      "
+    >
+      <!-- Hero Header -->
+      <div
+        class="px-8 py-10 text-white"
+        style="
+          background: linear-gradient(
+            135deg,
+            var(--primary-color),
+            var(--primary-color-text) 300%
+          );
+        "
+      >
+        <h1 class="text-3xl font-bold mb-2 text-white">Fale Conosco</h1>
+        <p class="opacity-90 text-white">
+          Estamos aqui para ajudar. Envie sua mensagem.
+        </p>
+      </div>
+
+      <div class="p-8 md:p-12">
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Contact Info / Context -->
+          <div class="md:col-span-1 space-y-6">
+            <div
+              class="p-6 rounded-xl"
+              style="background-color: var(--surface-ground)"
+            >
+              <h3
+                class="font-bold mb-4 flex items-center gap-2"
+                style="color: var(--text-color)"
+              >
+                <i
+                  class="pi pi-comments"
+                  style="color: var(--primary-color)"
+                ></i>
+                Canais de Atendimento
+              </h3>
+              <p
+                class="text-sm mb-4 leading-relaxed"
+                style="color: var(--text-color-secondary)"
+              >
+                Você pode usar o formulário ao lado para enviar suas dúvidas,
+                sugestões ou relatar problemas.
+              </p>
+              <div
+                class="border-t pt-4"
+                style="border-color: var(--surface-border)"
+              >
+                <p
+                  class="text-xs font-semibold uppercase tracking-wider mb-2"
+                  style="color: var(--text-color-secondary)"
+                >
+                  Tempo de resposta
+                </p>
+                <p class="text-sm" style="color: var(--text-color)">
+                  Respondemos geralmente em até 24h úteis.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="p-6 rounded-xl"
+              style="background-color: var(--surface-ground)"
+            >
+              <h3
+                class="font-bold mb-4 flex items-center gap-2"
+                style="color: var(--text-color)"
+              >
+                <i class="pi pi-shield" style="color: var(--primary-color)"></i>
+                Privacidade
+              </h3>
+              <p
+                class="text-sm leading-relaxed"
+                style="color: var(--text-color-secondary)"
+              >
+                Seus dados serão usados apenas para responder a essa
+                solicitação. Consulte nossa
+                <a
+                  routerLink="/privacy-policy"
+                  class="font-medium underline hover:text-[var(--primary-color)]"
+                  >Política de Privacidade</a
+                >.
+              </p>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <div class="md:col-span-2">
+            <form
+              [formGroup]="contactForm"
+              (ngSubmit)="onSubmit()"
+              class="space-y-6"
+            >
+              <div class="grid md:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                  <label
+                    for="name"
+                    class="font-semibold text-sm"
+                    style="color: var(--text-color)"
+                    >Nome Completo</label
+                  >
+                  <input
+                    pInputText
+                    id="name"
+                    formControlName="name"
+                    placeholder="Seu nome"
+                    class="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': getFieldError('name') }"
+                  />
+                  <small *ngIf="getFieldError('name')" class="text-red-500">{{
+                    getFieldError("name")
+                  }}</small>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label
+                    for="email"
+                    class="font-semibold text-sm"
+                    style="color: var(--text-color)"
+                    >Email</label
+                  >
+                  <input
+                    pInputText
+                    id="email"
+                    formControlName="email"
+                    placeholder="seu@email.com"
+                    class="w-full"
+                    [ngClass]="{
+                      'ng-invalid ng-dirty': getFieldError('email')
+                    }"
+                  />
+                  <small *ngIf="getFieldError('email')" class="text-red-500">{{
+                    getFieldError("email")
+                  }}</small>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label
+                  for="subject"
+                  class="font-semibold text-sm"
+                  style="color: var(--text-color)"
+                  >Assunto</label
+                >
+                <input
+                  pInputText
+                  id="subject"
+                  formControlName="subject"
+                  placeholder="Sobre o que você quer falar?"
+                  class="w-full"
+                  [ngClass]="{
+                    'ng-invalid ng-dirty': getFieldError('subject')
+                  }"
+                />
+                <small *ngIf="getFieldError('subject')" class="text-red-500">{{
+                  getFieldError("subject")
+                }}</small>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label
+                  for="message"
+                  class="font-semibold text-sm"
+                  style="color: var(--text-color)"
+                  >Mensagem</label
+                >
+                <textarea
+                  pInputTextarea
+                  id="message"
+                  formControlName="message"
+                  rows="5"
+                  placeholder="Digite sua mensagem aqui..."
+                  class="w-full"
+                  [ngClass]="{
+                    'ng-invalid ng-dirty': getFieldError('message')
+                  }"
+                ></textarea>
+                <small *ngIf="getFieldError('message')" class="text-red-500">{{
+                  getFieldError("message")
+                }}</small>
+              </div>
+
+              <div class="pt-4 flex justify-end">
+                <p-button
+                  type="submit"
+                  label="Enviar Mensagem"
+                  icon="pi pi-send"
+                  [loading]="isLoading()"
+                  [disabled]="contactForm.invalid"
+                  styleClass="w-full md:w-auto px-8 py-3"
+                ></p-button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

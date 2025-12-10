@@ -1,0 +1,91 @@
+🎨 Paleta de Cores | CapyCro AvecTech
+
+Aqui estão as cores predominantes extraídas do logo, com seus respectivos códigos HEX aproximados para você usar em seus projetos:
+
+Azul-Petróleo (Fundo): #5d8a8c
+
+A cor principal do círculo de fundo.
+
+Laranja Queimado (Faixa): #d8704c
+
+Usado na faixa onde o nome está escrito.
+
+Laranja Médio (Capivara): #da9b5bz
+
+O tom principal da pelagem da capivara.
+
+Laranja-Dourado (Croissant): #f0a040
+
+A cor vibrante do croissant.
+
+Marrom Escuro (Contorno): #593e2b
+
+Usado nos contornos e detalhes (como as patas).
+
+Bege Claro (Letras/Borda): #f3e4c9
+
+A cor das letras e da borda interna do círculo.
+
+Essa combinação traz um equilíbrio entre tons terrosos e "cozy" (os laranjas e o marrom) e uma cor mais corporativa e tecnológica (o azul-petróleo).
+
+1. 🌲 Paleta de Neutros (A Base "Tech")
+
+Essas cores são essenciais para fundos, textos e elementos de UI (interfaces). Elas dão o ar profissional e garantem a legibilidade, permitindo que as cores do seu logo brilhem.
+
+Branco Aconchegante (Off-White): #fbf9f6
+
+Uso: Cor de fundo principal. É mais suave para os olhos do que o branco puro e combina com o bege do seu logo.
+
+Cinza Chumbo (Texto): #3a3a3a
+
+Uso: Texto principal. Oferece ótimo contraste no fundo claro, sendo menos "duro" que o preto puro.
+
+Cinza Médio (Bordas/UI): #b0b0b0
+
+Uso: Divisores, bordas de formulários, texto secundário ou ícones.
+
+Tom Escuro (Fundo Alternativo): #2c3e40
+
+Uso: Para seções de "dark mode" ou um rodapé. É um parente próximo do seu azul-petróleo (#5d8a8c) e do seu marrom (#593e2b), unificando a paleta.
+
+2. 🌿 Paleta de Destaque (Ação e Natureza)
+
+Essas são as cores para botões (CTAs), links e destaques. Elas precisam "saltar" da paleta de neutros e combinar com os tons quentes do logo.
+
+Verde Sálvia: #8a9a8b
+
+Por quê: É uma cor "cozy" e natural que complementa perfeitamente os tons de laranja e marrom. Traz um sentimento de calma e confiança.
+
+Verde Musgo: #5a7d6c
+
+Por quê: Uma alternativa um pouco mais escura e séria ao verde sálvia, que também funciona muito bem com o azul-petróleo do seu logo.
+
+Azul Neblina: #a2b9c7
+
+Por quê: Se você precisar de um tom mais "corporativo" e "limpo", este azul claro e dessaturado funciona como um destaque sutil que harmoniza com o azul-petróleo.
+
+3. ⚠️ Paleta Funcional (Status do Sistema)
+
+Para qualquer empresa de tecnologia (especialmente se tiver um app ou site), você precisará de cores para mensagens de feedback do usuário.
+
+Sucesso (Verde): #5a9261
+
+Um verde amigável e claro, que se encaixa na paleta terrosa.
+
+Erro (Vermelho): #d15c5c
+
+Um vermelho dessaturado para não ser "gritante" e quebrar a vibe "cozy", mas que ainda comunica claramente um erro.
+
+Aviso (Amarelo): #e6a700
+
+Um tom de amarelo/mostarda que harmoniza com o laranja do croissant, mas é claramente uma cor de "aviso".
+
+Resumo Visual da Expansão
+
+Cores Principais (do Logo): #5d8a8c (Petróleo), #d8704c (Laranja), #593e2b (Marrom), #f3e4c9 (Bege)
+
+Neutros (Base): #fbf9f6 (Fundo), #3a3a3a (Texto)
+
+Destaque (Ação): #8a9a8b (Verde Sálvia)
+
+Funcionais: #5a9261 (Sucesso), #d15c5c (Erro)

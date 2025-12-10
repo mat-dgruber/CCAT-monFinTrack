@@ -3,12 +3,12 @@
 
 /* 2. Importamos o Tailwind nas camadas certas */
 @layer tailwind-base {
-    @tailwind base;
+  @tailwind base;
 }
 
 @layer tailwind-utilities {
-    @tailwind components;
-    @tailwind utilities;
+  @tailwind components;
+  @tailwind utilities;
 }
 
 /* 3. PrimeIcons (único CSS que ainda importamos) */
@@ -16,51 +16,75 @@
 
 /* 4. Configurações globais */
 :root {
-    --surface-ground: #f8fafc;
-    --surface-card: #ffffff;
-    --surface-overlay: #ffffff;
-    --surface-border: #e5e7eb;
-    --surface-hover: #f3f4f6;
-    --text-color: #1f2937;
-    --text-color-secondary: #6b7280;
-    --primary-color: #3b82f6;
-    --primary-color-text: #ffffff;
-    --mask-bg: rgba(0, 0, 0, 0.4);
+  --surface-ground: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-border: #e5e7eb;
+  --surface-hover: #f3f4f6;
+  --text-color: #1f2937;
+  --text-color-secondary: #6b7280;
+  --primary-color: #3b82f6;
+  --primary-color-text: #ffffff;
+  --mask-bg: rgba(0, 0, 0, 0.4);
 }
 
 .dark-theme,
 .dark {
-    --surface-ground: #0f172a;
-    --surface-card: #1e293b;
-    --surface-overlay: #1e293b;
-    --surface-border: #334155;
-    --surface-hover: #334155;
-    --text-color: #f8fafc;
-    --text-color-secondary: #94a3b8;
-    --primary-color: #60a5fa;
-    --primary-color-text: #0f172a;
-    --mask-bg: rgba(0, 0, 0, 0.6);
+  --surface-ground: #0f172a;
+  --surface-card: #1e293b;
+  --surface-overlay: #1e293b;
+  --surface-border: #334155;
+  --surface-hover: #334155;
+  --text-color: #f8fafc;
+  --text-color-secondary: #94a3b8;
+  --primary-color: #60a5fa;
+  --primary-color-text: #0f172a;
+  --mask-bg: rgba(0, 0, 0, 0.6);
 }
 
 .capycro-theme {
-    --surface-ground: #fbf9f6;
-    --surface-card: #ffffff;
-    --surface-overlay: #ffffff;
-    --surface-border: #b0b0b0;
-    --surface-hover: #eaeaea;
-    --text-color: #3a3a3a;
-    --text-color-secondary: #757575;
-    --primary-color: #8a9a8b;
-    --primary-color-text: #ffffff;
-    --mask-bg: rgba(0, 0, 0, 0.4);
+  --surface-ground: #f3e4c9; /* Fundo - Bege Claro */
+  --surface-card: #da9b5b;    /* Cards - Laranja Médio (Capivara) */
+  --surface-overlay: #ffffff;
+  --surface-border: #593e2b;  /* Borda - Marrom Escuro */
+  --surface-hover: #e8ded4;
+  --text-color: #3a3a3a;
+  --text-color-secondary: #593e2b;
+  --primary-color: #5d8a8c;
+  --primary-color-text: #ffffff;
+  --mask-bg: rgba(58, 58, 58, 0.4);
+
+  /* PrimeNG 18+ Semantic Override */
+  --p-primary-color: #5d8a8c;
+  --p-primary-50: #f0fdf4;
+  --p-primary-100: #dcfce7;
+  --p-primary-200: #bbf7d0;
+  --p-primary-300: #86efac;
+  --p-primary-400: #4ade80;
+  --p-primary-500: #5d8a8c;
+  --p-primary-600: #4a6f71;
+  --p-primary-700: #3a5658;
+  --p-primary-800: #2c3e40;
+  --p-primary-900: #1e292b;
+  --p-primary-950: #0f1516;
+
+  --p-content-background: #f3e4c9; /* Inputs/Componentes - Bege Claro */
+  --p-content-border-color: var(--surface-border);
+  --p-content-color: var(--text-color);
+
+  /* Cores de destaque e funcionais adicionais */
+  --secondary-color: #d8704c;
+  --highlight-color: #8a9a8b;
+  --success-color: #5a9261;
+  --error-color: #d15c5c;
 }
 
 html,
 body {
-    height: 100%;
-    background-color: var(--surface-ground);
-    color: var(--text-color);
-    font-family: var(--font-family);
+  height: 100%;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  font-family: var(--font-family);
 }
 
 /* 5. Global PrimeNG Overrides */
@@ -68,413 +92,546 @@ body {
 /* Dropdown Panel/Overlay */
 .p-select-overlay,
 .p-dropdown-panel {
-    background: var(--surface-overlay) !important;
-    border: 1px solid var(--surface-border) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+  background: var(--surface-overlay) !important;
+  border: 1px solid var(--surface-border) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
 
-    .p-select-option,
-    .p-dropdown-item {
+  .p-select-option,
+  .p-dropdown-item {
+    color: var(--text-color) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-color) !important;
+
+    &.p-select-option-selected,
+    &.p-dropdown-item-selected {
+      background: #eff6ff !important;
+      color: #1d4ed8 !important;
+    }
+
+    .p-datepicker-header {
+      background: var(--surface-overlay) !important;
+      color: var(--text-color) !important;
+      border-bottom: 1px solid var(--surface-border) !important;
+      padding: 0.5rem !important;
+
+      .p-datepicker-title {
         color: var(--text-color) !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+      }
+
+      button {
+        color: var(--text-color-secondary) !important;
+
+        &:hover {
+          background: var(--surface-hover) !important;
+          color: var(--text-color) !important;
+        }
+      }
+    }
+
+    table {
+      th {
+        color: var(--text-color-secondary) !important;
+      }
+
+      td {
+        > span {
+          color: var(--text-color) !important;
+
+          &.p-datepicker-today {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+          }
+
+          &:not(.p-disabled):not(.p-datepicker-other-month):hover {
+            background: var(--surface-hover) !important;
+            color: var(--text-color) !important;
+          }
+        }
+
+        /* Force text color for unselected dates */
+        > span:not(.p-highlight):not(.p-datepicker-day-selected) {
+          color: var(--text-color) !important;
+        }
+      }
+    }
+
+    /* Month/Year Picker */
+    .p-monthpicker-month,
+    .p-yearpicker-year {
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+
+      &.p-highlight,
+      &.p-monthpicker-month-selected,
+      &.p-yearpicker-year-selected {
+        background: #eff6ff !important;
+        color: #1d4ed8 !important;
+      }
+    }
+  }
+
+  .dark-theme .p-datepicker,
+  .dark .p-datepicker {
+    table td > span.p-datepicker-today {
+      background: rgba(59, 130, 246, 0.16) !important;
+      color: var(--primary-color) !important;
+    }
+
+    .p-monthpicker-month.p-highlight,
+    .p-monthpicker-month.p-monthpicker-month-selected,
+    .p-yearpicker-year.p-highlight,
+    .p-yearpicker-year.p-yearpicker-year-selected {
+      background: rgba(59, 130, 246, 0.16) !important;
+      color: var(--primary-color) !important;
+    }
+
+    /* Selected Day in Dark Mode */
+    table td > span.p-highlight,
+    table td > span.p-datepicker-day-selected {
+      background: rgba(59, 130, 246, 0.16) !important;
+      color: var(--primary-color) !important;
+    }
+  }
+}
+
+  /* Dialog Styles */
+  .p-dialog {
+    background: var(--surface-card) !important;
+    border: 1px solid var(--surface-border) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    color: var(--text-color) !important;
+
+    .p-dialog-header {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-bottom: 1px solid var(--surface-border) !important;
+      padding: 1.5rem !important;
+    }
+
+    .p-dialog-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      padding: 0 1.5rem 1.5rem 1.5rem !important;
+    }
+
+    .p-dialog-footer {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-top: 1px solid var(--surface-border) !important;
+      padding: 1.5rem !important;
+    }
+  }
+
+  /* Drawer/Sidebar Styles */
+  .p-drawer,
+  .p-sidebar {
+    background: var(--surface-card) !important;
+    border-right: 1px solid var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-drawer-header,
+    .p-sidebar-header {
+      color: var(--text-color) !important;
+      padding: 1rem !important;
+    }
+
+    .p-drawer-content,
+    .p-sidebar-content {
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Card Styles */
+  .p-card {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+
+    // Dark mode specific styles mimicking dark:bg-slate-800 dark:border-slate-800
+    // Slate-800 is typically #1e293b
+    .dark-theme &,
+    .dark & {
+      background: #1e293b !important;
+      border-color: #1e293b !important;
+    }
+
+    .p-card-title {
+      color: var(--text-color) !important;
+      font-weight: 700 !important;
+    }
+
+    .p-card-subtitle {
+      color: var(--text-color-secondary) !important;
+    }
+
+    .p-card-content {
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Tabs Styles */
+  .p-tabs {
+    .p-tablist {
+      background: transparent !important;
+      border-color: var(--surface-border) !important;
+    }
+
+    .p-tab {
+      background: transparent !important;
+      color: var(--text-color-secondary) !important;
+      border-color: transparent !important;
+
+      &:hover {
+        border-color: var(--surface-border) !important;
         color: var(--text-color) !important;
+      }
+
+      &.p-tab-active {
+        color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+      }
+    }
+
+    .p-tabpanels {
+      background: transparent !important;
+      color: var(--text-color) !important;
+      padding: 1rem 0 !important;
+    }
+  }
+
+  /* 6. Additional PrimeNG Component Overrides for Dark Mode */
+
+  /* Input Text Styles */
+  .p-inputtext {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--surface-border) !important;
+
+    &:enabled:hover {
+      border-color: var(--primary-color) !important;
+    }
+
+    &:enabled:focus {
+      border-color: #15803d !important;
+      /* Green-700 */
+      box-shadow: 0 0 0 1px #15803d !important;
+    }
+  }
+
+  /* Select/Dropdown Trigger */
+  .p-select,
+  .p-dropdown {
+    background: var(--surface-card) !important;
+    border: 1px solid var(--surface-border) !important;
+
+    .p-select-label,
+    .p-dropdown-label {
+      color: var(--text-color) !important;
+    }
+
+    .p-select-dropdown,
+    .p-dropdown-trigger {
+      color: var(--text-color-secondary) !important;
+    }
+
+    &:not(.p-disabled):hover {
+      border-color: var(--primary-color) !important;
+    }
+  }
+
+  /* Table Styles */
+  .p-datatable {
+    .p-datatable-header {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border: 1px solid var(--surface-border) !important;
+      border-bottom: 0 none !important;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: var(--surface-ground) !important;
+      color: var(--text-color) !important;
+      border: 1px solid var(--surface-border) !important;
+    }
+
+    .p-datatable-tbody > tr {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+
+      > td {
+        border: 1px solid var(--surface-border) !important;
+      }
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+    }
+
+    .p-paginator {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border: 1px solid var(--surface-border) !important;
+      border-top: 0 none !important;
+
+      .p-paginator-current {
+        color: var(--text-color-secondary) !important;
+      }
+
+      .p-paginator-first,
+      .p-paginator-prev,
+      .p-paginator-next,
+      .p-paginator-last,
+      .p-paginator-pages .p-paginator-page {
+        color: var(--text-color) !important;
+
+        &:not(.p-disabled):not(.p-paginator-page-selected):hover {
+          background: var(--surface-hover) !important;
+        }
+
+        &.p-paginator-page-selected {
+          background: #dcfce7 !important;
+          color: #15803d !important;
+        }
+      }
+    }
+  }
+
+  .dark-theme
+    .p-datatable
+    .p-paginator
+    .p-paginator-pages
+    .p-paginator-page.p-paginator-page-selected,
+  .dark
+    .p-datatable
+    .p-paginator
+    .p-paginator-pages
+    .p-paginator-page.p-paginator-page-selected {
+    background: rgba(21, 128, 61, 0.2) !important;
+    color: #86efac !important;
+  }
+
+  /* Stronger Overrides for Dark Mode */
+  .dark-theme,
+  .dark {
+    /* Table Header */
+    .p-datatable .p-datatable-thead > tr > th {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-color: var(--surface-border) !important;
+    }
+
+    /* Table Body */
+    .p-datatable .p-datatable-tbody > tr {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-color: var(--surface-border) !important;
+    }
+
+    .p-datatable .p-datatable-tbody > tr > td {
+      border-color: var(--surface-border) !important;
+    }
+
+    /* Select/Dropdown Panel Background Force */
+    .p-select-overlay,
+    .p-dropdown-panel {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      .p-select-list,
+      .p-dropdown-items {
+        background: var(--surface-card) !important;
+      }
+
+      .p-select-option,
+      .p-dropdown-item {
+        color: var(--text-color) !important;
+
+        &:hover {
+          background: var(--surface-hover) !important;
+        }
 
         &.p-select-option-selected,
         &.p-dropdown-item-selected {
-            background: #eff6ff !important;
-            color: #1d4ed8 !important;
+          background: rgba(59, 130, 246, 0.16) !important;
+          color: var(--primary-color) !important;
+        }
+      }
+    }
+
+    /* Popover Styles */
+    .p-popover {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+
+      .p-popover-content {
+        background: var(--surface-card) !important;
+        color: var(--text-color) !important;
+      }
+
+      /* Arrow (Top) */
+      &.p-popover-top:before {
+        border-top-color: var(--surface-border) !important;
+      }
+
+      &.p-popover-top:after {
+        border-top-color: var(--surface-card) !important;
+      }
+
+      /* Arrow (Bottom) - Default */
+      &:before {
+        border-bottom-color: var(--surface-border) !important;
+      }
+
+      &:after {
+        border-bottom-color: var(--surface-card) !important;
+      }
+
+      /* Arrow (Left) */
+      &.p-popover-left:before {
+        border-left-color: var(--surface-border) !important;
+      }
+
+      &.p-popover-left:after {
+        border-left-color: var(--surface-card) !important;
+      }
+
+      /* Arrow (Right) */
+      &.p-popover-right:before {
+        border-right-color: var(--surface-border) !important;
+      }
+
+      &.p-popover-right:after {
+        border-right-color: var(--surface-card) !important;
+      }
+    }
+  }
+
+  /* Stronger Overrides for Capycro Theme */
+  .capycro-theme {
+      /* Card Background - Specific for Capycro if distinct from generic surface-card */
+     .p-card {
+        background: var(--surface-card) !important;
+        border: 1px solid var(--surface-border) !important; /* Capycro needs explicit border to contrast with off-white bg */
+     }
+
+    /* Table Header */
+    .p-datatable .p-datatable-thead > tr > th {
+      background: var(--surface-ground) !important; /* Use off-white ground for headers to distinguish from white body */
+      color: var(--text-color) !important;
+      border-color: var(--surface-border) !important;
+    }
+
+    /* Table Body */
+    .p-datatable .p-datatable-tbody > tr {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+          background: var(--surface-hover) !important;
+      }
+    }
+
+    .p-datatable .p-datatable-tbody > tr > td {
+      border-color: var(--surface-border) !important;
+    }
+
+    /* Select/Dropdown Panel Background Force */
+    .p-select-overlay,
+    .p-dropdown-panel {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      .p-select-list,
+      .p-dropdown-items {
+        background: var(--surface-card) !important;
+        color: var(--text-color) !important;
+      }
+
+      .p-select-option,
+      .p-dropdown-item {
+        color: var(--text-color) !important;
+
+        &:hover {
+          background: var(--surface-hover) !important;
         }
 
-        .p-datepicker-header {
-            background: var(--surface-overlay) !important;
-            color: var(--text-color) !important;
-            border-bottom: 1px solid var(--surface-border) !important;
-            padding: 0.5rem !important;
+        &.p-select-option-selected,
+        &.p-dropdown-item-selected {
+          background: rgba(93, 138, 140, 0.16) !important; /* Capycro Blue Low Opacity */
+          color: var(--primary-color) !important;
+        }
+      }
+    }
 
-            .p-datepicker-title {
-                color: var(--text-color) !important;
-            }
+    /* Force Primary Button Color (Override Aura Green) */
+    .p-button {
+      background: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      color: var(--primary-color-text) !important;
 
-            button {
-                color: var(--text-color-secondary) !important;
+      &:hover {
+        background: #4a6f71 !important; /* Darker Petrol */
+        border-color: #4a6f71 !important;
+      }
 
-                &:hover {
-                    background: var(--surface-hover) !important;
-                    color: var(--text-color) !important;
-                }
-            }
+      &.p-button-outlined {
+        background: transparent !important;
+        color: var(--primary-color) !important;
+        border-color: var(--surface-border) !important; /* Beige border for outlines */
+
+        &:hover {
+            background: rgba(93, 138, 140, 0.04) !important;
+            border-color: var(--primary-color) !important;
         }
 
-        table {
-            th {
-                color: var(--text-color-secondary) !important;
-            }
-
-            td {
-                >span {
-                    color: var(--text-color) !important;
-
-                    &.p-datepicker-today {
-                        background: #eff6ff !important;
-                        color: #1d4ed8 !important;
-                    }
-
-                    &:not(.p-disabled):not(.p-datepicker-other-month):hover {
-                        background: var(--surface-hover) !important;
-                        color: var(--text-color) !important;
-                    }
-                }
-
-                /* Force text color for unselected dates */
-                >span:not(.p-highlight):not(.p-datepicker-day-selected) {
-                    color: var(--text-color) !important;
-                }
-            }
+        &.p-button-secondary {
+            color: var(--text-color-secondary) !important;
         }
 
-        /* Month/Year Picker */
-        .p-monthpicker-month,
-        .p-yearpicker-year {
-            color: var(--text-color) !important;
+        &.p-button-danger {
+            color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
 
             &:hover {
-                background: var(--surface-hover) !important;
-            }
-
-            &.p-highlight,
-            &.p-monthpicker-month-selected,
-            &.p-yearpicker-year-selected {
-                background: #eff6ff !important;
-                color: #1d4ed8 !important;
+                 background: rgba(209, 92, 92, 0.04) !important;
             }
         }
+      }
+
+      &.p-button-text {
+          background: transparent !important;
+          color: var(--primary-color) !important;
+          border-color: transparent !important;
+
+          &:hover {
+              background: rgba(93, 138, 140, 0.04) !important;
+          }
+      }
     }
 
-    .dark-theme .p-datepicker,
-    .dark .p-datepicker {
-        table td>span.p-datepicker-today {
-            background: rgba(59, 130, 246, 0.16) !important;
-            color: var(--primary-color) !important;
-        }
-
-        .p-monthpicker-month.p-highlight,
-        .p-monthpicker-month.p-monthpicker-month-selected,
-        .p-yearpicker-year.p-highlight,
-        .p-yearpicker-year.p-yearpicker-year-selected {
-            background: rgba(59, 130, 246, 0.16) !important;
-            color: var(--primary-color) !important;
-        }
-
-        /* Selected Day in Dark Mode */
-        table td>span.p-highlight,
-        table td>span.p-datepicker-day-selected {
-            background: rgba(59, 130, 246, 0.16) !important;
-            color: var(--primary-color) !important;
-        }
-    }
-
-    /* Dialog Styles */
-    .p-dialog {
-        background: var(--surface-card) !important;
-        border: 1px solid var(--surface-border) !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-        color: var(--text-color) !important;
-
-        .p-dialog-header {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            border-bottom: 1px solid var(--surface-border) !important;
-            padding: 1.5rem !important;
-        }
-
-        .p-dialog-content {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            padding: 0 1.5rem 1.5rem 1.5rem !important;
-        }
-
-        .p-dialog-footer {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            border-top: 1px solid var(--surface-border) !important;
-            padding: 1.5rem !important;
-        }
-    }
-
-    /* Drawer/Sidebar Styles */
+    /* Sidebar/Drawer Color */
     .p-drawer,
     .p-sidebar {
-        background: var(--surface-card) !important;
+        background: var(--surface-card) !important; /* White/Bege Card */
         border-right: 1px solid var(--surface-border) !important;
-        color: var(--text-color) !important;
 
         .p-drawer-header,
         .p-sidebar-header {
             color: var(--text-color) !important;
-            padding: 1rem !important;
         }
 
         .p-drawer-content,
         .p-sidebar-content {
-            color: var(--text-color) !important;
+             color: var(--text-color) !important;
         }
     }
-
-    /* Card Styles */
-    .p-card {
-        background: var(--surface-card) !important;
-        color: var(--text-color) !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
-
-        // Dark mode specific styles mimicking dark:bg-slate-800 dark:border-slate-800
-        // Slate-800 is typically #1e293b
-        .dark-theme &,
-        .dark & {
-            background: #1e293b !important;
-            border-color: #1e293b !important;
-        }
-
-        .p-card-title {
-            color: var(--text-color) !important;
-            font-weight: 700 !important;
-        }
-
-        .p-card-subtitle {
-            color: var(--text-color-secondary) !important;
-        }
-
-        .p-card-content {
-            color: var(--text-color) !important;
-        }
-    }
-
-    /* Tabs Styles */
-    .p-tabs {
-        .p-tablist {
-            background: transparent !important;
-            border-color: var(--surface-border) !important;
-        }
-
-        .p-tab {
-            background: transparent !important;
-            color: var(--text-color-secondary) !important;
-            border-color: transparent !important;
-
-            &:hover {
-                border-color: var(--surface-border) !important;
-                color: var(--text-color) !important;
-            }
-
-            &.p-tab-active {
-                color: var(--primary-color) !important;
-                border-color: var(--primary-color) !important;
-            }
-        }
-
-        .p-tabpanels {
-            background: transparent !important;
-            color: var(--text-color) !important;
-            padding: 1rem 0 !important;
-        }
-    }
-
-    /* 6. Additional PrimeNG Component Overrides for Dark Mode */
-
-    /* Input Text Styles */
-    .p-inputtext {
-        background: var(--surface-card) !important;
-        color: var(--text-color) !important;
-        border: 1px solid var(--surface-border) !important;
-
-        &:enabled:hover {
-            border-color: var(--primary-color) !important;
-        }
-
-        &:enabled:focus {
-            border-color: #15803d !important;
-            /* Green-700 */
-            box-shadow: 0 0 0 1px #15803d !important;
-        }
-    }
-
-    /* Select/Dropdown Trigger */
-    .p-select,
-    .p-dropdown {
-        background: var(--surface-card) !important;
-        border: 1px solid var(--surface-border) !important;
-
-        .p-select-label,
-        .p-dropdown-label {
-            color: var(--text-color) !important;
-        }
-
-        .p-select-dropdown,
-        .p-dropdown-trigger {
-            color: var(--text-color-secondary) !important;
-        }
-
-        &:not(.p-disabled):hover {
-            border-color: var(--primary-color) !important;
-        }
-    }
-
-    /* Table Styles */
-    .p-datatable {
-        .p-datatable-header {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            border: 1px solid var(--surface-border) !important;
-            border-bottom: 0 none !important;
-        }
-
-        .p-datatable-thead>tr>th {
-            background: var(--surface-ground) !important;
-            color: var(--text-color) !important;
-            border: 1px solid var(--surface-border) !important;
-        }
-
-        .p-datatable-tbody>tr {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-
-            >td {
-                border: 1px solid var(--surface-border) !important;
-            }
-
-            &:hover {
-                background: var(--surface-hover) !important;
-            }
-        }
-
-        .p-paginator {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            border: 1px solid var(--surface-border) !important;
-            border-top: 0 none !important;
-
-            .p-paginator-current {
-                color: var(--text-color-secondary) !important;
-            }
-
-            .p-paginator-first,
-            .p-paginator-prev,
-            .p-paginator-next,
-            .p-paginator-last,
-            .p-paginator-pages .p-paginator-page {
-                color: var(--text-color) !important;
-
-                &:not(.p-disabled):not(.p-paginator-page-selected):hover {
-                    background: var(--surface-hover) !important;
-                }
-
-                &.p-paginator-page-selected {
-                    background: #dcfce7 !important;
-                    color: #15803d !important;
-                }
-            }
-        }
-    }
-
-    .dark-theme .p-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-paginator-page-selected,
-    .dark .p-datatable .p-paginator .p-paginator-pages .p-paginator-page.p-paginator-page-selected {
-        background: rgba(21, 128, 61, 0.2) !important;
-        color: #86efac !important;
-    }
-
-    /* Stronger Overrides for Dark Mode */
-    .dark-theme,
-    .dark {
-
-        /* Table Header */
-        .p-datatable .p-datatable-thead>tr>th {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            border-color: var(--surface-border) !important;
-        }
-
-        /* Table Body */
-        .p-datatable .p-datatable-tbody>tr {
-            background: var(--surface-card) !important;
-            color: var(--text-color) !important;
-            border-color: var(--surface-border) !important;
-        }
-
-        .p-datatable .p-datatable-tbody>tr>td {
-            border-color: var(--surface-border) !important;
-        }
-
-        /* Select/Dropdown Panel Background Force */
-        .p-select-overlay,
-        .p-dropdown-panel {
-            background: var(--surface-card) !important;
-            border-color: var(--surface-border) !important;
-
-            .p-select-list,
-            .p-dropdown-items {
-                background: var(--surface-card) !important;
-            }
-
-            .p-select-option,
-            .p-dropdown-item {
-                color: var(--text-color) !important;
-
-                &:hover {
-                    background: var(--surface-hover) !important;
-                }
-
-                &.p-select-option-selected,
-                &.p-dropdown-item-selected {
-                    background: rgba(59, 130, 246, 0.16) !important;
-                    color: var(--primary-color) !important;
-                }
-            }
-        }
-
-        /* Popover Styles */
-        .p-popover {
-            background: var(--surface-card) !important;
-            border-color: var(--surface-border) !important;
-            color: var(--text-color) !important;
-
-            .p-popover-content {
-                background: var(--surface-card) !important;
-                color: var(--text-color) !important;
-            }
-
-            /* Arrow (Top) */
-            &.p-popover-top:before {
-                border-top-color: var(--surface-border) !important;
-            }
-
-            &.p-popover-top:after {
-                border-top-color: var(--surface-card) !important;
-            }
-
-            /* Arrow (Bottom) - Default */
-            &:before {
-                border-bottom-color: var(--surface-border) !important;
-            }
-
-            &:after {
-                border-bottom-color: var(--surface-card) !important;
-            }
-
-            /* Arrow (Left) */
-            &.p-popover-left:before {
-                border-left-color: var(--surface-border) !important;
-            }
-
-            &.p-popover-left:after {
-                border-left-color: var(--surface-card) !important;
-            }
-
-            /* Arrow (Right) */
-            &.p-popover-right:before {
-                border-right-color: var(--surface-border) !important;
-            }
-
-            &.p-popover-right:after {
-                border-right-color: var(--surface-card) !important;
-            }
-        }
-    }
-}
+  }
