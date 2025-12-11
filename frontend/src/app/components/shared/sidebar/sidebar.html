@@ -5,5 +5,10 @@
     <li><a routerLink="/accounts"><i class="pi pi-credit-card"></i> Contas</a></li>
     <li><a routerLink="/categories"><i class="pi pi-tag"></i> Categorias</a></li>
     <li><a routerLink="/budgets"><i class="pi pi-dollar"></i> Orçamentos</a></li>
+    @if (pwaService.isInstallable) {
+      <li class="mt-4 border-t border-surface-border pt-4">
+        <button pButton label="Instalar App" icon="pi pi-download" class="p-button-text w-full text-left" (click)="pwaService.installApp()"></button>
+      </li>
+    }
   </ul>
 </p-drawer>

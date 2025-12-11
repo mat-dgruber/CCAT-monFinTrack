@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { UserPreferenceService } from './services/user-preference.service';
 
 
+import { PwaService } from './services/pwa.service';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -16,5 +18,8 @@ import { UserPreferenceService } from './services/user-preference.service';
   styleUrl: './app.scss'
 })
 export class App {
-  constructor(private userPrefs: UserPreferenceService) {}
+  constructor(
+      private userPrefs: UserPreferenceService,
+      private pwaService: PwaService // Inicializa o serviço PWA
+  ) {}
 }

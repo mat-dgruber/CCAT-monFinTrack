@@ -78,6 +78,23 @@
               </a>
             </li>
             <li>
+              <a routerLink="/budgets" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-dollar"></i>
+                <span class="font-medium">Orçamentos</span>
+              </a>
+            </li>
+            @if (pwaService.isInstallable) {
+            <li>
+              <button (click)="pwaService.installApp(); closeSidebar()"
+                class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+                <i class="pi pi-download"></i>
+                <span class="font-medium">Instalar App</span>
+              </button>
+            </li>
+            }
+            <li>
               <a routerLink="/advanced-graphics" (click)="closeSidebar()"
                 routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                 class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
@@ -175,6 +192,22 @@
             <span class="font-medium">Categorias</span>
           </a>
         </li>
+        <li>
+          <a routerLink="/budgets" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+            <i class="pi pi-dollar"></i>
+            <span class="font-medium">Orçamentos</span>
+          </a>
+        </li>
+        @if (pwaService.isInstallable) {
+        <li>
+          <button (click)="pwaService.installApp()"
+            class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+            <i class="pi pi-download"></i>
+            <span class="font-medium">Instalar App</span>
+          </button>
+        </li>
+        }
         <li>
           <a routerLink="/advanced-graphics"
             routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"

@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 // PrimeNG
 import { TableModule, Table } from 'primeng/table';
@@ -57,7 +58,7 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
 })
-export class TransactionManager implements OnInit {
+export class TransactionManager implements OnInit, AfterViewInit {
   @ViewChild(TransactionForm) transactionForm!: TransactionForm;
 
   private transactionService = inject(TransactionService);
@@ -65,6 +66,7 @@ export class TransactionManager implements OnInit {
   private accountService = inject(AccountService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
 
   // Data
   transactions = signal<Transaction[]>([]);
@@ -110,6 +112,21 @@ export class TransactionManager implements OnInit {
     // Load metadata
     this.categoryService.getCategories().subscribe(cats => this.categories.set(cats));
     this.accountService.getAccounts().subscribe(accs => this.accounts.set(accs));
+  }
+
+  ngAfterViewInit() {
+    this.route.queryParams.subscribe(params => {
+      // Check for App Shortcut action ('new') or Protocol Parameter ('type')
+      if (params['action'] === 'new' || params['type']) {
+        setTimeout(() => {
+          this.openNew();
+          if (params['type']) {
+            // Pre-select type (expense/income)
+            this.transactionForm.form.patchValue({ type: params['type'] });
+          }
+        }, 200);
+      }
+    });
   }
 
   loadData() {
@@ -430,17 +447,52 @@ export class TransactionManager implements OnInit {
     });
   }
 
-  exportCSV() {
-    // Implement CSV export logic here
-    // Simple client side CSV
+  async exportCSV() {
     const data = this.currentViewTransactions();
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + "Data,Título,Descrição,Categoria,Valor,Tipo\n"
-      + data.map((e: Transaction) => `${e.date},${e.title},${e.description || ''},${e.category?.name},${e.amount},${e.type}`).join("\n");
+    // Add BOM for Excel compatibility
+    const bom = '\uFEFF';
+    const csvHeader = "Data,Título,Descrição,Categoria,Valor,Tipo\n";
+    const csvRows = data.map((e: Transaction) => {
+        // Handle potential commas in fields by wrapping in quotes
+        const title = `"${e.title.replace(/"/g, '""')}"`;
+        const desc = `"${(e.description || '').replace(/"/g, '""')}"`;
+        const cat = `"${(e.category?.name || 'Sem Categoria').replace(/"/g, '""')}"`;
+        return `${e.date},${title},${desc},${cat},${e.amount},${e.type}`;
+    }).join("\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = bom + csvHeader + csvRows;
+
+    // Try File System Access API
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: 'transacoes.csv',
+          types: [{
+            description: 'CSV File',
+            accept: { 'text/csv': ['.csv'] },
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(csvContent);
+        await writable.close();
+        this.messageService.add({ severity: 'success', summary: 'Exportado', detail: 'Arquivo salvo com sucesso!' });
+        return;
+      } catch (err: any) {
+        // Build failed or user cancelled
+        if (err.name !== 'AbortError') {
+           console.error('File System Access Error:', err);
+           // Fallback to legacy
+        } else {
+            return; // User cancelled
+        }
+      }
+    }
+
+    // Fallback
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", "transacoes.csv");
     document.body.appendChild(link);
     link.click();

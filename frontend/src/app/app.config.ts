@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 // Mantemos o Async para performance no Angular 20
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -16,6 +16,7 @@ import { ConfirmationService, MessageService } from 'primeng/api'; // <--- Impor
 import { routes } from './app.routes';
 
 import { jwtInterceptor } from './interceptors/jwt.interceptor';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,8 +36,13 @@ export const appConfig: ApplicationConfig = {
           darkModeSelector: '.dark'
         }
       }
-    })
+    }),
 
-    , ConfirmationService, MessageService // <--- Adicione aqui
+    ConfirmationService,
+    MessageService,
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: true,
+      registrationStrategy: 'registerWhenStable:30000'
+    })
   ]
 };
