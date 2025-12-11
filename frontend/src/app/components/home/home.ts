@@ -11,8 +11,8 @@ import { DrawerModule } from 'primeng/drawer';
 
 
 import { AuthService } from '../../services/auth.service';
-
 import { UserPreferenceService } from '../../services/user-preference.service';
+import { PwaService } from '../../services/pwa.service';
 
 @Component({
   selector: 'app-home',
@@ -30,6 +30,7 @@ import { UserPreferenceService } from '../../services/user-preference.service';
 export class Home {
   authService = inject(AuthService);
   userPreferenceService = inject(UserPreferenceService);
+  pwaService = inject(PwaService);
 
   sidebarVisible = signal(false);
 

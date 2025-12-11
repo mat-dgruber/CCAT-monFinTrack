@@ -41,5 +41,6 @@ export const routes: Routes = [
   { path: 'terms', component: Terms },
   { path: 'privacy-policy', component: PrivacyPolicy },
   { path: 'contact', component: Contact },
+  { path: 'transaction', redirectTo: 'transactions' },
   { path: '**', redirectTo: '' }
 ];

@@ -20,6 +20,34 @@
     </div>
   </div>
 
+  <!-- App & System Section -->
+  <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6">
+    <h2 class="text-xl font-semibold text-color mb-6">Aplicativo & Sistema</h2>
+
+    <div class="flex flex-col gap-6">
+      <!-- Wake Lock -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-secondary">Manter Tela Ligada</span>
+          <span class="text-sm text-secondary">Impede que a tela desligue enquanto o app estiver aberto.</span>
+        </div>
+        <p-toggleswitch [ngModel]="wakeLockEnabled()" (ngModelChange)="toggleWakeLock()"></p-toggleswitch>
+      </div>
+
+       <!-- Install App -->
+       @if (pwaService.isInstallable) {
+       <hr class="border-surface-border" />
+       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-secondary">Instalar Aplicativo</span>
+          <span class="text-sm text-secondary">Instale o MonFinTrack para uma melhor experiência.</span>
+        </div>
+        <p-button label="Instalar" icon="pi pi-download" styleClass="p-button-outlined" (onClick)="installApp()"></p-button>
+      </div>
+      }
+    </div>
+  </div>
+
   <!-- Profile Section -->
   <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6">
     <h2 class="text-xl font-semibold text-color mb-6">Perfil</h2>

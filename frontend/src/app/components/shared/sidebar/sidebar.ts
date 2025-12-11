@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
+import { PwaService } from '../../../services/pwa.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,4 +13,5 @@ import { RouterModule } from '@angular/router';
 })
 export class Sidebar {
   sidebarVisible = false;
+  pwaService = inject(PwaService);
 }

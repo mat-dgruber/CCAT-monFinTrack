@@ -23,6 +23,8 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
+import { PwaService } from '../../services/pwa.service';
+
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.html',
@@ -57,8 +59,10 @@ export class Settings {
 
   preferenceService = inject(UserPreferenceService);
   mfaService = inject(MFAService);
+  pwaService = inject(PwaService);
 
   preferences: UserPreference | null = null;
+  wakeLockEnabled = signal(false);
 
   // Computed signal for profile image
   profileImageUrl = computed(() => {
@@ -317,5 +321,19 @@ export class Settings {
         });
       }
     });
+  }
+
+  installApp() {
+    this.pwaService.installApp();
+  }
+
+  toggleWakeLock() {
+    this.wakeLockEnabled.set(!this.wakeLockEnabled());
+    if (this.wakeLockEnabled()) {
+      this.pwaService.requestWakeLock();
+      this.messageService.add({ severity: 'info', summary: 'Tela ativa', detail: 'O modo "Manter tela ligada" foi ativado.' });
+    } else {
+      this.pwaService.releaseWakeLock();
+    }
   }
 }

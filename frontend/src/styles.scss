@@ -618,20 +618,34 @@ body {
       }
     }
 
-    /* Sidebar/Drawer Color */
-    .p-drawer,
-    .p-sidebar {
-        background: var(--surface-card) !important; /* White/Bege Card */
-        border-right: 1px solid var(--surface-border) !important;
+  /* Sidebar/Drawer Color */
+  .pwa-title-bar {
+    display: none !important; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 33px; /* Standard Windows title bar height usually, or defined by env */
+    background: var(--surface-card); /* Should match theme */
+    z-index: 9999;
+    align-items: center;
+    padding-left: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    -webkit-app-region: drag; /* Allow dragging the window */
+    app-region: drag;
+  }
 
-        .p-drawer-header,
-        .p-sidebar-header {
-            color: var(--text-color) !important;
-        }
-
-        .p-drawer-content,
-        .p-sidebar-content {
-             color: var(--text-color) !important;
-        }
+  /* Only show when Window Controls Overlay is active */
+  @media (display-mode: window-controls-overlay) {
+    .pwa-title-bar {
+      display: flex !important;
+      /* Use env variables to avoid overlapping window controls */
+      padding-right: env(titlebar-area-width, 0);
+      left: env(titlebar-area-x, 0);
+      width: env(titlebar-area-width, 100%);
+      height: env(titlebar-area-height, 33px);
     }
   }
+}
