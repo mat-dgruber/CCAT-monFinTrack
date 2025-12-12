@@ -44,6 +44,14 @@ class TransactionBase(BaseModel):
      total_installments: Optional[int] = None
      is_auto_pay: bool = Field(False, description="Se o pagamento é automático (via recorrência)")
 
+     # Campos opcionais de Dízimos e Ofertas
+     tithe_amount: Optional[float] = Field(None, description="Valor do dízimo")
+     tithe_percentage: Optional[float] = Field(None, description="Porcentagem do dízimo")
+     offering_amount: Optional[float] = Field(None, description="Valor da oferta")
+     offering_percentage: Optional[float] = Field(None, description="Porcentagem da oferta")
+     net_amount: Optional[float] = Field(None, description="Valor líquido (lucro)")
+     tithe_status: Optional[str] = Field(None, description="Status do dízimo: NONE, PENDING, PAID")
+
      # --- BLOCO DE PROTEÇÃO XSS ---
      @field_validator('title', 'description')
      @classmethod # No Pydantic v2 usamos @classmethod as vezes, mas field_validator cuida disso

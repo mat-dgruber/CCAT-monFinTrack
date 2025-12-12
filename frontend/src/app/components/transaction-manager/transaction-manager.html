@@ -208,6 +208,18 @@
                 <div class="flex items-center gap-2">
                   <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
                     [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true"></p-tag>
+
+                  <!-- Tithe Tags -->
+                  @if (t.tithe_status && t.tithe_status !== 'NONE') {
+                    <i class="pi"
+                       [class.pi-check-circle]="t.tithe_status === 'PAID'"
+                       [class.pi-clock]="t.tithe_status === 'PENDING'"
+                       [class.text-green-500]="t.tithe_status === 'PAID'"
+                       [class.text-orange-500]="t.tithe_status === 'PENDING'"
+                       [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
+                    </i>
+                  }
+
                   <i *ngIf="t.is_auto_pay" class="pi pi-sync text-blue-500" pTooltip="Pagamento Automático"></i>
                 </div>
               </td>
@@ -315,6 +327,17 @@
               </span>
               <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
                 [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true" styleClass="text-xs"></p-tag>
+
+              <!-- Tithe Tags (Mobile) -->
+              @if (t.tithe_status && t.tithe_status !== 'NONE') {
+                <i class="pi"
+                   [class.pi-check-circle]="t.tithe_status === 'PAID'"
+                   [class.pi-clock]="t.tithe_status === 'PENDING'"
+                   [class.text-green-500]="t.tithe_status === 'PAID'"
+                   [class.text-orange-500]="t.tithe_status === 'PENDING'"
+                   [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
+                </i>
+              }
             </div>
             <div class="flex gap-1">
               <button (click)="toggleStatus($event, t)"

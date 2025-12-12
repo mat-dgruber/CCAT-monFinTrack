@@ -12,6 +12,7 @@ import { UserPreference } from '../../models/user-preference.model';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -36,6 +37,7 @@ import { PwaService } from '../../services/pwa.service';
     CardModule,
     ButtonModule,
     InputTextModule,
+    InputNumberModule,
     ToggleSwitchModule,
     ToastModule,
     ConfirmDialogModule,
@@ -99,6 +101,12 @@ export class Settings {
     { label: 'Sistema', value: 'system' }
   ];
 
+  // Tithes & Offerings
+  tithesEnabled = signal(false);
+  defaultTithePct = signal(10);
+  defaultOfferingPct = signal(5);
+  autoApplyTithe = signal(false);
+
   constructor() {
     // Initialize with current user data
     const user = this.auth.currentUser();
@@ -116,10 +124,34 @@ export class Settings {
         this.selectedTheme.set(prefs.theme);
         if (prefs.birthday) this.birthday.set(new Date(prefs.birthday));
         if (prefs.timezone) this.selectedTimezone.set(prefs.timezone);
+
+        // Tithes
+        this.tithesEnabled.set(!!prefs.enable_tithes_offerings);
+        this.defaultTithePct.set(prefs.default_tithe_percentage ?? 10);
+        this.defaultOfferingPct.set(prefs.default_offering_percentage ?? 5);
+        this.autoApplyTithe.set(!!prefs.auto_apply_tithe);
       }
     });
 
     this.checkMfaStatus();
+  }
+
+  onTithesChange() {
+    if (this.preferences) {
+        this.preferenceService.updatePreferences({
+            enable_tithes_offerings: this.tithesEnabled()
+        }).subscribe();
+    }
+  }
+
+  onTitheSettingsChange() {
+      if (this.preferences) {
+          this.preferenceService.updatePreferences({
+              default_tithe_percentage: this.defaultTithePct(),
+              default_offering_percentage: this.defaultOfferingPct(),
+              auto_apply_tithe: this.autoApplyTithe()
+          }).subscribe();
+      }
   }
 
   checkMfaStatus() {
