@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output, inject, signal, OnInit, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
@@ -18,6 +19,7 @@ import { CategoryService } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
+import { UserPreferenceService } from '../../services/user-preference.service';
 
 import { Category } from '../../models/category.model';
 import { Transaction } from '../../models/transaction.model';
@@ -31,6 +33,7 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     DialogModule,
     ButtonModule,
     InputTextModule,
@@ -53,8 +56,43 @@ export class TransactionForm implements OnInit {
   private refreshService = inject(RefreshService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private preferenceService = inject(UserPreferenceService);
 
   visible = signal(false);
+  preferences = toSignal(this.preferenceService.preferences$);
+
+  // Tithes & Offerings State
+  titheEnabled = signal(false);
+  titheType = signal<'percentage' | 'value'>('percentage');
+  titheReturned = signal(false);
+  offeringEnabled = signal(false);
+  offeringType = signal<'percentage' | 'value'>('value');
+
+  netAmount = computed(() => {
+      const amount = this.form.get('amount')?.value || 0;
+      let tithe = 0;
+      let offering = 0;
+
+      if (this.titheEnabled()) {
+          const tVal = this.form.get('tithe_value')?.value || 0;
+          if (this.titheType() === 'percentage') {
+              tithe = (amount * tVal) / 100;
+          } else {
+              tithe = tVal;
+          }
+      }
+
+      if (this.offeringEnabled()) {
+          const oVal = this.form.get('offering_value')?.value || 0;
+          if (this.offeringType() === 'percentage') {
+              offering = (amount * oVal) / 100;
+          } else {
+              offering = oVal;
+          }
+      }
+
+      return Math.max(0, amount - tithe - offering);
+  });
 
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
@@ -126,7 +164,11 @@ export class TransactionForm implements OnInit {
     recurrence_create_first: [true],
 
     is_paid: [true],
-    payment_date: [new Date()]
+    payment_date: [new Date()],
+
+    // Tithes & Offerings
+    tithe_value: [10], // Default 10%
+    offering_value: [null]
   });
 
   constructor() {
@@ -167,6 +209,32 @@ export class TransactionForm implements OnInit {
         payment_date: new Date()
     });
 
+    // Apply Defaults
+    const prefs = this.preferences();
+    if (prefs?.enable_tithes_offerings) {
+        if (prefs.auto_apply_tithe) {
+             this.titheEnabled.set(true);
+             this.form.patchValue({ tithe_value: prefs.default_tithe_percentage ?? 10 });
+             this.titheType.set('percentage'); // Default to percentage for tithe usually
+        } else {
+             this.titheEnabled.set(false);
+             this.form.patchValue({ tithe_value: prefs.default_tithe_percentage ?? 10 });
+        }
+        this.titheReturned.set(false);
+
+        this.offeringEnabled.set(false);
+        if (prefs.default_offering_percentage) {
+            this.form.patchValue({ offering_value: prefs.default_offering_percentage });
+            this.offeringType.set('percentage');
+        } else {
+            this.form.patchValue({ offering_value: null });
+        }
+    } else {
+        this.titheEnabled.set(false);
+        this.offeringEnabled.set(false);
+        this.titheReturned.set(false);
+    }
+
     this.visible.set(true);
   }
 
@@ -192,8 +260,38 @@ export class TransactionForm implements OnInit {
         total_installments: transaction.total_installments || 2,
         recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
         is_paid: transaction.status === 'paid' || !transaction.status,
-        payment_date: transaction.payment_date ? new Date(transaction.payment_date) : new Date(transaction.date)
+        payment_date: transaction.payment_date ? new Date(transaction.payment_date) : new Date(transaction.date),
+
+        // Tithes
+        tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
+        offering_value: transaction.offering_percentage || transaction.offering_amount || null
     });
+
+    if (transaction.tithe_percentage) {
+        this.titheEnabled.set(true);
+        this.titheType.set('percentage');
+    } else if (transaction.tithe_amount) {
+        this.titheEnabled.set(true);
+        this.titheType.set('value');
+    } else {
+        this.titheEnabled.set(false);
+    }
+
+    if (transaction.tithe_status === 'PAID') {
+        this.titheReturned.set(true);
+    } else {
+        this.titheReturned.set(false);
+    }
+
+    if (transaction.offering_percentage) {
+        this.offeringEnabled.set(true);
+        this.offeringType.set('percentage');
+    } else if (transaction.offering_amount) {
+        this.offeringEnabled.set(true);
+        this.offeringType.set('value');
+    } else {
+        this.offeringEnabled.set(false);
+    }
 
     this.visible.set(true);
   }
@@ -217,6 +315,45 @@ export class TransactionForm implements OnInit {
       } else {
           payload.total_installments = null;
           payload.is_recurrence = false;
+      }
+
+      // Add Tithes & Offerings Data if Income
+      if (formValue.type === 'income' && this.preferences()?.enable_tithes_offerings) {
+          const amount = formValue.amount;
+
+          if (this.titheEnabled()) {
+              const tVal = formValue.tithe_value;
+              if (this.titheType() === 'percentage') {
+                  payload.tithe_percentage = tVal;
+                  payload.tithe_amount = (amount * tVal) / 100;
+              } else {
+                  payload.tithe_amount = tVal;
+                  payload.tithe_percentage = null;
+              }
+
+              // Status Logic
+              payload.tithe_status = this.titheReturned() ? 'PAID' : 'PENDING';
+          } else {
+              payload.tithe_amount = null;
+              payload.tithe_percentage = null;
+              payload.tithe_status = 'NONE';
+          }
+
+          if (this.offeringEnabled()) {
+              const oVal = formValue.offering_value;
+              if (this.offeringType() === 'percentage') {
+                  payload.offering_percentage = oVal;
+                  payload.offering_amount = (amount * oVal) / 100;
+              } else {
+                  payload.offering_amount = oVal;
+                  payload.offering_percentage = null;
+              }
+          } else {
+              payload.offering_amount = null;
+              payload.offering_percentage = null;
+          }
+
+          payload.net_amount = this.netAmount();
       }
 
       const onSave = () => {

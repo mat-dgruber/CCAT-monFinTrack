@@ -127,6 +127,65 @@
       </p-select>
     </div>
 
+    <!-- Tithes & Offerings -->
+    @if (form.get('type')?.value === 'income' && preferences()?.enable_tithes_offerings) {
+    <div class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900">
+        <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300">Dízimos e Ofertas</h3>
+
+        <!-- Dízimo -->
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <p-checkbox [binary]="true" [ngModel]="titheEnabled()" (ngModelChange)="titheEnabled.set($event)" [ngModelOptions]="{standalone: true}" inputId="tithe_check"></p-checkbox>
+                <label for="tithe_check" class="cursor-pointer dark:text-gray-200">Deduzir Dízimo</label>
+            </div>
+
+            @if (titheEnabled()) {
+                <div class="flex gap-2 items-center">
+                    <div class="flex-1">
+                         <p-inputNumber formControlName="tithe_value" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" [placeholder]="titheType() === 'percentage' ? '10%' : 'R$ 0,00'" [style]="{width: '100%'}" inputStyleClass="w-full"></p-inputNumber>
+                    </div>
+                    <div class="flex-shrink-0">
+                         <p-selectButton [options]="[{label: '%', value: 'percentage'}, {label: 'R$', value: 'value'}]" [ngModel]="titheType()" (ngModelChange)="titheType.set($event)" [ngModelOptions]="{standalone: true}"></p-selectButton>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (titheEnabled()) {
+             <div class="flex items-center gap-2 ml-1">
+                 <p-checkbox [binary]="true" [ngModel]="titheReturned()" (ngModelChange)="titheReturned.set($event)" [ngModelOptions]="{standalone: true}" inputId="tithe_returned_check"></p-checkbox>
+                 <label for="tithe_returned_check" class="cursor-pointer text-sm font-medium dark:text-gray-300">Dízimo Devolvido?</label>
+             </div>
+        }
+
+        <!-- Oferta -->
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <p-checkbox [binary]="true" [ngModel]="offeringEnabled()" (ngModelChange)="offeringEnabled.set($event)" [ngModelOptions]="{standalone: true}" inputId="offering_check"></p-checkbox>
+                <label for="offering_check" class="cursor-pointer dark:text-gray-200">Deduzir Oferta</label>
+            </div>
+
+            @if (offeringEnabled()) {
+                <div class="flex gap-2 items-center">
+                    <div class="flex-1">
+                         <p-inputNumber formControlName="offering_value" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" [placeholder]="offeringType() === 'percentage' ? 'Ex: 5%' : 'R$ 0,00'" [style]="{width: '100%'}" inputStyleClass="w-full"></p-inputNumber>
+                    </div>
+                    <div class="flex-shrink-0">
+                         <p-selectButton [options]="[{label: '%', value: 'percentage'}, {label: 'R$', value: 'value'}]" [ngModel]="offeringType()" (ngModelChange)="offeringType.set($event)" [ngModelOptions]="{standalone: true}"></p-selectButton>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <hr class="border-gray-200 dark:border-gray-700">
+
+        <div class="flex justify-between items-center">
+            <span class="font-semibold text-gray-600 dark:text-gray-400">Lucro Líquido:</span>
+            <span class="font-bold text-lg text-primary-500">{{ netAmount() | currency:'BRL' }}</span>
+        </div>
+    </div>
+    }
+
     <div class="flex flex-col gap-2">
       <label for="payment" class="font-semibold text-gray-700 dark:text-gray-200">Pagamento</label>
       <p-select inputId="payment" [options]="paymentOptions" formControlName="payment_method" optionLabel="label"

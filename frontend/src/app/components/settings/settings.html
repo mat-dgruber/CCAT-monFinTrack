@@ -18,6 +18,78 @@
           optionValue="value" styleClass="w-full max-w-md" appendTo="body"></p-select>
       </div>
     </div>
+
+  </div>
+
+  <!-- Tithes & Offerings Section -->
+  <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6">
+    <h2 class="text-xl font-semibold text-color mb-6">Dízimos e Ofertas</h2>
+
+    <div class="flex flex-col gap-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-secondary">Habilitar Dízimos e Ofertas</span>
+          <span class="text-sm text-secondary">Ativa campos de dízimo e oferta nas receitas.</span>
+        </div>
+        <p-toggleswitch [(ngModel)]="tithesEnabled" (ngModelChange)="onTithesChange()"></p-toggleswitch>
+      </div>
+
+      @if (tithesEnabled()) {
+        <hr class="border-surface-border" />
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex flex-col gap-1">
+            <span class="font-medium text-secondary">Dízimo Padrão (%)</span>
+            <span class="text-sm text-secondary">Porcentagem sugerida ao criar uma receita.</span>
+          </div>
+          <p-inputNumber [(ngModel)]="defaultTithePct" (onBlur)="onTitheSettingsChange()" suffix="%" [min]="0" [max]="100" [showButtons]="true" buttonLayout="horizontal" inputParam="size" [inputStyle]="{'width': '5rem', 'text-align': 'center'}" styleClass="w-auto"></p-inputNumber>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex flex-col gap-1">
+            <span class="font-medium text-secondary">Oferta Padrão (%)</span>
+            <span class="text-sm text-secondary">Porcentagem sugerida ao criar uma receita (Ex: 5%).</span>
+          </div>
+          <p-inputNumber [(ngModel)]="defaultOfferingPct" (onBlur)="onTitheSettingsChange()" suffix="%" [min]="0" [max]="100" [showButtons]="true" buttonLayout="horizontal" inputParam="size" [inputStyle]="{'width': '5rem', 'text-align': 'center'}" styleClass="w-auto"></p-inputNumber>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex flex-col gap-1">
+             <span class="font-medium text-secondary">Aplicar Automaticamente</span>
+             <span class="text-sm text-secondary">Marcar a opção de dízimo automaticamente em novas receitas.</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="autoApplyTithe" (ngModelChange)="onTitheSettingsChange()"></p-toggleswitch>
+       </div>
+      }
+    </div>
+  </div>
+
+  <!-- App & System Section -->
+  <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6">
+    <h2 class="text-xl font-semibold text-color mb-6">Aplicativo & Sistema</h2>
+
+    <div class="flex flex-col gap-6">
+      <!-- Wake Lock -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-secondary">Manter Tela Ligada</span>
+          <span class="text-sm text-secondary">Impede que a tela desligue enquanto o app estiver aberto.</span>
+        </div>
+        <p-toggleswitch [ngModel]="wakeLockEnabled()" (ngModelChange)="toggleWakeLock()"></p-toggleswitch>
+      </div>
+
+       <!-- Install App -->
+       @if (pwaService.isInstallable) {
+       <hr class="border-surface-border" />
+       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-secondary">Instalar Aplicativo</span>
+          <span class="text-sm text-secondary">Instale o MonFinTrack para uma melhor experiência.</span>
+        </div>
+        <p-button label="Instalar" icon="pi pi-download" styleClass="p-button-outlined" (onClick)="installApp()"></p-button>
+      </div>
+      }
+    </div>
   </div>
 
   <!-- App & System Section -->

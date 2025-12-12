@@ -29,4 +29,10 @@ export interface Transaction {
   installment_group_id?: string;
   category_id?: string;
   is_auto_pay?: boolean;
+  tithe_amount?: number;
+  tithe_percentage?: number;
+  offering_amount?: number;
+  offering_percentage?: number;
+  net_amount?: number;
+  tithe_status?: 'NONE' | 'PENDING' | 'PAID';
 }
