@@ -34,7 +34,8 @@ export const routes: Routes = [
       { path: 'calendar', component: FinancialCalendarComponent },
       { path: 'subscriptions', component: SubscriptionsDashboardComponent },
       { path: 'advanced-graphics', component: AdvancedGraphicsComponent },
-      { path: 'budgets', component: BudgetManager }
+      { path: 'budgets', component: BudgetManager },
+      { path: 'cost-of-living', loadComponent: () => import('./components/cost-of-living/cost-of-living.component').then(m => m.CostOfLivingComponent) }
     ]
   },
   { path: 'verify-email', component: EmailVerification },

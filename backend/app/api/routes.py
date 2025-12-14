@@ -210,6 +210,7 @@ def skip_recurrence(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from app.api import mfa_routes
+from app.api import mfa_routes, analysis
 router.include_router(mfa_routes.router, prefix="/mfa", tags=["MFA"])
 router.include_router(user_preference.router, prefix="/preferences", tags=["User Preferences"])
+router.include_router(analysis.router, prefix="/analysis", tags=["Analysis"])

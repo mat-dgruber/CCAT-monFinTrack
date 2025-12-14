@@ -103,6 +103,14 @@
               </a>
             </li>
             <li>
+              <a routerLink="/cost-of-living" (click)="closeSidebar()"
+                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <i class="pi pi-chart-line"></i>
+                <span class="font-medium">Custo de Vida</span>
+              </a>
+            </li>
+            <li>
               <a routerLink="/settings" (click)="closeSidebar()"
                 routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                 class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
@@ -224,6 +232,13 @@
             class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <i class="pi pi-chart-bar"></i>
             <span class="font-medium">Gráficos Avançados</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/cost-of-living" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+            <i class="pi pi-chart-line"></i>
+            <span class="font-medium">Custo de Vida</span>
           </a>
         </li>
         <li>
