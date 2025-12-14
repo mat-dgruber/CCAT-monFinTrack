@@ -110,6 +110,16 @@
                 <span class="font-medium">Configurações</span>
               </a>
             </li>
+            <li>
+              <button (click)="toggleCalculator()"
+                [class.bg-blue-50]="calculatorVisible()"
+                [class.text-blue-600]="calculatorVisible()"
+                [class.dark:bg-blue-900/20]="calculatorVisible()"
+                class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+                <i class="pi pi-calculator"></i>
+                <span class="font-medium">Calculadora</span>
+              </button>
+            </li>
           </ul>
         </nav>
 
@@ -223,6 +233,16 @@
             <span class="font-medium">Configurações</span>
           </a>
         </li>
+        <li>
+          <button (click)="toggleCalculator()"
+            [class.bg-blue-50]="calculatorVisible()"
+            [class.text-blue-600]="calculatorVisible()"
+            [class.dark:bg-blue-900/20]="calculatorVisible()"
+            class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+            <i class="pi pi-calculator"></i>
+            <span class="font-medium">Calculadora</span>
+          </button>
+        </li>
       </ul>
     </nav>
 
@@ -279,4 +299,9 @@
       <p>&copy; 2025 CapyCro. AvecTech. Todos os direitos reservados.</p>
     </footer>
   </main>
+
+  <!-- Floating Calculator -->
+  @if (calculatorVisible()) {
+    <app-calculator (close)="toggleCalculator()"></app-calculator>
+  }
 </div>

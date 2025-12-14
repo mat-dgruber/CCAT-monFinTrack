@@ -13,6 +13,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { AuthService } from '../../services/auth.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { PwaService } from '../../services/pwa.service';
+import { CalculatorComponent } from '../shared/calculator/calculator.component';
 
 @Component({
   selector: 'app-home',
@@ -23,7 +24,9 @@ import { PwaService } from '../../services/pwa.service';
     ConfirmDialogModule,
     RouterModule,
     ButtonModule,
-    DrawerModule
+    ButtonModule,
+    DrawerModule,
+    CalculatorComponent
   ],
   templateUrl: './home.html',
 })
@@ -33,6 +36,7 @@ export class Home {
   pwaService = inject(PwaService);
 
   sidebarVisible = signal(false);
+  calculatorVisible = signal(false);
 
   firstName = computed(() => {
     const user = this.authService.currentUser();
@@ -49,5 +53,10 @@ export class Home {
 
   closeSidebar() {
     this.sidebarVisible.set(false);
+  }
+
+  toggleCalculator() {
+    this.calculatorVisible.update(v => !v);
+    this.closeSidebar();
   }
 }
