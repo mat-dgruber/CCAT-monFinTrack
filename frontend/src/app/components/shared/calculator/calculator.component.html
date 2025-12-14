@@ -1,0 +1,63 @@
+<div
+  #calculatorWindow
+  class="calculator-window shadow-2xl rounded-xl overflow-hidden bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 w-64 fixed top-20 right-20 z-50"
+>
+  <!-- Header / Drag Handle -->
+  <div
+    #dragHandle
+    class="drag-handle bg-gray-100 dark:bg-slate-700 p-2 flex items-center justify-between cursor-move select-none border-b border-gray-200 dark:border-gray-600"
+  >
+    <div class="flex items-center gap-2">
+      <i class="pi pi-calculator text-gray-500 dark:text-gray-400"></i>
+      <span
+        class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider"
+        >Calculadora</span
+      >
+    </div>
+    <button
+      (click)="close.emit()"
+      class="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-md transition-colors cursor-pointer"
+      type="button"
+    >
+      <i class="pi pi-times text-gray-500 dark:text-gray-400 text-xs"></i>
+    </button>
+  </div>
+
+  <!-- Display -->
+  <div class="p-3 bg-gray-50 dark:bg-slate-900 text-right">
+    <div class="text-xs text-gray-400 min-h-[1rem]">
+      {{ previousInput }} {{ operator }}
+    </div>
+    <div
+      class="text-2xl font-mono font-bold text-gray-800 dark:text-gray-100 truncate tracking-widest"
+    >
+      {{ display() }}
+    </div>
+  </div>
+
+  <!-- Keypad -->
+  <div class="grid grid-cols-4 gap-1 p-2 bg-gray-50 dark:bg-slate-800">
+    <button (click)="clear()" class="col-span-2 btn-calc btn-action">C</button>
+    <button (click)="handlePercentage()" class="btn-calc btn-action">%</button>
+    <button (click)="setOperator('/')" class="btn-calc btn-operator">÷</button>
+
+    <button (click)="appendNumber('7')" class="btn-calc">7</button>
+    <button (click)="appendNumber('8')" class="btn-calc">8</button>
+    <button (click)="appendNumber('9')" class="btn-calc">9</button>
+    <button (click)="setOperator('*')" class="btn-calc btn-operator">×</button>
+
+    <button (click)="appendNumber('4')" class="btn-calc">4</button>
+    <button (click)="appendNumber('5')" class="btn-calc">5</button>
+    <button (click)="appendNumber('6')" class="btn-calc">6</button>
+    <button (click)="setOperator('-')" class="btn-calc btn-operator">-</button>
+
+    <button (click)="appendNumber('1')" class="btn-calc">1</button>
+    <button (click)="appendNumber('2')" class="btn-calc">2</button>
+    <button (click)="appendNumber('3')" class="btn-calc">3</button>
+    <button (click)="setOperator('+')" class="btn-calc btn-operator">+</button>
+
+    <button (click)="appendNumber('0')" class="col-span-2 btn-calc">0</button>
+    <button (click)="appendNumber('.')" class="btn-calc">.</button>
+    <button (click)="calculate()" class="btn-calc btn-equals">=</button>
+  </div>
+</div>
