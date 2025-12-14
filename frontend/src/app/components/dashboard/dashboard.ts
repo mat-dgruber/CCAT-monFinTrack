@@ -19,6 +19,7 @@ import { DashboardService, DashboardSummary } from '../../services/dashboard.ser
 import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
 import { AccountService } from '../../services/account.service';
+import { AnalysisService } from '../../services/analysis.service';
 import { Account } from '../../models/account.model';
 
 // Components
@@ -52,10 +53,11 @@ export class Dashboard implements OnInit {
   private dashboardService = inject(DashboardService);
   private refreshService = inject(RefreshService);
   private filterService = inject(FilterService);
+  private analysisService = inject(AnalysisService);
   private accountService = inject(AccountService);
 
-
   summary = signal<DashboardSummary | null>(null);
+  costOfLiving = signal<number | null>(null);
   loading = signal(true);
 
 
@@ -108,6 +110,15 @@ export class Dashboard implements OnInit {
         console.error('Error loading dashboard', err);
         this.loading.set(false);
       }
+    });
+
+    this.analysisService.getMonthlyAverages().subscribe({
+      next: (data) => {
+        if (data && data.realized) {
+            this.costOfLiving.set(data.realized.average_total);
+        }
+      },
+      error: (err) => console.error('Error fetching cost of living', err)
     });
   }
 

@@ -1,21 +1,37 @@
 <div class="mb-8">
-  <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Visão Geral</h2>
+  <div
+    class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6"
+  >
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+      Visão Geral
+    </h2>
     <app-month-selector></app-month-selector>
   </div>
 
   @if (loading()) {
   <!-- Skeleton Layout -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
       <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
       <p-skeleton width="150px" height="2rem"></p-skeleton>
     </div>
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
       <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
       <p-skeleton width="150px" height="2rem"></p-skeleton>
     </div>
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
+      <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+      <p-skeleton width="150px" height="2rem"></p-skeleton>
+    </div>
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
       <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
       <p-skeleton width="150px" height="2rem"></p-skeleton>
     </div>
@@ -27,14 +43,16 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
     <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px]">
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px]"
+    >
       <p-skeleton width="200px" styleClass="mb-4"></p-skeleton>
       <div class="flex justify-center items-center h-full">
         <p-skeleton shape="circle" size="200px"></p-skeleton>
       </div>
     </div>
     <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px]">
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px]"
+    >
       <p-skeleton width="200px" styleClass="mb-4"></p-skeleton>
       <p-skeleton height="300px"></p-skeleton>
     </div>
@@ -50,26 +68,51 @@
 
   } @else if (summary(); as data) {
   <!-- 1. Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">Saldo Total</div>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
+      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">
+        Saldo Total
+      </div>
       <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
         {{ data.total_balance | currency : "BRL" }}
       </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">Receitas (Geral)</div>
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
+      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">
+        Receitas (Geral)
+      </div>
       <div class="text-3xl font-bold text-green-500 dark:text-green-400">
         + {{ data.income_month | currency : "BRL" }}
       </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">Despesas (Geral)</div>
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+    >
+      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">
+        Despesas (Geral)
+      </div>
       <div class="text-3xl font-bold text-red-500 dark:text-red-400">
         - {{ data.expense_month | currency : "BRL" }}
       </div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+      routerLink="/cost-of-living"
+    >
+      <div class="text-gray-500 dark:text-gray-400 font-medium mb-2">
+        Custo de Vida (Médio)
+      </div>
+      <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">
+        {{ costOfLiving() | currency : "BRL" }}
+      </div>
+      <p class="text-xs text-gray-400 mt-2">Clique para ver detalhes</p>
     </div>
   </div>
 
@@ -81,13 +124,19 @@
   <!-- 3. Charts Section -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
     <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col"
+    >
       <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">
         Despesas por Categoria
       </h3>
       @if (data.expenses_by_category.length > 0) {
       <div class="w-full h-[300px] flex justify-center">
-        <p-chart type="doughnut" [data]="chartData" [options]="chartOptions" class="w-full h-full"></p-chart>
+        <p-chart
+          type="doughnut"
+          [data]="chartData"
+          [options]="chartOptions"
+          class="w-full h-full"
+        ></p-chart>
       </div>
       } @else {
       <div class="text-gray-400 italic mt-10 text-center">
@@ -97,12 +146,19 @@
     </div>
 
     <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
-      <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Evolução Mensal</h3>
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col"
+    >
+      <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">
+        Evolução Mensal
+      </h3>
       @if (data.evolution && data.evolution.length > 0) {
       <div class="w-full h-[300px] flex justify-center">
-        <p-chart type="bar" [data]="evolutionChartData" [options]="evolutionChartOptions"
-          class="w-full h-full"></p-chart>
+        <p-chart
+          type="bar"
+          [data]="evolutionChartData"
+          [options]="evolutionChartOptions"
+          class="w-full h-full"
+        ></p-chart>
       </div>
       } @else {
       <div class="text-gray-400 italic mt-10 text-center">
