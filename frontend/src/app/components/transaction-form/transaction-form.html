@@ -193,6 +193,23 @@
       </p-select>
     </div>
 
+    <!-- SELEÇÃO DE CARTÃO ESPECÍFICO -->
+    @if (form.get('payment_method')?.value === 'credit_card' && availableCreditCards().length > 0) {
+    <div class="flex flex-col gap-2">
+       <label for="credit_card" class="font-semibold text-gray-700 dark:text-gray-200">Cartão (Opcional)</label>
+       <p-select inputId="credit_card" [options]="availableCreditCards()" formControlName="credit_card_id" 
+                 optionLabel="name" optionValue="id" placeholder="Padrão (Sem vínculo específico)"
+                 [style]="{ width: '100%' }" [appendTo]="'body'" [showClear]="true">
+          <ng-template pTemplate="item" let-card>
+             <div class="flex align-items-center gap-2">
+                 <div class="w-1rem h-1rem border-circle" [style.background]="card.color"></div>
+                 <span>{{ card.name }} ({{ card.brand | uppercase }})</span>
+             </div>
+          </ng-template>
+       </p-select>
+    </div>
+    }
+
     <div class="flex items-center gap-2 mt-2">
       <p-checkbox formControlName="is_paid" [binary]="true" inputId="is_paid"></p-checkbox>
       <label for="is_paid" class="cursor-pointer font-semibold text-gray-700 dark:text-gray-200">Pago / Recebido</label>

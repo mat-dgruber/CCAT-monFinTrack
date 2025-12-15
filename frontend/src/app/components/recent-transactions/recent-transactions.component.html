@@ -1,77 +1,82 @@
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-  <div class="flex justify-between items-center mb-4">
-    <h3 class="text-lg font-bold text-gray-800 dark:text-white">Transações Recentes</h3>
-    <p-button label="Nova Transação" icon="pi pi-plus" size="small" (onClick)="openNewTransaction()"></p-button>
+<div class="w-full">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Transações Recentes</h2>
+        <p class="text-gray-500 dark:text-gray-400">Últimas movimentações financeiras realizadas.</p>
+    </div>
+    <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNewTransaction()"></p-button>
   </div>
 
-  <div class="flex flex-col gap-6">
-    @if (loading()) {
-    @for (i of [1,2]; track i) {
-    <div>
-      <p-skeleton width="100px" styleClass="mb-3"></p-skeleton>
-      <div class="flex flex-col gap-2">
-        @for (j of [1,2]; track j) {
-        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-50 dark:border-gray-700">
-          <div class="flex items-center gap-3">
-            <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
-            <div>
-              <p-skeleton width="150px" styleClass="mb-2"></p-skeleton>
-              <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <div class="flex flex-col gap-6">
+        @if (loading()) {
+        @for (i of [1,2]; track i) {
+        <div>
+          <p-skeleton width="100px" styleClass="mb-3"></p-skeleton>
+          <div class="flex flex-col gap-2">
+            @for (j of [1,2]; track j) {
+            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-50 dark:border-gray-700">
+              <div class="flex items-center gap-3">
+                <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+                <div>
+                  <p-skeleton width="150px" styleClass="mb-2"></p-skeleton>
+                  <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+                </div>
+              </div>
+              <p-skeleton width="80px"></p-skeleton>
             </div>
-          </div>
-          <p-skeleton width="80px"></p-skeleton>
-        </div>
-        }
-      </div>
-    </div>
-    }
-    } @else {
-    @for (group of groupedTransactions(); track group.date) {
-    <div>
-      <div class="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wider pl-2 border-l-4 border-blue-100">
-        {{ group.date }}
-      </div>
-
-      <div class="flex flex-col gap-2">
-        @for (t of group.transactions; track t.id) {
-        <div
-          class="group flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
-          (click)="editTransaction($event, t)">
-          <!-- Left: Icon + Info -->
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-opacity-10"
-              [style.backgroundColor]="t.category.color + '20'">
-              <i [class]="t.category.icon" [style.color]="t.category.color"></i>
-            </div>
-
-            <div class="flex flex-col">
-              <span class="font-medium text-gray-800 dark:text-white">{{ t.description }}</span>
-              <span class="text-xs text-gray-500">{{ t.category.name }} •
-                {{ t.payment_method | paymentFormat }}</span>
-            </div>
-          </div>
-
-          <!-- Right: Amount + Arrow -->
-          <div class="flex items-center gap-4">
-            <span class="font-bold" [class.text-red-500]="t.type === 'expense'"
-              [class.text-green-500]="t.type === 'income'">
-              {{ t.type === "expense" ? "-" : "+" }}
-              {{ t.amount | currency : "BRL" }}
-            </span>
-
-            <i class="pi pi-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors"></i>
+            }
           </div>
         </div>
         }
-      </div>
-    </div>
-    } @empty {
-    <div class="text-center text-gray-400 dark:text-gray-500 py-8 italic">
-      Nenhuma transação recente.
-    </div>
-    }
-    }
-  </div>
+        } @else {
+        @for (group of groupedTransactions(); track group.date) {
+        <div>
+          <div class="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wider pl-2 border-l-4 border-blue-100">
+            {{ group.date }}
+          </div>
 
+          <div class="flex flex-col gap-2">
+            @for (t of group.transactions; track t.id) {
+            <div
+              class="group flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
+              (click)="editTransaction($event, t)">
+              <!-- Left: Icon + Info -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-opacity-10"
+                  [style.backgroundColor]="t.category.color + '20'">
+                  <i [class]="t.category.icon" [style.color]="t.category.color"></i>
+                </div>
+
+                <div class="flex flex-col">
+                  <span class="font-medium text-gray-800 dark:text-white">{{ t.description }}</span>
+                  <span class="text-xs text-gray-500">{{ t.category.name }} •
+                    {{ t.payment_method | paymentFormat }}</span>
+                </div>
+              </div>
+
+              <!-- Right: Amount + Arrow -->
+              <div class="flex items-center gap-4">
+                <span class="font-bold" [class.text-red-500]="t.type === 'expense'"
+                  [class.text-green-500]="t.type === 'income'">
+                  {{ t.type === "expense" ? "-" : "+" }}
+                  {{ t.amount | currency : "BRL" }}
+                </span>
+
+                <i class="pi pi-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors"></i>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        } @empty {
+        <div class="text-center text-gray-400 dark:text-gray-500 py-8 italic">
+          Nenhuma transação recente.
+        </div>
+        }
+        }
+      </div>
+  </div>
+  
   <app-transaction-form (save)="loadRecentTransactions()"></app-transaction-form>
 </div>

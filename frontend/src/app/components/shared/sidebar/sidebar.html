@@ -1,10 +1,31 @@
+
 <p-drawer [(visible)]="sidebarVisible" position="right">
   <h3>Menu</h3>
   <ul>
-    <li><a routerLink="/transactions"><i class="pi pi-wallet"></i> Transações</a></li>
-    <li><a routerLink="/accounts"><i class="pi pi-credit-card"></i> Contas</a></li>
-    <li><a routerLink="/categories"><i class="pi pi-tag"></i> Categorias</a></li>
-    <li><a routerLink="/budgets"><i class="pi pi-dollar"></i> Orçamentos</a></li>
+    <a routerLink="/transactions" routerLinkActive="surface-200 dark:bg-slate-700 text-primary-500 font-bold" class="flex align-items-center cursor-pointer p-3 border-round text-700 dark:text-gray-200 hover:surface-100 dark:hover:bg-slate-800 transition-duration-150 transition-colors w-full no-underline">
+        <i class="pi pi-list mr-2"></i>
+        <span class="font-medium">Transações</span>
+    </a>
+
+    <a routerLink="/invoices" routerLinkActive="surface-200 dark:bg-slate-700 text-primary-500 font-bold" class="flex align-items-center cursor-pointer p-3 border-round text-700 dark:text-gray-200 hover:surface-100 dark:hover:bg-slate-800 transition-duration-150 transition-colors w-full no-underline">
+        <i class="pi pi-credit-card mr-2"></i>
+        <span class="font-medium">Faturas</span>
+    </a>
+
+    <a routerLink="/accounts" routerLinkActive="surface-200 dark:bg-slate-700 text-primary-500 font-bold" class="flex align-items-center cursor-pointer p-3 border-round text-700 dark:text-gray-200 hover:surface-100 dark:hover:bg-slate-800 transition-duration-150 transition-colors w-full no-underline">
+        <i class="pi pi-wallet mr-2"></i>
+        <span class="font-medium">Contas</span>
+    </a>
+
+    <a routerLink="/categories" routerLinkActive="surface-200 dark:bg-slate-700 text-primary-500 font-bold" class="flex align-items-center cursor-pointer p-3 border-round text-700 dark:text-gray-200 hover:surface-100 dark:hover:bg-slate-800 transition-duration-150 transition-colors w-full no-underline">
+        <i class="pi pi-tag mr-2"></i>
+        <span class="font-medium">Categorias</span>
+    </a>
+
+    <a routerLink="/budgets" routerLinkActive="surface-200 dark:bg-slate-700 text-primary-500 font-bold" class="flex align-items-center cursor-pointer p-3 border-round text-700 dark:text-gray-200 hover:surface-100 dark:hover:bg-slate-800 transition-duration-150 transition-colors w-full no-underline">
+        <i class="pi pi-chart-pie mr-2"></i>
+        <span class="font-medium">Orçamentos</span>
+    </a>
     @if (pwaService.isInstallable) {
       <li class="mt-4 border-t border-surface-border pt-4">
         <button pButton label="Instalar App" icon="pi pi-download" class="p-button-text w-full text-left" (click)="pwaService.installApp()"></button>

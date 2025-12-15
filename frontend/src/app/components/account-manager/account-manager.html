@@ -41,9 +41,12 @@
             <span class="text-xs text-gray-500 dark:text-gray-400 uppercase">{{ acc.type | accountType }}</span>
           </div>
         </div>
-        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
-          class="opacity-0 group-hover:opacity-100 transition-opacity"
-          (onClick)="deleteAccount($event, acc.id!)"></p-button>
+        <div class="flex gap-1" class="opacity-0 group-hover:opacity-100 transition-opacity">
+             <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
+              (onClick)="editAccount($event, acc)"></p-button>
+             <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+              (onClick)="deleteAccount($event, acc.id!)"></p-button>
+        </div>
       </div>
 
       <div>
@@ -52,6 +55,18 @@
           [class.dark:text-white]="acc.balance >= 0">
           {{ acc.balance | currency:'BRL' }}
         </div>
+        
+        <!-- CREDIT CARDS ICONS -->
+        @if (acc.credit_cards && acc.credit_cards.length > 0) {
+            <div class="flex gap-1 mt-2">
+                @for (card of acc.credit_cards; track $index) {
+                    <div class="w-6 h-6 rounded flex items-center justify-center bg-gray-50 dark:bg-slate-700 border border-gray-100 dark:border-gray-600"
+                         [pTooltip]="card.name" tooltipPosition="bottom">
+                         <i class="pi pi-credit-card text-xs" [style.color]="card.color"></i>
+                    </div>
+                }
+            </div>
+        }
       </div>
     </div>
     }
@@ -109,8 +124,111 @@
         inputStyleClass="w-full"></p-inputNumber>
     </div>
 
+    <!-- SEÇÃO DE CARTÕES DE CRÉDITO -->
+    <div class="flex flex-col gap-2 mt-2 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div class="flex justify-between items-center">
+            <h3 class="font-bold text-sm text-gray-700 dark:text-gray-300">Cartões de Crédito Vinculados</h3>
+            <p-button icon="pi pi-plus" [text]="true" [rounded]="true" size="small" (onClick)="openNewCard()" pTooltip="Adicionar Cartão"></p-button>
+        </div>
+
+        @if (currentCards().length === 0) {
+            <div class="text-xs text-gray-500 text-center py-2">
+                Nenhum cartão vinculado a esta conta.
+            </div>
+        } @else {
+            <div class="flex flex-col gap-2">
+                @for (card of currentCards(); track $index) {
+                    <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded border border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full" [style.background]="card.color"></div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-800 dark:text-white">{{ card.name }}</span>
+                                <span class="text-xs text-gray-500">{{ card.brand }}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-1">
+                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small" (onClick)="editCard($index, card)"></p-button>
+                            <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (onClick)="removeCard($index)"></p-button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
     <div class="flex justify-end mt-4">
       <p-button label="Salvar" type="submit" [disabled]="form.invalid"></p-button>
     </div>
   </form>
+</p-dialog>
+
+<!-- DIALOG DE CARTÃO (ANINHADO) -->
+<!-- DIALOG DE CARTÃO (ANINHADO) -->
+<p-dialog [(visible)]="cardVisible" [style]="{width: '450px'}" header="Detalhes do Cartão" [modal]="true" appendTo="body" styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <div [formGroup]="cardForm" class="flex flex-col gap-5 pt-3">
+            
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Nome do Cartão</label>
+                <input pInputText formControlName="name" placeholder="Ex: Nubank Gold" class="w-full" autofocus />
+                <div class="flex items-start gap-2 text-xs text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                    <i class="pi pi-exclamation-triangle mt-0.5"></i>
+                    <span>Por segurança, <strong>não insira</strong> o número do cartão ou CVV como nome.</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Bandeira</label>
+                <p-select [options]="brandOptions" formControlName="brand" optionLabel="label" optionValue="value" 
+                          placeholder="Selecione a bandeira" [style]="{width: '100%'}">
+                     <ng-template pTemplate="item" let-brand>
+                         <div class="flex items-center gap-2">
+                             <i class="pi pi-credit-card"></i>
+                             <span>{{ brand.label }}</span>
+                         </div>
+                     </ng-template>
+                </p-select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label class="font-semibold text-gray-700 dark:text-gray-200">Dia Fechamento</label>
+                    <p-inputNumber formControlName="closing_day" [min]="1" [max]="31" suffix=" do mês" 
+                                   [showButtons]="true" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
+                </div>
+    
+                <div class="flex flex-col gap-2">
+                    <label class="font-semibold text-gray-700 dark:text-gray-200">Dia Vencimento</label>
+                    <p-inputNumber formControlName="invoice_due_day" [min]="1" [max]="31" suffix=" do mês"
+                                   [showButtons]="true" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Limite do Cartão</label>
+                <p-inputNumber formControlName="limit" mode="currency" currency="BRL" locale="pt-BR" 
+                               placeholder="R$ 0,00" styleClass="w-full" class="w-full"></p-inputNumber>
+                <small class="text-gray-500">Opcional. Usado apenas para referência.</small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Cor de Identificação</label>
+                <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900">
+                    <p-colorPicker formControlName="color" appendTo="body"></p-colorPicker>
+                    <div class="flex-1 text-sm text-gray-600 dark:text-gray-400">
+                        Esta cor aparecerá nos gráficos e listas.
+                    </div>
+                    <div [style.background]="cardForm.get('color')?.value" class="w-8 h-8 rounded-full shadow-sm border border-gray-100 dark:border-gray-600"></div>
+                </div>
+            </div>
+
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <div class="flex gap-2 justify-end mt-4">
+            <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="cardVisible.set(false)"></p-button>
+            <p-button label="Salvar Cartão" icon="pi pi-check" (onClick)="saveCard()"></p-button>
+        </div>
+    </ng-template>
 </p-dialog>

@@ -1,3 +1,13 @@
+export interface CreditCard {
+    id: string;
+    name: string;
+    brand: 'visa' | 'mastercard' | 'elo' | 'amex' | 'hipercard' | 'other';
+    limit: number;
+    closing_day: number;
+    invoice_due_day: number;
+    color: string;
+}
+
 export interface Account {
      id?: string;
      name: string;
@@ -5,4 +15,5 @@ export interface Account {
      balance: number;
      icon?: string;
      color: string;
+     credit_cards?: CreditCard[];
 }  

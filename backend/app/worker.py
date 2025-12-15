@@ -111,6 +111,9 @@ async def process_recurrences():
             if rec_data.get("payment_method_id"):
                  new_transaction.payment_method = rec_data.get("payment_method_id")
             
+            if rec_data.get("credit_card_id"):
+                 new_transaction.credit_card_id = rec_data.get("credit_card_id")
+            
             try:
                 transaction_service.create_transaction(new_transaction, user_id)
                 
