@@ -10,6 +10,68 @@
     </div>
   </div>
 
+  @if (loading()) {
+  <!-- Skeleton Layout -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
+    >
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="120px" height="2rem"></p-skeleton>
+        </div>
+        <p-skeleton shape="circle" size="3rem"></p-skeleton>
+      </div>
+      <p-skeleton width="180px"></p-skeleton>
+    </div>
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
+    >
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="120px" height="2rem"></p-skeleton>
+        </div>
+        <p-skeleton shape="circle" size="3rem"></p-skeleton>
+      </div>
+      <p-skeleton width="180px"></p-skeleton>
+    </div>
+    <div
+      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
+    >
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="120px" height="2rem"></p-skeleton>
+        </div>
+        <p-skeleton shape="circle" size="3rem"></p-skeleton>
+      </div>
+      <p-skeleton width="180px"></p-skeleton>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 h-[500px]">
+    <div
+      class="flex gap-4 mb-4 border-b border-gray-100 dark:border-gray-700 pb-2"
+    >
+      <p-skeleton width="120px" height="2rem"></p-skeleton>
+      <p-skeleton width="120px" height="2rem"></p-skeleton>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+      <div class="flex justify-center">
+        <p-skeleton shape="circle" size="300px"></p-skeleton>
+      </div>
+      <div>
+        <p-skeleton width="200px" height="1.5rem" styleClass="mb-4"></p-skeleton>
+        <p-skeleton width="100%" height="3rem" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="100%" height="3rem" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="100%" height="3rem" styleClass="mb-2"></p-skeleton>
+      </div>
+    </div>
+  </div>
+  } @else {
+
   <!-- Messages -->
   <div class="mb-6">
     @for (msg of inflationMessages; track msg) {
@@ -326,4 +388,5 @@
       </p-tabpanels>
     </p-tabs>
   </div>
+  }
 </div>

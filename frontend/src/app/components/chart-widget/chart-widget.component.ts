@@ -102,9 +102,9 @@ interface SankeyLink {
 
         <div class="flex flex-wrap gap-1 items-center">
             <!-- Resize Button -->
-            <button pButton 
-                    [icon]="widgetConfig.colSpan === 2 ? 'pi pi-window-minimize' : 'pi pi-window-maximize'" 
-                    class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8" 
+            <button pButton
+                    [icon]="widgetConfig.colSpan === 2 ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                    class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8"
                     (click)="onResizeWidget()"
                     pTooltip="Expandir/Reduzir">
             </button>
@@ -117,7 +117,7 @@ interface SankeyLink {
             <p-popover #op styleClass="dark:bg-slate-800 dark:border-slate-800">
                 <div class="flex flex-col gap-4 w-72 p-1 dark:bg-slate-800 dark:text-gray-200 dark:shadow-none dark:border-slate-800">
                     <span class="font-semibold text-sm text-gray-700 dark:bg-slate-800 dark:text-gray-200 dark:shadow-none dark:border-slate-800 border-b pb-1">Configuração do Gráfico</span>
-                    
+
                     <!-- Filters moved here -->
                     <div class="flex flex-col gap-2">
                         <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Tipo de Gráfico</label>
@@ -155,7 +155,7 @@ interface SankeyLink {
                         <span class="text-sm font-medium dark:text-gray-200 dark:border-slate-800">Previsão (Tendência)</span>
                         <p-toggleButton [(ngModel)]="widgetConfig.showForecast" (onChange)="updateChart()" onLabel="Sim" offLabel="Não" size="small" styleClass="w-16 text-xs"></p-toggleButton>
                     </div>
-                    
+
                     <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
 
                     <div class="flex justify-between items-center">
@@ -189,8 +189,15 @@ interface SankeyLink {
         </div>
 
         <!-- Standard Charts -->
-        <p-chart *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'boxplot' && widgetConfig.type !== 'sankey'" [type]="widgetConfig.type" [data]="chartData" [options]="chartOptions" height="100%" width="100%"></p-chart>
-        
+        <ng-container *ngIf="widgetConfig.type !== 'heatmap' && widgetConfig.type !== 'treemap' && widgetConfig.type !== 'boxplot' && widgetConfig.type !== 'sankey'">
+            <p-chart *ngIf="hasStandardChartData()" [type]="widgetConfig.type" [data]="chartData" [options]="chartOptions" height="100%" width="100%"></p-chart>
+
+            <div *ngIf="!hasStandardChartData()" class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
+                <i class="pi pi-chart-bar text-4xl mb-2 opacity-50"></i>
+                <span class="text-sm">Não há dados para exibir.</span>
+            </div>
+        </ng-container>
+
         <!-- Heatmap (Disabled) -->
         <!-- <div *ngIf="widgetConfig.type === 'heatmap'">...</div> -->
 
@@ -217,11 +224,11 @@ interface SankeyLink {
                      (click)="onTreemapNodeClick(node)"
                      [pTooltip]="node.label + ': ' + node.formattedValue + (treemapLevel === 'root' ? ' (Clique para detalhar)' : '')"
                      tooltipPosition="top">
-                     
+
                      <span class="text-white font-bold text-xs md:text-sm truncate w-full px-1 drop-shadow-md">{{ node.label }}</span>
                      <span *ngIf="node.h > 15" class="text-white text-[10px] opacity-90 drop-shadow-md">{{ node.formattedValue }}</span>
                 </div>
-                
+
                 <div *ngIf="treemapData.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-50">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -240,7 +247,7 @@ interface SankeyLink {
                 <div class="w-32 text-xs text-gray-600 dark:text-gray-400 font-medium truncate text-right pr-3" [title]="item.label">
                     {{ item.label }}
                 </div>
-                
+
                 <!-- Plot Area -->
                 <div class="flex-grow relative h-full bg-gray-50 dark:bg-slate-900 rounded border-l border-gray-200 dark:border-gray-700">
                     <!-- Whisker Line (Min to Max) -->
@@ -248,7 +255,7 @@ interface SankeyLink {
                          [style.left.%]="getBoxPlotPercent(item.min)"
                          [style.width.%]="getBoxPlotPercent(item.max - item.min)">
                     </div>
-                    
+
                     <!-- Whisker Caps -->
                     <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 dark:bg-gray-500 -translate-y-1/2 transition-all duration-500" [style.left.%]="getBoxPlotPercent(item.min)"></div>
                     <div class="absolute top-1/2 h-3 w-[2px] bg-gray-400 dark:bg-gray-500 -translate-y-1/2 transition-all duration-500" [style.left.%]="getBoxPlotPercent(item.max)"></div>
@@ -281,17 +288,17 @@ interface SankeyLink {
         <!-- Sankey Diagram v1.2 (Zoom/Pan) -->
         <div *ngIf="widgetConfig.type === 'sankey'" class="w-full h-full bg-white dark:bg-slate-800 rounded overflow-hidden relative flex items-center justify-center">
              <!-- Reset Zoom Button -->
-             <button *ngIf="sankeyScale !== 1 || sankeyX !== 0 || sankeyY !== 0" 
-                     pButton 
-                     icon="pi pi-refresh" 
-                     class="p-button-rounded p-button-text p-button-sm absolute top-2 right-2 z-10 bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 shadow-sm" 
-                     (click)="resetZoom()" 
+             <button *ngIf="sankeyScale !== 1 || sankeyX !== 0 || sankeyY !== 0"
+                     pButton
+                     icon="pi pi-refresh"
+                     class="p-button-rounded p-button-text p-button-sm absolute top-2 right-2 z-10 bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 shadow-sm"
+                     (click)="resetZoom()"
                      pTooltip="Resetar Zoom">
              </button>
 
-             <svg *ngIf="sankeyData.nodes.length > 0" 
-                  width="100%" height="100%" 
-                  viewBox="0 0 1000 600" 
+             <svg *ngIf="sankeyData.nodes.length > 0"
+                  width="100%" height="100%"
+                  viewBox="0 0 1000 600"
                   preserveAspectRatio="xMidYMid meet"
                   class="cursor-move"
                   (wheel)="onWheel($event)"
@@ -299,7 +306,7 @@ interface SankeyLink {
                   (mousemove)="onMouseMove($event)"
                   (mouseup)="onMouseUp()"
                   (mouseleave)="onMouseUp()">
-                
+
                 <g [attr.transform]="sankeyTransform">
                     <defs>
                         <linearGradient *ngFor="let link of sankeyData.links" [attr.id]="link.gradientId" gradientUnits="userSpaceOnUse">
@@ -321,10 +328,10 @@ interface SankeyLink {
 
                 <!-- Nodes -->
                 <g *ngFor="let node of sankeyData.nodes; trackBy: trackById">
-                    <rect [attr.x]="node.x" 
-                          [attr.y]="node.y" 
-                          [attr.width]="node.w" 
-                          [attr.height]="node.h" 
+                    <rect [attr.x]="node.x"
+                          [attr.y]="node.y"
+                          [attr.width]="node.w"
+                          [attr.height]="node.h"
                           [attr.fill]="node.color"
                           rx="4" ry="4"
                           stroke="#fff" stroke-width="1"
@@ -332,8 +339,8 @@ interface SankeyLink {
                           [pTooltip]="node.name + ': ' + (node.value | currency:'BRL')">
                     </rect>
                     <!-- Label -->
-                    <text [attr.x]="node.column === 0 ? node.x - 8 : (node.column === 3 ? node.x + node.w + 8 : node.x + node.w / 2)" 
-                          [attr.y]="node.y + node.h / 2" 
+                    <text [attr.x]="node.column === 0 ? node.x - 8 : (node.column === 3 ? node.x + node.w + 8 : node.x + node.w / 2)"
+                          [attr.y]="node.y + node.h / 2"
                           [attr.text-anchor]="node.column === 0 ? 'end' : (node.column === 3 ? 'start' : 'middle')"
                           [attr.transform]="(node.column === 1 || node.column === 2) ? 'rotate(-90, ' + (node.x + node.w/2) + ', ' + (node.y + node.h/2) + ')' : ''"
                           dominant-baseline="middle"
@@ -1309,6 +1316,13 @@ export class ChartWidgetComponent implements OnInit {
                 }
             } : undefined
         };
+    }
+
+    hasStandardChartData(): boolean {
+        if (!this.chartData || !this.chartData.datasets || !this.chartData.datasets.length) return false;
+
+        // Return true if any dataset has at least one data point
+        return this.chartData.datasets.some((ds: any) => ds.data && ds.data.length > 0);
     }
 }
 
