@@ -9,6 +9,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TabsModule } from 'primeng/tabs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
 
 import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly } from '../../services/analysis.service';
 
@@ -22,18 +23,19 @@ interface Message {
   selector: 'app-cost-of-living',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
-    ChartModule, 
-    TableModule, 
-    CardModule, 
+    ChartModule,
+    TableModule,
+    CardModule,
     ButtonModule,
     InputNumberModule,
     TabsModule,
     MessageModule,
     TooltipModule,
     CurrencyPipe,
-    DecimalPipe
+    DecimalPipe,
+    SkeletonModule
   ],
   templateUrl: './cost-of-living.component.html',
   styleUrl: './cost-of-living.component.scss'
@@ -45,19 +47,19 @@ export class CostOfLivingComponent implements OnInit {
   data = signal<MonthlyAverageResponse | null>(null);
   inflation = signal<InflationResponse | null>(null);
   anomalies = signal<Anomaly[]>([]);
-  
+
   // Projection State
   baseMonthlyCost = signal(0);
   inflationRate = signal(4.5);
   projectionYears = signal(10);
-  
+
   // Chart Data Signals
   breakdownChartData = signal<any>(null);
   breakdownChartOptions = signal<any>(null);
-  
+
   projectionChartData = signal<any>(null);
   projectionChartOptions = signal<any>(null);
-  
+
   // UX
   inflationMessages: Message[] = [];
 
@@ -73,7 +75,7 @@ export class CostOfLivingComponent implements OnInit {
            }
         }
     });
-    
+
     // Effect to update projection chart when inputs change
     effect(() => {
         this.updateProjectionChart();
@@ -86,13 +88,13 @@ export class CostOfLivingComponent implements OnInit {
 
   loadData() {
     this.loading.set(true);
-    
+
     // Load Averages
     this.analysisService.getMonthlyAverages().subscribe({
         next: (res) => this.data.set(res),
         error: (err) => console.error(err)
     });
-    
+
     // Load Inflation
     this.analysisService.getInflationRate().subscribe({
         next: (res) => {
@@ -104,20 +106,20 @@ export class CostOfLivingComponent implements OnInit {
         },
         error: (err) => console.error(err)
     });
-    
+
     // Load Anomalies
     this.analysisService.getAnomalies().subscribe({
         next: (res) => this.anomalies.set(res),
         error: (err) => console.error(err)
     });
-    
+
     this.loading.set(false);
   }
 
   initBreakdownChart(data: MonthlyAverageResponse) {
       const categories = Object.keys(data.realized.by_category);
       const values = Object.values(data.realized.by_category);
-      
+
       this.breakdownChartData.set({
           labels: categories,
           datasets: [
@@ -128,7 +130,7 @@ export class CostOfLivingComponent implements OnInit {
               }
           ]
       });
-      
+
       this.breakdownChartOptions.set({
           plugins: {
               legend: {
@@ -141,22 +143,22 @@ export class CostOfLivingComponent implements OnInit {
           }
       });
   }
-  
+
   updateProjectionChart() {
       const base = this.baseMonthlyCost();
       const rate = this.inflationRate() / 100;
       const years = this.projectionYears();
-      
+
       const labels = [];
       const values = [];
-      
+
       let current = base;
       for (let i = 0; i <= years; i++) {
           labels.push(`Ano ${i}`);
           values.push(current);
           current = current * (1 + rate);
       }
-      
+
       this.projectionChartData.set({
           labels: labels,
           datasets: [
@@ -170,7 +172,7 @@ export class CostOfLivingComponent implements OnInit {
               }
           ]
       });
-      
+
       this.projectionChartOptions.set({
           plugins: {
               legend: {

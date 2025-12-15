@@ -12,6 +12,7 @@ import { MultiSelectModule } from 'primeng/multiselect'; // For p-multiSelect
 import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { RouterModule } from '@angular/router';
 
 
 // Services
@@ -43,7 +44,8 @@ import { SkeletonModule } from 'primeng/skeleton';
     AccountManager,
     BudgetManager,
     RecentTransactionsComponent,
-    SkeletonModule
+    SkeletonModule,
+    RouterModule
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
