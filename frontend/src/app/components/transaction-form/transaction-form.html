@@ -130,7 +130,10 @@
     <!-- Tithes & Offerings -->
     @if (form.get('type')?.value === 'income' && preferences()?.enable_tithes_offerings) {
     <div class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900">
-        <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300">Dízimos e Ofertas</h3>
+        <div class="flex items-center gap-2 mb-2" [pTooltip]="titheTooltip()" tooltipPosition="top">
+            <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300 m-0">Dízimos e Ofertas</h3>
+            <i class="pi pi-info-circle text-xs text-gray-400"></i>
+        </div>
 
         <!-- Dízimo -->
         <div class="flex flex-col gap-2">

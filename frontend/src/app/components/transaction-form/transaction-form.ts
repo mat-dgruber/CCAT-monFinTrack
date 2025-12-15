@@ -13,6 +13,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
@@ -43,6 +44,7 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
     SelectButtonModule,
     CheckboxModule,
     TextareaModule,
+    TooltipModule,
     AccountTypePipe
   ],
   templateUrl: './transaction-form.html',
@@ -92,6 +94,27 @@ export class TransactionForm implements OnInit {
       }
 
       return Math.max(0, amount - tithe - offering);
+  });
+
+  titheTooltip = computed(() => {
+    if (!this.titheEnabled() && !this.offeringEnabled()) return '';
+
+    const amount = this.form.get('amount')?.value || 0;
+    let tithe = 0;
+    let offering = 0;
+
+    if (this.titheEnabled()) {
+        const tVal = this.form.get('tithe_value')?.value || 0;
+        tithe = this.titheType() === 'percentage' ? (amount * tVal) / 100 : tVal;
+    }
+
+    if (this.offeringEnabled()) {
+        const oVal = this.form.get('offering_value')?.value || 0;
+        offering = this.offeringType() === 'percentage' ? (amount * oVal) / 100 : oVal;
+    }
+
+    const total = tithe + offering;
+    return `Dízimo: ${tithe.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} \nOferta: ${offering.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} \nTotal Deduções: ${total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
   });
 
   categories = signal<Category[]>([]);
@@ -256,7 +279,13 @@ export class TransactionForm implements OnInit {
         this.offeringEnabled.set(false);
         if (prefs.default_offering_percentage) {
             this.form.patchValue({ offering_value: prefs.default_offering_percentage });
-            this.offeringType.set('percentage');
+        } else {
+            this.form.patchValue({ offering_value: null });
+        }
+        
+        if (prefs.auto_apply_offering) {
+             this.offeringEnabled.set(true);
+             this.offeringType.set('percentage'); // Default
         } else {
             this.form.patchValue({ offering_value: null });
         }
@@ -285,7 +314,9 @@ export class TransactionForm implements OnInit {
         this.form.patchValue({
             title: transaction.title,
             description: transaction.description,
-            amount: transaction.amount,
+
+            // Use GROSS amount if available (meaning we saved as NET previously)
+            amount: transaction.gross_amount || transaction.amount,
             date: new Date(transaction.date),
             category: foundCategory,
             account: foundAccount,
@@ -298,6 +329,8 @@ export class TransactionForm implements OnInit {
             total_installments: transaction.total_installments || 2,
             recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
             is_paid: transaction.status === 'paid',
+
+
 
             // Tithes
             tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
@@ -346,6 +379,25 @@ export class TransactionForm implements OnInit {
         status: formValue.is_paid ? 'paid' : 'pending',
         payment_date: formValue.is_paid ? formValue.date : null // Reuse date as payment_date
       };
+
+      // Handle Net vs Gross Amount Logic for Income with Tithes
+      if (formValue.type === 'income' && this.preferences()?.enable_tithes_offerings) {
+           const currentAmount = formValue.amount;
+           // Always save gross amount so we don't lose the original value on edits
+           payload.gross_amount = currentAmount; 
+           
+           // If Tithe Returned is checked, we want to debit the Net Amount from balance
+           // So we save the main 'amount' as the Net Amount.
+           if (this.titheEnabled() && this.titheReturned()) {
+               payload.amount = this.netAmount();
+           } else {
+               // Otherwise, save the full amount
+               payload.amount = currentAmount;
+           }
+      } else {
+           // Clear gross amount if not applicable
+           payload.gross_amount = null;
+      }
 
       if (formValue.mode === 'recurrence') {
           payload.is_recurrence = true;

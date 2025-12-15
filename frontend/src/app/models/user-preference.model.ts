@@ -14,6 +14,7 @@ export interface UserPreference {
      default_tithe_percentage?: number;
      default_offering_percentage?: number;
      auto_apply_tithe?: boolean;
+     auto_apply_offering?: boolean;
 }
 
 export interface UserPreferenceCreate {
@@ -29,4 +30,5 @@ export interface UserPreferenceCreate {
      default_tithe_percentage?: number;
      default_offering_percentage?: number;
      auto_apply_tithe?: boolean;
+     auto_apply_offering?: boolean;
 }

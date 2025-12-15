@@ -56,6 +56,7 @@ class TransactionBase(BaseModel):
      offering_percentage: Optional[float] = Field(None, description="Porcentagem da oferta")
      net_amount: Optional[float] = Field(None, description="Valor líquido (lucro)")
      tithe_status: Optional[str] = Field(None, description="Status do dízimo: NONE, PENDING, PAID")
+     gross_amount: Optional[float] = Field(None, description="Valor bruto da transação (antes das deduções)")
 
      # --- BLOCO DE PROTEÇÃO XSS ---
      @field_validator('title', 'description')
