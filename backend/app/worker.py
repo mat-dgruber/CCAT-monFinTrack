@@ -95,11 +95,26 @@ async def process_recurrences():
             # Criar Transação SEMPRE como PENDENTE inicialmente
             # O processamento de auto-pay será feito na etapa 2
             
+            # Recorrência agora pode ter TYPE (Default: EXPENSE)
+            rec_type = rec_data.get("type", TransactionType.EXPENSE)
+            description = f"{rec_data.get('name')} ({next_due.strftime('%m/%Y')})"
+            
+            # Lógica Especial para TRANSFER (Pagamento de Fatura)
+            if rec_type == TransactionType.TRANSFER and rec_data.get("credit_card_id"):
+                cc_id = rec_data.get("credit_card_id")
+                # Gerar Chave de Referência para evitar duplicidade
+                # REF:{card_id}:{month}:{year}
+                # next_due é a data de vencimento da recorrência. 
+                # Assumimos que a fatura refere-se ao mês de vencimento OU anterior.
+                # Simplificação: Usar mês/ano do vencimento da recorrência como referência da fatura.
+                ref_key = f"REF:{cc_id}:{next_due.month}:{next_due.year}"
+                description = f"{description} | {ref_key}"
+
             new_transaction = TransactionCreate(
-                description=f"{rec_data.get('name')} ({next_due.strftime('%m/%Y')})",
+                description=description,
                 amount=rec_data.get("amount"),
                 date=next_due,
-                type=TransactionType.EXPENSE, 
+                type=rec_type, 
                 payment_method=PaymentMethod.OTHER, 
                 category_id=rec_data.get("category_id"),
                 account_id=rec_data.get("account_id"),

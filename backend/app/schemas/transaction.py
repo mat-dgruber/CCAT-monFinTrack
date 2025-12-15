@@ -11,6 +11,7 @@ from app.core.validators import sanitize_html
 class TransactionType(str, Enum):
      EXPENSE = "expense"
      INCOME = "income"
+     TRANSFER = "transfer"
 
 class PaymentMethod(str, Enum):
      CREDIT_CARD = "credit_card"
@@ -18,6 +19,7 @@ class PaymentMethod(str, Enum):
      CASH = "cash"
      PIX = "pix"
      BANK_TRANSFER = "bank_transfer"
+     BANK_SLIP = "bank_slip"
      OTHER = "other"
 
 class TransactionStatus(str, Enum):

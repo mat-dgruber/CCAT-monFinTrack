@@ -99,16 +99,16 @@
             } @else {
             @for (date of daysInMonth(); track $index) {
             <div
-              class="min-h-[100px] bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-gray-700 p-2 flex flex-col gap-1 transition-colors hover:border-blue-300 dark:hover:border-blue-700"
+              class="min-h-[18vw] md:min-h-[100px] bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-gray-700 p-1 md:p-2 flex flex-col gap-1 transition-colors hover:border-blue-300 dark:hover:border-blue-700 overflow-hidden"
               [class.bg-gray-50]="!date" [class.dark:bg-slate-900]="!date">
 
               @if (date) {
-              <span class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1 block text-right">{{ date.getDate()
+              <span class="text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300 mb-0.5 block text-right">{{ date.getDate()
                 }}</span>
 
               @for (item of getRecurrencesForDay(date); track item.id) {
               <div
-                class="text-xs p-1.5 rounded cursor-pointer border-l-2 mb-1 shadow-sm transition-all hover:brightness-95"
+                class="text-[10px] md:text-xs p-1 md:p-1.5 rounded cursor-pointer border-l-2 mb-1 shadow-sm transition-all hover:brightness-95 overflow-hidden"
                 [class.bg-green-100]="item.status === 'paid'" [class.text-green-800]="item.status === 'paid'"
                 [class.border-green-500]="item.status === 'paid'" [class.bg-yellow-50]="item.status === 'pending'"
                 [class.text-yellow-800]="item.status === 'pending'"
@@ -118,13 +118,13 @@
                 [class.dark:text-yellow-100]="item.status === 'pending'" (click)="toggleRecurrenceStatus(item)">
                 <!-- Changed to toggle status on click -->
 
-                <div class="flex justify-between items-center">
-                  <span class="truncate font-medium">{{ item.name }}</span>
+                <div class="flex justify-between items-center gap-1">
+                  <span class="truncate font-medium leading-tight">{{ item.name }}</span>
                   @if (item.status === 'paid') {
-                  <i class="pi pi-check-circle text-[10px]"></i>
+                  <i class="pi pi-check-circle text-[8px] md:text-[10px] flex-shrink-0"></i>
                   }
                 </div>
-                <div class="font-bold mt-0.5">{{ item.amount | currency:'BRL' }}</div>
+                <div class="font-bold mt-0.5 leading-tight">{{ item.amount | currency:'BRL' }}</div>
               </div>
               }
               }
@@ -387,6 +387,29 @@
             optionValue="id" placeholder="Selecione uma categoria" styleClass="w-full" appendTo="body"
             panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
         </div>
+        <div class="flex flex-col gap-2">
+          <label for="payment_method" class="font-semibold">Forma de Pagamento</label>
+          <p-select id="payment_method" [options]="paymentOptions" formControlName="payment_method_id" optionLabel="label"
+            optionValue="value" placeholder="Selecione..." styleClass="w-full" appendTo="body"
+            panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
+        </div>
+
+        @if (recurrenceForm.get('payment_method_id')?.value === 'credit_card' && availableCreditCards().length > 0) {
+        <div class="flex flex-col gap-2">
+           <label for="credit_card_id" class="font-semibold">Cartão de Crédito</label>
+           <p-select id="credit_card_id" [options]="availableCreditCards()" formControlName="credit_card_id"
+                     optionLabel="name" optionValue="id" placeholder="Selecione o cartão"
+                     styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700" [showClear]="true">
+                <ng-template pTemplate="item" let-card>
+                     <div class="flex align-items-center gap-2">
+                         <div class="w-1rem h-1rem border-circle" [style.background]="card.color"></div>
+                         <span>{{ card.name }} ({{ card.brand | uppercase }})</span>
+                     </div>
+                </ng-template>
+           </p-select>
+        </div>
+        }
+
         <div class="flex flex-col gap-2">
           <label for="account_id" class="font-semibold">Conta</label>
           <p-select id="account_id" [options]="accounts()" formControlName="account_id" optionLabel="name"

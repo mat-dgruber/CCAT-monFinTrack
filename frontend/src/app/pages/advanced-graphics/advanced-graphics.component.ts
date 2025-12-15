@@ -37,13 +37,13 @@ import html2canvas from 'html2canvas';
           <!-- Left Side (Filters) -->
           <div class="flex flex-col md:flex-row gap-4 md:items-center w-full md:w-auto">
               <span class="font-semibold text-gray-600 dark:text-gray-300">Filtros Globais:</span>
-              
+
               <div class="grid grid-cols-2 md:flex gap-2 w-full md:w-auto">
-                  <p-select 
-                      [options]="datePresets" 
-                      [(ngModel)]="globalDatePreset" 
-                      optionLabel="label" 
-                      optionValue="value" 
+                  <p-select
+                      [options]="datePresets"
+                      [(ngModel)]="globalDatePreset"
+                      optionLabel="label"
+                      optionValue="value"
                       placeholder="Data"
                       size="small"
                       styleClass="w-full md:w-40"
@@ -51,12 +51,24 @@ import html2canvas from 'html2canvas';
                       panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
                   </p-select>
 
-                  <p-select 
-                      [options]="chartTypes" 
-                      [(ngModel)]="globalType" 
-                      optionLabel="label" 
-                      optionValue="value" 
+                  <p-select
+                      [options]="chartTypes"
+                      [(ngModel)]="globalType"
+                      optionLabel="label"
+                      optionValue="value"
                       placeholder="Tipo"
+                      size="small"
+                      styleClass="w-full md:w-40"
+                      appendTo="body"
+                      panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                  </p-select>
+
+                  <p-select
+                      [options]="groupingOptions"
+                      [(ngModel)]="globalGroupBy"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Agrupar"
                       size="small"
                       styleClass="w-full md:w-40"
                       appendTo="body"
@@ -64,10 +76,10 @@ import html2canvas from 'html2canvas';
                   </p-select>
               </div>
 
-              <p-button 
-                  label="Aplicar a Todos" 
-                  icon="pi pi-check" 
-                  size="small" 
+              <p-button
+                  label="Aplicar a Todos"
+                  icon="pi pi-check"
+                  size="small"
                   (onClick)="applyGlobalFilters()"
                   [outlined]="true"
                   styleClass="w-full md:w-auto">
@@ -76,18 +88,18 @@ import html2canvas from 'html2canvas';
 
            <!-- Right Side (Exports) -->
            <div class="grid grid-cols-2 md:flex gap-2 w-full md:w-auto">
-              <p-button 
-                  label="Exportar PNG" 
-                  icon="pi pi-image" 
-                  size="small" 
+              <p-button
+                  label="Exportar PNG"
+                  icon="pi pi-image"
+                  size="small"
                   severity="secondary"
                   (onClick)="exportAllPNG()"
                   styleClass="w-full md:w-auto">
               </p-button>
-               <p-button 
-                  label="Exportar CSV" 
-                  icon="pi pi-file-excel" 
-                  size="small" 
+               <p-button
+                  label="Exportar CSV"
+                  icon="pi pi-file-excel"
+                  size="small"
                   severity="secondary"
                   (onClick)="exportAllCSV()"
                   styleClass="w-full md:w-auto">
@@ -111,7 +123,7 @@ import html2canvas from 'html2canvas';
              (dragover)="onDragOver($event, i)"
              (drop)="onDrop(i)"
              (dragend)="onDragEnd()">
-           
+
            <div class="h-full relative group">
                <!-- Drag Handle Overlay (Visible on Hover) -->
                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded-b-md cursor-move z-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" title="Arrastar para reordenar">
@@ -163,6 +175,7 @@ export class AdvancedGraphicsComponent {
 
   globalDatePreset: string = 'none';
   globalType: string = 'none';
+  globalGroupBy: string = 'none';
 
   // Drag & Drop State
   draggedIndex: number | null = null;
@@ -186,6 +199,14 @@ export class AdvancedGraphicsComponent {
     { label: 'Sankey', value: 'sankey' }
   ];
 
+  groupingOptions = [
+    { label: 'Sem Alteração', value: 'none' },
+    { label: 'Categoria', value: 'category' },
+    { label: 'Subcategoria', value: 'subcategory' },
+    { label: 'Forma de Pagamento', value: 'payment-method' },
+    { label: 'Data', value: 'date' }
+  ];
+
   applyGlobalFilters() {
     this.widgets.update(widgets => widgets.map(w => {
       let newW = { ...w };
@@ -194,6 +215,9 @@ export class AdvancedGraphicsComponent {
       }
       if (this.globalType !== 'none') {
         newW.type = this.globalType as WidgetType;
+      }
+      if (this.globalGroupBy !== 'none') {
+        newW.groupBy = this.globalGroupBy as any;
       }
       return newW;
     }));

@@ -4,12 +4,12 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5 pt-4">
     <div class="flex justify-center flex-col gap-3">
       <div class="flex justify-center">
-        <p-selectButton [options]="typeOptions" formControlName="type" optionLabel="label" optionValue="value">
+        <p-selectButton [options]="typeOptions" formControlName="type" optionLabel="label" optionValue="value" [allowEmpty]="false">
         </p-selectButton>
       </div>
 
       <div class="flex justify-center">
-        <p-selectButton [options]="modeOptions" formControlName="mode" optionLabel="label" optionValue="value">
+        <p-selectButton [options]="modeOptions" formControlName="mode" optionLabel="label" optionValue="value" [allowEmpty]="false">
         </p-selectButton>
       </div>
     </div>
@@ -119,8 +119,8 @@
         <ng-template pTemplate="selectedItem" let-cat>
           @if (cat) {
           <div class="flex items-center gap-2">
-            <i [class]="cat.icon" [style.color]="cat.color"></i>
-            <span>{{ cat.name }}</span>
+            <i [class]="cat.icon || cat.value?.icon" [style.color]="cat.color || cat.value?.color"></i>
+            <span>{{ cat.name || cat.value?.name || cat.label }}</span>
           </div>
           }
         </ng-template>
@@ -197,7 +197,7 @@
     @if (form.get('payment_method')?.value === 'credit_card' && availableCreditCards().length > 0) {
     <div class="flex flex-col gap-2">
        <label for="credit_card" class="font-semibold text-gray-700 dark:text-gray-200">Cartão (Opcional)</label>
-       <p-select inputId="credit_card" [options]="availableCreditCards()" formControlName="credit_card_id" 
+       <p-select inputId="credit_card" [options]="availableCreditCards()" formControlName="credit_card_id"
                  optionLabel="name" optionValue="id" placeholder="Padrão (Sem vínculo específico)"
                  [style]="{ width: '100%' }" [appendTo]="'body'" [showClear]="true">
           <ng-template pTemplate="item" let-card>
@@ -212,16 +212,15 @@
 
     <div class="flex items-center gap-2 mt-2">
       <p-checkbox formControlName="is_paid" [binary]="true" inputId="is_paid"></p-checkbox>
-      <label for="is_paid" class="cursor-pointer font-semibold text-gray-700 dark:text-gray-200">Pago / Recebido</label>
+      <label for="is_paid" class="cursor-pointer font-semibold text-gray-700 dark:text-gray-200">
+        {{ form.get('type')?.value === 'expense' ? 'Pago' : 'Recebido' }}
+      </label>
     </div>
 
     @if (form.get('is_paid')?.value) {
-    <div class="flex flex-col gap-2 mt-2">
-      <label for="payment_date" class="font-semibold text-gray-700 dark:text-gray-200">Data do Pagamento</label>
-      <p-datepicker inputId="payment_date" formControlName="payment_date" dateFormat="dd/mm/yy" [showIcon]="true"
-        [appendTo]="'body'" [style]="{ width: '100%' }" inputStyleClass="w-full">
-      </p-datepicker>
-    </div>
+      <div class="mt-2 text-xs text-gray-500 italic">
+        A data da transação será usada como data do pagamento.
+      </div>
     }
 
     <div class="flex justify-between mt-6">

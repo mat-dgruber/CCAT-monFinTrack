@@ -75,6 +75,10 @@ def get_invoices(user_id: str) -> List[InvoiceSummary]:
     # 4. Construir Objetos InvoiceSummary
     today = date.today()
     
+    # Pre-processar transferências para verificar pagamentos
+    # Pattern: "REF:{card_id}:{month}:{year}" na descrição
+    transfers = [t for t in all_transactions if t.type == TransactionType.TRANSFER]
+    
     for (card_id, month, year), data in invoice_buckets.items():
         card = data["card"]
         amount = data["amount"]
@@ -111,6 +115,14 @@ def get_invoices(user_id: str) -> List[InvoiceSummary]:
             status = InvoiceStatus.OVERDUE
         elif today >= closing_date:
             status = InvoiceStatus.CLOSED
+            
+        # Verificar se já existe pagamento
+        # REF format: REF:{card_id}:{month}:{year}
+        ref_key = f"REF:{card_id}:{month}:{year}"
+        is_paid = any(ref_key in (t.description or "") for t in transfers)
+        
+        if is_paid:
+            status = InvoiceStatus.PAID
         
         invoices.append(InvoiceSummary(
             account_id=data["account"].id,
@@ -132,17 +144,37 @@ def get_invoices(user_id: str) -> List[InvoiceSummary]:
 def pay_invoice(user_id: str, invoice_data: dict):
     """
     Registra o pagamento de uma fatura.
-    invoice_data: { credit_card_id, amount, source_account_id, payment_date, description }
+    invoice_data: { credit_card_id, amount, source_account_id, payment_date, description, month, year }
     """
     credit_card_id = invoice_data.get('credit_card_id')
     amount = invoice_data.get('amount')
     source_account_id = invoice_data.get('source_account_id')
     date_str = invoice_data.get('payment_date')
-    description = invoice_data.get('description', f"Pagamento Fatura Cartão")
+    
+    # Dados para referência
+    month = invoice_data.get('month')
+    year = invoice_data.get('year')
+    
+    if not month or not year:
+        # Tenta inferir da data de pagamento se não vier (fallback)
+        # Mas o ideal é vir do frontend
+        pass
+
+    # Padronização da descrição
+    ref_key = f"REF:{credit_card_id}:{month}:{year}"
+    description_text = invoice_data.get('description', f"Pagamento Fatura")
+    full_description = f"{description_text} | {ref_key}"
     
     if not source_account_id:
         raise HTTPException(status_code=400, detail="Conta de origem (source_account_id) obrigatória")
         
+    # Verificar Duplicidade
+    # Busca transações recentes desse usuário que contenham a ref_key
+    all_trans = transaction_service.list_transactions(user_id, limit=500)
+    for t in all_trans:
+        if t.type == TransactionType.TRANSFER and t.description and ref_key in t.description:
+            raise HTTPException(status_code=400, detail="Esta fatura já foi paga.")
+
     payment_date = datetime.now()
     if date_str:
         try:
@@ -150,7 +182,7 @@ def pay_invoice(user_id: str, invoice_data: dict):
         except:
              pass
 
-    # Tenta achar categoria adequada
+    # Tenta achar categoria adequada (opcional, pois type=TRANSFER já isola dos gráficos de despesa)
     cats = transaction_service.category_service.list_categories(user_id)
     category_id = None
     for c in cats:
@@ -167,15 +199,15 @@ def pay_invoice(user_id: str, invoice_data: dict):
          raise HTTPException(status_code=400, detail="Nenhuma categoria disponível.")
 
     t_create = TransactionCreate(
-        title=description,
+        title=description_text, # Titulo limpo
         amount=amount,
-        type=TransactionType.EXPENSE,
+        type=TransactionType.TRANSFER, # MUDANÇA: TRANSFER para não somar em despesas
         category_id=category_id,
         account_id=source_account_id,
         payment_method=PaymentMethod.BANK_TRANSFER, 
         status=TransactionStatus.PAID,
         date=payment_date,
-        description=f"Pagamento Ref: Cartão {credit_card_id}"
+        description=full_description # Descrição com REF oculta/visível
     )
     
     return transaction_service.create_transaction(t_create, user_id)

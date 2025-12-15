@@ -37,6 +37,7 @@ export class Home {
 
   sidebarVisible = signal(false);
   calculatorVisible = signal(false);
+  moreMenuVisible = signal(false);
 
   firstName = computed(() => {
     const user = this.authService.currentUser();
@@ -58,5 +59,9 @@ export class Home {
   toggleCalculator() {
     this.calculatorVisible.update(v => !v);
     this.closeSidebar();
+  }
+
+  toggleMoreMenu() {
+    this.moreMenuVisible.update(v => !v);
   }
 }

@@ -12,6 +12,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
@@ -31,7 +32,8 @@ import { ICON_LIST } from '../../shared/icons';
     SelectModule,
     SelectButtonModule,
     TableModule,
-    SkeletonModule
+    SkeletonModule,
+    ConfirmDialogModule
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss'

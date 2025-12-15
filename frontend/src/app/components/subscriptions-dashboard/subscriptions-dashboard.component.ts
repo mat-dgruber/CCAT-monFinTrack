@@ -80,7 +80,19 @@ export class SubscriptionsDashboardComponent implements OnInit {
   // Dialog State
   displayDialog = false;
   dialogHeader = '';
-  recurrenceForm: FormGroup;
+  recurrenceForm: FormGroup = this.fb.group({
+    name: ['', Validators.required],
+    amount: [0, [Validators.required, Validators.min(0.01)]],
+    periodicity: [RecurrencePeriodicity.MONTHLY, Validators.required],
+    due_day: [1, [Validators.required, Validators.min(1), Validators.max(31)]],
+    due_month: [null],
+    category_id: ['', Validators.required],
+    account_id: ['', Validators.required],
+    payment_method_id: [null, Validators.required],
+    credit_card_id: [null],
+    auto_pay: [false],
+    active: [true]
+  });
   isEditMode = false;
   currentRecurrenceId: string | null = null;
   selectedType: 'expense' | 'income' = 'expense';
@@ -89,7 +101,6 @@ export class SubscriptionsDashboardComponent implements OnInit {
     { label: 'Despesa', value: 'expense' },
     { label: 'Receita', value: 'income' }
   ];
-
 
   periodicityOptions = [
     { label: 'Mensal', value: RecurrencePeriodicity.MONTHLY },
@@ -114,26 +125,40 @@ export class SubscriptionsDashboardComponent implements OnInit {
     { label: 'Dezembro', value: 12 }
   ];
 
-  constructor() {
-    this.recurrenceForm = this.fb.group({
-      name: ['', Validators.required],
-      amount: [0, [Validators.required, Validators.min(0.01)]],
-      periodicity: [RecurrencePeriodicity.MONTHLY, Validators.required],
-      due_day: [1, [Validators.required, Validators.min(1), Validators.max(31)]],
-      due_month: [null],
-      category_id: ['', Validators.required],
-      account_id: ['', Validators.required],
-      auto_pay: [false],
-      active: [true]
-    });
+  paymentOptions = [
+    { label: 'Cartão de Crédito', value: 'credit_card' },
+    { label: 'Débito', value: 'debit_card' },
+    { label: 'Pix', value: 'pix' },
+    { label: 'Dinheiro', value: 'cash' },
+    { label: 'Boleto', value: 'bank_transfer' }
+  ];
 
-    // Reload transactions whenever the current date changes
-    effect(() => {
-      this.loadTransactions();
+  availableCreditCards = computed(() => {
+    // Collect all cards from accounts
+    const cards: any[] = [];
+    this.accounts().forEach(acc => {
+      if (acc.credit_cards && acc.credit_cards.length > 0) {
+        cards.push(...acc.credit_cards);
+      }
+    });
+    return cards;
+  });
+
+  // Reload transactions whenever the current date changes
+  transactionsEffect = effect(() => {
+    this.loadTransactions();
+  });
+
+  constructor() {
+    // Listen to Payment Method changes to clear CC if not applicable
+    this.recurrenceForm.get('payment_method_id')?.valueChanges.subscribe(val => {
+       if (val !== 'credit_card') {
+           this.recurrenceForm.patchValue({ credit_card_id: null });
+       }
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadData();
   }
 
@@ -373,7 +398,8 @@ export class SubscriptionsDashboardComponent implements OnInit {
         periodicity: RecurrencePeriodicity.MONTHLY,
         due_day: 1,
         active: true,
-        auto_pay: false
+        auto_pay: false,
+        payment_method_id: 'pix' // Default
       });
     }
   }
@@ -468,6 +494,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   markAsPaid(item: any) {
     if (item.transactionId && item.originalTransaction) {
       const payload = {
+        title: item.originalTransaction.title,
         description: item.originalTransaction.description,
         amount: item.originalTransaction.amount,
         date: item.originalTransaction.date,
@@ -490,11 +517,13 @@ export class SubscriptionsDashboardComponent implements OnInit {
       const type = category ? category.type : 'expense';
 
       const newTransaction: any = {
+        title: `${rec.name} (${item.dueDate.getMonth() + 1}/${item.dueDate.getFullYear()})`,
         description: `${rec.name} (${item.dueDate.getMonth() + 1}/${item.dueDate.getFullYear()})`,
         amount: rec.amount,
         date: item.dueDate,
         type: type,
-        payment_method: 'other',
+        payment_method: rec.payment_method_id || 'other', // Use correct method
+        credit_card_id: rec.credit_card_id || null, // Use correct card
         category_id: rec.category_id,
         account_id: rec.account_id,
         recurrence_id: rec.id,
@@ -510,6 +539,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   markAsUnpaid(item: any) {
     if (item.transactionId && item.originalTransaction) {
       const payload = {
+        title: item.originalTransaction.title,
         description: item.originalTransaction.description,
         amount: item.originalTransaction.amount,
         date: item.originalTransaction.date,

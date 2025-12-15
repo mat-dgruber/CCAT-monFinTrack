@@ -12,6 +12,7 @@ export interface Recurrence {
     category_id: string;
     account_id: string;
     payment_method_id?: string;
+    credit_card_id?: string;
     periodicity: string;
     auto_pay: boolean;
     due_day: number;
@@ -21,4 +22,5 @@ export interface Recurrence {
     last_processed_at?: Date;
     cancellation_date?: Date;
     skipped_dates?: string[];
+    type?: 'expense' | 'income' | 'transfer';
 }

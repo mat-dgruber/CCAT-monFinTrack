@@ -103,8 +103,8 @@
           <i class="pi pi-receipt text-blue-500 text-xl"></i>
         </div>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400">
-        Média baseada nos últimos {{ data()?.range?.months_count }} meses
+      <span class="text-sm text-gray-500 dark:text-gray-300">
+        Média baseada nos últimos {{ data()?.range?.months_count | number:'1.0-0' }} meses
       </span>
     </div>
 
@@ -126,7 +126,7 @@
           <i class="pi pi-calendar-times text-green-500 text-xl"></i>
         </div>
       </div>
-      <span class="text-sm text-gray-500 dark:text-gray-400">
+      <span class="text-sm text-gray-500 dark:text-gray-300">
         Total em assinaturas e contas fixas ativas
       </span>
     </div>
@@ -151,7 +151,7 @@
       </div>
       <div class="flex flex-col">
         <span
-          class="text-sm text-gray-500 dark:text-gray-400"
+          class="text-sm text-gray-500 dark:text-gray-300"
           *ngIf="!inflation()?.is_fallback"
         >
           Dados do Banco Central do Brasil
@@ -223,7 +223,7 @@
             <div class="flex justify-center">
               <div class="w-full max-w-lg">
                 <h3
-                  class="text-center text-gray-700 dark:text-gray-300 mb-6 font-medium"
+                  class="text-center text-gray-700 dark:text-white mb-6 font-medium"
                 >
                   Distribuição Média (Realizado)
                 </h3>
@@ -238,7 +238,7 @@
               </div>
             </div>
             <div>
-              <h3 class="text-gray-700 dark:text-gray-300 mb-6 font-medium">
+              <h3 class="text-gray-700 dark:text-white mb-6 font-medium">
                 Detalhes por Categoria
               </h3>
               <p-table
@@ -292,7 +292,7 @@
             <div class="flex flex-col gap-2">
               <label
                 for="baseCost"
-                class="text-gray-700 dark:text-gray-300 font-medium"
+                class="text-gray-700 dark:text-gray-200 font-medium"
                 >Custo Base Mensal</label
               >
               <p-inputNumber
@@ -303,12 +303,13 @@
                 locale="pt-BR"
                 styleClass="w-full"
                 class="w-full"
+                inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               ></p-inputNumber>
             </div>
             <div class="flex flex-col gap-2">
               <label
                 for="inflation"
-                class="text-gray-700 dark:text-gray-300 font-medium"
+                class="text-gray-700 dark:text-gray-200 font-medium"
                 >Taxa de Inflação Anual (%)</label
               >
               <p-inputNumber
@@ -318,12 +319,13 @@
                 [minFractionDigits]="2"
                 styleClass="w-full"
                 class="w-full"
+                inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               ></p-inputNumber>
             </div>
             <div class="flex flex-col gap-2">
               <label
                 for="years"
-                class="text-gray-700 dark:text-gray-300 font-medium"
+                class="text-gray-700 dark:text-gray-200 font-medium"
                 >Período de Projeção (Anos)</label
               >
               <p-inputNumber
@@ -333,6 +335,7 @@
                 [max]="50"
                 styleClass="w-full"
                 class="w-full"
+                inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               ></p-inputNumber>
             </div>
           </div>

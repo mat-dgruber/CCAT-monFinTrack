@@ -39,12 +39,12 @@ export class InvoiceDashboard implements OnInit {
   private accountService = inject(AccountService);
   private refreshService = inject(RefreshService);
   private messageService = inject(MessageService);
-  
+
   @Input() isWidget = false;
 
   invoices = signal<InvoiceSummary[]>([]);
   loading = signal(true);
-  
+
   // Payment Modal State
   paymentVisible = signal(false);
   selectedInvoice = signal<InvoiceSummary | null>(null);
@@ -90,18 +90,18 @@ export class InvoiceDashboard implements OnInit {
       this.selectedInvoice.set(invoice);
       this.paymentDate = new Date();
       this.selectedAccount = null; // Reset selection
-      
+
       // Tentar auto-selecionar a conta "mãe" se possível, mas aqui invoice.account_id é a conta do cartão.
       // Se a conta do cartão for "Nubank", e houver uma conta "Nubank" (checking), talvez seja a mesma?
       // No schema Account, o cartão está DENTRO da conta.
       // Então invoice.account_id É a conta mãe.
       // Podemos pré-selecionar ela se ela estiver na lista de accounts (checking).
-      
+
       const motherAccount = this.accounts().find(a => a.id === invoice.account_id);
       if (motherAccount) {
           this.selectedAccount = motherAccount.id!;
       }
-      
+
       this.paymentVisible.set(true);
   }
 
@@ -113,7 +113,7 @@ export class InvoiceDashboard implements OnInit {
 
       this.paymentLoading.set(true);
       const inv = this.selectedInvoice()!;
-      
+
       this.invoiceService.payInvoice({
           credit_card_id: inv.credit_card_id,
           amount: inv.amount,
@@ -130,7 +130,8 @@ export class InvoiceDashboard implements OnInit {
               this.refreshService.triggerRefresh(); // Atualiza tudo
           },
           error: (err) => {
-              this.messageService.add({severity:'error', summary:'Erro', detail:'Falha ao pagar fatura.'});
+              const msg = err.error?.detail || 'Falha ao pagar fatura.';
+              this.messageService.add({severity:'error', summary:'Erro', detail: msg});
               this.paymentLoading.set(false);
           }
       });
