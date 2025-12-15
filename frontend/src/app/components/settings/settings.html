@@ -116,6 +116,23 @@
           (ngModelChange)="onTitheSettingsChange()"
         ></p-toggleswitch>
       </div>
+
+      <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+      >
+        <div class="flex flex-col gap-1">
+          <span class="font-medium text-secondary"
+            >Aplicar Oferta Automaticamente</span
+          >
+          <span class="text-sm text-secondary"
+            >Marcar a opção de oferta automaticamente em novas receitas.</span
+          >
+        </div>
+        <p-toggleswitch
+          [(ngModel)]="autoApplyOffering"
+          (ngModelChange)="onTitheSettingsChange()"
+        ></p-toggleswitch>
+      </div>
       }
     </div>
   </div>

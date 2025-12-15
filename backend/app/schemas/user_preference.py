@@ -15,6 +15,7 @@ class UserPreferenceBase(BaseModel):
     default_tithe_percentage: Optional[float] = 10.0
     default_offering_percentage: Optional[float] = 5.0
     auto_apply_tithe: Optional[bool] = False
+    auto_apply_offering: Optional[bool] = False
 
 class UserPreferenceCreate(UserPreferenceBase):
     pass

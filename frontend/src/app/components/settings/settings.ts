@@ -22,6 +22,7 @@ import { TagModule } from 'primeng/tag';
 import { AvatarModule } from 'primeng/avatar';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { PwaService } from '../../services/pwa.service';
@@ -48,6 +49,7 @@ import { PwaService } from '../../services/pwa.service';
     AvatarModule,
     FileUploadModule,
     DialogModule,
+    TooltipModule,
     RouterModule
   ],
   providers: [MessageService, ConfirmationService]
@@ -106,6 +108,7 @@ export class Settings {
   defaultTithePct = signal(10);
   defaultOfferingPct = signal(5);
   autoApplyTithe = signal(false);
+  autoApplyOffering = signal(false);
 
   constructor() {
     // Initialize with current user data
@@ -130,6 +133,7 @@ export class Settings {
         this.defaultTithePct.set(prefs.default_tithe_percentage ?? 10);
         this.defaultOfferingPct.set(prefs.default_offering_percentage ?? 5);
         this.autoApplyTithe.set(!!prefs.auto_apply_tithe);
+        this.autoApplyOffering.set(!!prefs.auto_apply_offering);
       }
     });
 
@@ -149,7 +153,8 @@ export class Settings {
           this.preferenceService.updatePreferences({
               default_tithe_percentage: this.defaultTithePct(),
               default_offering_percentage: this.defaultOfferingPct(),
-              auto_apply_tithe: this.autoApplyTithe()
+              auto_apply_tithe: this.autoApplyTithe(),
+              auto_apply_offering: this.autoApplyOffering()
           }).subscribe();
       }
   }

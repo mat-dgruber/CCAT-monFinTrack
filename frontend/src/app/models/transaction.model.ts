@@ -35,5 +35,6 @@ export interface Transaction {
   offering_percentage?: number;
   net_amount?: number;
   tithe_status?: 'NONE' | 'PENDING' | 'PAID';
+  gross_amount?: number;
   credit_card_id?: string;
 }
