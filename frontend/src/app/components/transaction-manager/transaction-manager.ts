@@ -11,13 +11,14 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, FilterMatchMode } from 'primeng/api';
 import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { InputNumberModule } from 'primeng/inputnumber';
 
 // Services
 import { TransactionService } from '../../services/transaction.service';
@@ -53,7 +54,8 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     IconFieldModule,
     InputIconModule,
     SkeletonModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    InputNumberModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
@@ -76,10 +78,37 @@ export class TransactionManager implements OnInit, AfterViewInit {
   // Filters
   filterDateRange = signal<Date[] | null>(null);
 
+  // Status Options for Filter
+  statusOptions = [
+    { label: 'Pago', value: 'paid' },
+    { label: 'Pendente', value: 'pending' }
+  ];
+
+  // Amount Match Mode Options (Desktop)
+  amountMatchModeOptions = [
+    { label: 'Igual a', value: FilterMatchMode.EQUALS },
+    { label: 'Maior que', value: FilterMatchMode.GREATER_THAN },
+    { label: 'Menor que', value: FilterMatchMode.LESS_THAN },
+    { label: 'Maior ou igual a', value: FilterMatchMode.GREATER_THAN_OR_EQUAL_TO },
+    { label: 'Menor ou igual a', value: FilterMatchMode.LESS_THAN_OR_EQUAL_TO }
+  ];
+
   // Mobile Filters
   mobileFilterVisible = signal(false);
   mobileCategoryFilter = signal<Category | null>(null);
   mobileAccountFilter = signal<Account | null>(null);
+  mobileTitleFilter = signal<string>('');
+  mobileStatusFilter = signal<string | null>(null);
+  mobileValueFilter = signal<number | null>(null);
+  mobileValueMode = signal<string>(FilterMatchMode.EQUALS); // Default to Equals
+
+  valueModeOptions = [
+    { label: 'Igual a', value: FilterMatchMode.EQUALS },
+    { label: 'Maior que', value: FilterMatchMode.GREATER_THAN },
+    { label: 'Menor que', value: FilterMatchMode.LESS_THAN },
+    { label: 'Maior ou igual', value: FilterMatchMode.GREATER_THAN_OR_EQUAL_TO },
+    { label: 'Menor ou igual', value: FilterMatchMode.LESS_THAN_OR_EQUAL_TO }
+  ];
 
   // View State for Stats
   currentViewTransactions = signal<Transaction[]>([]);
@@ -262,16 +291,12 @@ export class TransactionManager implements OnInit, AfterViewInit {
     this.currentSortOrder.set(-1);
     this.currentGroupField.set('dateGroup');
     // Clear mobile filters too
-    this.mobileCategoryFilter.set(null);
-    this.mobileAccountFilter.set(null);
+    this.clearMobileFilters();
 
     this.loadData();
   }
 
   applyMobileFilters() {
-    // Apply Date Range (handled by existing onDateRangeChange/onPresetChange if bound)
-    // We just need to apply local filters for Category and Account
-
     let filtered = this.transactions();
 
     // 1. Apply Category Filter
@@ -286,7 +311,39 @@ export class TransactionManager implements OnInit, AfterViewInit {
       filtered = filtered.filter(t => t.account?.name === acc.name);
     }
 
-    // 3. Update View
+    // 3. Apply Title/Description Filter
+    const title = this.mobileTitleFilter();
+    if (title) {
+        const term = title.toLowerCase();
+        filtered = filtered.filter(t =>
+            t.title.toLowerCase().includes(term) ||
+            (t.description && t.description.toLowerCase().includes(term))
+        );
+    }
+
+    // 4. Apply Status Filter
+    const status = this.mobileStatusFilter();
+    if (status) {
+        filtered = filtered.filter(t => t.status === status);
+    }
+
+    // 5. Apply Value Filter
+    const val = this.mobileValueFilter();
+    const mode = this.mobileValueMode();
+    if (val !== null) {
+      filtered = filtered.filter(t => {
+        switch (mode) {
+          case FilterMatchMode.EQUALS: return t.amount === val;
+          case FilterMatchMode.GREATER_THAN: return t.amount > val;
+          case FilterMatchMode.LESS_THAN: return t.amount < val;
+          case FilterMatchMode.GREATER_THAN_OR_EQUAL_TO: return t.amount >= val;
+          case FilterMatchMode.LESS_THAN_OR_EQUAL_TO: return t.amount <= val;
+          default: return t.amount === val;
+        }
+      });
+    }
+
+    // 6. Update View
     this.recalculateGroupingFlags(filtered);
     this.currentViewTransactions.set(filtered);
     this.mobileFilterVisible.set(false);
@@ -295,6 +352,11 @@ export class TransactionManager implements OnInit, AfterViewInit {
   clearMobileFilters() {
     this.mobileCategoryFilter.set(null);
     this.mobileAccountFilter.set(null);
+    this.mobileTitleFilter.set('');
+    this.mobileStatusFilter.set(null);
+    this.mobileValueFilter.set(null);
+    this.mobileValueMode.set(FilterMatchMode.EQUALS);
+
     this.selectedDatePreset.set('all');
     this.filterDateRange.set(null);
 
@@ -349,7 +411,12 @@ export class TransactionManager implements OnInit, AfterViewInit {
 
       // Ensure dateGroup is set (it should be, but just in case)
       if (!t.dateGroup) {
-        t.dateGroup = d.toISOString().split('T')[0];
+        if (!isNaN(d.getTime())) {
+           t.dateGroup = d.toISOString().split('T')[0];
+        } else {
+           // Fallback for invalid dates
+           t.dateGroup = 'Invalid Date';
+        }
       }
 
       const isNewYear = year !== lastYear;

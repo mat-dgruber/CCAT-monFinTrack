@@ -9,7 +9,7 @@ export interface Transaction {
   description?: string;
   amount: number;
   date: Date; // ou string, dependendo de como vem do back
-  type: 'expense' | 'income';
+  type: 'expense' | 'income' | 'transfer';
   category: Category;
   account: Account;
   payment_method: string;

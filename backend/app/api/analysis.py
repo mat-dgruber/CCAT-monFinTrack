@@ -13,7 +13,7 @@ router = APIRouter()
 
 # --- HELPER FUNCTIONS ---
 
-def calculate_monthly_averages_helper(transactions: List[Any], months_count: int) -> Dict[str, Any]:
+def calculate_monthly_averages_helper(transactions: List[Any], months_count: float) -> Dict[str, Any]:
     """
     Calculates average spending from a list of transactions.
     """
@@ -22,33 +22,40 @@ def calculate_monthly_averages_helper(transactions: List[Any], months_count: int
 
     total_spent = 0
     category_totals = {}
+    
+    # Pre-calculated strict filters
+    VALID_TYPES = {'expense'}
 
     for t in transactions:
-        # Assuming transaction model has 'amount', 'type', 'category_name'
-        # We only care about EXPENSES for cost of living
-        # Check if transaction is an expense (negative amount or type='expense')
-        # Adjust logic based on actual Transaction model
+        # Strict Type Filtering
+        # Explicitly exclude transfers and income. 
+        # We rely on 'type' attribute being present and matching 'expense'.
+        t_type = getattr(t, 'type', None)
         
-        # In this system, expenses seem to be negative or defined by category type.
-        # Let's assume input transactions are already filtered or we check here.
-        # Based on previous context, we might need to check logic.
-        # Let's assume standard behavior: absolute value of negative amounts for expenses.
-        
-        amount = 0
-        if hasattr(t, 'type') and t.type == 'expense':
-             amount = abs(t.amount)
-        elif hasattr(t, 'amount') and t.amount < 0:
-             amount = abs(t.amount)
-        else:
-            continue # Skip income or zero
+        # Handle Enum or String
+        if hasattr(t_type, 'value'):
+             t_type = t_type.value
+             
+        if t_type not in VALID_TYPES:
+            continue
 
+        # Get Amount (Abs value)
+        amount = abs(getattr(t, 'amount', 0))
+        
         total_spent += amount
         
+        # Robust Category Extraction
         cat_name = "Outros"
-        if hasattr(t, 'category_name') and t.category_name:
-            cat_name = t.category_name
-        elif hasattr(t, 'category') and t.category and hasattr(t.category, 'name'):
-            cat_name = t.category.name
+        category = getattr(t, 'category', None)
+        
+        if category:
+             # Try Object first
+             if hasattr(category, 'name'):
+                  cat_name = category.name
+             elif isinstance(category, dict):
+                  cat_name = category.get('name', "Outros")
+        elif hasattr(t, 'category_name') and t.category_name:
+             cat_name = t.category_name
             
         category_totals[cat_name] = category_totals.get(cat_name, 0) + amount
 
@@ -137,11 +144,9 @@ def get_monthly_averages(
     )
 
     # Calculate number of months involved to average correctly
-    # Simple diff in days / 30 or counting distinct months in data? 
-    # Let's use simpler: (end_year - start_year) * 12 + (end_month - start_month) + 1
-    # Actually, robust way is strictly requested range duration in months
-    months_diff = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1
-    months_count = max(1, months_diff)
+    # PROPOSED FIX: Use days / 30.4375 (Average days in month) for floating point precision
+    days_diff = (end_date - start_date).days + 1
+    months_count = max(1.0, days_diff / 30.4375)
 
     realized_data = calculate_monthly_averages_helper(transactions, months_count)
 
@@ -217,7 +222,14 @@ def check_anomalies(
     target_totals = {}
     for t in target_txs:
         if hasattr(t, 'type') and t.type == 'expense':
-            cat = t.category_name or "Outros"
+            # Robust Category Name Extraction
+            cat = "Outros"
+            if t.category:
+                 if hasattr(t.category, 'name'):
+                      cat = t.category.name
+                 elif isinstance(t.category, dict):
+                      cat = t.category.get('name', "Outros")
+            
             target_totals[cat] = target_totals.get(cat, 0) + abs(t.amount)
 
     # 2. Get Historical Average (Previous 6 months)
@@ -232,7 +244,14 @@ def check_anomalies(
     hist_totals = {}
     for t in hist_txs:
         if hasattr(t, 'type') and t.type == 'expense':
-            cat = t.category_name or "Outros"
+            # Robust Category Name Extraction
+            cat = "Outros"
+            if t.category:
+                 if hasattr(t.category, 'name'):
+                      cat = t.category.name
+                 elif isinstance(t.category, dict):
+                      cat = t.category.get('name', "Outros")
+
             hist_totals[cat] = hist_totals.get(cat, 0) + abs(t.amount)
 
     # Average divisor = 6

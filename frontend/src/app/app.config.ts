@@ -35,13 +35,41 @@ export const appConfig: ApplicationConfig = {
         options: {
           darkModeSelector: '.dark'
         }
+      },
+      translation: {
+        accept: 'Sim',
+        reject: 'Não',
+        apply: 'Aplicar',
+        clear: 'Limpar',
+        addRule: 'Adicionar Regra',
+        matchAll: 'Corresponder a Todos',
+        matchAny: 'Corresponder a Qualquer',
+        startsWith: 'Começa com',
+        contains: 'Contém',
+        notContains: 'Não contém',
+        endsWith: 'Termina com',
+        equals: 'Igual a',
+        notEquals: 'Diferente de',
+        noFilter: 'Sem filtro',
+        lt: 'Menor que',
+        lte: 'Menor ou igual a',
+        gt: 'Maior que',
+        gte: 'Maior ou igual a',
+        is: 'É',
+        isNot: 'Não é',
+        before: 'Antes',
+        after: 'Depois',
+        dateIs: 'Data é',
+        dateIsNot: 'Data não é',
+        dateBefore: 'Data é antes',
+        dateAfter: 'Data é depois'
       }
     }),
 
     ConfirmationService,
     MessageService,
     provideServiceWorker('ngsw-worker.js', {
-      enabled: true,
+      enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000'
     })
   ]

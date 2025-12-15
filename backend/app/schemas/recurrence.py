@@ -3,6 +3,7 @@ from datetime import datetime, date
 from typing import Optional, List
 from enum import Enum
 from app.core.validators import sanitize_html
+from app.schemas.transaction import TransactionType
 
 class RecurrencePeriodicity(str, Enum):
     MONTHLY = "monthly"
@@ -22,6 +23,9 @@ class RecurrenceBase(BaseModel):
     due_month: Optional[int] = Field(None, ge=1, le=12, description="Mês de vencimento para recorrências anuais")
     active: bool = Field(True, description="Se a recorrência está ativa")
     skipped_dates: List[date] = Field(default_factory=list, description="Lista de datas (vencimentos) puladas/excluídas")
+    
+    # Novo campo para suportar Transferência (Pagamento de Fatura)
+    type: TransactionType = Field(default=TransactionType.EXPENSE, description="Tipo da transação gerada")
 
     @field_validator('name')
     @classmethod
@@ -43,6 +47,7 @@ class RecurrenceUpdate(BaseModel):
     due_month: Optional[int] = None
     active: Optional[bool] = None
     last_processed_at: Optional[datetime] = None
+    type: Optional[TransactionType] = None
 
 class Recurrence(RecurrenceBase):
     id: str

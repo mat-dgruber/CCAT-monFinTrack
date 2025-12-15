@@ -7,6 +7,7 @@ from app.core.validators import sanitize_html
 class CategoryType(str, Enum):
     EXPENSE = "expense"
     INCOME = "income"
+    TRANSFER = "transfer"
 
 # 2. Agora podemos usar o CategoryType dentro da classe Base
 class CategoryBase(BaseModel):

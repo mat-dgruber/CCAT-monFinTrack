@@ -1,4 +1,4 @@
-export type CategoryType = 'expense' | 'income';
+export type CategoryType = 'expense' | 'income' | 'transfer';
 
 export interface Category {
      id?: string;

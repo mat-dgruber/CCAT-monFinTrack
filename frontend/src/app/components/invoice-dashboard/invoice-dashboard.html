@@ -32,9 +32,10 @@
                            [ngClass]="{
                                'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400': invoice.status === 'open',
                                'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400': invoice.status === 'closed',
-                               'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': invoice.status === 'overdue'
+                               'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': invoice.status === 'overdue',
+                               'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400': invoice.status === 'paid'
                            }">
-                           {{ invoice.status === 'open' ? 'ABERTA' : (invoice.status === 'closed' ? 'FECHADA' : 'ATRASADA') }}
+                           {{ invoice.status === 'open' ? 'ABERTA' : (invoice.status === 'closed' ? 'FECHADA' : (invoice.status === 'overdue' ? 'ATRASADA' : 'PAGA')) }}
                       </div>
 
                       <div class="flex items-center gap-4 mb-6">
@@ -53,7 +54,7 @@
                               <span class="text-gray-500 dark:text-gray-400">Referência</span>
                               <span class="font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded">{{ invoice.month | number:'2.0' }}/{{ invoice.year }}</span>
                           </div>
-                          
+
                           <div class="flex justify-between items-center text-sm">
                               <span class="text-gray-500 dark:text-gray-400">Vencimento</span>
                               <span class="font-medium" [class.text-red-500]="invoice.status === 'overdue'" [class.text-gray-900]="invoice.status !== 'overdue'" [class.dark:text-white]="invoice.status !== 'overdue'">
@@ -92,11 +93,18 @@
                               <span class="text-sm text-gray-500 dark:text-gray-400 mb-1">Valor Total</span>
                               <span class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{{ invoice.amount | currency:'BRL' }}</span>
                           </div>
-                          
-                          <p-button label="Pagar Fatura" icon="pi pi-check-circle" 
-                                    styleClass="w-full"
-                                    [outlined]="true"
-                                    (onClick)="openPaymentDialog(invoice)"></p-button>
+
+                          @if (invoice.status === 'paid') {
+                              <p-button label="Fatura Paga" icon="pi pi-check"
+                                        styleClass="w-full p-button-success"
+                                        [outlined]="true"
+                                        [disabled]="true"></p-button>
+                          } @else {
+                              <p-button label="Pagar Fatura" icon="pi pi-check-circle"
+                                        styleClass="w-full"
+                                        [outlined]="true"
+                                        (onClick)="openPaymentDialog(invoice)"></p-button>
+                          }
                       </div>
                  </div>
             </div>
@@ -122,7 +130,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="font-semibold text-gray-700 dark:text-gray-200 text-sm">Conta de Origem</label>
-                <p-select [options]="accounts()" [(ngModel)]="selectedAccount" optionLabel="name" optionValue="id" 
+                <p-select [options]="accounts()" [(ngModel)]="selectedAccount" optionLabel="name" optionValue="id"
                           placeholder="Selecione..." [style]="{width: '100%'}" appendTo="body" styleClass="w-full">
                      <ng-template pTemplate="item" let-acc>
                          <div class="flex items-center gap-2">

@@ -62,22 +62,6 @@
               </a>
             </li>
             <li>
-              <a routerLink="/invoices" (click)="closeSidebar()"
-                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                <i class="pi pi-credit-card"></i>
-                <span class="font-medium">Faturas</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/accounts" (click)="closeSidebar()"
-                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                <i class="pi pi-wallet"></i>
-                <span class="font-medium">Contas</span>
-              </a>
-            </li>
-            <li>
               <a routerLink="/subscriptions" (click)="closeSidebar()"
                 routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                 class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
@@ -93,39 +77,74 @@
                 <span class="font-medium">Categorias</span>
               </a>
             </li>
+
+            <!-- Mais Dropdown -->
             <li>
-              <a routerLink="/budgets" (click)="closeSidebar()"
-                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                <i class="pi pi-dollar"></i>
-                <span class="font-medium">Orçamentos</span>
-              </a>
-            </li>
-            @if (pwaService.isInstallable) {
-            <li>
-              <button (click)="pwaService.installApp(); closeSidebar()"
-                class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-                <i class="pi pi-download"></i>
-                <span class="font-medium">Instalar App</span>
+              <button (click)="toggleMoreMenu()"
+                class="w-full flex items-center justify-between px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+                <div class="flex items-center gap-3">
+                  <i class="pi pi-folder"></i>
+                  <span class="font-medium">Mais</span>
+                </div>
+                <i class="pi pi-chevron-down transition-transform duration-200" [class.rotate-180]="moreMenuVisible()"></i>
               </button>
+
+              <div class="overflow-hidden transition-all duration-300 ease-in-out"
+                   [style.max-height]="moreMenuVisible() ? '500px' : '0'"
+                   [style.opacity]="moreMenuVisible() ? '1' : '0'">
+                <ul class="pl-4 mt-1 space-y-1 border-l-2 border-gray-100 dark:border-gray-700 ml-3">
+                  <li>
+                    <a routerLink="/accounts" (click)="closeSidebar()"
+                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                      <i class="pi pi-wallet"></i>
+                      <span class="font-medium">Contas</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a routerLink="/budgets" (click)="closeSidebar()"
+                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                      <i class="pi pi-dollar"></i>
+                      <span class="font-medium">Orçamentos</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a routerLink="/cost-of-living" (click)="closeSidebar()"
+                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                      <i class="pi pi-chart-line"></i>
+                      <span class="font-medium">Custo de Vida</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a routerLink="/advanced-graphics" (click)="closeSidebar()"
+                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                      <i class="pi pi-chart-bar"></i>
+                      <span class="font-medium">Gráficos Avançados</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a routerLink="/invoices" (click)="closeSidebar()"
+                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                      <i class="pi pi-credit-card"></i>
+                      <span class="font-medium">Faturas</span>
+                    </a>
+                  </li>
+                  <li>
+                    <button (click)="toggleCalculator()" [class.bg-blue-50]="calculatorVisible()"
+                      [class.text-blue-600]="calculatorVisible()" [class.dark:bg-blue-900/20]="calculatorVisible()"
+                      class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+                      <i class="pi pi-calculator"></i>
+                      <span class="font-medium">Calculadora</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
             </li>
-            }
-            <li>
-              <a routerLink="/advanced-graphics" (click)="closeSidebar()"
-                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                <i class="pi pi-chart-bar"></i>
-                <span class="font-medium">Gráficos Avançados</span>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/cost-of-living" (click)="closeSidebar()"
-                routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                <i class="pi pi-chart-line"></i>
-                <span class="font-medium">Custo de Vida</span>
-              </a>
-            </li>
+
             <li>
               <a routerLink="/settings" (click)="closeSidebar()"
                 routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
@@ -134,16 +153,15 @@
                 <span class="font-medium">Configurações</span>
               </a>
             </li>
-            <li>
-              <button (click)="toggleCalculator()"
-                [class.bg-blue-50]="calculatorVisible()"
-                [class.text-blue-600]="calculatorVisible()"
-                [class.dark:bg-blue-900/20]="calculatorVisible()"
-                class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-                <i class="pi pi-calculator"></i>
-                <span class="font-medium">Calculadora</span>
-              </button>
-            </li>
+            @if (pwaService.isInstallable) {
+              <li>
+                <button (click)="pwaService.installApp(); closeSidebar()"
+                  class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+                  <i class="pi pi-download"></i>
+                  <span class="font-medium">Instalar App</span>
+                </button>
+              </li>
+            }
           </ul>
         </nav>
 
@@ -212,22 +230,6 @@
           </a>
         </li>
         <li>
-          <a routerLink="/invoices"
-            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-credit-card"></i>
-            <span class="font-medium">Faturas</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/accounts"
-            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-wallet"></i>
-            <span class="font-medium">Contas</span>
-          </a>
-        </li>
-        <li>
           <a routerLink="/subscriptions"
             routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
             class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
@@ -242,13 +244,80 @@
             <span class="font-medium">Categorias</span>
           </a>
         </li>
+
+        <!-- Mais Dropdown -->
         <li>
-          <a routerLink="/budgets" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+          <button (click)="toggleMoreMenu()"
+            class="w-full flex items-center justify-between px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+            <div class="flex items-center gap-3">
+              <i class="pi pi-folder"></i>
+              <span class="font-medium">Mais</span>
+            </div>
+            <i class="pi pi-chevron-down transition-transform duration-200" [class.rotate-180]="moreMenuVisible()"></i>
+          </button>
+
+          <div class="overflow-hidden transition-all duration-300 ease-in-out"
+               [style.max-height]="moreMenuVisible() ? '500px' : '0'"
+               [style.opacity]="moreMenuVisible() ? '1' : '0'">
+            <ul class="pl-4 mt-1 space-y-1 border-l-2 border-gray-100 dark:border-gray-700 ml-3">
+              <li>
+                <a routerLink="/accounts"
+                  routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-wallet"></i>
+                  <span class="font-medium">Contas</span>
+                </a>
+              </li>
+              <li>
+                <a routerLink="/budgets" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-dollar"></i>
+                  <span class="font-medium">Orçamentos</span>
+                </a>
+              </li>
+              <li>
+                <a routerLink="/cost-of-living" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-chart-line"></i>
+                  <span class="font-medium">Custo de Vida</span>
+                </a>
+              </li>
+              <li>
+                <a routerLink="/advanced-graphics"
+                  routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-chart-bar"></i>
+                  <span class="font-medium">Gráficos Avançados</span>
+                </a>
+              </li>
+              <li>
+                <a routerLink="/invoices"
+                  routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-credit-card"></i>
+                  <span class="font-medium">Faturas</span>
+                </a>
+              </li>
+              <li>
+                <button (click)="toggleCalculator()" [class.bg-blue-50]="calculatorVisible()"
+                  [class.text-blue-600]="calculatorVisible()" [class.dark:bg-blue-900/20]="calculatorVisible()"
+                  class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+                  <i class="pi pi-calculator"></i>
+                  <span class="font-medium">Calculadora</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li>
+          <a routerLink="/settings" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
             class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-dollar"></i>
-            <span class="font-medium">Orçamentos</span>
+            <i class="pi pi-cog"></i>
+            <span class="font-medium">Configurações</span>
           </a>
         </li>
+
         @if (pwaService.isInstallable) {
         <li>
           <button (click)="pwaService.installApp()"
@@ -258,38 +327,6 @@
           </button>
         </li>
         }
-        <li>
-          <a routerLink="/advanced-graphics"
-            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-chart-bar"></i>
-            <span class="font-medium">Gráficos Avançados</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/cost-of-living" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-chart-line"></i>
-            <span class="font-medium">Custo de Vida</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/settings" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-cog"></i>
-            <span class="font-medium">Configurações</span>
-          </a>
-        </li>
-        <li>
-          <button (click)="toggleCalculator()"
-            [class.bg-blue-50]="calculatorVisible()"
-            [class.text-blue-600]="calculatorVisible()"
-            [class.dark:bg-blue-900/20]="calculatorVisible()"
-            class="w-full flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-            <i class="pi pi-calculator"></i>
-            <span class="font-medium">Calculadora</span>
-          </button>
-        </li>
       </ul>
     </nav>
 

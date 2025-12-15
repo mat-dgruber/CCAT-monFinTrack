@@ -1,21 +1,26 @@
-<div class="flex h-full bg-gray-50 dark:bg-slate-900">
-  <!-- Main Content Column -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden">
-    <!-- Header -->
-    <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+<div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
+  <!-- Header with Mobile Adjustments -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
         <i class="pi pi-list"></i>
         Transações
-      </h1>
-      <div class="flex gap-2">
-        <p-button label="Exportar CSV" icon="pi pi-share-alt" severity="secondary" [outlined]="true"
-          (onClick)="exportCSV()" styleClass="hidden sm:flex"></p-button>
-        <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()">
-        </p-button>
-      </div>
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400">Gerencie suas receitas e despesas.</p>
     </div>
+    <div class="flex gap-2 w-full md:w-auto">
+      <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()" styleClass="w-full md:w-auto">
+      </p-button>
+      <p-button label="Exportar CSV" icon="pi pi-share-alt" severity="secondary" [outlined]="true"
+        (onClick)="exportCSV()" styleClass="w-full md:w-auto">
+      </p-button>
+    </div>
+  </div>
 
-    <div class="flex-1 overflow-hidden p-4 md:p-6">
+  <div class="flex flex-col md:flex-row gap-6 h-full min-h-0">
+    <!-- Main Content Column -->
+    <div class="flex-1 flex flex-col gap-4 overflow-hidden min-h-0">
+
       <!-- Desktop Table -->
       <div
         class="hidden md:flex bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex-col">
@@ -74,7 +79,8 @@
               <th>
                 <div class="flex items-center gap-2">
                   Categoria
-                  <p-columnFilter type="text" field="category.name" display="menu">
+                  <p-columnFilter type="text" field="category.name" display="menu" [showMatchModes]="false"
+                    [showOperator]="false" [showAddButton]="false">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                       <p-select [ngModel]="value" [options]="categories()" (onChange)="filter($any($event).value)"
                         placeholder="Qualquer" optionLabel="name" optionValue="name" styleClass="w-full" appendTo="body"
@@ -93,13 +99,15 @@
               <th>
                 <div class="flex items-center gap-2">
                   Título
-                  <p-columnFilter type="text" field="title" display="menu"></p-columnFilter>
+                  <p-columnFilter type="text" field="title" display="menu" [showMatchModes]="false"
+                    [showOperator]="false" [showAddButton]="false" matchMode="contains"></p-columnFilter>
                 </div>
               </th>
               <th>
                 <div class="flex items-center gap-2">
                   Conta
-                  <p-columnFilter type="text" field="account.name" display="menu">
+                  <p-columnFilter type="text" field="account.name" display="menu" [showMatchModes]="false"
+                    [showOperator]="false" [showAddButton]="false" matchMode="contains">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                       <p-select [ngModel]="value" [options]="accounts()" (onChange)="filter($any($event).value)"
                         placeholder="Qualquer" optionLabel="name" optionValue="name" styleClass="w-full" appendTo="body"
@@ -112,13 +120,22 @@
               <th>
                 <div class="flex items-center gap-2">
                   Status
-                  <p-columnFilter type="text" field="status" display="menu"></p-columnFilter>
+                  <p-columnFilter type="text" field="status" display="menu" [showMatchModes]="false"
+                    [showOperator]="false" [showAddButton]="false" matchMode="equals">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select [ngModel]="value" [options]="statusOptions" (onChange)="filter($any($event).value)"
+                        placeholder="Qualquer" optionLabel="label" optionValue="value" styleClass="w-full"
+                        appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
                 </div>
               </th>
               <th class="text-right">
                 <div class="flex items-center justify-end gap-2">
                   Valor
-                  <p-columnFilter type="numeric" field="amount" display="menu" currency="BRL"></p-columnFilter>
+                  <p-columnFilter type="numeric" field="amount" display="menu" currency="BRL"
+                    [matchModeOptions]="amountMatchModeOptions" [showOperator]="false"></p-columnFilter>
                 </div>
               </th>
               <th style="width: 100px"></th>
@@ -195,7 +212,8 @@
                 </div>
               </td>
               <td>
-                <div class="font-medium text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">{{t.title}}</div>
+                <div class="font-medium text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">
+                  {{t.title}}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{t.payment_method |
                   paymentFormat}}</div>
               </td>
@@ -211,13 +229,11 @@
 
                   <!-- Tithe Tags -->
                   @if (t.tithe_status && t.tithe_status !== 'NONE') {
-                    <i class="pi"
-                       [class.pi-check-circle]="t.tithe_status === 'PAID'"
-                       [class.pi-clock]="t.tithe_status === 'PENDING'"
-                       [class.text-green-500]="t.tithe_status === 'PAID'"
-                       [class.text-orange-500]="t.tithe_status === 'PENDING'"
-                       [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
-                    </i>
+                  <i class="pi" [class.pi-check-circle]="t.tithe_status === 'PAID'"
+                    [class.pi-clock]="t.tithe_status === 'PENDING'" [class.text-green-500]="t.tithe_status === 'PAID'"
+                    [class.text-orange-500]="t.tithe_status === 'PENDING'"
+                    [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
+                  </i>
                   }
 
                   <i *ngIf="t.is_auto_pay" class="pi pi-sync text-blue-500" pTooltip="Pagamento Automático"></i>
@@ -256,9 +272,9 @@
       </div>
 
       <!-- Mobile Card View -->
-      <div class="md:hidden flex flex-col gap-4 h-full overflow-y-auto pb-20">
+      <div class="md:hidden flex flex-col gap-4 overflow-y-auto pb-20">
         <!-- Mobile Search & Filter -->
-        <div class="flex gap-2 mb-2">
+        <div class="flex gap-2 mb-2 sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 py-2">
           <p-iconfield
             class="flex-1 dark:text-gray-200 dark:border-gray-700 dark:bg-slate-800 dark:shadow-none dark:placeholder-gray-200 dark:placeholder-opacity-100">
             <p-inputicon styleClass="pi pi-search" />
@@ -307,7 +323,8 @@
                 <i [class]="t.category?.icon" [style.color]="t.category?.color"></i>
               </div>
               <div>
-                <div class="font-bold text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">{{t.title}}</div>
+                <div class="font-bold text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">{{t.title}}
+                </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">{{t.date |
                   date:'dd/MM/yyyy'}} •
                   {{t.category?.name}}</div>
@@ -330,13 +347,11 @@
 
               <!-- Tithe Tags (Mobile) -->
               @if (t.tithe_status && t.tithe_status !== 'NONE') {
-                <i class="pi"
-                   [class.pi-check-circle]="t.tithe_status === 'PAID'"
-                   [class.pi-clock]="t.tithe_status === 'PENDING'"
-                   [class.text-green-500]="t.tithe_status === 'PAID'"
-                   [class.text-orange-500]="t.tithe_status === 'PENDING'"
-                   [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
-                </i>
+              <i class="pi" [class.pi-check-circle]="t.tithe_status === 'PAID'"
+                [class.pi-clock]="t.tithe_status === 'PENDING'" [class.text-green-500]="t.tithe_status === 'PAID'"
+                [class.text-orange-500]="t.tithe_status === 'PENDING'"
+                [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
+              </i>
               }
             </div>
             <div class="flex gap-1">
@@ -367,98 +382,98 @@
         }
       </div>
     </div>
-  </div>
 
-  <!-- Right Sidebar Stats -->
-  <div
-    class="w-80 bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0">
-    <h3 class="text-lg font-bold text-gray-800 dark:text-white">Resumo</h3>
+    <!-- Right Sidebar Stats -->
+    <div
+      class="w-80 bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-gray-700 p-6 flex flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0 rounded-xl">
+      <h3 class="text-lg font-bold text-gray-800 dark:text-white">Resumo</h3>
 
-    @if (loading()) {
-    <div class="space-y-4">
-      <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
-        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      @if (loading()) {
+      <div class="space-y-4">
+        <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="150px" height="2rem"></p-skeleton>
+        </div>
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="150px" height="2rem"></p-skeleton>
+        </div>
+        <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="150px" height="2rem"></p-skeleton>
+        </div>
+        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="150px" height="2rem"></p-skeleton>
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+              width="80px"></p-skeleton></div>
+          <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+              width="80px"></p-skeleton></div>
+          <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+              width="80px"></p-skeleton></div>
+          <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
+              width="80px"></p-skeleton></div>
+        </div>
       </div>
-      <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
-        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      } @else if (stats(); as s) {
+      <div class="space-y-4">
+        <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+          <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total de Transações</div>
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">{{s.totalTransactions}}</div>
+        </div>
+
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
+          <div class="text-sm text-red-600 dark:text-red-400 mb-1">Total Despesas</div>
+          <div class="text-2xl font-bold text-red-700 dark:text-red-400">{{s.totalExpense |
+            currency:'BRL'}}</div>
+        </div>
+
+        <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
+          <div class="text-sm text-green-600 dark:text-green-400 mb-1">Total Receitas</div>
+          <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{s.totalIncome |
+            currency:'BRL'}}
+          </div>
+        </div>
+
+        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+          <div class="text-sm text-blue-600 dark:text-blue-400 mb-1">Saldo do Período</div>
+          <div class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{s.net | currency:'BRL'}}
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+
+        <div class="space-y-3">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Maior Despesa</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{s.maxExpense |
+              currency:'BRL'}}</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Média (Valor)</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{s.avgTx | currency:'BRL'}}</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Primeira Data</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{s.firstDate |
+              date:'dd/MM/yy'}}</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Última Data</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{s.lastDate |
+              date:'dd/MM/yy'}}</span>
+          </div>
+        </div>
       </div>
-      <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
-        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-        <p-skeleton width="150px" height="2rem"></p-skeleton>
+      } @else {
+      <div class="text-center text-gray-500 dark:text-gray-400 py-10">
+        Sem dados para o filtro selecionado.
       </div>
-      <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-        <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-        <p-skeleton width="150px" height="2rem"></p-skeleton>
-      </div>
-      <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
-      <div class="space-y-3">
-        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
-            width="80px"></p-skeleton></div>
-        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
-            width="80px"></p-skeleton></div>
-        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
-            width="80px"></p-skeleton></div>
-        <div class="flex justify-between items-center"><p-skeleton width="100px"></p-skeleton><p-skeleton
-            width="80px"></p-skeleton></div>
-      </div>
+      }
     </div>
-    } @else if (stats(); as s) {
-    <div class="space-y-4">
-      <div class="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total de Transações</div>
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{s.totalTransactions}}</div>
-      </div>
-
-      <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30">
-        <div class="text-sm text-red-600 dark:text-red-400 mb-1">Total Despesas</div>
-        <div class="text-2xl font-bold text-red-700 dark:text-red-400">{{s.totalExpense |
-          currency:'BRL'}}</div>
-      </div>
-
-      <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
-        <div class="text-sm text-green-600 dark:text-green-400 mb-1">Total Receitas</div>
-        <div class="text-2xl font-bold text-green-700 dark:text-green-400">{{s.totalIncome |
-          currency:'BRL'}}
-        </div>
-      </div>
-
-      <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-        <div class="text-sm text-blue-600 dark:text-blue-400 mb-1">Saldo do Período</div>
-        <div class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{s.net | currency:'BRL'}}
-        </div>
-      </div>
-
-      <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
-
-      <div class="space-y-3">
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-gray-500 dark:text-gray-400">Maior Despesa</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{s.maxExpense |
-            currency:'BRL'}}</span>
-        </div>
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-gray-500 dark:text-gray-400">Média (Valor)</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{s.avgTx | currency:'BRL'}}</span>
-        </div>
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-gray-500 dark:text-gray-400">Primeira Data</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{s.firstDate |
-            date:'dd/MM/yy'}}</span>
-        </div>
-        <div class="flex justify-between items-center text-sm">
-          <span class="text-gray-500 dark:text-gray-400">Última Data</span>
-          <span class="font-medium text-gray-900 dark:text-white">{{s.lastDate |
-            date:'dd/MM/yy'}}</span>
-        </div>
-      </div>
-    </div>
-    } @else {
-    <div class="text-center text-gray-500 dark:text-gray-400 py-10">
-      Sem dados para o filtro selecionado.
-    </div>
-    }
   </div>
 
   <app-transaction-form (save)="onDateRangeChange()"></app-transaction-form>
@@ -467,7 +482,7 @@
   <p-drawer [(visible)]="mobileFilterVisible" [modal]="true" position="bottom" styleClass="!h-[80vh]"
     header="Filtrar Transações">
     <ng-template pTemplate="content">
-      <div class="flex flex-col gap-6 h-full">
+      <div class="flex flex-col gap-6 h-full overflow-y-auto">
         <!-- Date Filter -->
         <div class="flex flex-col gap-2">
           <span class="font-bold text-gray-700 dark:text-gray-200">Período</span>
@@ -483,6 +498,14 @@
               styleClass="w-full" inputStyleClass="w-full" appendTo="body">
             </p-datepicker>
           </div>
+        </div>
+
+        <!-- Title Filter (NEW) -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Título / Descrição</span>
+          <input pInputText [ngModel]="mobileTitleFilter()" (ngModelChange)="mobileTitleFilter.set($event)"
+                 name="titleFilter"
+                 placeholder="Pesquisar por texto..." class="w-full" />
         </div>
 
         <!-- Category Filter -->
@@ -509,13 +532,38 @@
           </p-select>
         </div>
 
+        <!-- Status Filter (NEW) -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Status</span>
+          <p-select [ngModel]="mobileStatusFilter()" [options]="statusOptions"
+            (onChange)="mobileStatusFilter.set($event.value)" placeholder="Qualquer" optionLabel="label" optionValue="value"
+            name="statusFilter"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+        </div>
+
+        <!-- Value Filter (NEW) -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Valor</span>
+          <p-select [ngModel]="mobileValueMode()" [options]="valueModeOptions"
+            (onChange)="mobileValueMode.set($event.value)" placeholder="Modo de Comparação" optionLabel="label" optionValue="value"
+            name="valueMode"
+            styleClass="w-full mb-2" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+
+           <p-inputNumber [ngModel]="mobileValueFilter()" (ngModelChange)="mobileValueFilter.set($event)"
+                         name="valueFilter"
+                         mode="currency" currency="BRL" locale="pt-BR"
+                         placeholder="R$ 0,00" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
+        </div>
+
         <div class="flex-1"></div>
 
         <!-- Actions -->
-        <div class="flex gap-3 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-          <p-button label="Limpar Filters" [outlined]="true" severity="secondary" styleClass="w-full"
+        <div class="flex gap-3 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 shrink-0 pb-4">
+          <p-button label="Limpar Filtros" [outlined]="true" severity="secondary" styleClass="w-full"
             (onClick)="clearMobileFilters()"></p-button>
-          <p-button label="Aplicar Filters" styleClass="w-full" (onClick)="applyMobileFilters()"></p-button>
+          <p-button label="Aplicar Filtros" styleClass="w-full" (onClick)="applyMobileFilters()"></p-button>
         </div>
       </div>
     </ng-template>
@@ -523,3 +571,4 @@
 
   <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
 </div>
+

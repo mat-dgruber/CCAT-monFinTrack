@@ -305,28 +305,55 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
     # Lógica de Parcelamento (Cenário A)
     if transaction_in.total_installments and transaction_in.total_installments > 1:
         group_id = str(uuid.uuid4())
-        recurrence_data = RecurrenceCreate(
-            name=transaction_in.title,
-            amount=transaction_in.amount,
-            category_id=transaction_in.category_id,
-            account_id=transaction_in.account_id,
-            payment_method_id=transaction_in.payment_method.value,
-            periodicity=RecurrencePeriodicity(transaction_in.recurrence_periodicity),
-            auto_pay=transaction_in.recurrence_auto_pay,
-            due_day=transaction_in.date.day,
-            active=True
-        )
         
-        recurrence = recurrence_service.create_recurrence(recurrence_data, user_id)
-        
-        if transaction_in.recurrence_create_first:
+        base_date = transaction_in.date
+        # Ensure base_date is datetime
+        if not isinstance(base_date, datetime):
+             base_date = datetime.combine(base_date, datetime.min.time())
+
+        for i in range(transaction_in.total_installments):
+            # Calculate due date: base_date + i months
+            due_date = base_date + relativedelta(months=i)
+            
+            # Prepare data
             t_data = transaction_in.model_dump()
-            t_data['recurrence_id'] = recurrence.id
-            # Se for a primeira parcela, o status é o que veio no form. Se não, PENDING.
-            if transaction_in.installment_number is None or transaction_in.installment_number == 1:
-                 pass # Usa o status do form
+            t_data['installment_group_id'] = group_id
+            t_data['installment_number'] = i + 1
+            t_data['date'] = due_date
+            
+            # Divide amount? No, usually user enters the installment value or total value?
+            # In this app context (monFinTrack), the form seems to send the 'amount' as the INSTALLMENT value (based on UI context usually)
+            # OR checking the form: "Valor" input. Usually in these apps it's the value of the transaction.
+            # If the user enters 1000 and 10x, is it 10x 100 or 10x 1000?
+            # Let's assume the input IS the installment value (standard in many personal finance apps, or user calculates).
+            # Looking at the code: `amount=transaction_in.amount` was passed to Recurrence. Recurrence used that amount. 
+            # So the input amount IS the installment amount.
+            
+            # Status Logic
+            # 1st installment: Respeita o que veio do form (ex: Pago)
+            # Others: Always PENDING
+            if i == 0:
+                 # Respeita o status que veio (pode ser PAID se usuario marcou "Pago")
+                 pass
             else:
                  t_data['status'] = TransactionStatus.PENDING
+                 t_data['is_paid'] = False
+                 t_data['payment_date'] = None
+                 # Reset Tithe/Offering status for future installments?
+                 # Probably yes, they haven't happened yet.
+                 if 'tithe_status' in t_data:
+                      t_data['tithe_status'] = 'PENDING' if t_data.get('tithe_status') != 'NONE' else 'NONE'
+            
+            # Description: "Title (1/10)"
+            original_title = transaction_in.title
+            t_data['description'] = f"{original_title} ({i+1}/{transaction_in.total_installments})"
+            # Also keep title clean? Or update title?
+            # Transaction schema has title. Let's update title.
+            # t_data['title'] = original_title # Keep main title clean? 
+            # The 'description' field is often used for details.
+            # But in the previous recurrence logic, description was set to "Name (MM/YYYY)".
+            # Let's append (x/y) to title to make it clear in lists that show title.
+            t_data['title'] = f"{original_title} ({i+1}/{transaction_in.total_installments})"
 
             t_create = TransactionCreate(**t_data)
             created_transactions.append(create_transaction(t_create, user_id))

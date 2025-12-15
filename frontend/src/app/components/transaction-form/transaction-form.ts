@@ -100,10 +100,11 @@ export class TransactionForm implements OnInit {
 
   @Output() save = new EventEmitter<void>();
 
-  currentType = signal<'expense' | 'income'>('expense');
+  currentType = signal<'expense' | 'income' | 'transfer'>('expense');
 
   filteredCategories = computed<SelectItemGroup[]>(() => {
-      const type = this.currentType();
+      let type = this.currentType();
+      if (type === 'transfer') type = 'expense'; // Transfers use expense categories
       const all = this.categories();
       const roots = all.filter(c => c.type === type);
 
@@ -125,13 +126,13 @@ export class TransactionForm implements OnInit {
 
   typeOptions = [
     { label: 'Despesas', value: 'expense' },
-    { label: 'Receitas', value: 'income' },
+    { label: 'Receitas', value: 'income' }
   ];
 
   modeOptions = [
     { label: 'Única', value: 'single' },
-    { label: 'Recorrente', value: 'recurrence' },
-    { label: 'Parcelada', value: 'installments' }
+    { label: 'Parcelada', value: 'installments' },
+    { label: 'Recorrente', value: 'recurrence' }
   ];
 
   periodicityOptions = [
@@ -144,7 +145,9 @@ export class TransactionForm implements OnInit {
     { label: 'Cartão de Crédito', value: 'credit_card' },
     { label: 'Débito', value: 'debit_card' },
     { label: 'Pix', value: 'pix' },
-    { label: 'Dinheiro', value: 'cash' }
+    { label: 'Dinheiro', value: 'cash' },
+    { label: 'Transferência', value: 'bank_transfer' },
+    { label: 'Boleto', value: 'bank_slip' }
   ];
 
   form: FormGroup = this.fb.group({
@@ -178,7 +181,12 @@ export class TransactionForm implements OnInit {
     this.form.get('type')?.valueChanges.subscribe(val => {
         if (val) {
             this.currentType.set(val);
-            this.form.patchValue({ category: null });
+            // Only clear category if we are interacting (not during initial patch if it matches)
+            // But getting context is hard. Simplest is to check if the current category type mismatches.
+            const currentCat = this.form.get('category')?.value;
+            if (currentCat && currentCat.type !== val) {
+                 this.form.patchValue({ category: null });
+            }
         }
     });
 
@@ -260,27 +268,33 @@ export class TransactionForm implements OnInit {
     if (transaction.installment_group_id) mode = 'installments';
     if (transaction.recurrence_id) mode = 'recurrence';
 
-    this.form.patchValue({
-        title: transaction.title,
-        description: transaction.description,
-        amount: transaction.amount,
-        date: new Date(transaction.date),
-        category: transaction.category,
-        account: transaction.account,
-        type: transaction.type,
-        payment_method: transaction.payment_method,
-        mode: mode,
-        total_installments: transaction.total_installments || 2,
-        recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
-        is_paid: transaction.status === 'paid' || !transaction.status,
-        payment_date: transaction.payment_date ? new Date(transaction.payment_date) : new Date(transaction.date),
+        // Helper to find matching object reference
+        const foundCategory = this.categories().find(c => c.id === transaction.category.id) || transaction.category;
+        const foundAccount = this.accounts().find(a => a.id === transaction.account.id) || transaction.account;
 
-        // Tithes
-        tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
-        offering_value: transaction.offering_percentage || transaction.offering_amount || null,
+        this.form.patchValue({
+            title: transaction.title,
+            description: transaction.description,
+            amount: transaction.amount,
+            date: new Date(transaction.date),
+            category: foundCategory,
+            account: foundAccount,
+            // Patch type with emitEvent: false to prevent clearing category
+            // But we can't easily do partial patch with options.
+            // Better: We handled the clearing logic in constructor to be smarter.
+            type: transaction.type,
+            payment_method: transaction.payment_method,
+            mode: mode,
+            total_installments: transaction.total_installments || 2,
+            recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
+            is_paid: transaction.status === 'paid',
 
-        credit_card_id: transaction.credit_card_id || null
-    });
+            // Tithes
+            tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
+            offering_value: transaction.offering_percentage || transaction.offering_amount || null,
+
+            credit_card_id: transaction.credit_card_id || null
+        });
 
     if (transaction.tithe_percentage) {
         this.titheEnabled.set(true);
@@ -320,7 +334,7 @@ export class TransactionForm implements OnInit {
         category_id: formValue.category.id,
         account_id: formValue.account.id,
         status: formValue.is_paid ? 'paid' : 'pending',
-        payment_date: formValue.is_paid ? formValue.payment_date : null
+        payment_date: formValue.is_paid ? formValue.date : null // Reuse date as payment_date
       };
 
       if (formValue.mode === 'recurrence') {

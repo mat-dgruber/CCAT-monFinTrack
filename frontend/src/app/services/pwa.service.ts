@@ -106,7 +106,7 @@ export class PwaService {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferredPrompt.set(e);
-      console.log('App install prompt intercepted');
+      console.log('App install prompt intercepted', e);
     });
   }
 

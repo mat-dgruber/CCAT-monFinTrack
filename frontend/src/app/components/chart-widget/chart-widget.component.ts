@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Signal, computed, effect, signal, inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, Signal, computed, effect, signal, inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -414,7 +414,7 @@ interface SankeyLink {
       </div>
   `
 })
-export class ChartWidgetComponent implements OnInit {
+export class ChartWidgetComponent implements OnInit, OnChanges {
     private elementRef = inject(ElementRef);
     @Input() widgetConfig!: DashboardWidget;
     @Input() removeCallback!: (id: string) => void;
@@ -512,6 +512,23 @@ export class ChartWidgetComponent implements OnInit {
             this.buildCategoryMap(cats);
             this.fetchData();
         });
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes['widgetConfig'] && !changes['widgetConfig'].firstChange) {
+             const current = changes['widgetConfig'].currentValue;
+             const previous = changes['widgetConfig'].previousValue;
+
+             // If date preset changed, refetch data
+             if (current.datePreset !== previous.datePreset ||
+                 current.customDateRange !== previous.customDateRange ||
+                 current.compareWithPrevious !== previous.compareWithPrevious) {
+                 this.fetchData();
+             } else {
+                 // Otherwise just update chart with existing data (e.g. type change, group by, etc)
+                 this.updateChartDataLocal();
+             }
+        }
     }
 
     trackByDate(index: number, cell: any): string {

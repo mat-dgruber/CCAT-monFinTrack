@@ -131,13 +131,16 @@ export class CostOfLivingComponent implements OnInit {
           ]
       });
 
+      const documentStyle = getComputedStyle(document.documentElement);
+      const textColor = documentStyle.getPropertyValue('--text-color');
+
       this.breakdownChartOptions.set({
           plugins: {
               legend: {
                   position: 'right',
                   labels: {
                       usePointStyle: true,
-                      color: 'var(--text-color)'
+                      color: textColor
                   }
               }
           }
@@ -173,20 +176,25 @@ export class CostOfLivingComponent implements OnInit {
           ]
       });
 
+      const documentStyle = getComputedStyle(document.documentElement);
+      const textColor = documentStyle.getPropertyValue('--text-color');
+      const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
+      const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
       this.projectionChartOptions.set({
           plugins: {
               legend: {
-                  labels: { color: 'var(--text-color)' }
+                  labels: { color: textColor }
               }
           },
           scales: {
               y: {
-                  ticks: { color: 'var(--text-color-secondary)' },
-                  grid: { color: 'var(--surface-border)' }
+                  ticks: { color: textColorSecondary },
+                  grid: { color: surfaceBorder }
               },
               x: {
-                  ticks: { color: 'var(--text-color-secondary)' },
-                  grid: { color: 'var(--surface-border)' }
+                  ticks: { color: textColorSecondary },
+                  grid: { color: surfaceBorder }
               }
           }
       });
