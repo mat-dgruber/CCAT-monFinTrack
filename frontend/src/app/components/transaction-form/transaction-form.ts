@@ -199,6 +199,16 @@ export class TransactionForm implements OnInit {
             this.form.patchValue({ credit_card_id: null });
         }
     });
+
+    // Listen to Account Changes to load cards
+    this.form.get('account')?.valueChanges.subscribe((acc: Account | null) => {
+        if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
+            this.availableCreditCards.set(acc.credit_cards);
+        } else {
+            this.availableCreditCards.set([]);
+            this.form.patchValue({ credit_card_id: null });
+        }
+    });
   }
 
   ngOnInit() {
