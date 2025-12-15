@@ -26,6 +26,7 @@ import { Account } from '../../models/account.model';
 // Components
 import { AccountManager } from '../account-manager/account-manager';
 import { BudgetManager } from '../budget-manager/budget-manager';
+import { InvoiceDashboard } from '../invoice-dashboard/invoice-dashboard';
 import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
 
 
@@ -43,6 +44,9 @@ import { SkeletonModule } from 'primeng/skeleton';
     MonthSelector,
     AccountManager,
     BudgetManager,
+    AccountManager,
+    BudgetManager,
+    InvoiceDashboard,
     RecentTransactionsComponent,
     SkeletonModule,
     RouterModule

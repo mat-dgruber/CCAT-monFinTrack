@@ -156,6 +156,7 @@ export class TransactionForm implements OnInit {
     account: [null, Validators.required],
     type: ['expense', Validators.required],
     payment_method: [null, Validators.required],
+    credit_card_id: [null], // Novo campo
 
     mode: ['single'],
     total_installments: [2],
@@ -171,11 +172,23 @@ export class TransactionForm implements OnInit {
     offering_value: [null]
   });
 
+  availableCreditCards = signal<any[]>([]);
+
   constructor() {
     this.form.get('type')?.valueChanges.subscribe(val => {
         if (val) {
             this.currentType.set(val);
             this.form.patchValue({ category: null });
+        }
+    });
+
+    // Listen to Account Changes to load cards
+    this.form.get('account')?.valueChanges.subscribe((acc: Account | null) => {
+        if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
+            this.availableCreditCards.set(acc.credit_cards);
+        } else {
+            this.availableCreditCards.set([]);
+            this.form.patchValue({ credit_card_id: null });
         }
     });
   }
@@ -264,7 +277,9 @@ export class TransactionForm implements OnInit {
 
         // Tithes
         tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
-        offering_value: transaction.offering_percentage || transaction.offering_amount || null
+        offering_value: transaction.offering_percentage || transaction.offering_amount || null,
+
+        credit_card_id: transaction.credit_card_id || null
     });
 
     if (transaction.tithe_percentage) {

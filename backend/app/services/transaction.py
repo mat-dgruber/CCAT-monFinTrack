@@ -518,9 +518,10 @@ def delete_transaction(transaction_id: str, user_id: str):
     t_type = data.get("type")
     account_id = data.get("account_id")
     status = data.get("status", TransactionStatus.PAID)
+    credit_card_id = data.get("credit_card_id")
 
-    # Estorna Saldo APENAS SE ESTAVA PAGO
-    if account_id and status == TransactionStatus.PAID:
+    # Estorna Saldo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
+    if account_id and status == TransactionStatus.PAID and not credit_card_id:
         _update_account_balance(db, account_id, amount, t_type, user_id, revert=True)
 
     doc_ref.delete()

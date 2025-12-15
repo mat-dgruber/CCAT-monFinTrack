@@ -43,6 +43,9 @@ class TransactionBase(BaseModel):
      installment_number: Optional[int] = None
      total_installments: Optional[int] = None
      is_auto_pay: bool = Field(False, description="Se o pagamento é automático (via recorrência)")
+     
+     # Se a transação for feita via cartão de crédito específico
+     credit_card_id: Optional[str] = Field(None, description="ID do cartão de crédito aninhado")
 
      # Campos opcionais de Dízimos e Ofertas
      tithe_amount: Optional[float] = Field(None, description="Valor do dízimo")

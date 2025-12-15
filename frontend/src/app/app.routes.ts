@@ -29,12 +29,18 @@ export const routes: Routes = [
       { path: '', component: Dashboard },
       { path: 'dashboard', redirectTo: '', pathMatch: 'full' },
       { path: 'settings', component: Settings },
+      { path: 'accounts', component: AccountManager },
       { path: 'categories', component: CategoryManager },
       { path: 'transactions', component: TransactionManager },
       { path: 'calendar', component: FinancialCalendarComponent },
       { path: 'subscriptions', component: SubscriptionsDashboardComponent },
       { path: 'advanced-graphics', component: AdvancedGraphicsComponent },
       { path: 'budgets', component: BudgetManager },
+      {
+        path: 'invoices',
+        loadComponent: () => import('./components/invoice-dashboard/invoice-dashboard').then(m => m.InvoiceDashboard),
+        canActivate: [authGuard]
+      },
       { path: 'cost-of-living', loadComponent: () => import('./components/cost-of-living/cost-of-living.component').then(m => m.CostOfLivingComponent) }
     ]
   },
