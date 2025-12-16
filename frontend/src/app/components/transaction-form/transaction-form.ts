@@ -401,11 +401,13 @@ export class TransactionForm implements OnInit {
 
       if (formValue.mode === 'recurrence') {
           payload.is_recurrence = true;
-      } else if (formValue.mode === 'installments') {
-          // total_installments is already in formValue
       } else {
-          payload.total_installments = null;
           payload.is_recurrence = false;
+          payload.recurrence_periodicity = null;
+      }
+
+      if (formValue.mode !== 'installments') {
+          payload.total_installments = null;
       }
 
       // Add Tithes & Offerings Data if Income
