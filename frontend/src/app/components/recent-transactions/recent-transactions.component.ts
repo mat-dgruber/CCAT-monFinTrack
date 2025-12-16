@@ -10,10 +10,12 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { SkeletonModule } from 'primeng/skeleton';
 
+import { TooltipModule } from 'primeng/tooltip';
+
 @Component({
   selector: 'app-recent-transactions',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TransactionForm, PaymentFormatPipe, SkeletonModule],
+  imports: [CommonModule, ButtonModule, TransactionForm, PaymentFormatPipe, SkeletonModule, TooltipModule],
   templateUrl: './recent-transactions.component.html',
   styles: []
 })

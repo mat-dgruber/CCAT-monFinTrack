@@ -181,10 +181,13 @@ export class AccountManager implements OnInit {
 
     this.confirmationService.confirm({
       target: event.target as EventTarget,
-      message: 'Tem certeza? Transações antigas podem ficar sem referência.',
+      message: `Tem certeza que deseja excluir a conta '${this.accounts().find(a => a.id === id)?.name}'? Transações antigas podem ficar sem referência.`,
+      header: 'Confirmar Exclusão',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: "p-button-danger p-button-text",
-      rejectButtonStyleClass: "p-button-text p-button-plain",
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.accountService.deleteAccount(id).subscribe(() => {
           this.messageService.add({ severity: 'success', summary: 'Conta Excluída' });

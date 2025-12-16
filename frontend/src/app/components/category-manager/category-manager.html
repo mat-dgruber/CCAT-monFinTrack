@@ -11,6 +11,35 @@
   <!-- Table (Desktop) -->
   <div
     class="hidden md:block card bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    @if (loading()) {
+      <div class="p-6 space-y-6">
+        <!-- Header Mock -->
+        <div class="flex justify-between items-center px-4">
+             <p-skeleton width="8rem" height="1.5rem"></p-skeleton>
+             <p-skeleton width="6rem" height="1.5rem"></p-skeleton>
+             <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
+        </div>
+        <!-- Rows -->
+         @for (i of [1,2,3,4,5]; track i) {
+           <div class="flex items-center justify-between px-4">
+              <!-- Name & Icon -->
+              <div class="flex items-center gap-4 w-1/3">
+                 <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+                 <p-skeleton width="60%" height="1.25rem"></p-skeleton>
+              </div>
+              <!-- Type -->
+              <div class="w-1/6">
+                 <p-skeleton width="6rem" height="1.75rem" borderRadius="1rem"></p-skeleton>
+              </div>
+              <!-- Actions -->
+              <div class="flex gap-2">
+                 <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                 <p-skeleton shape="circle" size="2rem"></p-skeleton>
+              </div>
+           </div>
+         }
+      </div>
+    } @else {
     <p-table [value]="tableData()" sortField="parent.name" sortMode="single" dataKey="id" rowGroupMode="subheader"
       groupRowsBy="parent.id" [tableStyle]="{ 'min-width': '60rem' }" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
@@ -110,6 +139,7 @@
         </tr>
       </ng-template>
     </p-table>
+    }
   </div>
 
   <!-- Mobile List -->

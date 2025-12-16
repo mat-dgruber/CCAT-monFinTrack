@@ -35,8 +35,15 @@ def calculate_monthly_averages_helper(transactions: List[Any], months_count: flo
         # Handle Enum or String
         if hasattr(t_type, 'value'):
              t_type = t_type.value
-             
-        if t_type not in VALID_TYPES:
+        
+        # Fallback: If type is None, check sign of amount? Or skip?
+        # Safe to skip if we enforce 'expense' type.
+        # But let's be robust against 'Expense' vs 'expense'
+        if not t_type:
+            continue
+            
+        if t_type.lower() not in VALID_TYPES:
+            # print(f"Skipping {t_type} (not in {VALID_TYPES})")
             continue
 
         # Get Amount (Abs value)
@@ -116,23 +123,48 @@ def get_monthly_averages(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Calculates Realized Average (from Transactions) and Committed Cost (from Active Recurrences).
-    Default range: Last 6 months.
+    Calculates Smart Cost of Living:
+    - Committed Cost: Active Recurrences (Fixed).
+    - Variable Cost: Average of Non-Recurring Expenses (Variable).
+    - Adaptive Timeframe: Uses [Max(6 months ago, First Transaction)] to calculate average.
     """
     user_id = current_user['uid']
     
-    # Default dates: last 6 months if not provided
+    # 1. Determine Timeframe (Adaptive)
     if not end_date:
         end_date = date.today()
-    if not start_date:
-        start_date = end_date - timedelta(days=180) # Approx 6 months
-
-    # 1. Realized Cost (Transactions)
-    # We need a service method to list transactions in range directly as objects
-    # Reusing existing service. likely list_transactions returns models.
-    # Note: start_date/end_date in service might expect datetime or string.
+        
+    # Standard 6 months window
+    standard_start = end_date - timedelta(days=180)
     
-    # Conversion to datetime for service if needed (assuming service handles it or expects datetime)
+    if not start_date:
+        # Try to adapt for new users
+        first_tx_date = transaction_service.get_first_transaction_date(user_id)
+        
+        if first_tx_date:
+            # Check if first transaction is LESS than 6 months ago
+            # We want the Maximimum of (6 months ago, First Tx Date)
+            # Actually we want the latest date between standard_start and first_tx_date to shorten the range?
+            # No, if data starts 1 month ago, we want start_date = 1 month ago.
+            # So if first_tx_date > standard_start, use first_tx_date.
+            
+            # Convert first_tx to date (naive)
+            first_date_val = first_tx_date.date() if isinstance(first_tx_date, datetime) else first_tx_date
+            
+            if first_date_val > standard_start:
+                start_date = first_date_val
+            else:
+                start_date = standard_start
+        else:
+            # No transactions at all
+            start_date = standard_start
+    
+    # Ensure start <= end
+    if start_date > end_date:
+        start_date = end_date
+
+    # 2. Get Variable Data (History)
+    # We fetch ALL expenses in range, then filter out those that are recurrences
     dt_start = datetime.combine(start_date, datetime.min.time())
     dt_end = datetime.combine(end_date, datetime.max.time())
 
@@ -140,23 +172,44 @@ def get_monthly_averages(
         user_id=user_id,
         start_date=dt_start,
         end_date=dt_end,
-        limit=10000 # Fetch all in range
+        limit=10000 
     )
 
-    # Calculate number of months involved to average correctly
-    # PROPOSED FIX: Use days / 30.4375 (Average days in month) for floating point precision
+    # Filter: Expense AND Not Generated from Recurrence
+    variable_transactions = []
+    for t in transactions:
+        t_type = getattr(t, 'type', None)
+        if hasattr(t_type, 'value'): t_type = t_type.value
+        
+        # We only care about EXPENSES for cost of living
+        if t_type != 'expense':
+            continue
+            
+        # Is it a recurrence instance?
+        # Check recurrence_id (assuming it is populated for auto-generated items OR items linked to recurrence)
+        rec_id = getattr(t, 'recurrence_id', None)
+        
+        # If it has a recurrence_id, it is part of the "Committed" logic (the recurrent plan), 
+        # so we EXCLUDE it from the "Variable" average to avoid double counting.
+        if rec_id:
+            continue
+            
+        variable_transactions.append(t)
+
+    # Calculate Divisor
     days_diff = (end_date - start_date).days + 1
     months_count = max(1.0, days_diff / 30.4375)
+    
+    # Calculate Average of Variables
+    variable_data = calculate_monthly_averages_helper(variable_transactions, months_count)
 
-    realized_data = calculate_monthly_averages_helper(transactions, months_count)
-
-    # 2. Committed Cost (Recurrences)
+    # 3. Get Committed Cost (Active Recurrences)
     recurrences = recurrence_service.list_recurrences(user_id=user_id, active_only=True)
     committed_total = 0
     
     for r in recurrences:
         # Calculate monthly equivalent cost
-        amount = abs(r.amount) # adhere to expense sign convention
+        amount = abs(r.amount)
         if r.type != 'expense':
             continue
 
@@ -166,26 +219,28 @@ def get_monthly_averages(
             committed_total += amount * 4.33 # Approx weeks in month
         elif r.periodicity == 'yearly':
             committed_total += amount / 12
-        elif r.periodicity == 'daily': # unlikely but possible
+        elif r.periodicity == 'daily':
              committed_total += amount * 30
+
+    # Total Cost of Living = Committed (Fixed) + Variable Average
+    total_cost_of_living = committed_total + variable_data["total_avg"]
 
     return {
         "range": {
             "start": start_date,
             "end": end_date,
-            "months_count": months_count
+            "months_count": months_count,
+            "mode": "adaptive" if start_date > standard_start else "standard"
         },
         "realized": {
-            "average_total": realized_data["total_avg"],
-            "by_category": realized_data["by_category"]
+            "average_total": variable_data["total_avg"], # This is now just the VARIABLE part
+            "by_category": variable_data["by_category"]
         },
         "committed": {
             "total": committed_total
         },
-        "total_estimated_monthly": max(realized_data["total_avg"], committed_total) # Simple heuristic or sum? 
-        # Actually user wants to see "Realized Avg" vs "Committed".
-        # Total cost of living usually is Realized (what you actually spent). 
-        # Committed is a baseline "floor".
+        "variable_avg": variable_data["total_avg"], # Explicit field for clarity
+        "total_estimated_monthly": total_cost_of_living
     }
 
 @router.get("/inflation")
@@ -256,6 +311,13 @@ def check_anomalies(
 
     # Average divisor = 6
     anomalies = []
+    
+    # Validation: If we have NO history (New User), we cannot detect anomalies effectively.
+    # Or if the total history sum is extremely low.
+    total_hist_sum = sum(hist_totals.values())
+    
+    if total_hist_sum < 10: # Arbitrary small threshold
+         return []
     
     for cat, current_val in target_totals.items():
         hist_total = hist_totals.get(cat, 0)

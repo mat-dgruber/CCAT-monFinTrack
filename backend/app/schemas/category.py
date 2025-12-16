@@ -19,6 +19,7 @@ class CategoryBase(BaseModel):
     
     # Aqui usamos o Enum definido acima
     type: CategoryType = Field(default=CategoryType.EXPENSE, description="Tipo: expense ou income")
+    is_hidden: bool = Field(default=False, description="Se a categoria deve ser ocultada de listas comuns")
 
     # --- BLOCO DE PROTEÇÃO XSS ---
     @field_validator('name')

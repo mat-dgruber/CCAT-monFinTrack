@@ -110,6 +110,14 @@
                     </a>
                   </li>
                   <li>
+                    <a routerLink="/invoices" (click)="closeSidebar()"
+                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                      <i class="pi pi-credit-card"></i>
+                      <span class="font-medium">Faturas</span>
+                    </a>
+                  </li>
+                  <li>
                     <a routerLink="/cost-of-living" (click)="closeSidebar()"
                       routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                       class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
@@ -125,14 +133,7 @@
                       <span class="font-medium">Gráficos Avançados</span>
                     </a>
                   </li>
-                  <li>
-                    <a routerLink="/invoices" (click)="closeSidebar()"
-                      routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                      <i class="pi pi-credit-card"></i>
-                      <span class="font-medium">Faturas</span>
-                    </a>
-                  </li>
+
                   <li>
                     <button (click)="toggleCalculator()" [class.bg-blue-50]="calculatorVisible()"
                       [class.text-blue-600]="calculatorVisible()" [class.dark:bg-blue-900/20]="calculatorVisible()"
@@ -229,22 +230,7 @@
             <span class="font-medium">Transações</span>
           </a>
         </li>
-        <li>
-          <a routerLink="/invoices"
-            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-credit-card"></i>
-            <span class="font-medium">Faturas</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/accounts"
-            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-wallet"></i>
-            <span class="font-medium">Contas</span>
-          </a>
-        </li>
+
         <li>
           <a routerLink="/subscriptions"
             routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
@@ -292,6 +278,14 @@
                 </a>
               </li>
               <li>
+                <a routerLink="/invoices"
+                  routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-credit-card"></i>
+                  <span class="font-medium">Faturas</span>
+                </a>
+              </li>
+              <li>
                 <a routerLink="/cost-of-living" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                   class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                   <i class="pi pi-chart-line"></i>
@@ -306,14 +300,7 @@
                   <span class="font-medium">Gráficos Avançados</span>
                 </a>
               </li>
-              <li>
-                <a routerLink="/invoices"
-                  routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                  <i class="pi pi-credit-card"></i>
-                  <span class="font-medium">Faturas</span>
-                </a>
-              </li>
+
               <li>
                 <button (click)="toggleCalculator()" [class.bg-blue-50]="calculatorVisible()"
                   [class.text-blue-600]="calculatorVisible()" [class.dark:bg-blue-900/20]="calculatorVisible()"
@@ -404,4 +391,6 @@
   @if (calculatorVisible()) {
     <app-calculator (close)="toggleCalculator()"></app-calculator>
   }
+
+  <p-confirmDialog [style]="{width: '450px'}" appendTo="body" rejectLabel="Cancelar" acceptLabel="Confirmar" acceptButtonStyleClass="p-button-danger" rejectButtonStyleClass="p-button-text"></p-confirmDialog>
 </div>
