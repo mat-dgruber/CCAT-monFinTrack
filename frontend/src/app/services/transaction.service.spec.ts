@@ -1,89 +1,99 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TransactionService } from './transaction.service';
-import { environment } from '../../environments/environment';
 import { Transaction } from '../models/transaction.model';
+import { environment } from '../../environments/environment';
 
 describe('TransactionService', () => {
-     let service: TransactionService;
-     let httpMock: HttpTestingController;
+  let service: TransactionService;
+  let httpMock: HttpTestingController;
+  const apiUrl = `${environment.apiUrl}/transactions`;
 
-     beforeEach(() => {
-          TestBed.configureTestingModule({
-               imports: [HttpClientTestingModule],
-               providers: [TransactionService]
-          });
-          service = TestBed.inject(TransactionService);
-          httpMock = TestBed.inject(HttpTestingController);
-     });
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [TransactionService]
+    });
+    service = TestBed.inject(TransactionService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
 
-     afterEach(() => {
-          httpMock.verify();
-     });
+  afterEach(() => {
+    httpMock.verify();
+  });
 
-     it('should be created', () => {
-          expect(service).toBeTruthy();
-     });
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
 
-     it('should retrieve transactions with query parameters', () => {
-          const mockTransactions: any[] = [
-               { id: '1', description: 'Test', amount: 100, date: '2023-01-01', type: 'expense', payment_method: 'card', category_id: 'c1', account_id: 'a1' }
-          ];
+  it('should get transactions with query params', () => {
+    const dummyTransactions: Transaction[] = [{ id: 't1', title: 'Test' } as Transaction];
 
-          service.getTransactions(1, 2023, 10).subscribe(transactions => {
-               expect(transactions.length).toBe(1);
-               expect(transactions).toEqual(mockTransactions);
-          });
+    service.getTransactions(1, 2023, 10, '2023-01-01', '2023-01-31').subscribe(trans => {
+      expect(trans).toEqual(dummyTransactions);
+    });
 
-          const req = httpMock.expectOne(`${environment.apiUrl}/transactions?month=1&year=2023&limit=10&`);
-          expect(req.request.method).toBe('GET');
-          req.flush(mockTransactions);
-     });
+    // Order of params depends on implementation construction
+    const req = httpMock.expectOne(req => req.url === apiUrl && req.params.has('month'));
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('month')).toBe('1');
+    expect(req.request.params.get('year')).toBe('2023');
+    expect(req.request.params.get('limit')).toBe('10');
+    expect(req.request.params.get('start_date')).toBe('2023-01-01');
+    expect(req.request.params.get('end_date')).toBe('2023-01-31');
+    
+    req.flush(dummyTransactions);
+  });
 
-     it('should create a transaction via POST', () => {
-          const newTransaction: any = {
-               description: 'New Transaction',
-               amount: 50,
-               date: '2023-01-02',
-               type: 'income',
-               payment_method: 'pix',
-               category_id: 'c2',
-               account_id: 'a2'
-          };
+  it('should create a transaction', () => {
+    const newTrans: Transaction = { title: 'New' } as Transaction;
+    const responseTrans: Transaction = { ...newTrans, id: '123' };
 
-          service.createTransaction(newTransaction).subscribe(transaction => {
-               expect(transaction).toEqual({ ...newTransaction, id: '123' });
-          });
+    service.createTransaction(newTrans).subscribe(trans => {
+      expect(trans).toEqual(responseTrans);
+    });
 
-          const req = httpMock.expectOne(`${environment.apiUrl}/transactions`);
-          expect(req.request.method).toBe('POST');
-          expect(req.request.body).toEqual(newTransaction);
-          req.flush({ ...newTransaction, id: '123' });
-     });
+    const req = httpMock.expectOne(apiUrl);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(newTrans);
+    req.flush(responseTrans);
+  });
 
-     it('should update a transaction via PUT', () => {
-          const transactionId = '123';
-          const updateData: Partial<Transaction> = { amount: 200 };
+  it('should update a transaction', () => {
+    const id = '123';
+    const updateData: Partial<Transaction> = { title: 'Updated' };
+    const responseTrans = { id, title: 'Updated' } as Transaction;
 
-          service.updateTransaction(transactionId, updateData).subscribe(transaction => {
-               expect(transaction.amount).toBe(200);
-          });
+    service.updateTransaction(id, updateData).subscribe(trans => {
+      expect(trans).toEqual(responseTrans);
+    });
 
-          const req = httpMock.expectOne(`${environment.apiUrl}/transactions/${transactionId}`);
-          expect(req.request.method).toBe('PUT');
-          expect(req.request.body).toEqual(updateData);
-          req.flush({ id: transactionId, amount: 200 } as Transaction);
-     });
+    const req = httpMock.expectOne(`${apiUrl}/${id}`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual(updateData);
+    req.flush(responseTrans);
+  });
 
-     it('should delete a transaction via DELETE', () => {
-          const transactionId = '123';
+  it('should delete a transaction', () => {
+    const id = '123';
 
-          service.deleteTransaction(transactionId).subscribe(response => {
-               expect(response).toBeNull();
-          });
+    service.deleteTransaction(id).subscribe();
 
-          const req = httpMock.expectOne(`${environment.apiUrl}/transactions/${transactionId}`);
-          expect(req.request.method).toBe('DELETE');
-          req.flush(null);
-     });
+    const req = httpMock.expectOne(`${apiUrl}/${id}`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+  });
+  
+  it('should get upcoming transactions', () => {
+      const dummyTransactions: Transaction[] = [{ id: 't1', title: 'Upcoming' } as Transaction];
+      const limit = 5;
+      
+      service.getUpcomingTransactions(limit).subscribe(trans => {
+          expect(trans).toEqual(dummyTransactions);
+      });
+      
+      const req = httpMock.expectOne(`${apiUrl}/upcoming?limit=${limit}`);
+      expect(req.request.method).toBe('GET');
+      req.flush(dummyTransactions);
+  });
 });
