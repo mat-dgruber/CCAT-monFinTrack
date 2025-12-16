@@ -182,21 +182,34 @@ def pay_invoice(user_id: str, invoice_data: dict):
         except:
              pass
 
-    # Tenta achar categoria adequada (opcional, pois type=TRANSFER já isola dos gráficos de despesa)
+    # Tenta achar categoria "Fatura Cartão" oculta
     cats = transaction_service.category_service.list_categories(user_id)
     category_id = None
+    
+    target_category_name = "Fatura Cartão"
+    
+    # 1. Tenta encontrar a exata
     for c in cats:
-        # Tenta achar algo como "Pagamento", "Fatura", "Financeiro"
-        name_lower = c.name.lower()
-        if "fatura" in name_lower or "cartão" in name_lower or "pagamento" in name_lower:
+        if c.name == target_category_name and getattr(c, 'is_hidden', False):
             category_id = c.id
             break
-    
-    if not category_id and cats:
-        category_id = cats[0].id # Fallback
-        
+            
+    # 2. Se não achar, cria
     if not category_id:
-         raise HTTPException(status_code=400, detail="Nenhuma categoria disponível.")
+        from app.schemas.category import CategoryCreate, CategoryType
+        new_cat = CategoryCreate(
+            name=target_category_name,
+            icon="pi pi-credit-card",
+            color="#FFFFFF",
+            type=CategoryType.TRANSFER,
+            is_hidden=True,
+            is_custom=False
+        )
+        created_cat = transaction_service.category_service.create_category(new_cat, user_id)
+        category_id = created_cat.id
+
+    if not category_id:
+         raise HTTPException(status_code=400, detail="Não foi possível definir a categoria da fatura.")
 
     t_create = TransactionCreate(
         title=description_text, # Titulo limpo

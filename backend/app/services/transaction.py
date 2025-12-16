@@ -401,3 +401,40 @@ def delete_all_transactions(user_id: str):
         deleted_count += count
         
     return deleted_count
+
+def get_first_transaction_date(user_id: str) -> Optional[datetime]:
+    """
+    Returns the date of the very first transaction for the user.
+    Used for calculating averages for new users (adaptive timeframe).
+    """
+    db = get_db()
+    
+    # Query for the oldest transaction
+    query = db.collection(COLLECTION_NAME)\
+        .where("user_id", "==", user_id)\
+        .order_by("date", direction=firestore.Query.ASCENDING)\
+        .limit(1)
+        
+    docs = list(query.stream())
+    
+    if not docs:
+        return None
+        
+    data = docs[0].to_dict()
+    first_date = data.get("date")
+    
+    # Ensure it's a datetime
+    if isinstance(first_date, str):
+        try:
+            first_date = datetime.fromisoformat(first_date.replace('Z', '+00:00'))
+        except:
+            return None
+            
+    if isinstance(first_date, datetime):
+        # Convert to naive if needed or keep timezone? 
+        # Usually internal logic prefers naive UTC or consistent timezone.
+        # Let's return as is, caller handles logic.
+        return first_date
+        
+    return None
+

@@ -282,7 +282,7 @@ export class TransactionForm implements OnInit {
         } else {
             this.form.patchValue({ offering_value: null });
         }
-        
+
         if (prefs.auto_apply_offering) {
              this.offeringEnabled.set(true);
              this.offeringType.set('percentage'); // Default
@@ -380,12 +380,19 @@ export class TransactionForm implements OnInit {
         payment_date: formValue.is_paid ? formValue.date : null // Reuse date as payment_date
       };
 
+      // Clean up payload
+      delete payload.category;
+      delete payload.account;
+      delete payload.is_paid;
+      delete payload.mode; // 'mode' is internal UI state
+      // 'recurrence_periodicity' is valid if mode was recurrence, handled below
+
       // Handle Net vs Gross Amount Logic for Income with Tithes
       if (formValue.type === 'income' && this.preferences()?.enable_tithes_offerings) {
            const currentAmount = formValue.amount;
            // Always save gross amount so we don't lose the original value on edits
-           payload.gross_amount = currentAmount; 
-           
+           payload.gross_amount = currentAmount;
+
            // If Tithe Returned is checked, we want to debit the Net Amount from balance
            // So we save the main 'amount' as the Net Amount.
            if (this.titheEnabled() && this.titheReturned()) {
@@ -487,8 +494,10 @@ export class TransactionForm implements OnInit {
       message: 'Tem certeza que deseja excluir esta transação?',
       header: 'Confirmar Exclusão',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sim',
-      rejectLabel: 'Não',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         if (this.editingId()) {
           this.transactionService.deleteTransaction(this.editingId()!).subscribe({

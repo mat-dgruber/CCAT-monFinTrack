@@ -48,6 +48,7 @@ class RecurrenceUpdate(BaseModel):
     active: Optional[bool] = None
     last_processed_at: Optional[datetime] = None
     type: Optional[TransactionType] = None
+    skipped_dates: Optional[List[date]] = None
 
 class Recurrence(RecurrenceBase):
     id: str

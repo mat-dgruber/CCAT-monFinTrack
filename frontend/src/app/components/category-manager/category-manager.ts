@@ -112,7 +112,7 @@ export class CategoryManager implements OnInit {
     this.loading.set(true);
     this.categoryService.getCategories().subscribe({
       next: (data) => {
-        this.categories.set(data);
+        this.categories.set(data.filter(c => !c.is_hidden));
         this.loading.set(false);
       },
       error: (err) => {

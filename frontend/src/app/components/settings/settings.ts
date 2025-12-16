@@ -52,7 +52,7 @@ import { PwaService } from '../../services/pwa.service';
     TooltipModule,
     RouterModule
   ],
-  providers: [MessageService, ConfirmationService]
+  providers: [MessageService]
 })
 export class Settings {
   auth = inject(AuthService);
@@ -206,8 +206,12 @@ export class Settings {
   disableMFA() {
     this.confirmationService.confirm({
       message: 'Tem certeza que deseja desativar o MFA? Sua conta ficará menos segura.',
-      header: 'Desativar MFA',
+      header: 'Confirmar Ação',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Desativar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.mfaService.disableMFA().subscribe({
           next: () => {
@@ -317,13 +321,13 @@ export class Settings {
 
   confirmDelete() {
     this.confirmationService.confirm({
-      message: 'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.',
-      header: 'Excluir Conta',
+      message: 'Tem certeza que deseja excluir sua conta permanentemente? Esta ação não pode ser desfeita.',
+      header: 'Confirmar Exclusão',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
+      acceptLabel: 'Excluir Conta',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: async () => {
         try {
           await this.auth.deleteAccount();
@@ -338,13 +342,13 @@ export class Settings {
 
   onResetAccount() {
     this.confirmationService.confirm({
-      message: 'Tem certeza que deseja LIMPAR sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas, mas manterá sua conta ativa. Esta ação não pode ser desfeita.',
-      header: 'Limpar Dados da Conta',
+      message: 'Tem certeza que deseja LIMPAR todos os dados da sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas.',
+      header: 'Confirmar Limpeza',
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-warning p-button-text',
-      rejectButtonStyleClass: 'p-button-text p-button-text',
-      acceptIcon: 'none',
-      rejectIcon: 'none',
+      acceptLabel: 'Limpar Tudo',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.preferenceService.resetAccount().subscribe({
           next: () => {

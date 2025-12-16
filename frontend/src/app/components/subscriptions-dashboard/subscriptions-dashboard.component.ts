@@ -57,7 +57,7 @@ import { SkeletonModule } from 'primeng/skeleton';
     PeriodicityPipe,
     SkeletonModule
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
   styleUrl: './subscriptions-dashboard.component.scss'
 })
@@ -279,15 +279,12 @@ export class SubscriptionsDashboardComponent implements OnInit {
       }
 
       // Virtual projection
-      const isSkipped = r.skipped_dates?.some(sd => {
-        const skippedDate = new Date(sd);
-        // Compare only YYYY-MM-DD
-        return skippedDate.getFullYear() === dueDate.getFullYear() &&
-          skippedDate.getMonth() === dueDate.getMonth() &&
-          skippedDate.getDate() === dueDate.getDate();
-      });
+      const yearStr = dueDate.getFullYear();
+      const monthStr = String(dueDate.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(dueDate.getDate()).padStart(2, '0');
+      const dueDateString = `${yearStr}-${monthStr}-${dayStr}`;
 
-      if (isSkipped) return null;
+      if (r.skipped_dates?.includes(dueDateString)) return null;
 
       return {
         id: r.id,
@@ -470,13 +467,13 @@ export class SubscriptionsDashboardComponent implements OnInit {
 
   cancelRecurrence(recurrence: Recurrence) {
     this.confirmationService.confirm({
-      message: `Tem certeza que deseja cancelar a assinatura "${recurrence.name}"?`,
+      message: `Tem certeza que deseja cancelar a assinatura '${recurrence.name}'?`,
       header: 'Confirmar Cancelamento',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sim, Cancelar',
-      rejectLabel: 'Não',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text',
+      acceptLabel: 'Cancelar Assinatura',
+      rejectLabel: 'Voltar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.recurrenceService.cancelRecurrence(recurrence.id).subscribe({
           next: () => {
@@ -575,13 +572,13 @@ export class SubscriptionsDashboardComponent implements OnInit {
 
   deleteOccurrence(item: any) {
     this.confirmationService.confirm({
-      message: `Tem certeza que deseja excluir esta ocorrência de "${item.name}"?`,
+      message: `Tem certeza que deseja excluir esta ocorrência de '${item.name}'?`,
       header: 'Confirmar Exclusão',
       icon: 'pi pi-trash',
-      acceptLabel: 'Sim, Excluir',
-      rejectLabel: 'Não',
-      acceptButtonStyleClass: 'p-button-danger p-button-text',
-      rejectButtonStyleClass: 'p-button-text',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         if (item.transactionId) {
           // Real Transaction: Delete it

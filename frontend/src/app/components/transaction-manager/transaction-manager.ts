@@ -84,6 +84,12 @@ export class TransactionManager implements OnInit, AfterViewInit {
     { label: 'Pendente', value: 'pending' }
   ];
 
+  titheStatusOptions = [
+    { label: 'Devolvido', value: 'PAID' },
+    { label: 'Pendente', value: 'PENDING' },
+    { label: 'Sem Dízimo', value: 'NONE' }
+  ];
+
   // Amount Match Mode Options (Desktop)
   amountMatchModeOptions = [
     { label: 'Igual a', value: FilterMatchMode.EQUALS },
@@ -99,6 +105,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
   mobileAccountFilter = signal<Account | null>(null);
   mobileTitleFilter = signal<string>('');
   mobileStatusFilter = signal<string | null>(null);
+  mobileTitheStatusFilter = signal<string | null>(null);
   mobileValueFilter = signal<number | null>(null);
   mobileValueMode = signal<string>(FilterMatchMode.EQUALS); // Default to Equals
 
@@ -327,6 +334,12 @@ export class TransactionManager implements OnInit, AfterViewInit {
         filtered = filtered.filter(t => t.status === status);
     }
 
+    // 5. Apply Tithe Status Filter
+    const titheStatus = this.mobileTitheStatusFilter();
+    if (titheStatus) {
+        filtered = filtered.filter(t => t.tithe_status === titheStatus);
+    }
+
     // 5. Apply Value Filter
     const val = this.mobileValueFilter();
     const mode = this.mobileValueMode();
@@ -354,6 +367,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
     this.mobileAccountFilter.set(null);
     this.mobileTitleFilter.set('');
     this.mobileStatusFilter.set(null);
+    this.mobileTitheStatusFilter.set(null);
     this.mobileValueFilter.set(null);
     this.mobileValueMode.set(FilterMatchMode.EQUALS);
 
@@ -405,6 +419,9 @@ export class TransactionManager implements OnInit, AfterViewInit {
     // We must mutate the objects in the list to update flags based on the current list order.
     // Since objects are references, this updates the data source too, which is fine for view flags.
     list.forEach(t => {
+      // Guard against skeleton loader numbers
+      if (typeof t !== 'object' || t === null) return;
+
       const d = new Date(t.date);
       const year = d.getFullYear();
       const month = d.getMonth();
@@ -467,14 +484,22 @@ export class TransactionManager implements OnInit, AfterViewInit {
     if (t.account) payload.account_id = t.account.id;
     payload.status = newStatus;
 
-    // Remove objects to avoid circular or validation issues if backend is strict
+    // Clean up payload
+    delete payload.id;
+    delete payload._id;
     delete payload.category;
     delete payload.account;
+
+    // UI Flags
     delete payload.dateGroup;
     delete payload.isNewYear;
     delete payload.isNewMonth;
     delete payload.yearLabel;
     delete payload.monthLabel;
+
+    // Ensure dates are strings or Date objects (Angular handles Dates, but strings are safer)
+    if (payload.date instanceof Date) payload.date = payload.date.toISOString();
+    if (payload.payment_date instanceof Date) payload.payment_date = payload.payment_date.toISOString();
 
     this.transactionService.updateTransaction(t.id, payload).subscribe({
       next: (updated) => {
@@ -494,8 +519,13 @@ export class TransactionManager implements OnInit, AfterViewInit {
 
   deleteTransaction(event: Event, t: Transaction) {
     this.confirmationService.confirm({
-      message: 'Apagar esta transação?',
+      message: `Tem certeza que deseja excluir a transação '${t.title}' de ${t.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}?`,
+      header: 'Confirmar Exclusão',
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.transactionService.deleteTransaction(t.id).subscribe(() => {
           this.messageService.add({ severity: 'success', summary: 'Excluído' });

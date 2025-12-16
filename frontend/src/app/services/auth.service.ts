@@ -1,4 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { User, UserCredential } from 'firebase/auth';
 import { from, switchMap, ReplaySubject } from 'rxjs';
@@ -11,6 +12,7 @@ import { FirebaseWrapperService } from './firebase-wrapper.service';
 export class AuthService {
   private firebaseWrapper = inject(FirebaseWrapperService);
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   currentUser = signal<User | null>(null);
 
@@ -23,6 +25,7 @@ export class AuthService {
       // SÓ aceita o usuário se o email estiver verificado!
       if (user && user.emailVerified) {
         this.currentUser.set(user);
+        this.initializeUser(); // Garante categorias padrão
         this.authStateSubject.next(user);
       } else {
         this.currentUser.set(null);
@@ -116,5 +119,12 @@ export class AuthService {
       handleCodeInApp: true
     };
     return await this.firebaseWrapper.sendEmailVerification(user, actionCodeSettings);
+  }
+
+  private initializeUser() {
+    this.http.post(`${environment.apiUrl}/users/setup`, {}).subscribe({
+      next: () => console.log('User setup completed'),
+      error: (err) => console.error('Error setting up user', err)
+    });
   }
 }

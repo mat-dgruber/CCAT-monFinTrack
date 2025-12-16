@@ -33,6 +33,10 @@ export class RecurrenceService {
   }
 
   skipRecurrence(id: string, date: Date): Observable<Recurrence> {
-    return this.http.post<Recurrence>(`${this.apiUrl}/${id}/skip`, { date: date.toISOString().split('T')[0] });
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    return this.http.post<Recurrence>(`${this.apiUrl}/${id}/skip`, { date: dateString });
   }
 }

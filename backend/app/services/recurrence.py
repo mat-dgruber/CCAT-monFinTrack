@@ -20,6 +20,9 @@ def create_recurrence(recurrence_in: RecurrenceCreate, user_id: str) -> Recurren
     # Convert Enum to string for Firestore
     if 'periodicity' in data:
         data['periodicity'] = data['periodicity'].value
+
+    if 'skipped_dates' in data and data['skipped_dates'] is not None:
+        data['skipped_dates'] = [d.isoformat() if hasattr(d, 'isoformat') else d for d in data['skipped_dates']]
         
     update_time, recurrence_ref = db.collection(COLLECTION_NAME).add(data)
     
@@ -102,6 +105,10 @@ def update_recurrence(recurrence_id: str, recurrence_in: RecurrenceUpdate, user_
     
     if 'periodicity' in data and data['periodicity']:
         data['periodicity'] = data['periodicity'].value
+
+    if 'skipped_dates' in data and data['skipped_dates'] is not None:
+        # Convert date objects to strings for Firestore
+        data['skipped_dates'] = [d.isoformat() if hasattr(d, 'isoformat') else d for d in data['skipped_dates']]
         
     doc_ref.update(data)
     

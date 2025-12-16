@@ -1,4 +1,4 @@
-<div class="p-6 max-w-7xl mx-auto flex flex-col gap-6">
+<div class="p-2 w-full flex flex-col gap-4 h-full">
   <!-- Header with Mobile Adjustments -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
@@ -123,10 +123,24 @@
                   <p-columnFilter type="text" field="status" display="menu" [showMatchModes]="false"
                     [showOperator]="false" [showAddButton]="false" matchMode="equals">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-select [ngModel]="value" [options]="statusOptions" (onChange)="filter($any($event).value)"
-                        placeholder="Qualquer" optionLabel="label" optionValue="value" styleClass="w-full"
-                        appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
-                      </p-select>
+                      <div class="flex flex-col gap-4 min-w-[200px]">
+                        <div class="flex flex-col gap-2">
+                          <span class="font-bold">Status do Pagamento</span>
+                          <p-select [ngModel]="value" [options]="statusOptions" (onChange)="filter($any($event).value)"
+                            placeholder="Qualquer" optionLabel="label" optionValue="value" styleClass="w-full"
+                            appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                          </p-select>
+                        </div>
+
+                        <div class="flex flex-col gap-2 border-t border-gray-200 dark:border-gray-700 pt-4">
+                          <span class="font-bold">Situação do Dízimo</span>
+                          <p-select [options]="titheStatusOptions"
+                            (onChange)="dt.filter($event.value, 'tithe_status', 'equals')"
+                            placeholder="Qualquer" optionLabel="label" optionValue="value" styleClass="w-full"
+                            appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                          </p-select>
+                        </div>
+                      </div>
                     </ng-template>
                   </p-columnFilter>
                 </div>
@@ -228,21 +242,25 @@
                     [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true"></p-tag>
 
                   <!-- Tithe Tags -->
-                  @if (t.tithe_status && t.tithe_status !== 'NONE') {
-                  <i class="pi" [class.pi-check-circle]="t.tithe_status === 'PAID'"
-                    [class.pi-clock]="t.tithe_status === 'PENDING'" [class.text-green-500]="t.tithe_status === 'PAID'"
+                  @if (t.tithe_status) {
+                  <i class="pi"
+                    [class.pi-check-circle]="t.tithe_status === 'PAID'"
+                    [class.pi-clock]="t.tithe_status === 'PENDING'"
+                    [class.pi-minus-circle]="t.tithe_status === 'NONE'"
+                    [class.text-green-500]="t.tithe_status === 'PAID'"
                     [class.text-orange-500]="t.tithe_status === 'PENDING'"
-                    [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
+                    [class.text-gray-400]="t.tithe_status === 'NONE'"
+                    [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : (t.tithe_status === 'PENDING' ? 'Dízimo Pendente' : 'Sem Dízimo')">
                   </i>
                   }
 
                   <i *ngIf="t.is_auto_pay" class="pi pi-sync text-blue-500" pTooltip="Pagamento Automático"></i>
                 </div>
               </td>
-              <td class="text-right">
+          <td class="text-right">
                 <span
-                  [class]="t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold'">
-                  {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
+                  [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-white font-bold' : (t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold')">
+                  {{ (t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? '-' : (t.type === 'expense' ? '-' : '+') }} {{t.amount | currency:'BRL'}}
                 </span>
               </td>
               <td>
@@ -331,8 +349,8 @@
               </div>
             </div>
             <span
-              [class]="t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold'">
-              {{t.type === 'expense' ? '-' : '+'}} {{t.amount | currency:'BRL'}}
+              [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-white font-bold' : (t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold')">
+              {{ (t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? '-' : (t.type === 'expense' ? '-' : '+') }} {{t.amount | currency:'BRL'}}
             </span>
           </div>
 
@@ -346,11 +364,15 @@
                 [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true" styleClass="text-xs"></p-tag>
 
               <!-- Tithe Tags (Mobile) -->
-              @if (t.tithe_status && t.tithe_status !== 'NONE') {
-              <i class="pi" [class.pi-check-circle]="t.tithe_status === 'PAID'"
-                [class.pi-clock]="t.tithe_status === 'PENDING'" [class.text-green-500]="t.tithe_status === 'PAID'"
+              @if (t.tithe_status) {
+              <i class="pi"
+                [class.pi-check-circle]="t.tithe_status === 'PAID'"
+                [class.pi-clock]="t.tithe_status === 'PENDING'"
+                [class.pi-minus-circle]="t.tithe_status === 'NONE'"
+                [class.text-green-500]="t.tithe_status === 'PAID'"
                 [class.text-orange-500]="t.tithe_status === 'PENDING'"
-                [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : 'Dízimo Pendente'">
+                [class.text-gray-400]="t.tithe_status === 'NONE'"
+                [pTooltip]="t.tithe_status === 'PAID' ? 'Dízimo Devolvido' : (t.tithe_status === 'PENDING' ? 'Dízimo Pendente' : 'Sem Dízimo')">
               </i>
               }
             </div>
@@ -542,6 +564,16 @@
           </p-select>
         </div>
 
+        <!-- Tithe Status Filter (NEW) -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Situação do Dízimo</span>
+          <p-select [ngModel]="mobileTitheStatusFilter()" [options]="titheStatusOptions"
+            (onChange)="mobileTitheStatusFilter.set($event.value)" placeholder="Qualquer" optionLabel="label" optionValue="value"
+            name="titheStatusFilter"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+          </p-select>
+        </div>
+
         <!-- Value Filter (NEW) -->
         <div class="flex flex-col gap-2">
           <span class="font-bold text-gray-700 dark:text-gray-200">Valor</span>
@@ -569,6 +601,6 @@
     </ng-template>
   </p-drawer>
 
-  <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
 </div>
 

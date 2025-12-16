@@ -151,10 +151,16 @@ export class BudgetManager implements OnInit {
   }
 
   deleteBudget(event: Event, id: string) {
+    const budget = this.budgets().find(b => b.id === id);
     this.confirmationService.confirm({
       target: event.target as EventTarget,
-      message: 'Excluir esta meta de orçamento?',
-      icon: 'pi pi-trash',
+      message: `Tem certeza que deseja excluir a meta de orçamento para '${budget?.category?.name}'?`,
+      header: 'Confirmar Exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         this.budgetService.deleteBudget(id).subscribe(() => {
           this.messageService.add({ severity: 'success', summary: 'Meta Removida' });

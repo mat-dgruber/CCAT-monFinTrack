@@ -7,6 +7,7 @@ export interface Category {
      color: string;
      is_custom: boolean;
      type: CategoryType;
+     is_hidden?: boolean;
      parent_id?: string;
      subcategories?: Category[];
 }
