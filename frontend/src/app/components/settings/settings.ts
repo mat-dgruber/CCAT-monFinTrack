@@ -110,6 +110,14 @@ export class Settings {
   autoApplyTithe = signal(false);
   autoApplyOffering = signal(false);
 
+  // Subscription (Test Mode)
+  selectedTier = signal<'free' | 'pro' | 'premium'>('free');
+  tierOptions = [
+      { label: 'Free (Grátis)', value: 'free' },
+      { label: 'Pro (Intermediário)', value: 'pro' },
+      { label: 'Premium (Completo)', value: 'premium' }
+  ];
+
   constructor() {
     // Initialize with current user data
     const user = this.auth.currentUser();
@@ -133,7 +141,11 @@ export class Settings {
         this.defaultTithePct.set(prefs.default_tithe_percentage ?? 10);
         this.defaultOfferingPct.set(prefs.default_offering_percentage ?? 5);
         this.autoApplyTithe.set(!!prefs.auto_apply_tithe);
+        this.autoApplyTithe.set(!!prefs.auto_apply_tithe);
         this.autoApplyOffering.set(!!prefs.auto_apply_offering);
+        
+        // Tier
+        this.selectedTier.set(prefs.subscription_tier || 'free');
       }
     });
 
@@ -284,6 +296,18 @@ export class Settings {
     }
 
     // The service's tap/next will trigger applyTheme, so we don't need manual DOM manipulation here anymore.
+  }
+
+  onTierChange(event: any) {
+    if (this.preferences) {
+        this.preferenceService.updatePreferences({ 
+            subscription_tier: event.value 
+        }).subscribe(() => {
+            this.messageService.add({severity: 'success', summary: 'Tier Atualizado', detail: `Agora você é ${event.value.toUpperCase()}!`});
+             // Force page reload to apply feature gates globally if needed, or rely on service.
+             // Since SubscriptionService uses computed from preferences$, it should react automatically.
+        });
+    }
   }
 
   onLanguageChange(event: any) {

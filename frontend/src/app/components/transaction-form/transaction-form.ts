@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Output, inject, signal, OnInit, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, EventEmitter, Output, inject, signal, OnInit, computed, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -21,6 +21,8 @@ import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
+import { AIService } from '../../services/ai.service';
+import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 
 import { Category } from '../../models/category.model';
 import { Transaction } from '../../models/transaction.model';
@@ -58,7 +60,9 @@ export class TransactionForm implements OnInit {
   private refreshService = inject(RefreshService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+
   private preferenceService = inject(UserPreferenceService);
+  private aiService = inject(AIService);
 
   visible = signal(false);
   preferences = toSignal(this.preferenceService.preferences$);
@@ -223,15 +227,63 @@ export class TransactionForm implements OnInit {
         }
     });
 
-    // Listen to Account Changes to load cards
-    this.form.get('account')?.valueChanges.subscribe((acc: Account | null) => {
-        if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
-            this.availableCreditCards.set(acc.credit_cards);
-        } else {
-            this.availableCreditCards.set([]);
-            this.form.patchValue({ credit_card_id: null });
-        }
+
+
+    // AI Classification logic
+    this.form.get('title')?.valueChanges.pipe(
+        takeUntilDestroyed(),
+        debounceTime(1500),
+        distinctUntilChanged(),
+        filter(val => val && val.length > 2), // At least 3 chars
+        tap(() => console.log('AI Checking...')),
+        switchMap(val => this.aiService.classifyTransaction(val))
+    ).subscribe({
+        next: (res) => {
+            if (res.category_id) {
+                // Check if current category is empty or system wants to suggest
+                // We only override if category is null to avoid annoying user overwrites
+                const currentCat = this.form.get('category')?.value;
+                if (!currentCat) {
+                     const cat = this.categories().find(c => c.id === res.category_id);
+                     if (cat) {
+                         this.form.patchValue({ category: cat });
+                         this.messageService.add({ severity: 'info', summary: '✨ AI Magic', detail: `Categoria sugerida: ${cat.name}`, life: 3000 });
+                     }
+                }
+            }
+        },
+        error: (err) => console.error('AI Error', err)
     });
+
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+        this.messageService.add({ severity: 'info', summary: 'Processando...', detail: 'Lendo comprovante com IA...', life: 3000 });
+        
+        this.aiService.scanReceipt(file).subscribe({
+            next: (data) => {
+                const patch: any = {};
+                if (data.title) patch.title = data.title;
+                if (data.amount) patch.amount = data.amount;
+                if (data.date) patch.date = new Date(data.date);
+                
+                // Try to match category
+                if (data.category_id) {
+                    const cat = this.categories().find(c => c.id === data.category_id);
+                    if (cat) patch.category = cat;
+                }
+                
+                this.form.patchValue(patch);
+                this.messageService.add({ severity: 'success', summary: 'Dados Extraídos!', detail: 'Verifique os campos preenchidos.' });
+            },
+            error: (err) => {
+                console.error('Scan Error', err);
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao ler comprovante.' });
+            }
+        });
+    }
   }
 
   ngOnInit() {
@@ -476,8 +528,19 @@ export class TransactionForm implements OnInit {
         });
       } else {
         this.transactionService.createTransaction(payload).subscribe({
-            next: () => {
+            next: (res: any) => {
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação criada.' });
+                
+                // Check for Anomaly Warning
+                if (Array.isArray(res) && res.length > 0 && res[0].warning) {
+                    this.messageService.add({ 
+                        severity: 'warn', 
+                        summary: 'Gasto Atípico', 
+                        detail: res[0].warning, 
+                        life: 10000 
+                    });
+                }
+                
                 onSave();
             },
             error: (err) => {

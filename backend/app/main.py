@@ -51,6 +51,10 @@ app.add_middleware(
 #  Adicione as rotas ao app principal
 app.include_router(api_router, prefix="/api")
 
+# AI Router (Novo)
+from app.api.routers import ai
+app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
+
 from fastapi.staticfiles import StaticFiles
 import os
 

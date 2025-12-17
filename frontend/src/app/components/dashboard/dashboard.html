@@ -5,7 +5,27 @@
     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
       Visão Geral
     </h2>
-    <app-month-selector></app-month-selector>
+    <div class="flex gap-2">
+      <p-button
+        label="Resumo IA"
+        icon="pi pi-sparkles"
+        styleClass="p-button-outlined p-button-help"
+        (onClick)="generateReport()"
+        *ngIf="subscriptionService.canAccess('monthly_report')"
+        pTooltip="Disponível no plano PRO"
+        tooltipPosition="bottom"
+      ></p-button>
+      <p-button
+        *ngIf="!subscriptionService.canAccess('monthly_report')"
+        label="Resumo IA"
+        icon="pi pi-lock"
+        styleClass="p-button-outlined p-button-secondary"
+        pTooltip="Upgrade para PRO necessário"
+        tooltipPosition="bottom"
+        [disabled]="true"
+      ></p-button>
+      <app-month-selector></app-month-selector>
+    </div>
   </div>
 
   @if (loading()) {
@@ -123,14 +143,25 @@
 
   <!-- Invoices Widget -->
   <div class="mb-8">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-              <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Faturas Abertas</h2>
-              <p class="text-gray-500 dark:text-gray-400">Acompanhe os limites e vencimentos dos seus cartões.</p>
-          </div>
-          <p-button label="Ver todas" icon="pi pi-arrow-right" styleClass="p-button-text p-button-rounded" routerLink="/invoices"></p-button>
+    <div
+      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+    >
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+          Faturas Abertas
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400">
+          Acompanhe os limites e vencimentos dos seus cartões.
+        </p>
       </div>
-      <app-invoice-dashboard [isWidget]="true"></app-invoice-dashboard>
+      <p-button
+        label="Ver todas"
+        icon="pi pi-arrow-right"
+        styleClass="p-button-text p-button-rounded"
+        routerLink="/invoices"
+      ></p-button>
+    </div>
+    <app-invoice-dashboard [isWidget]="true"></app-invoice-dashboard>
   </div>
 
   <!-- 3. Charts Section -->
@@ -189,4 +220,29 @@
   <app-recent-transactions></app-recent-transactions>
 
   }
+
+  <p-dialog
+    header="Relatório Mensal IA 🤖"
+    [(visible)]="showReportDialog"
+    [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '600px' }"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="true"
+  >
+    @if (reportLoading) {
+    <div class="flex flex-col items-center justify-center p-6 text-center">
+      <i class="pi pi-spin pi-spinner text-4xl mb-4 text-purple-500"></i>
+      <p class="text-gray-600 dark:text-gray-300">
+        Analisando suas finanças... 🧠
+      </p>
+    </div>
+    } @else {
+    <div
+      class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
+    >
+      <markdown [data]="reportContent"></markdown>
+    </div>
+    }
+  </p-dialog>
 </div>

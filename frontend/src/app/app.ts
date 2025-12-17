@@ -6,13 +6,15 @@ import { UserPreferenceService } from './services/user-preference.service';
 
 
 import { PwaService } from './services/pwa.service';
+import { ChatComponent } from './components/chat/chat.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule
+    RouterModule,
+    ChatComponent
   ],
 
   templateUrl: './app.html',

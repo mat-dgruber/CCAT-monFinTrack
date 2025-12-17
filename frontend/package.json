@@ -33,6 +33,7 @@
     "firebase": "^12.6.0",
     "html2canvas": "^1.4.1",
     "lucide-angular": "^0.561.0",
+    "ngx-markdown": "^21.0.1",
     "primeicons": "^7.0.0",
     "primeng": "^20.3.0",
     "rxjs": "~7.8.0",

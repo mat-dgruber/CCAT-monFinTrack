@@ -57,6 +57,9 @@ class TransactionBase(BaseModel):
      net_amount: Optional[float] = Field(None, description="Valor líquido (lucro)")
      tithe_status: Optional[str] = Field(None, description="Status do dízimo: NONE, PENDING, PAID")
      gross_amount: Optional[float] = Field(None, description="Valor bruto da transação (antes das deduções)")
+     
+     # Anomaly Warning
+     warning: Optional[str] = Field(None, description="Avisos de anomalias (gastos excessivos)")
 
      # --- BLOCO DE PROTEÇÃO XSS ---
      @field_validator('title', 'description')

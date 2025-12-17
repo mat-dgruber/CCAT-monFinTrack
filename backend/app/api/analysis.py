@@ -247,6 +247,11 @@ def get_monthly_averages(
 def get_inflation_rate(current_user: dict = Depends(get_current_user)):
     return get_projection_inflation()
 
+@router.get("/subscriptions")
+def check_subscriptions(current_user: dict = Depends(get_current_user)):
+    from app.services.analysis_service import analysis_service
+    return analysis_service.detect_subscriptions(current_user['uid'])
+
 @router.get("/anomalies")
 def check_anomalies(
     month: Optional[int] = None,

@@ -1,15 +1,38 @@
-<p-dialog [header]="editingId() ? 'Editar Transação' : 'Nova Transação'" [modal]="true" [(visible)]="visible"
-  [style]="{ width: '30rem', maxHeight: '90vh' }" [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
-  [draggable]="false" [resizable]="false" [contentStyle]="{ overflowY: 'auto' }">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5 pt-4">
+<p-dialog
+  [header]="editingId() ? 'Editar Transação' : 'Nova Transação'"
+  [modal]="true"
+  [(visible)]="visible"
+  [style]="{ width: '30rem', maxHeight: '90vh' }"
+  [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflowY: 'auto' }"
+>
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    class="flex flex-col gap-5 pt-4"
+  >
     <div class="flex justify-center flex-col gap-3">
       <div class="flex justify-center">
-        <p-selectButton [options]="typeOptions" formControlName="type" optionLabel="label" optionValue="value" [allowEmpty]="false">
+        <p-selectButton
+          [options]="typeOptions"
+          formControlName="type"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+        >
         </p-selectButton>
       </div>
 
       <div class="flex justify-center">
-        <p-selectButton [options]="modeOptions" formControlName="mode" optionLabel="label" optionValue="value" [allowEmpty]="false">
+        <p-selectButton
+          [options]="modeOptions"
+          formControlName="mode"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+        >
         </p-selectButton>
       </div>
     </div>
@@ -17,25 +40,45 @@
     <!-- Campos de Recorrência -->
     @if (form.get('mode')?.value === 'recurrence') {
     <div
-      class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900">
+      class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900"
+    >
       <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300">
         Configuração da Recorrência
       </h3>
 
       <div class="flex flex-col gap-2">
-        <label class="font-semibold text-gray-700 dark:text-gray-200">Periodicidade</label>
-        <p-select [options]="periodicityOptions" formControlName="recurrence_periodicity" optionLabel="label"
-          optionValue="value" [style]="{ width: '100%' }"></p-select>
+        <label class="font-semibold text-gray-700 dark:text-gray-200"
+          >Periodicidade</label
+        >
+        <p-select
+          [options]="periodicityOptions"
+          formControlName="recurrence_periodicity"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        ></p-select>
       </div>
 
       <div class="flex items-center gap-2">
-        <p-checkbox formControlName="recurrence_auto_pay" [binary]="true" inputId="auto_pay"></p-checkbox>
-        <label for="auto_pay" class="cursor-pointer dark:text-gray-200">Pagamento Automático</label>
+        <p-checkbox
+          formControlName="recurrence_auto_pay"
+          [binary]="true"
+          inputId="auto_pay"
+        ></p-checkbox>
+        <label for="auto_pay" class="cursor-pointer dark:text-gray-200"
+          >Pagamento Automático</label
+        >
       </div>
 
       <div class="flex items-center gap-2">
-        <p-checkbox formControlName="recurrence_create_first" [binary]="true" inputId="create_first"></p-checkbox>
-        <label for="create_first" class="cursor-pointer dark:text-gray-200">Criar primeira transação agora</label>
+        <p-checkbox
+          formControlName="recurrence_create_first"
+          [binary]="true"
+          inputId="create_first"
+        ></p-checkbox>
+        <label for="create_first" class="cursor-pointer dark:text-gray-200"
+          >Criar primeira transação agora</label
+        >
       </div>
     </div>
     }
@@ -43,66 +86,158 @@
     <!-- Campos de Parcelamento -->
     @if (form.get('mode')?.value === 'installments') {
     <div
-      class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900">
+      class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900"
+    >
       <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300">
         Configuração do Parcelamento
       </h3>
 
       <div class="flex flex-col gap-2">
-        <label class="font-semibold text-gray-700 dark:text-gray-200">Número de Parcelas</label>
-        <p-inputNumber formControlName="total_installments" [min]="2" [max]="120" [showButtons]="true"
-          buttonLayout="horizontal" inputId="installments" decrementButtonClass="p-button-secondary"
-          incrementButtonClass="p-button-secondary" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"
-          [style]="{ width: '100%' }" inputStyleClass="w-full text-center"></p-inputNumber>
+        <label class="font-semibold text-gray-700 dark:text-gray-200"
+          >Número de Parcelas</label
+        >
+        <p-inputNumber
+          formControlName="total_installments"
+          [min]="2"
+          [max]="120"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          inputId="installments"
+          decrementButtonClass="p-button-secondary"
+          incrementButtonClass="p-button-secondary"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          [style]="{ width: '100%' }"
+          inputStyleClass="w-full text-center"
+        ></p-inputNumber>
       </div>
     </div>
     }
 
     <div class="flex flex-col gap-2">
-      <label for="title" class="font-semibold text-gray-700 dark:text-gray-200">Título</label>
-      <input pInputText id="title" formControlName="title" placeholder="Ex: Mercado, Uber..." class="w-full" />
+      <label for="title" class="font-semibold text-gray-700 dark:text-gray-200"
+        >Título</label
+      >
+      <div class="flex gap-2">
+        <input
+          pInputText
+          id="title"
+          formControlName="title"
+          placeholder="Ex: Mercado, Uber..."
+          class="w-full"
+        />
+        <button
+          pButton
+          icon="pi pi-camera"
+          class="p-button-secondary"
+          (click)="fileInput.click()"
+          type="button"
+          pTooltip="Scanear Comprovante (IA)"
+          tooltipPosition="top"
+        ></button>
+        <input
+          #fileInput
+          type="file"
+          (change)="onFileSelected($event)"
+          accept="image/*"
+          style="display: none"
+        />
+      </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="desc" class="font-semibold text-gray-700 dark:text-gray-200">Descrição (Opcional)</label>
-      <textarea pTextarea id="desc" formControlName="description" rows="3" class="w-full p-inputtext" style="resize: none;" placeholder="Detalhes adicionais..."></textarea>
+      <label for="desc" class="font-semibold text-gray-700 dark:text-gray-200"
+        >Descrição (Opcional)</label
+      >
+      <textarea
+        pTextarea
+        id="desc"
+        formControlName="description"
+        rows="3"
+        class="w-full p-inputtext"
+        style="resize: none"
+        placeholder="Detalhes adicionais..."
+      ></textarea>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <label for="amount" class="font-semibold text-gray-700 dark:text-gray-200">Valor</label>
-        <p-inputNumber inputId="amount" formControlName="amount" mode="currency" currency="BRL" locale="pt-BR"
-          placeholder="R$ 0,00" [style]="{ width: '100%' }" inputStyleClass="w-full">
+        <label
+          for="amount"
+          class="font-semibold text-gray-700 dark:text-gray-200"
+          >Valor</label
+        >
+        <p-inputNumber
+          inputId="amount"
+          formControlName="amount"
+          mode="currency"
+          currency="BRL"
+          locale="pt-BR"
+          placeholder="R$ 0,00"
+          [style]="{ width: '100%' }"
+          inputStyleClass="w-full"
+        >
         </p-inputNumber>
       </div>
       <div class="flex flex-col gap-2">
-        <label for="date" class="font-semibold text-gray-700 dark:text-gray-200">Data</label>
-        <p-datepicker inputId="date" formControlName="date" dateFormat="dd/mm/yy" [showIcon]="true" [appendTo]="'body'"
-          [style]="{ width: '100%' }" inputStyleClass="w-full">
+        <label for="date" class="font-semibold text-gray-700 dark:text-gray-200"
+          >Data</label
+        >
+        <p-datepicker
+          inputId="date"
+          formControlName="date"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [appendTo]="'body'"
+          [style]="{ width: '100%' }"
+          inputStyleClass="w-full"
+        >
         </p-datepicker>
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="account" class="font-semibold text-gray-700 dark:text-gray-200">Conta / Carteira</label>
-      <p-select inputId="account" [options]="accounts()" formControlName="account" optionLabel="name"
-        placeholder="Selecione a conta de origem" [style]="{ width: '100%' }" [appendTo]="'body'">
+      <label
+        for="account"
+        class="font-semibold text-gray-700 dark:text-gray-200"
+        >Conta / Carteira</label
+      >
+      <p-select
+        inputId="account"
+        [options]="accounts()"
+        formControlName="account"
+        optionLabel="name"
+        placeholder="Selecione a conta de origem"
+        [style]="{ width: '100%' }"
+        [appendTo]="'body'"
+      >
         <ng-template pTemplate="item" let-acc>
           <div class="flex flex-col">
             <span class="font-bold">{{ acc.name }}</span>
             <span class="text-xs text-gray-500 uppercase">{{
               acc.type | accountType
-              }}</span>
+            }}</span>
           </div>
         </ng-template>
       </p-select>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="category" class="font-semibold text-gray-700 dark:text-gray-200">Categoria</label>
-      <p-select inputId="category" [options]="filteredCategories()" formControlName="category"
-        placeholder="Selecione uma categoria" [group]="true" [style]="{ width: '100%' }" [appendTo]="'body'"
-        [emptyMessage]="'Nenhuma categoria deste tipo encontrada.'">
+      <label
+        for="category"
+        class="font-semibold text-gray-700 dark:text-gray-200"
+        >Categoria</label
+      >
+      <p-select
+        inputId="category"
+        [options]="filteredCategories()"
+        formControlName="category"
+        placeholder="Selecione uma categoria"
+        [group]="true"
+        [style]="{ width: '100%' }"
+        [appendTo]="'body'"
+        [emptyMessage]="'Nenhuma categoria deste tipo encontrada.'"
+      >
         <ng-template pTemplate="group" let-group>
           <div class="flex items-center gap-2">
             <span class="font-bold">{{ group.label }}</span>
@@ -119,7 +254,10 @@
         <ng-template pTemplate="selectedItem" let-cat>
           @if (cat) {
           <div class="flex items-center gap-2">
-            <i [class]="cat.icon || cat.value?.icon" [style.color]="cat.color || cat.value?.color"></i>
+            <i
+              [class]="cat.icon || cat.value?.icon"
+              [style.color]="cat.color || cat.value?.color"
+            ></i>
             <span>{{ cat.name || cat.value?.name || cat.label }}</span>
           </div>
           }
@@ -128,112 +266,235 @@
     </div>
 
     <!-- Tithes & Offerings -->
-    @if (form.get('type')?.value === 'income' && preferences()?.enable_tithes_offerings) {
-    <div class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900">
-        <div class="flex items-center gap-2 mb-2" [pTooltip]="titheTooltip()" tooltipPosition="top">
-            <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300 m-0">Dízimos e Ofertas</h3>
-            <i class="pi pi-info-circle text-xs text-gray-400"></i>
-        </div>
+    @if (form.get('type')?.value === 'income' &&
+    preferences()?.enable_tithes_offerings) {
+    <div
+      class="flex flex-col gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900"
+    >
+      <div
+        class="flex items-center gap-2 mb-2"
+        [pTooltip]="titheTooltip()"
+        tooltipPosition="top"
+      >
+        <h3 class="font-bold text-sm text-gray-600 dark:text-gray-300 m-0">
+          Dízimos e Ofertas
+        </h3>
+        <i class="pi pi-info-circle text-xs text-gray-400"></i>
+      </div>
 
-        <!-- Dízimo -->
-        <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2">
-                <p-checkbox [binary]="true" [ngModel]="titheEnabled()" (ngModelChange)="titheEnabled.set($event)" [ngModelOptions]="{standalone: true}" inputId="tithe_check"></p-checkbox>
-                <label for="tithe_check" class="cursor-pointer dark:text-gray-200">Deduzir Dízimo</label>
-            </div>
-
-            @if (titheEnabled()) {
-                <div class="flex gap-2 items-center">
-                    <div class="flex-1">
-                         <p-inputNumber formControlName="tithe_value" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" [placeholder]="titheType() === 'percentage' ? '10%' : 'R$ 0,00'" [style]="{width: '100%'}" inputStyleClass="w-full"></p-inputNumber>
-                    </div>
-                    <div class="flex-shrink-0">
-                         <p-selectButton [options]="[{label: '%', value: 'percentage'}, {label: 'R$', value: 'value'}]" [ngModel]="titheType()" (ngModelChange)="titheType.set($event)" [ngModelOptions]="{standalone: true}"></p-selectButton>
-                    </div>
-                </div>
-            }
+      <!-- Dízimo -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <p-checkbox
+            [binary]="true"
+            [ngModel]="titheEnabled()"
+            (ngModelChange)="titheEnabled.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+            inputId="tithe_check"
+          ></p-checkbox>
+          <label for="tithe_check" class="cursor-pointer dark:text-gray-200"
+            >Deduzir Dízimo</label
+          >
         </div>
 
         @if (titheEnabled()) {
-             <div class="flex items-center gap-2 ml-1">
-                 <p-checkbox [binary]="true" [ngModel]="titheReturned()" (ngModelChange)="titheReturned.set($event)" [ngModelOptions]="{standalone: true}" inputId="tithe_returned_check"></p-checkbox>
-                 <label for="tithe_returned_check" class="cursor-pointer text-sm font-medium dark:text-gray-300">Dízimo Devolvido?</label>
-             </div>
+        <div class="flex gap-2 items-center">
+          <div class="flex-1">
+            <p-inputNumber
+              formControlName="tithe_value"
+              mode="decimal"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              [placeholder]="titheType() === 'percentage' ? '10%' : 'R$ 0,00'"
+              [style]="{ width: '100%' }"
+              inputStyleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div class="flex-shrink-0">
+            <p-selectButton
+              [options]="[
+                { label: '%', value: 'percentage' },
+                { label: 'R$', value: 'value' }
+              ]"
+              [ngModel]="titheType()"
+              (ngModelChange)="titheType.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+            ></p-selectButton>
+          </div>
+        </div>
         }
+      </div>
 
-        <!-- Oferta -->
-        <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2">
-                <p-checkbox [binary]="true" [ngModel]="offeringEnabled()" (ngModelChange)="offeringEnabled.set($event)" [ngModelOptions]="{standalone: true}" inputId="offering_check"></p-checkbox>
-                <label for="offering_check" class="cursor-pointer dark:text-gray-200">Deduzir Oferta</label>
-            </div>
+      @if (titheEnabled()) {
+      <div class="flex items-center gap-2 ml-1">
+        <p-checkbox
+          [binary]="true"
+          [ngModel]="titheReturned()"
+          (ngModelChange)="titheReturned.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+          inputId="tithe_returned_check"
+        ></p-checkbox>
+        <label
+          for="tithe_returned_check"
+          class="cursor-pointer text-sm font-medium dark:text-gray-300"
+          >Dízimo Devolvido?</label
+        >
+      </div>
+      }
 
-            @if (offeringEnabled()) {
-                <div class="flex gap-2 items-center">
-                    <div class="flex-1">
-                         <p-inputNumber formControlName="offering_value" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" [placeholder]="offeringType() === 'percentage' ? 'Ex: 5%' : 'R$ 0,00'" [style]="{width: '100%'}" inputStyleClass="w-full"></p-inputNumber>
-                    </div>
-                    <div class="flex-shrink-0">
-                         <p-selectButton [options]="[{label: '%', value: 'percentage'}, {label: 'R$', value: 'value'}]" [ngModel]="offeringType()" (ngModelChange)="offeringType.set($event)" [ngModelOptions]="{standalone: true}"></p-selectButton>
-                    </div>
-                </div>
-            }
+      <!-- Oferta -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <p-checkbox
+            [binary]="true"
+            [ngModel]="offeringEnabled()"
+            (ngModelChange)="offeringEnabled.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+            inputId="offering_check"
+          ></p-checkbox>
+          <label for="offering_check" class="cursor-pointer dark:text-gray-200"
+            >Deduzir Oferta</label
+          >
         </div>
 
-        <hr class="border-gray-200 dark:border-gray-700">
-
-        <div class="flex justify-between items-center">
-            <span class="font-semibold text-gray-600 dark:text-gray-400">Lucro Líquido:</span>
-            <span class="font-bold text-lg text-primary-500">{{ netAmount() | currency:'BRL' }}</span>
+        @if (offeringEnabled()) {
+        <div class="flex gap-2 items-center">
+          <div class="flex-1">
+            <p-inputNumber
+              formControlName="offering_value"
+              mode="decimal"
+              [minFractionDigits]="2"
+              [maxFractionDigits]="2"
+              [placeholder]="
+                offeringType() === 'percentage' ? 'Ex: 5%' : 'R$ 0,00'
+              "
+              [style]="{ width: '100%' }"
+              inputStyleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div class="flex-shrink-0">
+            <p-selectButton
+              [options]="[
+                { label: '%', value: 'percentage' },
+                { label: 'R$', value: 'value' }
+              ]"
+              [ngModel]="offeringType()"
+              (ngModelChange)="offeringType.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+            ></p-selectButton>
+          </div>
         </div>
+        }
+      </div>
+
+      <hr class="border-gray-200 dark:border-gray-700" />
+
+      <div class="flex justify-between items-center">
+        <span class="font-semibold text-gray-600 dark:text-gray-400"
+          >Lucro Líquido:</span
+        >
+        <span class="font-bold text-lg text-primary-500">{{
+          netAmount() | currency : "BRL"
+        }}</span>
+      </div>
     </div>
     }
 
     <div class="flex flex-col gap-2">
-      <label for="payment" class="font-semibold text-gray-700 dark:text-gray-200">Pagamento</label>
-      <p-select inputId="payment" [options]="paymentOptions" formControlName="payment_method" optionLabel="label"
-        optionValue="value" placeholder="Selecione..." [style]="{ width: '100%' }" [appendTo]="'body'">
+      <label
+        for="payment"
+        class="font-semibold text-gray-700 dark:text-gray-200"
+        >Pagamento</label
+      >
+      <p-select
+        inputId="payment"
+        [options]="paymentOptions"
+        formControlName="payment_method"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecione..."
+        [style]="{ width: '100%' }"
+        [appendTo]="'body'"
+      >
       </p-select>
     </div>
 
     <!-- SELEÇÃO DE CARTÃO ESPECÍFICO -->
-    @if (form.get('payment_method')?.value === 'credit_card' && availableCreditCards().length > 0) {
+    @if (form.get('payment_method')?.value === 'credit_card' &&
+    availableCreditCards().length > 0) {
     <div class="flex flex-col gap-2">
-       <label for="credit_card" class="font-semibold text-gray-700 dark:text-gray-200">Cartão (Opcional)</label>
-       <p-select inputId="credit_card" [options]="availableCreditCards()" formControlName="credit_card_id"
-                 optionLabel="name" optionValue="id" placeholder="Padrão (Sem vínculo específico)"
-                 [style]="{ width: '100%' }" [appendTo]="'body'" [showClear]="true">
-          <ng-template pTemplate="item" let-card>
-             <div class="flex align-items-center gap-2">
-                 <div class="w-1rem h-1rem border-circle" [style.background]="card.color"></div>
-                 <span>{{ card.name }} ({{ card.brand | uppercase }})</span>
-             </div>
-          </ng-template>
-       </p-select>
+      <label
+        for="credit_card"
+        class="font-semibold text-gray-700 dark:text-gray-200"
+        >Cartão (Opcional)</label
+      >
+      <p-select
+        inputId="credit_card"
+        [options]="availableCreditCards()"
+        formControlName="credit_card_id"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Padrão (Sem vínculo específico)"
+        [style]="{ width: '100%' }"
+        [appendTo]="'body'"
+        [showClear]="true"
+      >
+        <ng-template pTemplate="item" let-card>
+          <div class="flex align-items-center gap-2">
+            <div
+              class="w-1rem h-1rem border-circle"
+              [style.background]="card.color"
+            ></div>
+            <span>{{ card.name }} ({{ card.brand | uppercase }})</span>
+          </div>
+        </ng-template>
+      </p-select>
     </div>
     }
 
     <div class="flex items-center gap-2 mt-2">
-      <p-checkbox formControlName="is_paid" [binary]="true" inputId="is_paid"></p-checkbox>
-      <label for="is_paid" class="cursor-pointer font-semibold text-gray-700 dark:text-gray-200">
-        {{ form.get('type')?.value === 'expense' ? 'Pago' : 'Recebido' }}
+      <p-checkbox
+        formControlName="is_paid"
+        [binary]="true"
+        inputId="is_paid"
+      ></p-checkbox>
+      <label
+        for="is_paid"
+        class="cursor-pointer font-semibold text-gray-700 dark:text-gray-200"
+      >
+        {{ form.get("type")?.value === "expense" ? "Pago" : "Recebido" }}
       </label>
     </div>
 
     @if (form.get('is_paid')?.value) {
-      <div class="mt-2 text-xs text-gray-500 italic">
-        A data da transação será usada como data do pagamento.
-      </div>
+    <div class="mt-2 text-xs text-gray-500 italic">
+      A data da transação será usada como data do pagamento.
+    </div>
     }
 
     <div class="flex justify-between mt-6">
       @if (editingId()) {
-      <p-button label="Excluir" icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-        (onClick)="confirmDelete()"></p-button>
+      <p-button
+        label="Excluir"
+        icon="pi pi-trash"
+        severity="danger"
+        [text]="true"
+        [rounded]="true"
+        (onClick)="confirmDelete()"
+      ></p-button>
       }
       <div class="flex gap-2 ml-auto">
-        <p-button label="Cancelar" severity="secondary" (onClick)="visible.set(false)"></p-button>
-        <p-button label="Salvar" icon="pi pi-check" type="submit" [disabled]="form.invalid"></p-button>
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          (onClick)="visible.set(false)"
+        ></p-button>
+        <p-button
+          label="Salvar"
+          icon="pi pi-check"
+          type="submit"
+          [disabled]="form.invalid"
+        ></p-button>
       </div>
     </div>
   </form>

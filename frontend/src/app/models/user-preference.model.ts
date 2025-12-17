@@ -15,6 +15,9 @@ export interface UserPreference {
      default_offering_percentage?: number;
      auto_apply_tithe?: boolean;
      auto_apply_offering?: boolean;
+
+     // Subscription
+     subscription_tier?: 'free' | 'pro' | 'premium';
 }
 
 export interface UserPreferenceCreate {
@@ -31,4 +34,5 @@ export interface UserPreferenceCreate {
      default_offering_percentage?: number;
      auto_apply_tithe?: boolean;
      auto_apply_offering?: boolean;
+     subscription_tier?: 'free' | 'pro' | 'premium';
 }

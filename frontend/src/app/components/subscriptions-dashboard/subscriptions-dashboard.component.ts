@@ -32,6 +32,8 @@ import { Account } from '../../models/account.model';
 import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
 
 import { SkeletonModule } from 'primeng/skeleton';
+import { AIService } from '../../services/ai.service';
+import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
   selector: 'app-subscriptions-dashboard',
@@ -61,6 +63,10 @@ import { SkeletonModule } from 'primeng/skeleton';
   templateUrl: './subscriptions-dashboard.component.html',
   styleUrl: './subscriptions-dashboard.component.scss'
 })
+
+
+// ... existing code ...
+
 export class SubscriptionsDashboardComponent implements OnInit {
   private recurrenceService = inject(RecurrenceService);
   private transactionService = inject(TransactionService);
@@ -68,12 +74,15 @@ export class SubscriptionsDashboardComponent implements OnInit {
   private accountService = inject(AccountService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private aiService = inject(AIService); // Inject AI Service
+  subscriptionService = inject(SubscriptionService);
   private fb = inject(FormBuilder);
 
   recurrences = signal<Recurrence[]>([]);
   transactions = signal<Transaction[]>([]);
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
+  suggestions = signal<any[]>([]); // New signal for suggestions
   currentDate = signal(new Date());
   loading = signal(true);
 
@@ -168,6 +177,14 @@ export class SubscriptionsDashboardComponent implements OnInit {
     this.loadTransactions();
     this.loadCategories();
     this.loadAccounts();
+    this.loadSuggestions(); // New
+  }
+
+  loadSuggestions() {
+      this.aiService.getSubscriptionSuggestions().subscribe({
+          next: (data) => this.suggestions.set(data),
+          error: (err) => console.log('Suggestions error', err)
+      });
   }
 
   loadRecurrences() {
@@ -369,6 +386,18 @@ export class SubscriptionsDashboardComponent implements OnInit {
   });
 
   // Actions
+  openSuggestionDialog(suggestion: any) {
+    this.showDialog(); // Open as new (reset form, editMode=false)
+    
+    // Pre-fill with suggestion data
+    this.recurrenceForm.patchValue({
+        name: suggestion.title,
+        amount: suggestion.avg_amount,
+        periodicity: 'monthly', // Default from analysis
+        due_day: 1
+    });
+  }
+
   showDialog(recurrence?: Recurrence) {
     this.displayDialog = true;
 

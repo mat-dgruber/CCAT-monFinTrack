@@ -1,0 +1,68 @@
+<div class="chat-widget" [class.expanded]="expanded()">
+  <!-- Header (Always Visible when expanded, or button when collapsed) -->
+  <div class="chat-header" (click)="toggleChat()">
+    <div class="header-content">
+      <i class="pi pi-sparkles"></i>
+      <span *ngIf="expanded()">Assistente Financeiro</span>
+    </div>
+    <div class="header-actions" *ngIf="expanded()">
+      <i
+        class="pi pi-fire mr-3 cursor-pointer transition-colors duration-300"
+        [class.text-orange-500]="isRoastMode()"
+        [class.text-gray-400]="!isRoastMode()"
+        pTooltip="Modo Roast 🔥"
+        tooltipPosition="bottom"
+        (click)="toggleRoastMode(); $event.stopPropagation()"
+      >
+      </i>
+      <i class="pi pi-minus"></i>
+    </div>
+  </div>
+
+  <!-- Body (Visible only when expanded) -->
+  <div class="chat-body" *ngIf="expanded()">
+    <div class="messages-list" #scrollContainer>
+      <div
+        *ngFor="let msg of messages()"
+        class="message"
+        [class.user]="msg.sender === 'user'"
+        [class.ai]="msg.sender === 'ai'"
+      >
+        <div class="message-content">
+          {{ msg.text }}
+        </div>
+        <div class="message-time">
+          {{ msg.timestamp | date : "shortTime" }}
+        </div>
+      </div>
+
+      <div *ngIf="loading()" class="message ai loading">
+        <i class="pi pi-spin pi-spinner"></i> Digitando...
+      </div>
+
+      <div *ngIf="messages().length === 0" class="empty-state">
+        <p>Olá! Sou seu assistente financeiro.</p>
+        <p>Pergunte sobre seu saldo, gastos recentes ou dicas de economia.</p>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <input
+        type="text"
+        pInputText
+        class="chat-input"
+        placeholder="Pergunte algo..."
+        [(ngModel)]="currentMessage"
+        (keydown.enter)="sendMessage()"
+        [disabled]="loading()"
+      />
+      <button
+        pButton
+        icon="pi pi-send"
+        class="p-button-rounded p-button-text"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage || loading()"
+      ></button>
+    </div>
+  </div>
+</div>

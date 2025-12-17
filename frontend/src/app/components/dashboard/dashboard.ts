@@ -12,6 +12,8 @@ import { MultiSelectModule } from 'primeng/multiselect'; // For p-multiSelect
 import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog'; // Import Dialog
+import { MarkdownModule } from 'ngx-markdown'; // Import Markdown Module if used
 import { RouterModule } from '@angular/router';
 
 
@@ -21,6 +23,8 @@ import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
 import { AccountService } from '../../services/account.service';
 import { AnalysisService } from '../../services/analysis.service';
+import { AIService } from '../../services/ai.service'; // Import AI Service
+import { SubscriptionService } from '../../services/subscription.service';
 import { Account } from '../../models/account.model';
 
 // Components
@@ -49,6 +53,9 @@ import { SkeletonModule } from 'primeng/skeleton';
     InvoiceDashboard,
     RecentTransactionsComponent,
     SkeletonModule,
+    DialogModule, // Add Dialog
+    MarkdownModule, // Add Markdown
+    ButtonModule, // Add Button
     RouterModule
   ],
   templateUrl: './dashboard.html',
@@ -61,10 +68,19 @@ export class Dashboard implements OnInit {
   private filterService = inject(FilterService);
   private analysisService = inject(AnalysisService);
   private accountService = inject(AccountService);
+  private aiService = inject(AIService); // Inject AI Service
+  subscriptionService = inject(SubscriptionService);
+
 
   summary = signal<DashboardSummary | null>(null);
   costOfLiving = signal<number | null>(null);
   loading = signal(true);
+
+  // AI Report
+  showReportDialog = false;
+  reportLoading = false;
+  reportContent = '';
+
 
 
 
@@ -102,6 +118,28 @@ export class Dashboard implements OnInit {
 
   loadAccounts() {
     this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
+  }
+
+  generateReport() {
+    this.showReportDialog = true;
+    this.reportLoading = true;
+    this.reportContent = '';
+    
+    // Use current month/year from filter
+    const m = this.filterService.month();
+    const y = this.filterService.year();
+
+    this.aiService.generateMonthlyReport(m, y).subscribe({
+        next: (res) => {
+            this.reportContent = res.content;
+            this.reportLoading = false;
+        },
+        error: (err) => {
+            console.error('Error generating report', err);
+            this.reportContent = "Desculpe, não consegui gerar o relatório agora. Tente mais tarde!";
+            this.reportLoading = false;
+        }
+    })
   }
 
   loadDashboard(m: number, y: number) {

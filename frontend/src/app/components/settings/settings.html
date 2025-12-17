@@ -24,6 +24,32 @@
           appendTo="body"
         ></p-select>
       </div>
+
+      <!-- Subscription Mode (Test) -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-secondary"
+          >Modo de Assinatura (Teste)</label
+        >
+        <div class="flex items-center gap-2">
+          <p-select
+            [options]="tierOptions"
+            [(ngModel)]="selectedTier"
+            (onChange)="onTierChange($event)"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full max-w-md"
+            appendTo="body"
+          ></p-select>
+          <p-tag
+            value="Ambiente de Teste"
+            severity="info"
+            icon="pi pi-code"
+          ></p-tag>
+        </div>
+        <small class="text-secondary"
+          >Simule diferentes planos para testar funcionalidades.</small
+        >
+      </div>
     </div>
   </div>
 
@@ -456,4 +482,3 @@
 </div>
 
 <p-toast></p-toast>
-
