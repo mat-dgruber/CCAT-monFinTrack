@@ -21,6 +21,7 @@
 
   <!-- Body (Visible only when expanded) -->
   <div class="chat-body" *ngIf="expanded()">
+    @if (canAccess()) {
     <div class="messages-list" #scrollContainer>
       <div
         *ngFor="let msg of messages()"
@@ -30,6 +31,10 @@
       >
         <div class="message-content">
           {{ msg.text }}
+
+          <div *ngIf="msg.chartData" class="mt-3 w-full" style="max-height: 250px;">
+              <p-chart [type]="msg.chartData.type" [data]="msg.chartData.data" [options]="msg.chartData.options" height="200px"></p-chart>
+          </div>
         </div>
         <div class="message-time">
           {{ msg.timestamp | date : "shortTime" }}
@@ -64,5 +69,13 @@
         [disabled]="!currentMessage || loading()"
       ></button>
     </div>
+    } @else {
+    <div class="flex flex-col items-center justify-center h-full p-4 text-center">
+        <div class="text-4xl mb-2">💎</div>
+        <h3 class="font-bold text-gray-800 dark:text-white mb-1">IA Financeira</h3>
+        <p class="text-sm text-gray-500 mb-4">Chat exclusivo para Pro.</p>
+        <p-button label="Upgrade" styleClass="p-button-sm p-button-rounded"></p-button>
+    </div>
+    }
   </div>
 </div>

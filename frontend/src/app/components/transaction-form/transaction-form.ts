@@ -14,6 +14,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
@@ -23,12 +24,15 @@ import { RefreshService } from '../../services/refresh.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { AIService } from '../../services/ai.service';
 import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
+import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
+import { HttpClient } from '@angular/common/http';
 
 import { Category } from '../../models/category.model';
 import { Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 
 import { AccountTypePipe } from '../../pipes/account-type.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-transaction-form',
@@ -47,6 +51,7 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
     CheckboxModule,
     TextareaModule,
     TooltipModule,
+    TagModule,
     AccountTypePipe
   ],
   templateUrl: './transaction-form.html',
@@ -63,6 +68,8 @@ export class TransactionForm implements OnInit {
 
   private preferenceService = inject(UserPreferenceService);
   private aiService = inject(AIService);
+  private firebaseService = inject(FirebaseWrapperService);
+  private http = inject(HttpClient);
 
   visible = signal(false);
   preferences = toSignal(this.preferenceService.preferences$);
@@ -124,6 +131,7 @@ export class TransactionForm implements OnInit {
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
   editingId = signal<string | null>(null);
+  isUploading = signal(false);
 
   @Output() save = new EventEmitter<void>();
 
@@ -199,7 +207,10 @@ export class TransactionForm implements OnInit {
 
     // Tithes & Offerings
     tithe_value: [10], // Default 10%
-    offering_value: [null]
+    offering_value: [null],
+
+    // Attachments
+    attachments: [[]]
   });
 
   availableCreditCards = signal<any[]>([]);
@@ -261,20 +272,20 @@ export class TransactionForm implements OnInit {
     const file = event.target.files[0];
     if (file) {
         this.messageService.add({ severity: 'info', summary: 'Processando...', detail: 'Lendo comprovante com IA...', life: 3000 });
-        
+
         this.aiService.scanReceipt(file).subscribe({
             next: (data) => {
                 const patch: any = {};
                 if (data.title) patch.title = data.title;
                 if (data.amount) patch.amount = data.amount;
                 if (data.date) patch.date = new Date(data.date);
-                
+
                 // Try to match category
                 if (data.category_id) {
                     const cat = this.categories().find(c => c.id === data.category_id);
                     if (cat) patch.category = cat;
                 }
-                
+
                 this.form.patchValue(patch);
                 this.messageService.add({ severity: 'success', summary: 'Dados Extraídos!', detail: 'Verifique os campos preenchidos.' });
             },
@@ -285,6 +296,41 @@ export class TransactionForm implements OnInit {
         });
     }
   }
+
+  // --- Attachment Methods ---
+
+  async onUpload(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (this.preferences()?.subscription_tier !== 'pro' && this.preferences()?.subscription_tier !== 'premium') {
+         this.messageService.add({severity: 'warn', summary: 'Upgrade Necessário', detail: 'Recurso Pro/Premium'});
+         return;
+    }
+
+    try {
+        this.isUploading.set(true);
+        const path = `receipts/${this.preferences()!.user_id}/${Date.now()}_${file.name}`;
+        const url = await this.firebaseService.uploadFile(path, file);
+
+        const current = this.form.get('attachments')?.value || [];
+        this.form.patchValue({ attachments: [...current, url] });
+
+        // Trigger AI Scan if Premium
+        if (this.preferences()?.subscription_tier === 'premium' && file.type.startsWith('image/')) {
+            this.scanReceipt(file);
+        }
+
+    } catch (e) {
+        console.error(e);
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha no upload' });
+    } finally {
+        this.isUploading.set(false);
+        event.target.value = ''; // Reset
+    }
+  }
+
+
 
   ngOnInit() {
     this.loadCategories();
@@ -388,7 +434,8 @@ export class TransactionForm implements OnInit {
             tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
             offering_value: transaction.offering_percentage || transaction.offering_amount || null,
 
-            credit_card_id: transaction.credit_card_id || null
+            credit_card_id: transaction.credit_card_id || null,
+            attachments: transaction.attachments || []
         });
 
     if (transaction.tithe_percentage) {
@@ -530,17 +577,17 @@ export class TransactionForm implements OnInit {
         this.transactionService.createTransaction(payload).subscribe({
             next: (res: any) => {
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação criada.' });
-                
+
                 // Check for Anomaly Warning
                 if (Array.isArray(res) && res.length > 0 && res[0].warning) {
-                    this.messageService.add({ 
-                        severity: 'warn', 
-                        summary: 'Gasto Atípico', 
-                        detail: res[0].warning, 
-                        life: 10000 
+                    this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Gasto Atípico',
+                        detail: res[0].warning,
+                        life: 10000
                     });
                 }
-                
+
                 onSave();
             },
             error: (err) => {
@@ -578,5 +625,35 @@ export class TransactionForm implements OnInit {
         }
       }
     });
+  }
+  scanReceipt(file: File) {
+      this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando imagem...' });
+      const formData = new FormData();
+      formData.append('file', file);
+
+      this.http.post<any>(`${environment.apiUrl}/ai/scan`, formData).subscribe({
+          next: (data) => {
+              if (data) {
+                 const patch: any = {};
+                 if (data.title) patch.title = data.title;
+                 if (data.amount) patch.amount = data.amount;
+                 if (data.date) patch.date = new Date(data.date);
+                 if (data.category_id) {
+                     const cat = this.categories().find(c => c.id === data.category_id);
+                     if (cat) patch.category = cat;
+                 }
+                 this.form.patchValue(patch);
+                 this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Dados preenchidos!' });
+              }
+          },
+          error: () => {
+              this.messageService.add({ severity: 'warn', summary: 'IA', detail: 'Não foi possível ler o comprovante.' });
+          }
+      });
+  }
+
+  removeAttachment(url: string) {
+      const current = this.form.get('attachments')?.value || [];
+      this.form.patchValue({ attachments: current.filter((u: string) => u !== url) });
   }
 }

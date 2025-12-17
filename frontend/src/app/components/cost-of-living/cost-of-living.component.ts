@@ -12,6 +12,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 
 import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly } from '../../services/analysis.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { inject } from '@angular/core';
 
 interface Message {
     severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
@@ -62,6 +64,9 @@ export class CostOfLivingComponent implements OnInit {
 
   // UX
   inflationMessages: Message[] = [];
+
+  subscriptionService = inject(SubscriptionService);
+  canAccess = computed(() => this.subscriptionService.canAccess('cost_of_living'));
 
   constructor(private analysisService: AnalysisService) {
     // Effect to update breakdown chart when data changes

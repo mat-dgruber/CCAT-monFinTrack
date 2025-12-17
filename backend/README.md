@@ -9,6 +9,7 @@ Este é o backend do projeto **monFinTrack**, uma aplicação para gerenciamento
 - [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup) - Integração com o Firebase Firestore.
 - [Pydantic](https://docs.pydantic.dev/) - Validação de dados.
 - [Uvicorn](https://www.uvicorn.org/) - Servidor ASGI.
+- [Google Generative AI](https://ai.google.dev/) - Inteligência Artificial Generativa.
 
 ## 📋 Pré-requisitos
 

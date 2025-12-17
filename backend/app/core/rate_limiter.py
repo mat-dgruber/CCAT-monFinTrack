@@ -5,32 +5,50 @@ from collections import defaultdict
 class RateLimiter:
     def __init__(self):
         # Armazena uso em memória: {user_id: {'classify': [timestamps], 'chat': [timestamps]}}
-        # Em produção, idealmente seria Redis. Como é MVP, memória funciona (reiniciou, zerou).
         self.usage = defaultdict(lambda: defaultdict(list))
         
-        # Limites Diários
-        self.LIMITS = {
-            'classify': 20, # 20 categorizações novas por dia
-            'chat': 20      # 20 mensagens de chat por dia
+        # Base limits (fallback)
+        self.DEFAULT_LIMITS = {
+            'classify': 20,
+            'chat': 20
         }
 
-    def check_limit(self, user_id: str, action: str):
+    def check_limit(self, user_id: str, action: str, tier: str = 'free'):
+        """
+        Verifica se o usuário excedeu o limite para a ação, baseado no plano.
+        """
         now = datetime.now()
         
-        # 1. Limpa timestamps antigos (> 24h)
+        # 1. Determina o limite baseado no Tier
+        limit = 0 # Default (Free)
+        
+        if tier == 'premium':
+            limit = 1000 # "Unlimited"
+        elif tier == 'pro':
+            limit = 20 # Standard Limit
+        elif tier == 'free':
+            limit = 0 # No AI
+            
+        # 2. Se limite é 0, bloqueia imediatamente
+        if limit == 0:
+             raise HTTPException(
+                status_code=403, 
+                detail=f"Feature '{action}' is not available for Free plan. Please upgrade."
+            )
+
+        # 3. Limpa timestamps antigos (> 24h)
         self._cleanup(user_id, action, now)
         
-        # 2. Verifica contagem
+        # 4. Verifica contagem
         count = len(self.usage[user_id][action])
-        limit = self.LIMITS.get(action, 100)
         
         if count >= limit:
             raise HTTPException(
                 status_code=429, 
-                detail=f"Rate limit exceeded for '{action}'. Max {limit} per day. Try again tomorrow."
+                detail=f"Rate limit exceeded for '{action}'. Max {limit} per day. Upgrade to Premium for unlimited access."
             )
             
-        # 3. Registra uso
+        # 5. Registra uso
         self.usage[user_id][action].append(now)
 
     def _cleanup(self, user_id: str, action: str, now: datetime):

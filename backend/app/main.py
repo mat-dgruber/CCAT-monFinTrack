@@ -52,8 +52,10 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 
 # AI Router (Novo)
-from app.api.routers import ai
+from app.api.routers import ai, import_transactions, analysis
 app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
+app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
+app.include_router(import_transactions.router, prefix="/api/import", tags=["Import"])
 
 from fastapi.staticfiles import StaticFiles
 import os

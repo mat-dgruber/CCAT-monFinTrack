@@ -13,6 +13,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { AuthService } from '../../services/auth.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { PwaService } from '../../services/pwa.service';
+import { SubscriptionService } from '../../services/subscription.service';
 import { CalculatorComponent } from '../shared/calculator/calculator.component';
 
 @Component({
@@ -34,6 +35,7 @@ export class Home {
   authService = inject(AuthService);
   userPreferenceService = inject(UserPreferenceService);
   pwaService = inject(PwaService);
+  subscriptionService = inject(SubscriptionService);
 
   sidebarVisible = signal(false);
   calculatorVisible = signal(false);

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -18,6 +18,7 @@ import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
 import { Account, CreditCard } from '../../models/account.model';
 import { AccountTypePipe } from '../../pipes/account-type.pipe'; // Pipe de tradução
+import { SubscriptionService } from '../../services/subscription.service'; // Service de Assinatura
 
 // Lista de Ícones Compartilhada
 import { ICON_LIST } from '../../shared/icons';
@@ -44,6 +45,7 @@ import { ICON_LIST } from '../../shared/icons';
 export class AccountManager implements OnInit {
   // Injeção de Dependências
   private accountService = inject(AccountService);
+  private subscriptionService = inject(SubscriptionService);
   private refreshService = inject(RefreshService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -54,6 +56,7 @@ export class AccountManager implements OnInit {
   loading = signal(true);
   visible = signal(false);
   editingId = signal<string | null>(null);
+  canAccessCreditCardMgmt = computed(() => this.subscriptionService.canAccess('credit_card_mgmt'));
 
   // Propriedade para o HTML acessar a lista de ícones
   icons = ICON_LIST;
@@ -89,7 +92,7 @@ export class AccountManager implements OnInit {
   // --- Lógica de Cartões de Crédito ---
   // --- Lógica de Cartões de Crédito ---
 
-  
+
   currentCards = signal<any[]>([]); // Usando any temporariamente para evitar erro de build se interface não estiver importada
   cardVisible = signal(false);
   editingCardIndex = signal<number | null>(null);
@@ -151,7 +154,7 @@ export class AccountManager implements OnInit {
 
     try {
       this.editingId.set(acc.id!);
-      
+
       // Carrega cartões existentes (se houver)
       if (acc.credit_cards) {
           this.currentCards.set([...acc.credit_cards]);
@@ -233,13 +236,13 @@ export class AccountManager implements OnInit {
           }
 
           const cards = [...this.currentCards()];
-          
+
           if (this.editingCardIndex() !== null) {
               cards[this.editingCardIndex()!] = cardData;
           } else {
               cards.push(cardData);
           }
-          
+
           this.currentCards.set(cards);
           this.cardVisible.set(false);
       }

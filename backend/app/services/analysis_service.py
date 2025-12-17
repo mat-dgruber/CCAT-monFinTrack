@@ -1,7 +1,7 @@
 from google.cloud import firestore
 from app.core.database import get_db
 import statistics
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 class AnalysisService:

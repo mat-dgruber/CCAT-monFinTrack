@@ -18,10 +18,28 @@ export class AIService {
     return this.http.post<{ response: string }>(`${this.apiUrl}/chat`, { message, persona });
   }
 
-  scanReceipt(file: File): Observable<{ title: string, amount: number, date: string, category_id: string }> {
+  scanReceipt(file: File): Observable<{
+    title: string,
+    amount: number,
+    date: string,
+    category_id: string,
+    items: { description: string, amount: number, category_id: string }[],
+    location: string,
+    payment_method: string,
+    account_id: string
+  }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{ title: string, amount: number, date: string, category_id: string }>(`${this.apiUrl}/scan`, formData);
+    return this.http.post<{
+      title: string,
+      amount: number,
+      date: string,
+      category_id: string,
+      items: { description: string, amount: number, category_id: string }[],
+      location: string,
+      payment_method: string,
+      account_id: string
+    }>(`${this.apiUrl}/scan`, formData);
   }
 
   getSubscriptionSuggestions(): Observable<any[]> {

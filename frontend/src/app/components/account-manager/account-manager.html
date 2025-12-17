@@ -55,7 +55,7 @@
           [class.dark:text-white]="acc.balance >= 0">
           {{ acc.balance | currency:'BRL' }}
         </div>
-        
+
         <!-- CREDIT CARDS ICONS -->
         @if (acc.credit_cards && acc.credit_cards.length > 0) {
             <div class="flex gap-1 mt-2">
@@ -125,6 +125,7 @@
     </div>
 
     <!-- SEÇÃO DE CARTÕES DE CRÉDITO -->
+    @if (canAccessCreditCardMgmt()) {
     <div class="flex flex-col gap-2 mt-2 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div class="flex justify-between items-center">
             <h3 class="font-bold text-sm text-gray-700 dark:text-gray-300">Cartões de Crédito Vinculados</h3>
@@ -155,6 +156,18 @@
             </div>
         }
     </div>
+    } @else {
+      <div class="flex flex-col gap-2 mt-2 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg opacity-75 relative overflow-hidden">
+          <div class="flex justify-between items-center blur-[2px]">
+              <h3 class="font-bold text-sm text-gray-700 dark:text-gray-300">Cartões de Crédito</h3>
+              <p-button icon="pi pi-plus" [text]="true" [rounded]="true" size="small"></p-button>
+          </div>
+          <div class="absolute inset-0 flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/60 z-10 backdrop-blur-[1px]">
+              <div class="text-sm font-bold text-gray-800 dark:text-white mb-1"><i class="pi pi-lock text-xs mr-1"></i> Pro Feature</div>
+              <p-button label="Ativar Gestão de Cartões" size="small" styleClass="text-xs py-1 px-2 h-8"></p-button>
+          </div>
+      </div>
+    }
 
     <div class="flex justify-end mt-4">
       <p-button label="Salvar" type="submit" [disabled]="form.invalid"></p-button>
@@ -167,7 +180,7 @@
 <p-dialog [(visible)]="cardVisible" [style]="{width: '450px'}" header="Detalhes do Cartão" [modal]="true" appendTo="body" styleClass="p-fluid">
     <ng-template pTemplate="content">
         <div [formGroup]="cardForm" class="flex flex-col gap-5 pt-3">
-            
+
             <div class="flex flex-col gap-2">
                 <label class="font-semibold text-gray-700 dark:text-gray-200">Nome do Cartão</label>
                 <input pInputText formControlName="name" placeholder="Ex: Nubank Gold" class="w-full" autofocus />
@@ -179,7 +192,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="font-semibold text-gray-700 dark:text-gray-200">Bandeira</label>
-                <p-select [options]="brandOptions" formControlName="brand" optionLabel="label" optionValue="value" 
+                <p-select [options]="brandOptions" formControlName="brand" optionLabel="label" optionValue="value"
                           placeholder="Selecione a bandeira" [style]="{width: '100%'}">
                      <ng-template pTemplate="item" let-brand>
                          <div class="flex items-center gap-2">
@@ -193,10 +206,10 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="flex flex-col gap-2">
                     <label class="font-semibold text-gray-700 dark:text-gray-200">Dia Fechamento</label>
-                    <p-inputNumber formControlName="closing_day" [min]="1" [max]="31" suffix=" do mês" 
+                    <p-inputNumber formControlName="closing_day" [min]="1" [max]="31" suffix=" do mês"
                                    [showButtons]="true" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
                 </div>
-    
+
                 <div class="flex flex-col gap-2">
                     <label class="font-semibold text-gray-700 dark:text-gray-200">Dia Vencimento</label>
                     <p-inputNumber formControlName="invoice_due_day" [min]="1" [max]="31" suffix=" do mês"
@@ -206,7 +219,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="font-semibold text-gray-700 dark:text-gray-200">Limite do Cartão</label>
-                <p-inputNumber formControlName="limit" mode="currency" currency="BRL" locale="pt-BR" 
+                <p-inputNumber formControlName="limit" mode="currency" currency="BRL" locale="pt-BR"
                                placeholder="R$ 0,00" styleClass="w-full" class="w-full"></p-inputNumber>
                 <small class="text-gray-500">Opcional. Usado apenas para referência.</small>
             </div>

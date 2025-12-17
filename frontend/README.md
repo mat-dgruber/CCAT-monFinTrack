@@ -7,6 +7,8 @@ This is the frontend for the MonFinTrack application, a personal finance tracker
 - Angular
 - TypeScript
 - SCSS
+- PrimeNG
+- ngx-markdown
 
 ## 🚀 Deployment
 
@@ -35,7 +37,7 @@ The application is configured for deployment to **Firebase Hosting**.
 1.  Navigate to the `frontend` directory.
 2.  Install the dependencies:
     ```bash
-    npm install
+    npm install --legacy-peer-deps
     ```
 
 ### Running the Application

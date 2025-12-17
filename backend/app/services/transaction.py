@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta
 from app.services import category as category_service
 from app.services import account as account_service
 from app.services import recurrence as recurrence_service
+from app.services.analysis_service import analysis_service 
 from app.schemas.recurrence import RecurrenceCreate, RecurrencePeriodicity
 from fastapi import HTTPException
 
@@ -60,6 +61,13 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
             db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
         )
     
+    # --- ANOMALY DETECTION (PRO) ---
+    if transaction_in.type == TransactionType.EXPENSE and not transaction_in.warning:
+        warning = analysis_service.analyze_transaction(user_id, transaction_in.amount, transaction_in.category_id)
+        if warning:
+            transaction_in.warning = warning
+    # -------------------------------
+
     data = transaction_in.model_dump()
     data['user_id'] = user_id # MARCA DONO
     

@@ -3,12 +3,14 @@
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
       <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-        <i class="pi pi-list"></i>
         Transações
       </h2>
       <p class="text-gray-500 dark:text-gray-400">Gerencie suas receitas e despesas.</p>
     </div>
     <div class="flex gap-2 w-full md:w-auto">
+      <p-button label="Importar Extrato" icon="pi pi-download" styleClass="w-full md:w-auto p-button-outlined p-button-secondary"
+        routerLink="/import" pTooltip="Importar Extrato">
+      </p-button>
       <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNew()" styleClass="w-full md:w-auto">
       </p-button>
       <p-button label="Exportar CSV" icon="pi pi-share-alt" severity="secondary" [outlined]="true"

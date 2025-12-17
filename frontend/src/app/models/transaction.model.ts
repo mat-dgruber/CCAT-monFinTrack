@@ -37,4 +37,5 @@ export interface Transaction {
   tithe_status?: 'NONE' | 'PENDING' | 'PAID';
   gross_amount?: number;
   credit_card_id?: string;
+  attachments?: string[];
 }

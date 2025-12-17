@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from .category import Category
 from .account import Account
@@ -60,6 +60,9 @@ class TransactionBase(BaseModel):
      
      # Anomaly Warning
      warning: Optional[str] = Field(None, description="Avisos de anomalias (gastos excessivos)")
+
+     # Attachments (Firebase Storage URLs)
+     attachments: Optional[List[str]] = Field(default=[], description="URLs de comprovantes ou anexos")
 
      # --- BLOCO DE PROTEÇÃO XSS ---
      @field_validator('title', 'description')

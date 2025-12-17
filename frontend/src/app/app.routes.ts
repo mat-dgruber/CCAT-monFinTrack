@@ -41,6 +41,10 @@ export const routes: Routes = [
         loadComponent: () => import('./components/invoice-dashboard/invoice-dashboard').then(m => m.InvoiceDashboard),
         canActivate: [authGuard]
       },
+      {
+        path: 'import',
+        loadComponent: () => import('./components/import-transactions/import-transactions.component').then(m => m.ImportTransactionsComponent)
+      },
       { path: 'cost-of-living', loadComponent: () => import('./components/cost-of-living/cost-of-living.component').then(m => m.CostOfLivingComponent) }
     ]
   },
