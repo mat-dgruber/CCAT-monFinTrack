@@ -19,17 +19,18 @@ from fastapi import HTTPException
 COLLECTION_NAME = "transactions"
 
 # Função Auxiliar Blindada
-def _update_account_balance(db, account_id: str, amount: float, type: str, user_id: str, revert: bool = False):
+def _update_account_balance(db, account_id: str, amount: float, type: str, user_id: str, revert: bool = False, destination_account_id: str = None):
     if not account_id:
         return
 
+    # SOURCE ACCOUNT
     acc_ref = db.collection("accounts").document(account_id)
     acc_doc = acc_ref.get()
     
-    # VERIFICAÇÃO DE SEGURANÇA: A conta existe E pertence ao usuário?
     if acc_doc.exists and acc_doc.to_dict().get('user_id') == user_id:
         current_balance = acc_doc.to_dict().get("balance", 0.0)
         
+        # LOGIC FOR SOURCE ACCOUNT
         if type == "expense":
             if revert:
                 current_balance += amount
@@ -40,10 +41,33 @@ def _update_account_balance(db, account_id: str, amount: float, type: str, user_
                 current_balance -= amount
             else:
                 current_balance += amount
-                
+        elif type == "transfer":
+            # Transfers always decrement source, unless reverting
+            if revert:
+                current_balance += amount
+            else:
+                current_balance -= amount
+
         acc_ref.update({"balance": current_balance})
     else:
         print(f"⚠️ Acesso negado ou conta inexistente para update de saldo. User: {user_id}, Acc: {account_id}")
+
+    # DESTINATION ACCOUNT (Only for Transfers with explicit destination)
+    if type == "transfer" and destination_account_id:
+        dest_ref = db.collection("accounts").document(destination_account_id)
+        dest_doc = dest_ref.get()
+        
+        if dest_doc.exists and dest_doc.to_dict().get('user_id') == user_id:
+            dest_balance = dest_doc.to_dict().get("balance", 0.0)
+            
+            if revert:
+                dest_balance -= amount # Reverting transfer: Remove from dest
+            else:
+                dest_balance += amount # Applying transfer: Add to dest
+                
+            dest_ref.update({"balance": dest_balance})
+        else:
+            print(f"⚠️ Acesso negado ou conta destino inexistente. User: {user_id}, DestAcc: {destination_account_id}")
 
 def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Transaction:
     db = get_db()
@@ -55,10 +79,20 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
 
     account = account_service.get_account(transaction_in.account_id)
     
+    destination_account = None
+    if transaction_in.destination_account_id:
+         destination_account = account_service.get_account(transaction_in.destination_account_id)
+
     # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO E NÃO FOR CARTÃO DE CRÉDITO
     if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
         _update_account_balance(
-            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+            db, 
+            transaction_in.account_id, 
+            transaction_in.amount, 
+            transaction_in.type, 
+            user_id, 
+            revert=False,
+            destination_account_id=transaction_in.destination_account_id 
         )
     
     # --- ANOMALY DETECTION (PRO) ---
@@ -77,6 +111,7 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
         id=transaction_ref.id, 
         category=category, 
         account=account, 
+        destination_account=destination_account,
         **data
     )
 
@@ -238,10 +273,17 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         if not account:
             account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="")
 
+        # Helper to get destination account if exists
+        dest_acc_id = data.get("destination_account_id")
+        destination_account = None
+        if dest_acc_id:
+             destination_account = account_service.get_account(dest_acc_id)
+
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
-            account=account, 
+            account=account,
+            destination_account=destination_account, 
             **data
         ))
         
@@ -271,13 +313,25 @@ def update_transaction(transaction_id: str, transaction_in: TransactionCreate, u
     # Estorna valor antigo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
     if old_status == TransactionStatus.PAID and not old_data.get("credit_card_id"):
         _update_account_balance(
-            db, old_data.get("account_id"), old_data.get("amount", 0), old_data.get("type"), user_id, revert=True
+            db, 
+            old_data.get("account_id"), 
+            old_data.get("amount", 0), 
+            old_data.get("type"), 
+            user_id, 
+            revert=True,
+            destination_account_id=old_data.get("destination_account_id")
         )
 
     # Aplica novo valor APENAS SE NOVO STATUS É PAGO E NÃO É CARTÃO
     if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
         _update_account_balance(
-            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+            db, 
+            transaction_in.account_id, 
+            transaction_in.amount, 
+            transaction_in.type, 
+            user_id, 
+            revert=False,
+            destination_account_id=transaction_in.destination_account_id
         )
     
     data = transaction_in.model_dump()
@@ -287,7 +341,12 @@ def update_transaction(transaction_id: str, transaction_in: TransactionCreate, u
     category = category_service.get_category(transaction_in.category_id)
     account = account_service.get_account(transaction_in.account_id)
     
-    return Transaction(id=transaction_id, category=category, account=account, **data)
+    dest_acc_id = data.get("destination_account_id")
+    destination_account = None
+    if dest_acc_id:
+         destination_account = account_service.get_account(dest_acc_id)
+
+    return Transaction(id=transaction_id, category=category, account=account, destination_account=destination_account, **data)
 
 def delete_transaction(transaction_id: str, user_id: str):
     db = get_db()
@@ -321,7 +380,15 @@ def delete_transaction(transaction_id: str, user_id: str):
             # Estorna Saldo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
             t_credit_card_id = t_data.get("credit_card_id")
             if t_account_id and t_status == TransactionStatus.PAID and not t_credit_card_id:
-                _update_account_balance(db, t_account_id, t_amount, t_type, user_id, revert=True)
+                _update_account_balance(
+                     db, 
+                     t_account_id, 
+                     t_amount, 
+                     t_type, 
+                     user_id, 
+                     revert=True,
+                     destination_account_id=t_data.get("destination_account_id")
+                )
             
             db.collection(COLLECTION_NAME).document(t_id).delete()
             deleted_count += 1
@@ -337,7 +404,15 @@ def delete_transaction(transaction_id: str, user_id: str):
 
     # Estorna Saldo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
     if account_id and status == TransactionStatus.PAID and not credit_card_id:
-        _update_account_balance(db, account_id, amount, t_type, user_id, revert=True)
+        _update_account_balance(
+             db, 
+             account_id, 
+             amount, 
+             t_type, 
+             user_id, 
+             revert=True,
+             destination_account_id=data.get("destination_account_id")
+        )
 
     doc_ref.delete()
     
@@ -380,10 +455,17 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
              data['title'] = data.pop('description')
              data['description'] = None
 
+        # Helper to get destination account if exists
+        dest_acc_id = data.get("destination_account_id")
+        destination_account = None
+        if dest_acc_id:
+             destination_account = account_service.get_account(dest_acc_id)
+
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
             account=account, 
+            destination_account=destination_account,
             **data
         ))
         

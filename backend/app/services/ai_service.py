@@ -528,3 +528,54 @@ def generate_budget_plan(user_id: str) -> str:
     except Exception as e:
         print(f"❌ Budget Plan Error: {e}")
         return "Erro ao gerar plano de orçamento."
+
+def analyze_cost_of_living(user_id: str, data: dict, tier: str = 'free') -> str:
+    """
+    Analisa os dados de custo de vida e gera insights (Premium).
+    """
+    if tier != 'premium':
+        return "A análise de IA do Custo de Vida é exclusiva para usuários Premium."
+        
+    if not GENAI_API_KEY:
+        return "IA Indisponível no momento."
+
+    try:
+        # data contém: { range, realized, committed, variable_avg, total_estimated_monthly }
+        
+        realized_total = data.get('realized', {}).get('average_total', 0)
+        committed_total = data.get('committed', {}).get('total', 0)
+        total_est = data.get('total_estimated_monthly', 0)
+        
+        cats = data.get('realized', {}).get('by_category', {})
+        top_cats = dict(sorted(cats.items(), key=lambda x: x[1], reverse=True)[:5])
+        
+        context = f"""
+        User Financial Data (Monthly Average):
+        - Total Estimated Cost: R${total_est:.2f}
+        - Fixed/Committed Cost: R${committed_total:.2f} ({(committed_total/total_est)*100 if total_est else 0:.1f}%)
+        - Variable Cost: R${realized_total:.2f} ({(realized_total/total_est)*100 if total_est else 0:.1f}%)
+        - Top Variable Categories: {json.dumps(top_cats, ensure_ascii=False)}
+        """
+        
+        model = genai.GenerativeModel(AI_MODEL_NAME)
+        prompt = f"""
+        Data:
+        {context}
+        
+        Role: Efficient Financial Strategist.
+        Task: Analyze the Cost of Living structure.
+        
+        Output (PT-BR, Markdown):
+        1. **Diagnóstico**: Is the fixed cost too high? (>50% is risky). Is the variable cost out of control?
+        2. **Alerta**: Point out the biggest offender in variable costs.
+        3. **Sugestão Prática**: One concrete step to lower the Cost of Living based on this data.
+        
+        Keep it concise (max 300 words). Use bullet points.
+        """
+        
+        response = model.generate_content(prompt)
+        return response.text
+
+    except Exception as e:
+        print(f"❌ Cost of Living Analysis Error: {e}")
+        return "Não foi possível gerar a análise. Tente novamente mais tarde."

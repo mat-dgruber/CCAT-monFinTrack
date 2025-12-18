@@ -48,6 +48,9 @@ class TransactionBase(BaseModel):
      
      # Se a transação for feita via cartão de crédito específico
      credit_card_id: Optional[str] = Field(None, description="ID do cartão de crédito aninhado")
+     
+     # Destination Account for Transfers
+     destination_account_id: Optional[str] = Field(None, description="ID da conta de destino (apenas para transferências)")
 
      # Campos opcionais de Dízimos e Ofertas
      tithe_amount: Optional[float] = Field(None, description="Valor do dízimo")
@@ -98,6 +101,7 @@ class Transaction(TransactionBase):
      id: str
      category: Category
      account: Account
+     destination_account: Optional[Account] = None
 
 
      class Config:

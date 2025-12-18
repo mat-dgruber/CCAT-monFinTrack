@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services import category as category_service
+from app.services import account as account_service
 from app.core.security import get_current_user
 
 router = APIRouter()
@@ -14,6 +15,9 @@ def setup_user_account(current_user: dict = Depends(get_current_user)):
         user_id = current_user['uid']
         # Garante categorias padrão
         category_service.ensure_default_categories(user_id)
+        
+        # Garante conta padrão
+        account_service.ensure_default_account(user_id)
         
         return {"status": "success", "message": "User setup completed"}
     except Exception as e:

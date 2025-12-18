@@ -46,6 +46,8 @@
               (onClick)="editAccount($event, acc)"></p-button>
              <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
               (onClick)="deleteAccount($event, acc.id!)"></p-button>
+             <p-button icon="pi pi-arrow-right-arrow-left" [text]="true" [rounded]="true" severity="info"
+              (onClick)="openTransfer($event, acc)" pTooltip="Transferir"></p-button>
         </div>
       </div>
 
@@ -242,6 +244,76 @@
         <div class="flex gap-2 justify-end mt-4">
             <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="cardVisible.set(false)"></p-button>
             <p-button label="Salvar Cartão" icon="pi pi-check" (onClick)="saveCard()"></p-button>
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- DIALOG DE TRANSFERÊNCIA -->
+<p-dialog [(visible)]="transferVisible" [style]="{width: '450px'}" header="Nova Transferência" [modal]="true" appendTo="body" styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <div [formGroup]="transferForm" class="flex flex-col gap-4 pt-2">
+
+            <!-- ORIGEM -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Conta de Origem</label>
+                <div class="flex items-center gap-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-900 opacity-80">
+                     @if(sourceAccount()) {
+                        <i [class]="sourceAccount()?.icon" [style.color]="sourceAccount()?.color"></i>
+                        <span class="font-bold">{{ sourceAccount()?.name }}</span>
+                     }
+                </div>
+            </div>
+
+            <!-- DESTINO -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Para onde vai o dinheiro?</label>
+                <p-select [options]="availableDestinationAccounts()" formControlName="destination_account_id"
+                          optionLabel="name" optionValue="id" placeholder="Selecione a conta de destino"
+                          [style]="{width: '100%'}">
+                    <ng-template pTemplate="item" let-acc>
+                        <div class="flex items-center gap-2">
+                            <i [class]="acc.icon" [style.color]="acc.color"></i>
+                            <span>{{ acc.name }}</span>
+                        </div>
+                    </ng-template>
+                     <ng-template pTemplate="selectedItem" let-acc>
+                        <div class="flex items-center gap-2" *ngIf="acc">
+                            <i [class]="acc.icon" [style.color]="acc.color"></i>
+                            <span>{{ acc.name }}</span>
+                        </div>
+                    </ng-template>
+                </p-select>
+            </div>
+
+            <!-- VALOR -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Valor</label>
+                <p-inputNumber formControlName="amount" mode="currency" currency="BRL" locale="pt-BR"
+                               placeholder="R$ 0,00" styleClass="w-full" class="w-full" autofocus></p-inputNumber>
+            </div>
+
+            <!-- FORMA DE TRANSFERÊNCIA -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Forma de Transferência</label>
+                 <p-select [options]="transferMethods" formControlName="payment_method"
+                          optionLabel="label" optionValue="value"
+                          [style]="{width: '100%'}">
+                </p-select>
+            </div>
+
+             <!-- DATA -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 dark:text-gray-200">Data</label>
+                <p-datepicker formControlName="date" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+            </div>
+
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <div class="flex gap-2 justify-end mt-4">
+            <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="transferVisible.set(false)"></p-button>
+            <p-button label="Confirmar Transferência" icon="pi pi-check" (onClick)="saveTransfer()" [disabled]="transferForm.invalid"></p-button>
         </div>
     </ng-template>
 </p-dialog>

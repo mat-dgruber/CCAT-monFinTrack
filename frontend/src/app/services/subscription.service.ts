@@ -12,7 +12,8 @@ export type Feature =
   'cost_of_living' |
   'import' |
   'credit_card_mgmt' |
-  'receipt_scanner';
+  'receipt_scanner' |
+  'ai_advisor';
 
 @Injectable({
   providedIn: 'root'

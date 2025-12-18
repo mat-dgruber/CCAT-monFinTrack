@@ -95,7 +95,8 @@ def ensure_default_categories(user_id: str):
         {"name": "Presentes/Doações", "icon": "pi pi-gift", "color": "#F472B6", "type": CategoryType.INCOME, "subcategories": []},
 
         # --- SISTEMA ---
-        {"name": "Fatura Cartão", "icon": "pi pi-credit-card", "color": "#94A3B8", "type": CategoryType.TRANSFER, "is_hidden": True}
+        {"name": "Fatura Cartão", "icon": "pi pi-credit-card", "color": "#94A3B8", "type": CategoryType.TRANSFER, "is_hidden": True},
+        {"name": "Transferencia entre contas", "icon": "pi pi-arrow-right-arrow-left", "color": "#94A3B8", "type": CategoryType.TRANSFER, "is_hidden": True}
     ]
 
     # Batch para criação eficiente

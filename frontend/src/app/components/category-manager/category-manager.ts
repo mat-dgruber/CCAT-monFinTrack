@@ -112,7 +112,13 @@ export class CategoryManager implements OnInit {
     this.loading.set(true);
     this.categoryService.getCategories().subscribe({
       next: (data) => {
-        this.categories.set(data.filter(c => !c.is_hidden));
+        const sorted = data
+          .filter(c => !c.is_hidden)
+          .sort((a, b) => {
+            if (a.type !== b.type) return a.type.localeCompare(b.type);
+            return a.name.localeCompare(b.name);
+          });
+        this.categories.set(sorted);
         this.loading.set(false);
       },
       error: (err) => {

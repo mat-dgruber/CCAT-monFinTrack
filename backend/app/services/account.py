@@ -1,5 +1,5 @@
 from app.core.database import get_db
-from app.schemas.account import AccountCreate, Account
+from app.schemas.account import AccountCreate, Account, AccountType
 from fastapi import HTTPException
 
 COLLECTION_NAME = "accounts"
@@ -81,3 +81,24 @@ def delete_all_accounts(user_id: str):
         deleted_count += count
         
     return deleted_count
+
+def ensure_default_account(user_id: str):
+    """
+    Garante que o usuário tenha pelo menos uma conta.
+    Se não tiver nenhuma, cria uma conta genérica padrão.
+    """
+    existing_accounts = list_accounts(user_id)
+    
+    if not existing_accounts:
+        # Criar conta padrão
+        default_account = AccountCreate(
+            name="Sua Conta Bancária (Personalise)",
+            type=AccountType.CHECKING,
+            balance=0.0,
+            color="#3b82f6",
+            icon="pi pi-wallet"
+        )
+        create_account(default_account, user_id)
+        return True
+    
+    return False

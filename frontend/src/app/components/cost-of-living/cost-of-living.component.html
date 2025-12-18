@@ -167,6 +167,45 @@
       </div>
     </div>
 
+    <!-- Insufficient Data Warning -->
+    <div class="mb-6" *ngIf="insufficientData()">
+        <p-message severity="info" text="Poucos dados para análise. Adicione transações ou configure recorrências para ver seu Custo de Vida." styleClass="w-full block"></p-message>
+    </div>
+
+    <!-- AI Analysis (Premium) -->
+    <div class="mb-6" *ngIf="canUseAi() && !insufficientData()">
+        <div class="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+             <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+
+            <div class="flex items-center justify-between mb-4 relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                         <i class="pi pi-sparkles text-yellow-300 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg m-0">Análise Inteligente</h3>
+                         <p class="text-white/80 text-sm m-0">Insights Personalizados da IA</p>
+                    </div>
+                </div>
+                <p-button
+                    *ngIf="!aiAnalysis() && !aiLoading()"
+                    label="Gerar Análise"
+                    icon="pi pi-bolt"
+                    (onClick)="analyzeWithAi()"
+                    styleClass="p-button-sm p-button-outlined text-white border-white hover:bg-white/10">
+                </p-button>
+                <div *ngIf="aiLoading()">
+                    <i class="pi pi-spin pi-spinner text-2xl"></i>
+                </div>
+            </div>
+
+            <div *ngIf="aiAnalysis()" class="bg-white/10 rounded-lg p-4 backdrop-blur-sm border border-white/10 animate-fade-in">
+                <div class="prose prose-invert max-w-none text-sm leading-relaxed text-white/90" [innerHTML]="formattedAnalysis()"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Spending Anomalies Alert -->
     <div class="mb-6" *ngIf="anomalies().length > 0">
       <div

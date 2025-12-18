@@ -52,4 +52,9 @@ export class AIService {
   generateMonthlyReport(month: number, year: number): Observable<{ content: string }> {
     return this.http.get<{ content: string }>(`${this.apiUrl}/report`, { params: { month, year } });
   }
+
+  analyzeCostOfLiving(data: any): Observable<{ analysis: string }> {
+    // Touching file to force recompile
+    return this.http.post<{ analysis: string }>(`${this.apiUrl}/cost-of-living-analysis`, { data });
+  }
 }

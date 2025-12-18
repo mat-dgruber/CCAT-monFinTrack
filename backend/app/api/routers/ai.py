@@ -118,3 +118,20 @@ def generate_report(month: int, year: int, current_user: dict = Depends(get_curr
     limiter.check_limit(user_id, 'chat', tier) # Use chat quota
     
     return {"content": ai_service.generate_monthly_report(user_id, month, year, tier=tier)}
+
+class CostOfLivingAnalysisRequest(BaseModel):
+    data: dict
+
+@router.post("/cost-of-living-analysis")
+def analyze_cost_of_living_endpoint(request: CostOfLivingAnalysisRequest, current_user: dict = Depends(get_current_user)):
+    user_id = current_user['uid']
+    prefs = preference_service.get_preferences(user_id)
+    tier = prefs.subscription_tier or 'free'
+    
+    if tier != 'premium':
+        raise HTTPException(status_code=403, detail="Feature exclusive for Premium users.")
+
+    limiter.check_limit(user_id, 'chat', tier)
+    
+    analysis = ai_service.analyze_cost_of_living(user_id, request.data, tier=tier)
+    return {"analysis": analysis}
