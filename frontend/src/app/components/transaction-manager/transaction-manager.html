@@ -100,6 +100,19 @@
               </th>
               <th>
                 <div class="flex items-center gap-2">
+                  Tipo
+                  <p-columnFilter field="type" matchMode="equals" display="menu" [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-select [ngModel]="value" [options]="typeOptions" (onChange)="filter($event.value)" placeholder="Qualquer" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                             <ng-template let-option pTemplate="item">
+                                <span [class]="option.value === 'expense' ? 'text-red-500' : (option.value === 'income' ? 'text-green-500' : 'text-gray-500')">{{option.label}}</span>
+                            </ng-template>
+                        </p-select>
+                    </ng-template>
+                  </p-columnFilter>
+                </div>
+              <th>
+                <div class="flex items-center gap-2">
                   Título
                   <p-columnFilter type="text" field="title" display="menu" [showMatchModes]="false"
                     [showOperator]="false" [showAddButton]="false" matchMode="contains"></p-columnFilter>
@@ -160,7 +173,7 @@
           <ng-template pTemplate="groupheader" let-t>
             @if (!loading()) {
             <tr pRowGroupHeader>
-              <td colspan="7">
+              <td colspan="8">
                 <div class="flex flex-col gap-2 py-2">
                   <!-- Year Separator -->
                   <div *ngIf="t.isNewYear" class="flex items-center gap-4 mt-4 mb-2">
@@ -196,6 +209,7 @@
                   <p-skeleton width="100px"></p-skeleton>
                 </div>
               </td>
+              <td><p-skeleton width="60px"></p-skeleton></td>
               <td>
                 <div class="flex flex-col gap-1">
                   <p-skeleton width="150px"></p-skeleton>
@@ -226,6 +240,11 @@
                   </div>
                   <span class="text-sm font-medium">{{t.category?.name}}</span>
                 </div>
+              </td>
+              <td>
+                   <span [class]="t.type === 'expense' ? 'text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded text-xs' : (t.type === 'income' ? 'text-green-500 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-xs' : 'text-gray-500 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded text-xs')">
+                        {{ t.type === 'expense' ? 'Despesa' : (t.type === 'income' ? 'Receita' : 'Transferência') }}
+                    </span>
               </td>
               <td>
                 <div class="font-medium text-gray-900 dark:text-white" [pTooltip]="t.description || t.title">
@@ -259,9 +278,9 @@
                   <i *ngIf="t.is_auto_pay" class="pi pi-sync text-blue-500" pTooltip="Pagamento Automático"></i>
                 </div>
               </td>
-          <td class="text-right">
+            <td class="text-right">
                 <span
-                  [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-white font-bold' : (t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold')">
+                  [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-gray-400 dark:text-gray-500 font-bold' : (t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold')">
                   {{ (t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? '-' : (t.type === 'expense' ? '-' : '+') }} {{t.amount | currency:'BRL'}}
                 </span>
               </td>
@@ -351,7 +370,7 @@
               </div>
             </div>
             <span
-              [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-white font-bold' : (t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold')">
+              [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-gray-400 dark:text-gray-500 font-bold' : (t.type === 'expense' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-600 dark:text-green-400 font-bold')">
               {{ (t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? '-' : (t.type === 'expense' ? '-' : '+') }} {{t.amount | currency:'BRL'}}
             </span>
           </div>
@@ -545,6 +564,15 @@
               </div>
             </ng-template>
           </p-select>
+        </div>
+
+        <!-- Type Filter (Mobile) -->
+        <div class="flex flex-col gap-2">
+            <span class="font-bold text-gray-700 dark:text-gray-200">Tipo</span>
+            <p-select [ngModel]="mobileTypeFilter()" [options]="typeOptions"
+              (onChange)="mobileTypeFilter.set($event.value)" placeholder="Qualquer" optionLabel="label" optionValue="value"
+              styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+            </p-select>
         </div>
 
         <!-- Account Filter -->

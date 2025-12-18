@@ -156,14 +156,16 @@ export class Dashboard implements OnInit {
       }
     });
 
-    this.analysisService.getMonthlyAverages().subscribe({
-      next: (data) => {
-        if (data && data.realized) {
-            this.costOfLiving.set(data.realized.average_total);
-        }
-      },
-      error: (err) => console.error('Error fetching cost of living', err)
-    });
+    if (this.subscriptionService.canAccess('cost_of_living')) {
+      this.analysisService.getMonthlyAverages().subscribe({
+        next: (data) => {
+          if (data && data.realized) {
+              this.costOfLiving.set(data.realized.average_total);
+          }
+        },
+        error: (err) => console.error('Error fetching cost of living', err)
+      });
+    }
   }
 
   setupChart(data: DashboardSummary) {

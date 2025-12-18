@@ -62,7 +62,7 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     SkeletonModule,
     ConfirmDialogModule,
     InputNumberModule,
-    ImportTransactionsComponent
+    ConfirmDialogModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
@@ -139,6 +139,15 @@ export class TransactionManager implements OnInit, AfterViewInit {
 
   // View State for Stats
   currentViewTransactions = signal<Transaction[]>([]);
+
+  // Type Options for Filter
+  typeOptions = [
+    { label: 'Despesa', value: 'expense' },
+    { label: 'Receita', value: 'income' },
+    { label: 'Transferência', value: 'transfer' }
+  ];
+
+  mobileTypeFilter = signal<string | null>(null);
 
   paymentMethods = [
     { label: 'Cartão de Crédito', value: 'credit_card' },
@@ -279,7 +288,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
     for (const t of list) {
       const amount = t.amount;
       if (t.type === 'income') totalIncome += amount;
-      else totalExpense += amount;
+      else if (t.type === 'expense') totalExpense += amount;
 
       if (amount > maxTx) maxTx = amount;
       if (t.type === 'expense' && amount > maxExpense) maxExpense = amount;
@@ -339,6 +348,12 @@ export class TransactionManager implements OnInit, AfterViewInit {
       filtered = filtered.filter(t => t.account?.name === acc.name);
     }
 
+    // 2.5 Apply Type Filter
+    const type = this.mobileTypeFilter();
+    if (type) {
+        filtered = filtered.filter(t => t.type === type);
+    }
+
     // 3. Apply Title/Description Filter
     const title = this.mobileTitleFilter();
     if (title) {
@@ -386,6 +401,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
   clearMobileFilters() {
     this.mobileCategoryFilter.set(null);
     this.mobileAccountFilter.set(null);
+    this.mobileTypeFilter.set(null);
     this.mobileTitleFilter.set('');
     this.mobileStatusFilter.set(null);
     this.mobileTitheStatusFilter.set(null);

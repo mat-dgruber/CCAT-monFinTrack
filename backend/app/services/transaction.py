@@ -1,6 +1,6 @@
 from google.cloud import firestore
 from app.core.database import get_db
-from app.schemas.transaction import TransactionCreate, Transaction, TransactionStatus
+from app.schemas.transaction import TransactionCreate, Transaction, TransactionStatus, TransactionType
 from app.schemas.category import Category 
 from app.schemas.account import Account 
 from app.core.date_utils import get_month_range
@@ -55,8 +55,8 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
 
     account = account_service.get_account(transaction_in.account_id)
     
-    # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO
-    if transaction_in.status == TransactionStatus.PAID:
+    # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO E NÃO FOR CARTÃO DE CRÉDITO
+    if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
         _update_account_balance(
             db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
         )
@@ -266,14 +266,16 @@ def update_transaction(transaction_id: str, transaction_in: TransactionCreate, u
     
     old_status = old_data.get("status", TransactionStatus.PAID)
     
-    # Estorna valor antigo APENAS SE ESTAVA PAGO
-    if old_status == TransactionStatus.PAID:
+    start_balance_update = False
+    
+    # Estorna valor antigo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
+    if old_status == TransactionStatus.PAID and not old_data.get("credit_card_id"):
         _update_account_balance(
             db, old_data.get("account_id"), old_data.get("amount", 0), old_data.get("type"), user_id, revert=True
         )
 
-    # Aplica novo valor APENAS SE NOVO STATUS É PAGO
-    if transaction_in.status == TransactionStatus.PAID:
+    # Aplica novo valor APENAS SE NOVO STATUS É PAGO E NÃO É CARTÃO
+    if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
         _update_account_balance(
             db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
         )
@@ -316,8 +318,9 @@ def delete_transaction(transaction_id: str, user_id: str):
             t_account_id = t_data.get("account_id")
             t_status = t_data.get("status", TransactionStatus.PAID)
             
-            # Estorna Saldo APENAS SE ESTAVA PAGO
-            if t_account_id and t_status == TransactionStatus.PAID:
+            # Estorna Saldo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
+            t_credit_card_id = t_data.get("credit_card_id")
+            if t_account_id and t_status == TransactionStatus.PAID and not t_credit_card_id:
                 _update_account_balance(db, t_account_id, t_amount, t_type, user_id, revert=True)
             
             db.collection(COLLECTION_NAME).document(t_id).delete()

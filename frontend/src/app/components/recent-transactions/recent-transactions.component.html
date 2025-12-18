@@ -60,7 +60,7 @@
               <!-- Right: Amount + Arrow -->
               <div class="flex items-center gap-4">
                 <span class="font-bold"
-                  [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-white font-bold' : (t.type === 'expense' ? 'text-red-500' : 'text-green-500')">
+                  [class]="(t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? 'text-gray-400 dark:text-gray-500 font-bold' : (t.type === 'expense' ? 'text-red-500' : 'text-green-500')">
                   {{ (t.category?.is_hidden || t.category?.name === 'Fatura Cartão') ? '-' : (t.type === 'expense' ? "-" : "+") }}
                   {{ t.amount | currency : "BRL" }}
                 </span>

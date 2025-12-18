@@ -4,6 +4,7 @@
     <div class="header-content">
       <i class="pi pi-sparkles"></i>
       <span *ngIf="expanded()">Assistente Financeiro</span>
+      <span *ngIf="!expanded()" class="collapsed-label ml-2">Chat IA</span>
     </div>
     <div class="header-actions" *ngIf="expanded()">
       <i

@@ -6,24 +6,7 @@
       Visão Geral
     </h2>
     <div class="flex gap-2">
-      <p-button
-        label="Resumo IA"
-        icon="pi pi-sparkles"
-        styleClass="p-button-outlined p-button-help"
-        (onClick)="generateReport()"
-        *ngIf="subscriptionService.canAccess('monthly_report')"
-        pTooltip="Disponível no plano PRO"
-        tooltipPosition="bottom"
-      ></p-button>
-      <p-button
-        *ngIf="!subscriptionService.canAccess('monthly_report')"
-        label="Resumo IA"
-        icon="pi pi-lock"
-        styleClass="p-button-outlined p-button-secondary"
-        pTooltip="Upgrade para PRO necessário"
-        tooltipPosition="bottom"
-        [disabled]="true"
-      ></p-button>
+      <!-- AI Report Button moved to FAB -->
       <app-month-selector></app-month-selector>
     </div>
   </div>
@@ -122,6 +105,7 @@
       </div>
     </div>
 
+    @if (subscriptionService.canAccess('cost_of_living')) {
     <div
       class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
       routerLink="/cost-of-living"
@@ -134,6 +118,15 @@
       </div>
       <p class="text-xs text-gray-400 mt-2">Clique para ver detalhes</p>
     </div>
+    } @else {
+      <!-- Placeholder for Free Users to upsell? Or just hide. User asked to remove. -->
+      <!-- Keeping grid structure by adding a placeholder or just letting grid flow. 
+           If we remove it, the grid might have a hole if it's strictly 4 cols.
+           Let's use a "Upgrade to Pro" placeholder if desired, but user said "remove".
+           However, grid-cols-4 means we need 4 items or it will wrap weirdly if we want a row.
+           Actually, CSS grid will just place 3 items. That's fine.
+      -->
+    }
   </div>
 
   <!-- 2. Accounts (Contas) - Above Charts -->
@@ -142,6 +135,7 @@
   </div>
 
   <!-- Invoices Widget -->
+  @if (subscriptionService.canAccess('credit_card_mgmt')) {
   <div class="mb-8">
     <div
       class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
@@ -163,6 +157,7 @@
     </div>
     <app-invoice-dashboard [isWidget]="true"></app-invoice-dashboard>
   </div>
+  }
 
   <!-- 3. Charts Section -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -245,4 +240,29 @@
     </div>
     }
   </p-dialog>
+  
+  <!-- AI Report FAB -->
+  <div class="fixed bottom-6 left-6 lg:left-72 z-50 flex flex-col gap-2">
+    <!-- Pro Button -->
+    <button
+        *ngIf="subscriptionService.canAccess('monthly_report')"
+        (click)="generateReport()"
+        class="group relative flex items-center justify-center gap-2 px-4 h-14 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-900"
+        pTooltip="Gerar Resumo IA"
+        tooltipPosition="right"
+    >
+        <i class="pi pi-sparkles text-xl text-white animate-pulse"></i>
+        <span class="text-white font-bold whitespace-nowrap">Relatório IA</span>
+    </button>
+
+    <!-- Locked Button -->
+    <button
+        *ngIf="!subscriptionService.canAccess('monthly_report')"
+        class="flex items-center justify-center w-14 h-14 bg-gray-200 dark:bg-slate-700 rounded-full shadow-md cursor-not-allowed opacity-75"
+        pTooltip="Resumo IA (Pro)"
+        tooltipPosition="right"
+    >
+        <i class="pi pi-lock text-xl text-gray-500 dark:text-gray-400"></i>
+    </button>
+  </div>
 </div>
