@@ -81,6 +81,14 @@ uvicorn app.main:app --reload
 
 O servidor iniciará por padrão em `http://127.0.0.1:8000`.
 
+## 🧪 Testes
+
+Para executar os testes unitários:
+
+```bash
+python -m pytest
+```
+
 ## 📖 Documentação da API
 
 O FastAPI gera automaticamente a documentação interativa da API. Com o servidor rodando, acesse:

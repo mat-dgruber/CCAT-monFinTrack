@@ -132,6 +132,7 @@ export class TransactionForm implements OnInit {
   accounts = signal<Account[]>([]);
   editingId = signal<string | null>(null);
   isUploading = signal(false);
+  isScanning = signal(false);
 
   @Output() save = new EventEmitter<void>();
 
@@ -271,6 +272,13 @@ export class TransactionForm implements OnInit {
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
+        if (this.preferences()?.subscription_tier !== 'premium') {
+             this.messageService.add({severity: 'warn', summary: 'Upgrade Necessário', detail: 'Leitura de comprovante é exclusiva Premium.'});
+             event.target.value = ''; // Reset input
+             return;
+        }
+
+        this.isScanning.set(true);
         this.messageService.add({ severity: 'info', summary: 'Processando...', detail: 'Lendo comprovante com IA...', life: 3000 });
 
         this.aiService.scanReceipt(file).subscribe({
@@ -279,6 +287,8 @@ export class TransactionForm implements OnInit {
                 if (data.title) patch.title = data.title;
                 if (data.amount) patch.amount = data.amount;
                 if (data.date) patch.date = new Date(data.date);
+                if (data.description) patch.description = data.description;
+                if (data.payment_method) patch.payment_method = data.payment_method;
 
                 // Try to match category
                 if (data.category_id) {
@@ -286,12 +296,20 @@ export class TransactionForm implements OnInit {
                     if (cat) patch.category = cat;
                 }
 
+                // Suggest Account/Card if returned
+                if (data.account_id) {
+                     const acc = this.accounts().find(a => a.id === data.account_id);
+                     if (acc) patch.account = acc;
+                }
+
                 this.form.patchValue(patch);
                 this.messageService.add({ severity: 'success', summary: 'Dados Extraídos!', detail: 'Verifique os campos preenchidos.' });
+                this.isScanning.set(false);
             },
             error: (err) => {
                 console.error('Scan Error', err);
                 this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao ler comprovante.' });
+                this.isScanning.set(false);
             }
         });
     }
@@ -638,6 +656,9 @@ export class TransactionForm implements OnInit {
                  if (data.title) patch.title = data.title;
                  if (data.amount) patch.amount = data.amount;
                  if (data.date) patch.date = new Date(data.date);
+                 if (data.description) patch.description = data.description;
+                 if (data.payment_method) patch.payment_method = data.payment_method;
+
                  if (data.category_id) {
                      const cat = this.categories().find(c => c.id === data.category_id);
                      if (cat) patch.category = cat;

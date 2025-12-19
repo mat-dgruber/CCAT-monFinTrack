@@ -120,7 +120,7 @@
     </div>
     } @else {
       <!-- Placeholder for Free Users to upsell? Or just hide. User asked to remove. -->
-      <!-- Keeping grid structure by adding a placeholder or just letting grid flow. 
+      <!-- Keeping grid structure by adding a placeholder or just letting grid flow.
            If we remove it, the grid might have a hole if it's strictly 4 cols.
            Let's use a "Upgrade to Pro" placeholder if desired, but user said "remove".
            However, grid-cols-4 means we need 4 items or it will wrap weirdly if we want a row.
@@ -220,29 +220,36 @@
     header="Relatório Mensal IA 🤖"
     [(visible)]="showReportDialog"
     [modal]="true"
-    [style]="{ width: '90vw', maxWidth: '600px' }"
+    [style]="{ width: '90vw', maxWidth: '800px' }"
     [draggable]="false"
     [resizable]="false"
     [dismissableMask]="true"
+    styleClass="ai-report-dialog"
   >
     @if (reportLoading) {
-    <div class="flex flex-col items-center justify-center p-6 text-center">
-      <i class="pi pi-spin pi-spinner text-4xl mb-4 text-purple-500"></i>
-      <p class="text-gray-600 dark:text-gray-300">
-        Analisando suas finanças... 🧠
+    <div class="flex flex-col items-center justify-center p-12 text-center h-[400px]">
+      <div class="relative mb-6">
+        <div class="absolute inset-0 bg-purple-500 blur-xl opacity-20 animate-pulse rounded-full"></div>
+        <i class="pi pi-spin pi-sparkles text-6xl text-purple-600 relative z-10 animate-spin-slow"></i>
+      </div>
+      <h3 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 mb-2">
+        Gerando Insights...
+      </h3>
+      <p class="text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+        Nosso "Senior Financial Advisor" está analisando suas transações para encontrar oportunidades de economia. 🧠
       </p>
     </div>
     } @else {
     <div
-      class="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
+      class="ai-report-container prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200"
     >
       <markdown [data]="reportContent"></markdown>
     </div>
     }
   </p-dialog>
-  
+
   <!-- AI Report FAB -->
-  <div class="fixed bottom-6 left-6 lg:left-72 z-50 flex flex-col gap-2">
+  <div class="fixed bottom-24 md:bottom-6 left-6 lg:left-72 z-50 flex flex-col gap-2">
     <!-- Pro Button -->
     <button
         *ngIf="subscriptionService.canAccess('monthly_report')"
@@ -265,4 +272,6 @@
         <i class="pi pi-lock text-xl text-gray-500 dark:text-gray-400"></i>
     </button>
   </div>
+
+  <p-confirmDialog></p-confirmDialog>
 </div>

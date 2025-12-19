@@ -1,0 +1,124 @@
+// Custom styling for AI Report Markdown
+.ai-report-container {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+
+  // Global typography adjustments
+  ::ng-deep {
+    h1, h2, h3, h4 {
+      color: var(--text-color);
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      background: linear-gradient(90deg, #6366f1, #a855f7); // Indigo to Purple
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+      padding-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--primary-color); // Use theme primary
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1rem;
+      background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.05), transparent);
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+      border-radius: 0 8px 8px 0;
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      color: var(--text-color);
+      margin-top: 1.25rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--text-color);
+      opacity: 0.9;
+    }
+
+    strong {
+      color: var(--primary-color); // Highlight key values
+      font-weight: 700;
+    }
+
+    ul, ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      &::marker {
+        color: var(--primary-color);
+      }
+    }
+
+    hr {
+      border: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--surface-border), transparent);
+      margin: 2rem 0;
+    }
+
+    blockquote {
+      border-left: 4px solid #a855f7; // Purple accent
+      background: rgba(168, 85, 247, 0.05);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      margin: 1.5rem 0;
+    }
+
+    // Money/Numbers specific styling detection if possible via class (hard in raw md)
+    // relying on strong tags for now.
+  }
+}
+
+// Dialog Overrides for this specific report
+:host ::ng-deep .p-dialog {
+    &.ai-report-dialog {
+        background: var(--surface-card);
+        border: 1px solid var(--surface-border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border-radius: 16px;
+
+        .p-dialog-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border-bottom: none;
+            border-radius: 16px 16px 0 0;
+            padding: 1.5rem;
+
+            .p-dialog-title {
+                font-size: 1.5rem;
+                font-weight: 800;
+                letter-spacing: -0.025em;
+            }
+
+            .p-dialog-header-icon {
+                color: rgba(255,255,255,0.8);
+                &:hover {
+                    color: white;
+                    background: rgba(255,255,255,0.1);
+                }
+            }
+        }
+
+        .p-dialog-content {
+            padding: 2rem;
+            border-radius: 0 0 16px 16px;
+        }
+    }
+}

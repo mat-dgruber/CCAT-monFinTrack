@@ -254,7 +254,7 @@
               </td>
               <td>
                 <span class="text-sm text-gray-600 dark:text-gray-300">
-                  {{ t.account?.name || 'Conta' }}
+                  {{ t.account ? t.account.name : 'Conta' }}
                 </span>
               </td>
               <td>
@@ -379,7 +379,7 @@
             <div class="flex items-center gap-2">
               <span
                 class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                {{ t.account?.name || 'Conta' }}
+                {{ t.account ? t.account.name : 'Conta' }}
               </span>
               <p-tag [severity]="t.status === 'paid' ? 'success' : 'warn'"
                 [value]="t.status === 'paid' ? 'Pago' : 'Pendente'" [rounded]="true" styleClass="text-xs"></p-tag>

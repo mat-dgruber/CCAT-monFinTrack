@@ -1,0 +1,429 @@
+<div class="card fade-in">
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3">
+      <div>
+        <h2 class="m-0">Planejador de Dívidas</h2>
+        <span class="text-500 block mt-1">Gerencie suas dívidas e simule estratégias de quitação.</span>
+      </div>
+      <div class="flex gap-2 w-full md:w-auto">
+          <p-button label="Simulação Habitacional" icon="pi pi-home" styleClass="p-button-outlined p-button-secondary w-full md:w-auto" (onClick)="activeIndex.set(2)"></p-button>
+          <p-button label="Consultor IA" icon="pi pi-sparkles" styleClass="w-full md:w-auto" (onClick)="openAdvice()"></p-button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <p-tabs [value]="activeIndex()" (valueChange)="activeIndex.set($any($event))">
+      <p-tablist>
+          <p-tab [value]="0">
+              <i class="pi pi-list mr-2"></i>
+              Minhas Dívidas
+          </p-tab>
+          <p-tab [value]="1">
+              <i class="pi pi-chart-line mr-2"></i>
+              Plano de Pagamento
+          </p-tab>
+          <p-tab [value]="2">
+              <i class="pi pi-home mr-2"></i>
+              Financiamento
+          </p-tab>
+          <p-tab [value]="3">
+              <i class="pi pi-file-pdf mr-2"></i>
+              IA Scanner
+          </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+          <!-- TAB 1: GERENCIAR DÍVIDAS -->
+          <p-tabpanel [value]="0">
+              <div class="flex justify-between items-center mb-3">
+                  <span class="text-xl font-semibold">Lista de Dívidas</span>
+                  <p-button label="Nova Dívida" icon="pi pi-plus" (onClick)="openNewDebt()" styleClass="p-button-sm"></p-button>
+              </div>
+
+              <!-- SKELETON LOADING -->
+              <div *ngIf="loading()" class="fade-in">
+                  <div class="flex justify-between items-center px-3 py-2 border-bottom-1 surface-border">
+                      <p-skeleton width="10rem" height="1.5rem"></p-skeleton>
+                      <p-skeleton width="8rem" height="2rem" borderRadius="16px"></p-skeleton>
+                  </div>
+                  <div class="p-4 surface-card border-round border-1 surface-border">
+                      <div class="flex flex-col gap-4">
+                          <div class="flex justify-between" *ngFor="let i of [1,2,3,4,5]">
+                              <div class="flex gap-4 w-full">
+                                  <p-skeleton width="20%" height="1.5rem"></p-skeleton>
+                                  <p-skeleton width="15%" height="1.5rem"></p-skeleton>
+                                  <p-skeleton width="15%" height="1.5rem"></p-skeleton>
+                                  <p-skeleton width="10%" height="1.5rem"></p-skeleton>
+                                  <div class="flex gap-2 ml-auto">
+                                      <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                                      <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- DATA TABLE -->
+              <p-table [value]="debts()" *ngIf="!loading()" styleClass="p-datatable-sm" [rowHover]="true">
+                  <ng-template pTemplate="header">
+                  <tr>
+                      <th>Nome</th>
+                      <th>Tipo</th>
+                      <th>Saldo Devedor</th>
+                      <th>Juros</th>
+                      <th class="text-right">Ações</th>
+                  </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-debt>
+                  <tr>
+                      <td class="font-medium">{{ debt.name }}</td>
+                      <td>
+                        <!-- Simple logic to color code badges based on type keywords -->
+                        <span class="badge-soft"
+                              [ngClass]="{
+                                'blue': debt.debt_type.includes('card'),
+                                'purple': debt.debt_type.includes('loan'),
+                                'orange': debt.debt_type.includes('financing'),
+                                'green': debt.debt_type.includes('consigned')
+                              }">
+                            {{ getDebtLabel(debt.debt_type) }}
+                        </span>
+                      </td>
+                      <td class="text-red-500 font-bold text-lg">{{ debt.total_amount | currency:'BRL' }}</td>
+                      <td>
+                          <div class="flex flex-column">
+                              <span class="font-bold">{{ debt.interest_period === 'yearly' ? convertToMonthly(debt.interest_rate) + '%' : debt.interest_rate + '%' }} <span class="text-xs font-normal text-500">a.m.</span></span>
+                              <span *ngIf="debt.interest_period === 'yearly'" class="text-xs text-500">({{debt.interest_rate}}% a.a.)</span>
+                          </div>
+                      </td>
+                      <td class="text-right">
+                        <div class="flex justify-content-end gap-1">
+                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary" (onClick)="editDebt(debt)"></p-button>
+                            <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" (onClick)="deleteDebt(debt.id)"></p-button>
+                        </div>
+                      </td>
+                  </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                      <tr>
+                          <td colspan="5">
+                              <div class="empty-state">
+                                  <i class="pi pi-wallet"></i>
+                                  <p class="m-0 font-medium text-lg">Você ainda não cadastrou dívidas.</p>
+                                  <p class="mt-1 text-sm">Adicione suas pendências para gerar um plano de pagamento.</p>
+                                  <p-button label="Adicionar Agora" [link]="true" (onClick)="openNewDebt()"></p-button>
+                              </div>
+                          </td>
+                      </tr>
+                  </ng-template>
+              </p-table>
+          </p-tabpanel>
+
+          <!-- TAB 2: PLANO DE PAGAMENTO -->
+          <p-tabpanel [value]="1">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div class="col-span-12 md:col-span-4">
+                      <div class="surface-card p-4 border-round border-1 surface-border h-full">
+                          <h3 class="mt-0 mb-4 text-primary">Configurar Plano</h3>
+                          <div class="flex flex-col gap-4">
+                              <div class="field">
+                                  <label class="font-bold">Orçamento Mensal (R$)</label>
+                                  <p-inputNumber [(ngModel)]="monthlyBudget" mode="currency" currency="BRL" locale="pt-BR" placeholder="Quanto sobe por mês?"></p-inputNumber>
+                                  <small class="block mt-2 text-500 line-height-3">Valor total disponível para pagar dívidas (incluindo mínimos).</small>
+                              </div>
+                              <div class="field">
+                                  <label class="font-bold">Estratégia</label>
+                                  <p-selectButton [options]="strategies" [(ngModel)]="selectedStrategy" optionLabel="name" optionValue="value" styleClass="w-full"></p-selectButton>
+
+                                  <div class="mt-3 p-3 surface-ground dark:surface-card border-round text-sm" *ngIf="selectedStrategy === 'snowball'">
+                                      <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+                                      <span class="font-medium text-blue-500">Bola de Neve:</span> Elimina dívidas menores primeiro. Ótimo para motivação rápida.
+                                  </div>
+                                  <div class="mt-3 p-3 surface-ground dark:surface-card border-round text-sm" *ngIf="selectedStrategy === 'avalanche'">
+                                      <i class="pi pi-info-circle text-green-500 mr-2"></i>
+                                      <span class="font-medium text-green-500">Avalanche:</span> Foca nos juros mais altos. Matematicamente mais eficiente.
+                                  </div>
+                              </div>
+                              <p-button label="Gerar Simulação" icon="pi pi-bolt" (onClick)="generatePlan()" [loading]="simulating()" styleClass="w-full"></p-button>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-8">
+                      <div *ngIf="paymentPlan()" class="fade-in">
+                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                              <div class="col-span-1">
+                                  <div class="stat-card">
+                                      <span class="block text-500 text-sm mb-2">Tempo Total</span>
+                                      <span class="text-2xl font-bold text-primary">{{ paymentPlan()!.total_months }} meses</span>
+                                  </div>
+                              </div>
+                              <div class="col-span-1">
+                                  <div class="stat-card">
+                                      <span class="block text-500 text-sm mb-2">Juros Pagos</span>
+                                      <span class="text-2xl font-bold text-red-500">{{ paymentPlan()!.total_interest_paid | currency:'BRL' }}</span>
+                                  </div>
+                              </div>
+                              <div class="col-span-1">
+                                  <div class="stat-card">
+                                      <span class="block text-500 text-sm mb-2">Liberdade Financeira</span>
+                                      <span class="text-2xl font-bold text-green-500">{{ paymentPlan()!.payoff_date | date:'MM/yyyy' }}</span>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="surface-card border-round p-3 border-1 surface-border">
+                            <h4 class="m-0 mb-3 ml-2">Cronograma Sugerido</h4>
+                            <p-table [value]="paymentPlan()!.steps" [paginator]="true" [rows]="6" styleClass="p-datatable-sm" responsiveLayout="scroll">
+                                <ng-template pTemplate="header">
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th>Data</th>
+                                        <th>Focar em</th>
+                                        <th>Pagar</th>
+                                        <th>Saldo Restante</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-step>
+                                    <tr>
+                                        <td><span class="font-bold text-500">#{{ step.month_index }}</span></td>
+                                        <td>{{ step.date | date:'MM/yyyy' }}</td>
+                                        <td class="font-bold text-primary">{{ step.debt_name }}</td>
+                                        <td class="text-green-600 font-bold">+ {{ step.payment_amount | currency:'BRL' }}</td>
+                                        <td class="text-500">{{ step.remaining_balance | currency:'BRL' }}</td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                          </div>
+                      </div>
+
+                      <div *ngIf="!paymentPlan() && !simulating()" class="h-full flex flex-col items-center justify-center p-6 border-1 surface-border border-round border-dashed text-center opacity-70">
+                          <i class="pi pi-chart-bar text-6xl mb-3 text-500"></i>
+                          <p class="text-xl font-medium m-0">Aguardando Simulação</p>
+                          <p class="text-500">Defina seu orçamento e estratégia ao lado para visualizar o plano.</p>
+                      </div>
+                  </div>
+              </div>
+          </p-tabpanel>
+
+          <!-- TAB 3: FINANCIAMENTO (MCMV) -->
+          <p-tabpanel [value]="2">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div class="col-span-12 md:col-span-5">
+                      <div class="surface-card p-4 border-round border-1 surface-border h-full">
+                          <h3 class="mt-0 text-blue-600">Simulador Habitacional</h3>
+                          <p class="text-sm text-500 mb-4">Simule financiamentos imobiliários (SAC/Price) e veja se você se enquadra no MCMV.</p>
+
+                          <div class="flex flex-col gap-3">
+                              <div class="field">
+                                  <label>Renda Bruta Familiar</label>
+                                  <p-inputNumber [(ngModel)]="housingIncome" (onBlur)="loadHousingDefaults()" mode="currency" currency="BRL" locale="pt-BR"></p-inputNumber>
+                              </div>
+                              <div class="field">
+                                  <label>Valor do Imóvel</label>
+                                  <p-inputNumber [(ngModel)]="housingValue" mode="currency" currency="BRL" locale="pt-BR"></p-inputNumber>
+                              </div>
+                              <div class="field">
+                                  <label>Entrada (FGTS + Poupança)</label>
+                                  <p-inputNumber [(ngModel)]="housingEntry" mode="currency" currency="BRL" locale="pt-BR"></p-inputNumber>
+                              </div>
+                              <div class="field">
+                                  <label>Taxa de Juros (% a.a.)</label>
+                                  <div class="p-inputgroup">
+                                      <p-inputNumber [(ngModel)]="housingRate" [minFractionDigits]="2" [maxFractionDigits]="2"></p-inputNumber>
+                                      <span class="p-inputgroup-addon bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-none" *ngIf="housingProgram" [pTooltip]="housingProgram">
+                                          <i class="pi pi-info-circle"></i>
+                                      </span>
+                                  </div>
+                                  <small class="text-primary font-bold mt-1 block" *ngIf="housingProgram">Programa: {{ housingProgram }}</small>
+                              </div>
+                              <div class="field">
+                                  <label>Total de Parcelas (Meses)</label>
+                                  <p-inputNumber [ngModel]="360" [disabled]="true"></p-inputNumber>
+                              </div>
+                              <div class="field mt-2">
+                                  <label class="mb-2 block">Sistema de Amortização</label>
+                                  <div class="flex flex-wrap gap-4 p-3 border-1 surface-border border-round">
+                                      <div class="flex items-center gap-2">
+                                          <p-radioButton name="sys" value="sac" [(ngModel)]="housingSystem" inputId="sys_sac"></p-radioButton>
+                                          <label for="sys_sac" class="cursor-pointer">SAC (Decrescente)</label>
+                                      </div>
+                                      <div class="flex items-center gap-2">
+                                          <p-radioButton name="sys" value="price" [(ngModel)]="housingSystem" inputId="sys_price"></p-radioButton>
+                                          <label for="sys_price" class="cursor-pointer">Price (Fixa)</label>
+                                      </div>
+                                  </div>
+                              </div>
+                              <p-button label="Calcular Agora" (onClick)="runHousingSim()" [loading]="housingSimulating" styleClass="w-full mt-2"></p-button>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-span-12 md:col-span-7">
+                      <div *ngIf="housingResult" class="flex flex-col h-full">
+                          <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div class="col-span-1">
+                                    <div class="stat-card h-full">
+                                        <div class="text-500 text-sm mb-1">Primeira Parcela</div>
+                                        <div class="text-2xl font-bold">{{ housingResult.first_installment | currency:'BRL' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-span-1">
+                                    <div class="stat-card h-full">
+                                        <div class="text-500 text-sm mb-1">Última Parcela</div>
+                                        <div class="text-2xl font-bold">{{ housingResult.last_installment | currency:'BRL' }}</div>
+                                    </div>
+                                </div>
+                          </div>
+
+                          <div class="surface-card p-5 border-round border-1 surface-border flex-grow-1 flex flex-col justify-center text-center">
+                              <h2 class="text-4xl font-bold text-primary mb-2 line-height-2">{{ housingResult.total_paid | currency:'BRL' }}</h2>
+                              <span class="text-500 uppercase tracking-widest text-sm font-semibold">Total a Pagar (30 Anos)</span>
+
+                              <div class="mt-5 pt-5 border-top-1 surface-border grid grid-cols-1">
+                                  <div class="col-span-1 text-center">
+                                      <span class="block text-500 mb-2">Juros Acumulados</span>
+                                      <span class="text-xl font-bold text-red-500">{{ housingResult.total_interest | currency:'BRL' }}</span>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border-round text-blue-900 dark:text-blue-100 text-sm line-height-3">
+                              <i class="pi pi-verified mr-2"></i>
+                              Análise: Com renda de <strong>{{ housingIncome | currency:'BRL' }}</strong>, você se enquadra no <strong>{{ housingProgram || 'Financiamento Padrão' }}</strong>.
+                              {{ housingResult.total_interest < housingValue ? 'Ótimo negócio! Juros totais abaixo do valor do imóvel.' : '' }}
+                          </div>
+                      </div>
+
+                      <div *ngIf="!housingResult" class="h-full flex items-center justify-center p-6 border-1 surface-border border-round border-dashed opacity-60">
+                          <div class="text-center">
+                                <i class="pi pi-home text-6xl mb-3 text-500"></i>
+                                <p>Preencha os dados ao lado para simular.</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </p-tabpanel>
+
+          <!-- TAB 4: DOCUMENT ANALYSIS (PREMIUM) -->
+          <p-tabpanel [value]="3">
+              <div class="flex flex-col items-center justify-center p-6 border-1 surface-border border-round border-dashed text-center" style="min-height: 400px;">
+
+                  <div class="bg-primary-50 dark:bg-primary-900/20 border-circle p-4 mb-4" style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                      <i class="pi pi-sparkles text-5xl text-primary"></i>
+                  </div>
+
+                  <h2 class="mt-0 mb-3">Assistente Inteligente</h2>
+                  <p class="mb-5 text-500 max-w-lg mx-auto leading-relaxed">
+                      Sem tempo para digitar? Envie o PDF do contrato ou uma foto da conta.
+                      Nossa IA identifica valores, juros e prazos automaticamente.
+                  </p>
+
+                  <p-fileUpload
+                      mode="basic"
+                      chooseLabel="Ler Documento com IA"
+                      chooseIcon="pi pi-upload"
+                      name="file"
+                      url=""
+                      accept="image/*,application/pdf"
+                      [auto]="true"
+                      [customUpload]="true"
+                      (uploadHandler)="onUpload($event)"
+                      styleClass="p-button-outlined p-button-lg">
+                  </p-fileUpload>
+
+                  <div *ngIf="analyzing" class="mt-5 flex items-center gap-3 fade-in">
+                      <p-progressSpinner styleClass="w-2rem h-2rem"></p-progressSpinner>
+                      <span class="text-primary font-medium">Processando documento...</span>
+                  </div>
+              </div>
+          </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+
+    <!-- Confirm Dialog -->
+    <p-confirmDialog [style]="{width: '450px'}" rejectButtonStyleClass="p-button-text p-button-secondary" acceptButtonStyleClass="p-button-danger"></p-confirmDialog>
+
+    <!-- DEBT FORM DIALOG -->
+    <p-dialog [(visible)]="debtDialog" [style]="{width: '500px', 'max-width': '95vw'}" header="Detalhes da Dívida" [modal]="true" styleClass="p-fluid">
+        <ng-template pTemplate="content">
+            <form [formGroup]="debtForm" class="flex flex-col gap-4">
+
+                <span class="text-primary font-bold block uppercase text-xs tracking-wider">Informações Básicas</span>
+
+                <div class="field">
+                    <label for="name">Nome da Dívida</label>
+                    <input pInputText id="name" formControlName="name" class="w-full" placeholder="Ex: Cartão Nubank" autocomplete="off" />
+                    <small class="p-error block" *ngIf="submitted && !debtForm.controls.name.valid">Este campo é obrigatório.</small>
+                </div>
+                <div class="field">
+                    <label>Tipo de Dívida</label>
+                    <p-select [options]="debtTypes" formControlName="debt_type" optionLabel="label" optionValue="value" placeholder="Selecione..." appendTo="body"></p-select>
+                </div>
+
+                <span class="text-primary font-bold block uppercase text-xs tracking-wider">Financeiro</span>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="field col-span-1">
+                        <label for="total_amount">Saldo Devedor</label>
+                        <p-inputNumber id="total_amount" formControlName="total_amount" mode="currency" currency="BRL" locale="pt-BR" placeholder="R$ 0,00"></p-inputNumber>
+                    </div>
+                    <div class="field col-span-1">
+                        <label for="min_payment">Mínimo Mensal</label>
+                        <p-inputNumber id="min_payment" formControlName="minimum_payment" mode="currency" currency="BRL" locale="pt-BR" placeholder="R$ 0,00"></p-inputNumber>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="field col-span-1">
+                        <label for="interest_rate">Taxa de Juros (%)</label>
+                        <p-inputNumber id="interest_rate" formControlName="interest_rate" [minFractionDigits]="2" suffix="%"></p-inputNumber>
+                    </div>
+                    <div class="field col-span-1">
+                        <label>Período da Taxa</label>
+                         <div class="flex gap-4 h-full items-center">
+                             <div class="flex items-center gap-2">
+                                <p-radioButton name="interest_period" value="monthly" formControlName="interest_period" inputId="period_monthly"></p-radioButton>
+                                <label for="period_monthly" class="cursor-pointer">Mês</label>
+                             </div>
+                             <div class="flex items-center gap-2">
+                                <p-radioButton name="interest_period" value="yearly" formControlName="interest_period" inputId="period_yearly"></p-radioButton>
+                                <label for="period_yearly" class="cursor-pointer">Ano</label>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="due_day">Dia do Vencimento</label>
+                    <p-inputNumber id="due_day" formControlName="due_day" [showButtons]="false" [min]="1" [max]="31" placeholder="Dia (1-31)" styleClass="w-full"></p-inputNumber>
+                </div>
+            </form>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2">
+                <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+                <button pButton pRipple label="Salvar Dívida" icon="pi pi-check" (click)="saveDebt()"></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+    <!-- ADVICE DIALOG -->
+    <p-dialog [(visible)]="adviceDialog" [style]="{width: '600px', 'max-width': '95vw'}" header="Consultoria Financeira IA" [modal]="true" class="p-fluid">
+        <div *ngIf="adviceLoading()" class="flex flex-col items-center justify-center p-6">
+            <p-progressSpinner styleClass="w-3rem h-3rem mb-3"></p-progressSpinner>
+            <span class="text-primary font-medium text-lg">Analisando suas finanças...</span>
+            <span class="text-500 text-sm mt-2">Verificando gastos, dívidas e sobras.</span>
+        </div>
+
+        <div *ngIf="!adviceLoading() && adviceResult()" class="line-height-3 text-lg">
+            <!-- Simple Pre-wrap for now. In a real app, use MarkdownPipe -->
+            <div class="p-4 surface-ground border-round surface-border border-1" style="white-space: pre-wrap; font-family: sans-serif;">{{ adviceResult() }}</div>
+
+            <div class="mt-4 flex justify-end">
+                <p-button label="Fechar" icon="pi pi-check" (onClick)="adviceDialog = false"></p-button>
+            </div>
+        </div>
+    </p-dialog>
+  </div>

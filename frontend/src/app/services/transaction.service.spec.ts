@@ -41,7 +41,7 @@ describe('TransactionService', () => {
     expect(req.request.params.get('limit')).toBe('10');
     expect(req.request.params.get('start_date')).toBe('2023-01-01');
     expect(req.request.params.get('end_date')).toBe('2023-01-31');
-    
+
     req.flush(dummyTransactions);
   });
 
@@ -50,7 +50,7 @@ describe('TransactionService', () => {
     const responseTrans: Transaction = { ...newTrans, id: '123' };
 
     service.createTransaction(newTrans).subscribe(trans => {
-      expect(trans).toEqual(responseTrans);
+      expect(trans).toEqual(responseTrans as any);
     });
 
     const req = httpMock.expectOne(apiUrl);
@@ -83,15 +83,15 @@ describe('TransactionService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });
-  
+
   it('should get upcoming transactions', () => {
       const dummyTransactions: Transaction[] = [{ id: 't1', title: 'Upcoming' } as Transaction];
       const limit = 5;
-      
+
       service.getUpcomingTransactions(limit).subscribe(trans => {
           expect(trans).toEqual(dummyTransactions);
       });
-      
+
       const req = httpMock.expectOne(`${apiUrl}/upcoming?limit=${limit}`);
       expect(req.request.method).toBe('GET');
       req.flush(dummyTransactions);

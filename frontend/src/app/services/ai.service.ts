@@ -26,7 +26,8 @@ export class AIService {
     items: { description: string, amount: number, category_id: string }[],
     location: string,
     payment_method: string,
-    account_id: string
+    account_id: string,
+    description?: string
   }> {
     const formData = new FormData();
     formData.append('file', file);
@@ -38,7 +39,8 @@ export class AIService {
       items: { description: string, amount: number, category_id: string }[],
       location: string,
       payment_method: string,
-      account_id: string
+      account_id: string,
+      description?: string
     }>(`${this.apiUrl}/scan`, formData);
   }
 

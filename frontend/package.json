@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:e2e": "playwright test"
   },
   "prettier": {
     "overrides": [
@@ -45,6 +46,7 @@
     "@angular/cli": "^20.0.0",
     "@angular/compiler-cli": "^20.0.0",
     "@angular/pwa": "^21.0.3",
+    "@playwright/test": "^1.57.0",
     "@types/html2canvas": "^0.5.35",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.22",

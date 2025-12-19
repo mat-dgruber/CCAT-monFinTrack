@@ -128,11 +128,12 @@
         />
         <button
           pButton
-          icon="pi pi-camera"
+          [icon]="isScanning() ? 'pi pi-spin pi-spinner' : 'pi pi-camera'"
           class="p-button-secondary"
           (click)="fileInput.click()"
           type="button"
-          pTooltip="Scanear Comprovante (IA)"
+          [disabled]="isScanning()"
+          pTooltip="Scanear Comprovante (IA) - Permitido apenas Premium"
           tooltipPosition="top"
         ></button>
         <input

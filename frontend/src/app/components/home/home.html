@@ -246,20 +246,21 @@
           </a>
         </li>
         <li>
-          <a routerLink="/categories" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+          <a routerLink="/debt-planner"
+            routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
             class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-            <i class="pi pi-tags"></i>
-            <span class="font-medium">Categorias</span>
+            <i class="pi pi-money-bill"></i>
+            <span class="font-medium">Dívidas</span>
           </a>
         </li>
 
         <!-- Mais Dropdown -->
         <li>
           <button (click)="toggleMoreMenu()"
-            class="w-full flex items-center justify-between px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-            <div class="flex items-center gap-3">
-              <i class="pi pi-folder"></i>
-              <span class="font-medium">Mais</span>
+          class="w-full flex items-center justify-between px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
+          <div class="flex items-center gap-3">
+            <i class="pi pi-folder"></i>
+            <span class="font-medium">Mais</span>
             </div>
             <i class="pi pi-chevron-down transition-transform duration-200" [class.rotate-180]="moreMenuVisible()"></i>
           </button>
@@ -268,6 +269,13 @@
                [style.max-height]="moreMenuVisible() ? '500px' : '0'"
                [style.opacity]="moreMenuVisible() ? '1' : '0'">
             <ul class="pl-4 mt-1 space-y-1 border-l-2 border-gray-100 dark:border-gray-700 ml-3">
+              <li>
+                <a routerLink="/categories" routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <i class="pi pi-tags"></i>
+                  <span class="font-medium">Categorias</span>
+                </a>
+              </li>
               <li>
                 <a routerLink="/accounts"
                   routerLinkActive="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"

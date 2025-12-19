@@ -309,9 +309,10 @@ def parse_receipt(image_bytes: bytes, mime_type: str, user_id: str, tier: str = 
         
         Output JSON:
         {{
-          "title": "Store Name",
+          "title": "Store Name (Business Name ONLY - No Location)",
           "amount": 0.00 (Total),
           "date": "YYYY-MM-DD",
+          "description": "Rich description: Location, Listing of items with qty, Discounts applied. Ex: 'Mercado X - Av. Paulista: 2x Leite, 1x Pão. Desconto R$ 2,00.'",
           "category_id": "best_match_id",
           "payment_method": "credit_card|debit_card|cash|pix",
           "account_id": "best_match_account_based_on_name_payment",
@@ -323,14 +324,19 @@ def parse_receipt(image_bytes: bytes, mime_type: str, user_id: str, tier: str = 
         }}
         
         Rules:
-        - If date missing, use today.
-        - Payment method mapped to: credit_card, debit_card, cash, pix.
-        - Guess Account based on store name (e.g. if I pay iFood usually with Nubank) or payment method.
+        - **Total Amount**: Must be the final value paid.
+        - **Date**: If missing, use today.
+        - **Title**: STRICTLY the Store/Establishment Name. Do NOT include address.
+        - **Description**: create a summary string that includes the Store Name, Location (if valid), and a summary of items. Mention discounts if any.
+        - **Payment**: Map to credit_card, debit_card, cash, pix.
+        - **Account**: Guess Account based on store name (e.g. if I pay iFood usually with Nubank) or payment method.
         """
         
         # PRO TIER LIMITATION: No Item extraction, just totals.
         if tier == 'pro':
              prompt += "\nNOTE: Extract ONLY total Amount, Date, Store Name. DO NOT extract items list (return empty items [])."
+             # For Pro we can still give a basic description
+             prompt += "\nNOTE: For description, just use 'Purchase at [Store Name]'."
         
         
         # 3. Cria objeto de imagem para o Gemini
@@ -372,6 +378,32 @@ def generate_monthly_report(user_id: str, month: int, year: int, tier: str = 'pr
             
         txs_current = transaction_service.list_transactions(user_id, start_date=start_date, end_date=end_date)
         
+        # --- SMART CACHING START ---
+        # Calculate Hash of current data state to avoid re-generation if nothing changed
+        # We assume if ID, Amount, Category or Date changed, the report might change.
+        # Sorting ensures consistent order for hashing.
+        
+        # Simple Hash: user_id + month + year + (id, amount, cat_id) of all txs
+        cache_data_str = f"{user_id}-{month}-{year}"
+        sorted_txs_for_hash = sorted(txs_current, key=lambda x: x.id)
+        for t in sorted_txs_for_hash:
+            cat_id = t.category.id if t.category else "none"
+            cache_data_str += f"|{t.id}:{t.amount}:{cat_id}"
+            
+        data_hash = hashlib.md5(cache_data_str.encode('utf-8')).hexdigest()
+        
+        db = get_db()
+        # Report Path: users/{uid}/reports/{YYYY-MM}
+        report_ref = db.collection('users').document(user_id).collection('reports').document(f"{year}-{month}")
+        report_doc = report_ref.get()
+        
+        if report_doc.exists:
+            cached_data = report_doc.to_dict()
+            if cached_data.get('hash') == data_hash and cached_data.get('content'):
+                print(f"✨ Report Cache Hit ({month}/{year})")
+                return cached_data.get('content')
+        # --- SMART CACHING END ---
+
         total_current = 0
         cat_current = {}
         for t in txs_current:
@@ -405,8 +437,6 @@ def generate_monthly_report(user_id: str, month: int, year: int, tier: str = 'pr
         
         if is_current_month:
             days_passed = now.day
-            last_day = end_date.day # end_date is adjusted? Logic above sets end_date to start of next month - 1 microsecond.
-            # Fix day extraction
             import calendar
             _, days_in_month = calendar.monthrange(year, month)
             
@@ -472,11 +502,22 @@ def generate_monthly_report(user_id: str, month: int, year: int, tier: str = 'pr
         
         
         response = model.generate_content(prompt)
-        return response.text
+        text_content = response.text
+        
+        # --- SAVE TO CACHE ---
+        report_ref.set({
+            'created_at': datetime.now(),
+            'hash': data_hash,
+            'content': text_content,
+            'month': month,
+            'year': year
+        })
+        
+        return text_content
 
     except Exception as e:
         print(f"❌ Error generating monthly report: {e}")
-        return "Não foi possível gerar o relatório de IA no momento."
+        return f"Não foi possível gerar o relatório de IA no momento. Erro: {str(e)}"
 
 def generate_budget_plan(user_id: str) -> str:
     """
@@ -579,3 +620,82 @@ def analyze_cost_of_living(user_id: str, data: dict, tier: str = 'free') -> str:
     except Exception as e:
         print(f"❌ Cost of Living Analysis Error: {e}")
         return "Não foi possível gerar a análise. Tente novamente mais tarde."
+
+def generate_debt_advice(user_id: str, debts_data: list, current_surplus: float) -> str:
+    """
+    Gera um relatório holístico de consultoria para quitação de dívidas.
+    Analisa Dívidas vs. Sobra Mensal vs. Gastos Recentes.
+    """
+    if not GENAI_API_KEY:
+        return "IA Indisponível."
+
+    try:
+        # 1. Coleta Contexto de Gastos (Onde cortar?)
+        # Pega últimos 30 dias para ver 'ralos' de dinheiro
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        recent_txs = transaction_service.list_transactions(user_id, start_date=start_date, end_date=end_date)
+        
+        expense_cats = {}
+        for t in recent_txs:
+            if t.type == 'expense':
+                c_name = t.category.name if t.category else "Outros"
+                expense_cats[c_name] = expense_cats.get(c_name, 0) + abs(t.amount)
+        
+        top_expenses = dict(sorted(expense_cats.items(), key=lambda x: x[1], reverse=True)[:5])
+
+        # 2. Formata Dados das Dívidas
+        total_debt = sum(d.get('total_amount', 0) for d in debts_data)
+        debts_summary = []
+        for d in debts_data:
+            debts_summary.append(f"- {d.get('name')}: R${d.get('total_amount'):.2f} ({d.get('interest_rate')}% {d.get('interest_period')})")
+        
+        debts_str = "\n".join(debts_summary)
+
+        # 3. Monta Contexto
+        context = f"""
+        User Financial Picture:
+        - Monthly Surplus (Income - Existing expenses): R$ {current_surplus:.2f}
+        - Total Debt Load: R$ {total_debt:.2f}
+        
+        Debts:
+        {debts_str}
+        
+        Recent Top Expenses (Last 30 days - Potential Cuts):
+        {json.dumps(top_expenses, ensure_ascii=False)}
+        """
+
+        # 4. Prompt Consultor
+        model = genai.GenerativeModel(AI_MODEL_NAME)
+        prompt = f"""
+        Data:
+        {context}
+        
+        Role: Expert Debt Consultant (Dave Ramsey style but Brazilian context).
+        Task: Create a minimal, actionable Debt Payoff Strategy (PT-BR).
+        
+        Output (Markdown):
+        1. **Diagnóstico 🩺**:
+           - One sentence reality check. Is it critical? Manageable?
+        
+        2. **Onde Cortar (Sugestões) ✂️**:
+           - Look at 'Recent Top Expenses'. Suggest 2 specific cuts to free up cash.
+           - Calculate how much extra cash this would generate.
+           
+        3. **Estratégia Recomendada 🎯**:
+           - Suggest Snowball (Bola de Neve) if motivation is needed (many small debts).
+           - Suggest Avalanche if there are high interest rates (>10% monthly).
+           - Explain WHY in 1 sentence.
+
+        4. **Plano de Ação 🚀**:
+           - 3 bullet points of what to do TODAY.
+           
+        Format: Use bolding and emojis. Be direct and encouraging.
+        """
+        
+        response = model.generate_content(prompt)
+        return response.text
+
+    except Exception as e:
+        print(f"❌ Debt Advice Error: {e}")
+        return "Erro ao gerar consultoria. Verifique seus dados."

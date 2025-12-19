@@ -13,6 +13,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog'; // Import Dialog
+import { ConfirmDialogModule } from 'primeng/confirmdialog'; // Import ConfirmDialog
+import { ConfirmationService } from 'primeng/api'; // Import ConfirmationService
 import { MarkdownModule } from 'ngx-markdown'; // Import Markdown Module if used
 import { RouterModule } from '@angular/router';
 
@@ -54,10 +56,12 @@ import { SkeletonModule } from 'primeng/skeleton';
     RecentTransactionsComponent,
     SkeletonModule,
     DialogModule, // Add Dialog
+    ConfirmDialogModule, // Add ConfirmDialog
     MarkdownModule, // Add Markdown
     ButtonModule, // Add Button
     RouterModule
   ],
+  providers: [ConfirmationService],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -69,6 +73,7 @@ export class Dashboard implements OnInit {
   private analysisService = inject(AnalysisService);
   private accountService = inject(AccountService);
   private aiService = inject(AIService); // Inject AI Service
+  private confirmationService = inject(ConfirmationService);
   subscriptionService = inject(SubscriptionService);
 
 
@@ -121,25 +126,36 @@ export class Dashboard implements OnInit {
   }
 
   generateReport() {
-    this.showReportDialog = true;
-    this.reportLoading = true;
-    this.reportContent = '';
-    
-    // Use current month/year from filter
-    const m = this.filterService.month();
-    const y = this.filterService.year();
+    this.confirmationService.confirm({
+        message: 'Deseja gerar o relatório mensal com nosso Assistente IA? (Isso pode levar alguns segundos)',
+        header: 'Confirmar Geração',
+        icon: 'pi pi-sparkles',
+        acceptLabel: 'Gerar Relatório',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-outlined p-button-success',
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => {
+            this.showReportDialog = true;
+            this.reportLoading = true;
+            this.reportContent = '';
 
-    this.aiService.generateMonthlyReport(m, y).subscribe({
-        next: (res) => {
-            this.reportContent = res.content;
-            this.reportLoading = false;
-        },
-        error: (err) => {
-            console.error('Error generating report', err);
-            this.reportContent = "Desculpe, não consegui gerar o relatório agora. Tente mais tarde!";
-            this.reportLoading = false;
+            // Use current month/year from filter
+            const m = this.filterService.month();
+            const y = this.filterService.year();
+
+            this.aiService.generateMonthlyReport(m, y).subscribe({
+                next: (res) => {
+                    this.reportContent = res.content;
+                    this.reportLoading = false;
+                },
+                error: (err) => {
+                    console.error('Error generating report', err);
+                    this.reportContent = "Desculpe, não consegui gerar o relatório agora. Tente mais tarde!";
+                    this.reportLoading = false;
+                }
+            })
         }
-    })
+    });
   }
 
   loadDashboard(m: number, y: number) {
