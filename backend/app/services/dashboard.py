@@ -63,6 +63,12 @@ def get_dashboard_data(
         # Melhor abordagem: Firestore retorna Aware (UTC). Nossas Ranges são Aware (UTC).
         # Se date_val for Naive (ex: dados antigos bugados), assumir UTC.
         d = date_val
+        if isinstance(d, str):
+            try:
+                d = datetime.fromisoformat(d.replace("Z", "+00:00"))
+            except ValueError:
+                return False
+
         if d.tzinfo is None:
             d = d.replace(tzinfo=timezone.utc)
         

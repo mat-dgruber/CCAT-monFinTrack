@@ -26,6 +26,7 @@ import { AIService } from '../../services/ai.service';
 import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
 import { HttpClient } from '@angular/common/http';
+import { AttachmentService } from '../../services/attachment.service';
 
 import { Category } from '../../models/category.model';
 import { Transaction } from '../../models/transaction.model';
@@ -302,6 +303,15 @@ export class TransactionForm implements OnInit {
                      if (acc) patch.account = acc;
                 }
 
+                // Attachments
+                if (data.attachment_url) {
+                    const baseUrl = environment.apiUrl.replace('/api', '');
+                    const fullUrl = data.attachment_url.startsWith('http') ? data.attachment_url : `${baseUrl}${data.attachment_url}`;
+                    
+                    const current = this.form.get('attachments')?.value || [];
+                    patch.attachments = [...current, fullUrl];
+                }
+
                 this.form.patchValue(patch);
                 this.messageService.add({ severity: 'success', summary: 'Dados Extraídos!', detail: 'Verifique os campos preenchidos.' });
                 this.isScanning.set(false);
@@ -315,9 +325,24 @@ export class TransactionForm implements OnInit {
     }
   }
 
+import { AttachmentService } from '../../services/attachment.service';
+
+// ... imports
+
+@Component({
+  // ... selector etc
+})
+export class TransactionForm implements OnInit {
+  // ... services
+  private attachmentService = inject(AttachmentService);
+  
+  // ...
+
+  // ... constructor etc
+
   // --- Attachment Methods ---
 
-  async onUpload(event: any) {
+  onUpload(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -326,26 +351,69 @@ export class TransactionForm implements OnInit {
          return;
     }
 
-    try {
-        this.isUploading.set(true);
-        const path = `receipts/${this.preferences()!.user_id}/${Date.now()}_${file.name}`;
-        const url = await this.firebaseService.uploadFile(path, file);
-
-        const current = this.form.get('attachments')?.value || [];
-        this.form.patchValue({ attachments: [...current, url] });
-
-        // Trigger AI Scan if Premium
-        if (this.preferences()?.subscription_tier === 'premium' && file.type.startsWith('image/')) {
-            this.scanReceipt(file);
+    this.isUploading.set(true);
+    
+    this.attachmentService.uploadFile(file).subscribe({
+        next: (res) => {
+            // Resolve URL (if relative)
+            const baseUrl = environment.apiUrl.replace('/api', '');
+            const fullUrl = res.url.startsWith('http') ? res.url : `${baseUrl}${res.url}`;
+            
+            const current = this.form.get('attachments')?.value || [];
+            this.form.patchValue({ attachments: [...current, fullUrl] });
+            
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Arquivo anexado.' });
+            this.isUploading.set(false);
+        },
+        error: (err) => {
+            console.error('Upload Error', err);
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha no upload' });
+            this.isUploading.set(false);
         }
+    });
+    
+    event.target.value = ''; // Reset
+  }
+  
+  scanAttachment(url: string) {
+       // Extract relative path if needed, or pass full url if backend supports it.
+       // Backend expects: /static/attachments/...
+       // Our fullUrl is http://localhost:8000/static/attachments/...
+       
+       let relativeUrl = url;
+       try {
+           const urlObj = new URL(url);
+           relativeUrl = urlObj.pathname; // /static/attachments/filename.jpg
+       } catch (e) {
+           // already relative or invalid
+       }
+       
+       this.isScanning.set(true);
+       this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando anexo...' });
+       
+       this.aiService.scanReceiptFromUrl(relativeUrl).subscribe({
+            next: (data) => {
+                 const patch: any = {};
+                 if (data.title) patch.title = data.title;
+                 if (data.amount) patch.amount = data.amount;
+                 if (data.date) patch.date = new Date(data.date);
+                 if (data.description) patch.description = data.description;
+                 if (data.payment_method) patch.payment_method = data.payment_method;
 
-    } catch (e) {
-        console.error(e);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha no upload' });
-    } finally {
-        this.isUploading.set(false);
-        event.target.value = ''; // Reset
-    }
+                 if (data.category_id) {
+                     const cat = this.categories().find(c => c.id === data.category_id);
+                     if (cat) patch.category = cat;
+                 }
+                 this.form.patchValue(patch);
+                 this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Dados extraídos do anexo!' });
+                 this.isScanning.set(false);
+            },
+            error: (err) => {
+                 console.error('Scan Error', err);
+                 this.messageService.add({ severity: 'warn', summary: 'IA', detail: 'Não foi possível ler o comprovante.' });
+                 this.isScanning.set(false);
+            }
+       });
   }
 
 

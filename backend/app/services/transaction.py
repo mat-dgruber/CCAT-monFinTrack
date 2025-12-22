@@ -1,6 +1,6 @@
 from google.cloud import firestore
 from app.core.database import get_db
-from app.schemas.transaction import TransactionCreate, Transaction, TransactionStatus, TransactionType
+from app.schemas.transaction import TransactionCreate, TransactionUpdate, Transaction, TransactionStatus, TransactionType
 from app.schemas.category import Category 
 from app.schemas.account import Account 
 from app.core.date_utils import get_month_range
@@ -25,7 +25,7 @@ def _update_account_balance(db, account_id: str, amount: float, type: str, user_
 
     # SOURCE ACCOUNT
     acc_ref = db.collection("accounts").document(account_id)
-    acc_doc = acc_ref.get()
+    acc_doc = acc_ref.get() 
     
     if acc_doc.exists and acc_doc.to_dict().get('user_id') == user_id:
         current_balance = acc_doc.to_dict().get("balance", 0.0)
@@ -141,38 +141,18 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
             t_data['installment_number'] = i + 1
             t_data['date'] = due_date
             
-            # Divide amount? No, usually user enters the installment value or total value?
-            # In this app context (monFinTrack), the form seems to send the 'amount' as the INSTALLMENT value (based on UI context usually)
-            # OR checking the form: "Valor" input. Usually in these apps it's the value of the transaction.
-            # If the user enters 1000 and 10x, is it 10x 100 or 10x 1000?
-            # Let's assume the input IS the installment value (standard in many personal finance apps, or user calculates).
-            # Looking at the code: `amount=transaction_in.amount` was passed to Recurrence. Recurrence used that amount. 
-            # So the input amount IS the installment amount.
-            
             # Status Logic
-            # 1st installment: Respeita o que veio do form (ex: Pago)
-            # Others: Always PENDING
             if i == 0:
-                 # Respeita o status que veio (pode ser PAID se usuario marcou "Pago")
                  pass
             else:
                  t_data['status'] = TransactionStatus.PENDING
                  t_data['is_paid'] = False
                  t_data['payment_date'] = None
-                 # Reset Tithe/Offering status for future installments?
-                 # Probably yes, they haven't happened yet.
                  if 'tithe_status' in t_data:
                       t_data['tithe_status'] = 'PENDING' if t_data.get('tithe_status') != 'NONE' else 'NONE'
             
-            # Description: "Title (1/10)"
             original_title = transaction_in.title
             t_data['description'] = f"{original_title} ({i+1}/{transaction_in.total_installments})"
-            # Also keep title clean? Or update title?
-            # Transaction schema has title. Let's update title.
-            # t_data['title'] = original_title # Keep main title clean? 
-            # The 'description' field is often used for details.
-            # But in the previous recurrence logic, description was set to "Name (MM/YYYY)".
-            # Let's append (x/y) to title to make it clear in lists that show title.
             t_data['title'] = f"{original_title} ({i+1}/{transaction_in.total_installments})"
 
             t_create = TransactionCreate(**t_data)
@@ -200,9 +180,6 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
             t_data = transaction_in.model_dump()
             t_data['recurrence_id'] = recurrence.id
             
-            # Lógica de Auto-Pay para a primeira transação
-            # Se auto-pay estiver ativo, e a data for futura, deve nascer PENDENTE.
-            # Se for hoje ou passado, respeita o status do form (provavelmente PAGO se o user marcou).
             if transaction_in.recurrence_auto_pay:
                 today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
                 t_date = transaction_in.date
@@ -279,6 +256,10 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         if dest_acc_id:
              destination_account = account_service.get_account(dest_acc_id)
 
+        # Sanitize boolean fields for Pydantic
+        if data.get('is_auto_pay') is None:
+            data['is_auto_pay'] = False
+
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
@@ -295,63 +276,92 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         
     return transactions
 
-def update_transaction(transaction_id: str, transaction_in: TransactionCreate, user_id: str) -> Transaction:
+def update_transaction(transaction_id: str, transaction_in: TransactionUpdate, user_id: str) -> Transaction:
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
+    doc = doc_ref.get() 
     
     # Verifica Propriedade
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
         raise HTTPException(status_code=404, detail="Transaction not found")
         
     old_data = doc.to_dict()
+    # Serialize Enums/Datetimes to JSON-compatible format for Firestore
+    update_data = transaction_in.model_dump(exclude_unset=True, mode='json')
+    
+    # Merge for logic check (simulating what the new state will be)
+    new_full_data = {**old_data, **update_data}
     
     old_status = old_data.get("status", TransactionStatus.PAID)
+    new_status = new_full_data.get("status", TransactionStatus.PAID)
     
-    start_balance_update = False
+    # --- BALANCE UPDATE LOGIC ---
+    fields_affecting_balance = ['amount', 'account_id', 'status', 'type', 'credit_card_id']
+    changed = any(old_data.get(f) != new_full_data.get(f) for f in fields_affecting_balance)
     
-    # Estorna valor antigo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
-    if old_status == TransactionStatus.PAID and not old_data.get("credit_card_id"):
-        _update_account_balance(
-            db, 
-            old_data.get("account_id"), 
-            old_data.get("amount", 0), 
-            old_data.get("type"), 
-            user_id, 
-            revert=True,
-            destination_account_id=old_data.get("destination_account_id")
-        )
+    if changed:
+        # 1. Revert Old (If it impacted balance)
+        if old_status == TransactionStatus.PAID and not old_data.get("credit_card_id"):
+             _update_account_balance(
+                db, 
+                old_data.get("account_id"), 
+                old_data.get("amount", 0), 
+                old_data.get("type"), 
+                user_id, 
+                revert=True,
+                destination_account_id=old_data.get("destination_account_id")
+            )
+            
+        # 2. Apply New (If it impacts balance)
+        if new_status == TransactionStatus.PAID and not new_full_data.get("credit_card_id"):
+             _update_account_balance(
+                db, 
+                new_full_data.get("account_id"), 
+                new_full_data.get("amount", 0), 
+                new_full_data.get("type"), 
+                user_id, 
+                revert=False,
+                destination_account_id=new_full_data.get("destination_account_id")
+            )
+    
+    # Apply Update (Using JSON compatible data)
+    if update_data:
+        doc_ref.update(update_data)
+    
+    # Construct Response
+    category_id = new_full_data.get("category_id")
+    account_id = new_full_data.get("account_id")
+    
+    category = category_service.get_category(category_id)
+    if not category:
+         category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
 
-    # Aplica novo valor APENAS SE NOVO STATUS É PAGO E NÃO É CARTÃO
-    if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
-        _update_account_balance(
-            db, 
-            transaction_in.account_id, 
-            transaction_in.amount, 
-            transaction_in.type, 
-            user_id, 
-            revert=False,
-            destination_account_id=transaction_in.destination_account_id
-        )
+    account = account_service.get_account(account_id)
+    if not account:
+        account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="")
     
-    data = transaction_in.model_dump()
-    data['user_id'] = user_id
-    doc_ref.set(data)
-    
-    category = category_service.get_category(transaction_in.category_id)
-    account = account_service.get_account(transaction_in.account_id)
-    
-    dest_acc_id = data.get("destination_account_id")
+    dest_acc_id = new_full_data.get("destination_account_id")
     destination_account = None
     if dest_acc_id:
          destination_account = account_service.get_account(dest_acc_id)
 
-    return Transaction(id=transaction_id, category=category, account=account, destination_account=destination_account, **data)
+    # Sanitize boolean fields for Pydantic (TransactionBase expects bool, not None)
+    if new_full_data.get('is_auto_pay') is None:
+        new_full_data['is_auto_pay'] = False
+
+    # Ensure ID is present
+    return Transaction(
+        id=transaction_id, 
+        category=category, 
+        account=account, 
+        destination_account=destination_account, 
+        **new_full_data
+    )
 
 def delete_transaction(transaction_id: str, user_id: str):
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
+    doc = doc_ref.get() 
     
     # Verifica Propriedade
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
@@ -461,6 +471,10 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
         if dest_acc_id:
              destination_account = account_service.get_account(dest_acc_id)
 
+        # Sanitize boolean fields for Pydantic
+        if data.get('is_auto_pay') is None:
+            data['is_auto_pay'] = False
+
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
@@ -530,4 +544,3 @@ def get_first_transaction_date(user_id: str) -> Optional[datetime]:
         return first_date
         
     return None
-

@@ -4,10 +4,32 @@ from app.services import ai_service
 from app.services import user_preference as preference_service
 from app.core.rate_limiter import limiter
 from typing import Optional, List
+import os
+import uuid
 
 router = APIRouter()
 
 from app.core.security import get_current_user
+
+class LimitsResponse(BaseModel):
+    classify: dict
+    chat: dict
+    tier: str
+
+@router.get("/limits", response_model=LimitsResponse)
+def get_limits(current_user: dict = Depends(get_current_user)):
+    user_id = current_user['uid']
+    prefs = preference_service.get_preferences(user_id)
+    tier = prefs.subscription_tier or 'free'
+    
+    classify_info = limiter.get_usage_info(user_id, 'classify', tier)
+    chat_info = limiter.get_usage_info(user_id, 'chat', tier)
+    
+    return LimitsResponse(
+        classify=classify_info,
+        chat=chat_info,
+        tier=tier
+    )
 
 class ClassificationRequest(BaseModel):
     description: str
@@ -30,7 +52,7 @@ def classify_endpoint(request: ClassificationRequest, current_user: dict = Depen
     if not request.description:
         raise HTTPException(status_code=400, detail="Description is required")
 
-    category_id = ai_service.classify_transaction(request.description, user_id)
+    category_id = ai_service.classify_transaction(request.description, user_id, tier=tier)
     
     return ClassificationResponse(category_id=category_id)
 
@@ -77,11 +99,17 @@ class ScanResponse(BaseModel):
     location: Optional[str] = None
     payment_method: Optional[str] = None
     account_id: Optional[str] = None
+    description: Optional[str] = None
+    attachment_url: Optional[str] = None
 
 @router.post("/scan", response_model=ScanResponse)
-async def scan_receipt_endpoint(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def scan_receipt_endpoint(
+    file: Optional[UploadFile] = File(None), 
+    file_url: Optional[str] = None, # Expecting form field if multipart, or we need to separate endpoints?
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Recebe uma imagem de comprovante e retorna os dados extraídos.
+    Recebe uma imagem de comprovante (UploadFile) OU uma URL local (file_url) e retorna os dados extraídos.
     """
     user_id = current_user['uid']
     prefs = preference_service.get_preferences(user_id)
@@ -93,15 +121,66 @@ async def scan_receipt_endpoint(file: UploadFile = File(...), current_user: dict
 
     limiter.check_limit(user_id, 'classify', tier) # Uses classify quota
     
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    content = None
+    content_type = "image/jpeg" # Default fallback
+    attachment_url = None
+
+    # Scenario A: Uploaded File
+    if file:
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="File must be an image")
+            
+        content = await file.read()
+        content_type = file.content_type
         
-    content = await file.read()
+        # Save file locally
+        file_ext = file.filename.split('.')[-1] if '.' in file.filename else "jpg"
+        filename = f"{uuid.uuid4()}.{file_ext}"
+        file_path = f"app/static/attachments/{filename}"
+        
+        try:
+            with open(file_path, "wb") as buffer:
+                buffer.write(content)
+            attachment_url = f"/static/attachments/{filename}"
+        except Exception as e:
+            print(f"❌ Error saving file: {e}")
+            attachment_url = None
+
+    # Scenario B: Existing File URL
+    elif file_url:
+        # Security: Prevent Directory Traversal
+        # Ensure url starts with /static/attachments/ and contains no ..
+        if not file_url.startswith("/static/attachments/") or ".." in file_url:
+             raise HTTPException(status_code=400, detail="Invalid file path")
+             
+        local_path = f"app{file_url}" # e.g. app/static/attachments/xyz.jpg
+        
+        if not os.path.exists(local_path):
+            raise HTTPException(status_code=404, detail="File not found")
+            
+        try:
+            with open(local_path, "rb") as f:
+                content = f.read()
+            # Infer mime type? Simple check
+            if local_path.lower().endswith(".png"): content_type = "image/png"
+            elif local_path.lower().endswith(".pdf"): content_type = "application/pdf"
+            else: content_type = "image/jpeg"
+            
+            attachment_url = file_url
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Could not read local file")
+
+    else:
+        raise HTTPException(status_code=400, detail="Must provide 'file' or 'file_url'")
+
     
-    result = ai_service.parse_receipt(content, file.content_type, user_id, tier=tier)
+    result = ai_service.parse_receipt(content, content_type, user_id, tier=tier)
     
     if not result:
         raise HTTPException(status_code=500, detail="Could not parse receipt")
+    
+    if attachment_url:
+        result['attachment_url'] = attachment_url
         
     return ScanResponse(**result)
 

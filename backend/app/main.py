@@ -52,10 +52,11 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 
 # AI Router (Novo)
-from app.api.routers import ai, import_transactions, analysis
+from app.api.routers import ai, import_transactions, analysis, attachments
 app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
 app.include_router(import_transactions.router, prefix="/api/import", tags=["Import"])
+app.include_router(attachments.router, prefix="/api/attachments", tags=["Attachments"])
 
 from app.api.debts import router as debt_router
 app.include_router(debt_router, prefix="/api")
@@ -65,6 +66,7 @@ import os
 
 # Mount Static Files
 os.makedirs("app/static/profile_images", exist_ok=True)
+os.makedirs("app/static/attachments", exist_ok=True)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 

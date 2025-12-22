@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 // import { ThemeService } from '../../services/theme.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { MFAService } from '../../services/mfa.service';
+import { AIService } from '../../services/ai.service';
 import { UserPreference } from '../../models/user-preference.model';
 
 // PrimeNG Imports
@@ -24,6 +25,8 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 import { PwaService } from '../../services/pwa.service';
 
@@ -50,7 +53,9 @@ import { PwaService } from '../../services/pwa.service';
     FileUploadModule,
     DialogModule,
     TooltipModule,
-    RouterModule
+    RouterModule,
+    ProgressBarModule,
+    ProgressSpinnerModule
   ],
   providers: [MessageService]
 })
@@ -64,9 +69,13 @@ export class Settings {
   preferenceService = inject(UserPreferenceService);
   mfaService = inject(MFAService);
   pwaService = inject(PwaService);
+  aiService = inject(AIService);
 
   preferences: UserPreference | null = null;
   wakeLockEnabled = signal(false);
+  
+  // AI Limits
+  aiLimits = signal<any>(null);
 
   // Computed signal for profile image
   profileImageUrl = computed(() => {
@@ -150,6 +159,14 @@ export class Settings {
     });
 
     this.checkMfaStatus();
+    this.loadAiLimits();
+  }
+
+  loadAiLimits() {
+      this.aiService.getLimits().subscribe({
+          next: (res) => this.aiLimits.set(res),
+          error: () => console.error('Failed to load AI limits')
+      });
   }
 
   onTithesChange() {
@@ -304,8 +321,7 @@ export class Settings {
             subscription_tier: event.value 
         }).subscribe(() => {
             this.messageService.add({severity: 'success', summary: 'Tier Atualizado', detail: `Agora você é ${event.value.toUpperCase()}!`});
-             // Force page reload to apply feature gates globally if needed, or rely on service.
-             // Since SubscriptionService uses computed from preferences$, it should react automatically.
+            this.loadAiLimits();
         });
     }
   }

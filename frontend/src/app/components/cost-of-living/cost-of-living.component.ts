@@ -102,11 +102,12 @@ export class CostOfLivingComponent implements OnInit {
            } else {
                this.insufficientData.set(false);
 
-               // Auto-trigger AI for Premium users? Or wait for click?
-               // Let's autofetch if premium to be cool, provided we have data.
-               if (this.canUseAi() && !this.aiAnalysis()) {
-                   this.analyzeWithAi();
-               }
+               this.insufficientData.set(false);
+
+               // Auto-trigger REMOVED as per user request (On-demand only)
+               // if (this.canUseAi() && !this.aiAnalysis()) {
+               //     this.analyzeWithAi();
+               // }
            }
         }
     });

@@ -312,19 +312,75 @@ export class DebtPlannerComponent implements OnInit {
       this.debtService.analyzeDocument(file).subscribe({
           next: (data) => {
               this.analyzing = false;
-              // Show result in a dialog or auto-fill form (for now just alert)
-              console.log('AI Analysis:', data);
-              this.messageService.add({
-                  severity: 'success',
-                  summary: 'Análise Concluída',
-                  detail: `Tipo: ${data.debt_type || 'Desconhecido'}, Valor: ${data.total_amount}`
-              });
-              // TODO: Open Form pre-filled
+              console.log('AI Analysis Result:', data);
+
+              if (data.error) {
+                   this.messageService.add({
+                       severity: 'error',
+                       summary: 'Erro na Análise',
+                       detail: data.error
+                   });
+                   return;
+              }
+
+              // AUTO-CREATE LOGIC
+              // If we have at least Name and Amount, we try to create directly
+              if (data.name && data.total_amount > 0) {
+                  const payload = {
+                      name: data.name,
+                      debt_type: data.debt_type || 'other',
+                      total_amount: data.total_amount,
+                      interest_rate: data.interest_rate || 0,
+                      interest_period: data.interest_period || 'monthly',
+                      minimum_payment: data.minimum_payment || 0, // Optional
+                      due_day: data.due_day || null // Optional
+                  };
+
+                  this.loading.set(true); // Show global loading while creating
+                  this.debtService.createDebt(payload).subscribe({
+                      next: (newDebt) => {
+                           this.loading.set(false);
+                           this.messageService.add({
+                               severity: 'success',
+                               summary: 'Dívida Criada via IA!',
+                               detail: `${newDebt.name} - ${newDebt.total_amount}`
+                           });
+                           this.loadDebts(); // Refresh list
+                           this.activeIndex.set(0); // Switch to list tab
+                      },
+                      error: (err) => {
+                           this.loading.set(false);
+                           console.error('Auto-create failed', err);
+                           // Fallback to manual form if creation fails (e.g. valid failure)
+                           this.preFillForm(data);
+                           this.messageService.add({ severity: 'warn', summary: 'Criação Automática Falhou', detail: 'Por favor, revise os dados.' });
+                      }
+                  });
+
+              } else {
+                  // Fallback: Not enough confidence to create, let user review
+                  this.messageService.add({
+                      severity: 'info',
+                      summary: 'Revisão Necessária',
+                      detail: 'Dados incompletos para criação automática. Por favor, revise.'
+                  });
+                  this.preFillForm(data);
+              }
           },
           error: (err) => {
               this.analyzing = false;
-              this.messageService.add({ severity: 'error', summary: 'Erro na Análise', detail: err.error?.error || 'Tente novamente.' });
+              this.messageService.add({ severity: 'error', summary: 'Erro na Análise', detail: 'Falha ao conectar com o serviço.' });
           }
       });
+  }
+
+  preFillForm(data: any) {
+      if (data.name) this.debtForm.controls.name.setValue(data.name);
+      if (data.total_amount) this.debtForm.controls.total_amount.setValue(data.total_amount);
+      if (data.interest_rate !== undefined) this.debtForm.controls.interest_rate.setValue(data.interest_rate);
+      if (data.debt_type) this.debtForm.controls.debt_type.setValue(data.debt_type as any);
+      if (data.interest_period) this.debtForm.controls.interest_period.setValue(data.interest_period as any);
+
+      this.openNewDebt();
   }
 }

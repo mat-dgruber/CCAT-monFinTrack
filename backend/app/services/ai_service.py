@@ -9,29 +9,63 @@ from app.services import account as account_service
 from app.services import transaction as transaction_service
 from datetime import datetime, timedelta
 import json
+import time
+import random
 
-# Configura a API Key e Modelo (carregados do .env)
+# Configura a API Key (carregado do .env)
 GENAI_API_KEY = os.getenv("GOOGLE_API_KEY")
-AI_MODEL_NAME = os.getenv("GOOGLE_AI_MODEL", "gemini-2.0-flash-lite")
 
 if GENAI_API_KEY:
     genai.configure(api_key=GENAI_API_KEY)
 else:
     print("⚠️ GOOGLE_API_KEY not found. AI features will be disabled.")
 
-def classify_transaction(description: str, user_id: str) -> Optional[str]:
+def _call_with_retry(model, prompt_or_parts, retries=3, initial_delay=2):
     """
-    Usa o Gemini Flash para classificar uma transação com base na descrição.
-    Retorna o ID da categoria sugerida.
+    Helper function to call model.generate_content with exponential backoff for rate limits (429).
+    """
+    delay = initial_delay
+    for attempt in range(retries):
+        try:
+            return model.generate_content(prompt_or_parts)
+        except Exception as e:
+            error_str = str(e).lower()
+            if "429" in error_str or "quota" in error_str or "resourceexhausted" in error_str:
+                if attempt < retries - 1:
+                    sleep_time = delay + random.uniform(0, 1) # Add jitter
+                    print(f"⏳ Quota exceeded. Retrying in {sleep_time:.2f}s... (Attempt {attempt+1}/{retries})")
+                    time.sleep(sleep_time)
+                    delay *= 2 # Exponential backoff
+                else:
+                    print(f"❌ Max retries reached for AI call.")
+                    raise e
+            else:
+                raise e
+
+def get_model_for_tier(tier: str = 'free') -> str:
+    """
+    Retorna o modelo adequado para o Tier do usuário.
+    """
+    if tier == 'premium':
+        return "gemini-3-flash-preview" 
+    elif tier == 'pro':
+        return "gemini-2.5-flash-lite"
+    else:
+        # Fallback ou Free (se chamado indevidamente)
+        return "gemini-2.0-flash-lite"
+
+def classify_transaction(description: str, user_id: str, tier: str = 'pro') -> Optional[str]:
+    """
+    Usa IA para classificar transação.
     """
     if not GENAI_API_KEY:
         return None
 
     try:
-        # 0. CACHE check (Cost Savings!)
-        # Cria um hash da descrição para usar como chave de cache (normaliza texto)
+        # 0. CACHE check (Smart Hashing)
+        # Hash inclui description E tier (caso modelos diferentes dêem resultados diferentes)
         desc_clean = description.strip().lower()
-        desc_hash = hashlib.md5(desc_clean.encode('utf-8')).hexdigest()
+        desc_hash = hashlib.md5(f"{desc_clean}".encode('utf-8')).hexdigest()
         
         db = get_db()
         cache_ref = db.collection('ai_predictions').document(desc_hash)
@@ -39,663 +73,513 @@ def classify_transaction(description: str, user_id: str) -> Optional[str]:
         
         if cache_doc.exists:
             data = cache_doc.to_dict()
-            # Se já classificamos isso antes e temos um ID, retorna direto!
             if data.get('category_id'):
                 print(f"✨ AI Cache Hit: '{description}' -> {data.get('category_id')}")
                 return data.get('category_id')
 
-        # 1. Busca categorias do usuário para dar contexto à IA
-        # Trazemos todas (receita e despesa) ou filtramos? 
-        # Geralmente categorização é para despesa, mas pode ser receita.
+        # 1. Contexto Minificado (Token Saving)
         categories = category_service.list_categories(user_id)
+        # Ex: "Transporte,123\nAlimentação,456"
+        cat_lines = [f"{c.name},{c.id}" for c in categories]
+        cat_context = "C:\n" + "\n".join(cat_lines)
         
-        # Formata a lista para o prompt no estilo TOON (Header + Data)
-        # C[name,id]
-        category_lines = [f"{c.name},{c.id}" for c in categories]
-        cat_toon = "C[name,id]\n" + "\n".join(category_lines)
-        
-        # 2. Busca histórico recente para Few-Shot Learning (Aprender com o usuário)
-        # Pega as últimas 50 transações para ver padrões
-        history = transaction_service.list_transactions(user_id, limit=50)
+        # 2. Few-Shot (Últimas 30 txs)
+        history = transaction_service.list_transactions(user_id, limit=30)
         examples = []
         for t in history:
              if t.category and t.title:
-                 clean_title = t.title.replace('"', '').strip()
-                 examples.append(f'Tx:"{clean_title}" -> CatID:{t.category.id} ({t.category.name})')
+                 clean_title = t.title.replace('"', '').strip()[:30] # Limit length
+                 examples.append(f'{clean_title}->{t.category.id}')
         
-        # Junta os exemplos em um bloco de texto (exibe apenas os últimos 20 para economizar tokens se necessário, mas 50 cabe no Flash)
-        examples_block = "User History (Patterns):\n" + "\n".join(examples[:30]) 
+        examples_block = "Hist:\n" + "\n".join(examples) 
 
-        # 3. Monta o Prompt
-        model = genai.GenerativeModel(AI_MODEL_NAME)
+        # 3. Prompt Otimizado
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
         
         prompt = f"""
-        Data:TOON(C[name,id])
-        {cat_toon}
-        
+        {cat_context}
         {examples_block}
         
-        Task: Classify current Tx based on Categories AND User History patterns.
-        Current Tx:"{description}"
-        Return Category ID only or "null".
+        Task: Classify '{description}'. verify Hist for patterns.
+        Ret: CategoryID OR 'null'.
         """
         
         # 3. Chama a IA
-        response = model.generate_content(prompt)
+        response = _call_with_retry(model, prompt)
         predicted_id = response.text.strip()
         
         if predicted_id.lower() == "null":
             return None
             
-        # Verifica se o ID retornado existe na lista (segurança)
+        # Valida ID
         valid_ids = {c.id for c in categories}
         if predicted_id in valid_ids:
             # 4. SALVA NO CACHE
             cache_ref.set({
                 'description': desc_clean,
                 'category_id': predicted_id,
-                'created_at': datetime.now(),
-                'user_id_context': user_id
+                'tier_used': tier,
+                'created_at': datetime.now()
             })
             return predicted_id
             
         return None
 
     except Exception as e:
-        print(f"❌ Error calling Gemini AI: {e}")
+        print(f"❌ Error calling AI ({tier}): {e}")
         return None
 
 def chat_finance(message: str, user_id: str, tier: str = 'pro', persona: str = 'friendly') -> str:
     """
-    Chatbot financeiro que usa dados do usuário para responder perguntas.
-    Persona: 'friendly' (padrão) ou 'roast' (sarcástico/engraçado).
+    Chatbot financeiro.
     """
     if tier == 'free':
         return "Upgrade to Pro to chat with AI!"
 
     if not GENAI_API_KEY:
-        return "I'm sorry, my AI brain is currently offline (API Key missing)."
+        return "AI offline."
 
     try:
-        # 1. Coletar Contexto (RAG Simplificado)
+        # 1. Contexto Otimizado
         
-        # A. Saldo das Contas
+        # A. Contas (Simplificado)
         accounts = account_service.list_accounts(user_id)
-        accounts_info = []
-        total_balance = 0
-        for acc in accounts:
-            accounts_info.append(f"{acc.name}:R${acc.balance:.0f}") # Removed "- " and decimals for tokens
-            total_balance += acc.balance
-            
-        accounts_str = ",".join(accounts_info) # Comma separated is denser
+        acc_str = ",".join([f"{a.name}:{int(a.balance)}" for a in accounts])
         
-        # B. Transações Recentes (Últimas 10 - Reduced from 15)
+        # B. Transações (Últimas 10)
         transactions = transaction_service.list_transactions(user_id, limit=10)
-        tx_info = []
+        tx_list = []
         for t in transactions:
-            # TOON Format: T[date,title,category,amount]
-            date_str = t.date.strftime("%d/%m")
-            cat = t.category.name if t.category else "?"
-            safe_title = t.title.replace(",", " ")[:20] # Truncate title to 20 chars
-            tx_info.append(f"{date_str},{safe_title},{cat},{t.amount:.0f}")
+            d = t.date.strftime("%d")
+            n = t.title[:15]
+            v = int(t.amount)
+            c = t.category.name if t.category else "?"
+            tx_list.append(f"{d},{n},{v},{c}")
+        tx_str = "\n".join(tx_list)
             
-        # C. Agregação por Categoria (Para Contexto Rico e Gráficos)
-        # Calcula total por categoria nas últimas transações (ou melhor, no mês atual para ser mais útil)
-        # Vamos pegar transações do mês corrente para análise macro
+        # C. Totais Mês Atual
         now = datetime.now()
         start_month = datetime(now.year, now.month, 1)
         txs_month = transaction_service.list_transactions(user_id, start_date=start_month)
         
         cat_totals = {}
+        total_spent = 0
         for t in txs_month:
              if t.type == 'expense':
-                 c_name = t.category.name if t.category else "Outros"
-                 cat_totals[c_name] = cat_totals.get(c_name, 0) + abs(t.amount)
+                 c = t.category.name if t.category else "Other"
+                 v = abs(t.amount)
+                 cat_totals[c] = cat_totals.get(c, 0) + v
+                 total_spent += v
         
-        # Top 5 Categorias
         top_cats = dict(sorted(cat_totals.items(), key=lambda x: x[1], reverse=True)[:5])
-        agg_context = f"MonthTops:{json.dumps(top_cats, ensure_ascii=False)}"
-
-        # 2. Montar System Prompt
-        model = genai.GenerativeModel(AI_MODEL_NAME)
         
-        # Highly condensed context
-        system_context = f"""
+        # 2. System Prompt
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
+        
+        sys_ctx = f"""
         Ctx:
-        Bal:R${total_balance:.0f}
-        Accs:{accounts_str}
+        Accs:{acc_str}
+        Spent:{int(total_spent)}
+        Top:{json.dumps(top_cats, ensure_ascii=False)}
         LastTx:
-        {tx_toon}
-        {agg_context}
+        {tx_str}
         
         Q:{message}
         """
         
         if persona == 'roast':
-            # PROMPT ROAST
             final_prompt = f"""
-            {system_context}
-            Role:Sarcastic Advisor.
-            Task:Roast user's spending. Answer Q. Be funny/mean. Use emojis. PT-BR.
+            {sys_ctx}
+            Role:Sarcastic.
+            Task:Roast spending. PT-BR.
             """
         else:
-            # PROMPT FRIENDLY (Default)
             final_prompt = f"""
-            {system_context}
-            Role:Financial Assistant.
-            
+            {sys_ctx}
+            Role:FinAssistant.
             Rules:
-            1. Answer Q based on data. Be concise. PT-BR.
-            2. If user asks for a graph/chart/visual:
-               - Return valid JSON ONLY for the graph at the end of response.
-               - Format:
-               ```json
-               {{
-                 "type": "chart",
-                 "chartType": "pie" (or "bar"),
-                 "title": "Gastos do Mês",
-                 "data": {{ "labels": ["Cat A", "Cat B"], "values": [100, 20] }}
-               }}
-               ```
-               - Use 'MonthTops' data for charts unless specific range requested.
-            3. If user wants to ADD/CREATE a transaction (e.g., "Gastei 50 no Uber"):
-               - Return valid JSON ONLY for the action.
-               - Format:
-               ```json
-               {{
-                 "type": "action",
-                 "action": "create_transaction",
-                 "data": {{
-                   "title": "Uber",
-                   "amount": 50.00,
-                   "type": "expense",
-                   "category_id": "best_match_id",
-                   "account_id": "best_match_account_id"
-                 }}
-               }}
-               ```
-               - Infer today's date. Default payment method "credit_card" if not specified.
-            4. If user asks for a BUDGET/PLAN (e.g., "Crie um orçamento", "Planeje meus gastos"):
-               - Return valid JSON ONLY for the action.
-               - Format:
-               ```json
-               {{
-                 "type": "action",
-                 "action": "generate_budget_plan"
-               }}
-               ```
+            1. PT-BR. Concise.
+            2. If 'graph' needed -> End with JSON: {{ "type": "chart", "data": ... }}
+            3. If 'add tx' needed -> End with JSON: {{ "type": "action", "action": "create_transaction", "data": {{...}} }}
             """
-
         
-        # 3. Call AI
-        response = model.generate_content(final_prompt)
+        response = _call_with_retry(model, final_prompt)
         text_response = response.text
         
-        # 4. Check for Action JSON
+        # 1.b Pre-fetch Categories for resolution
+        categories = category_service.list_categories(user_id)
+
+        # 4. Action JSON Handling
         import re
-        json_match = re.search(r'```json\s*(\{[\s\S]*?\})\s*```', text_response)
-        if json_match:
+        
+        # Helper to process JSON string
+        def process_json_action(json_str):
             try:
-                action_data = json.loads(json_match.group(1))
+                action_data = json.loads(json_str)
                 if action_data.get('type') == 'action' and action_data.get('action') == 'create_transaction':
-                    # Execute Action
-                    from app.schemas.transaction import TransactionCreate, TransactionType, PaymentMethod, TransactionStatus
-                    
+                    from app.schemas.transaction import TransactionCreate
                     t_data = action_data['data']
                     
-                    # Defaults
-                    if not t_data.get('account_id'):
-                         # Fallback to first account if AI fails guessing
-                         if accounts:
-                             t_data['account_id'] = accounts[0].id
+                    # Resolve Account
+                    acc_id = t_data.get('account_id')
+                    if not acc_id:
+                        acc_name = t_data.get('account')
+                        if acc_name and accounts:
+                            # Try match name
+                            for a in accounts:
+                                if a.name.lower() == acc_name.lower():
+                                    acc_id = a.id
+                                    break
+                        
+                        # Fallback to first account
+                        if not acc_id and accounts:
+                            acc_id = accounts[0].id
                     
-                    # Validate Category (or fallback to 'Outros')
-                    # For simplicity, we assume AI picks a valid ID from the context list. 
-                    # If None, we might fail or pick random. Let's trust AI context for now.
-                    
+                    if not acc_id: raise ValueError("No account found")
+
+                    # Resolve Category
+                    cat_id = t_data.get('category_id')
+                    if not cat_id:
+                        cat_name = t_data.get('category')
+                        if cat_name and categories:
+                            for c in categories:
+                                if c.name.lower() == cat_name.lower():
+                                    cat_id = c.id
+                                    break
+                        # Fallback if still no category? 
+                        # Try to find 'Outros' or first
+                        if not cat_id and categories:
+                             cat_id = categories[0].id
+                             
+                    if not cat_id: raise ValueError("No category found")
+
+                    # Fix: Handle description vs title mismatch
+                    title_val = t_data.get('title') or t_data.get('description') or "Transaction"
+
                     new_tx = TransactionCreate(
-                        title=t_data['title'],
+                        title=title_val,
                         amount=float(t_data['amount']),
                         type=t_data.get('type', 'expense'),
-                        category_id=t_data['category_id'],
-                        account_id=t_data['account_id'],
-                        payment_method=t_data.get('payment_method', 'credit_card'),
+                        category_id=cat_id,
+                        account_id=acc_id,
+                        payment_method='credit_card',
                         date=datetime.now(),
                         status='paid'
                     )
-                    
                     created = transaction_service.create_transaction(new_tx, user_id)
-                    return f"✅ Pronto! Criei a transação '{created.title}' de R$ {created.amount:.2f}."
-
-                elif action_data.get('type') == 'action' and action_data.get('action') == 'generate_budget_plan':
-                     return self.generate_budget_plan(user_id)
-
+                    return f"✅ Criado: {created.title} (R$ {created.amount})."
             except Exception as e:
-                print(f"❌ Action Error: {e}")
-                return "Tentei processar sua solicitação, mas algo deu errado. 🤖"
+                pass
+            return None
+
+        # Attempt 1: Json Code Block
+        json_match = re.search(r'```json\s*(\{[\s\S]*?\})\s*```', text_response)
+        if json_match:
+            result = process_json_action(json_match.group(1))
+            if result: return result
+
+        # Attempt 2: Valid JSON Object Structure (Loose)
+        # Buscar por algo que comece com { e termine com } e contenha "type": "action"
+        try:
+             # Find start of potential JSON (first '{')
+             start_idx = text_response.find('{')
+             if start_idx != -1:
+                 # Try to extract valid JSON from start_idx
+                 # Simple heuristic: find matching closing brace or just try parsing substrings?
+                 # Better: regex for the specific known structure or simply find the LAST '}'
+                 end_idx = text_response.rfind('}')
+                 if end_idx != -1 and end_idx > start_idx:
+                     potential_json = text_response[start_idx:end_idx+1]
+                     # Verify if it looks like our action
+                     if '"type": "action"' in potential_json or '"type":"action"' in potential_json:
+                        result = process_json_action(potential_json)
+                        if result: return result
+        except Exception:
+            pass
 
         return text_response
 
     except Exception as e:
-        print(f"❌ Error calling Gemini AI Chat: {e}")
-        return "Desculpe, erro ao processar. Tente novamente."
+        print(f"❌ Chat Error: {e}")
+        return "Erro no chat."
 
 def parse_receipt(image_bytes: bytes, mime_type: str, user_id: str, tier: str = 'pro') -> Optional[dict]:
     """
-    Analisa uma imagem de comprovante e extrai dados (Data, Valor, Título, Categoria).
+    Extrai dados de comprovante com foco em descrição detalhada (Itens + Localização).
     """
     if not GENAI_API_KEY:
         return None
 
     try:
-        # 1. Contexto de Categorias (TOON) e Contas
         categories = category_service.list_categories(user_id)
-        category_lines = [f"{c.name},{c.id}" for c in categories]
-        cat_toon = "C[name,id]\n" + "\n".join(category_lines)
+        cat_str = ";".join([f"{c.id}:{c.name}" for c in categories])
         
-        accounts = account_service.list_accounts(user_id)
-        account_lines = [f"{a.name},{a.id}" for a in accounts]
-        acc_toon = "A[name,id]\n" + "\n".join(account_lines)
-
-        # 2. Monta Prompt Multimodal
-        model = genai.GenerativeModel(AI_MODEL_NAME)
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
         
+        # Otimização do Prompt: Instruções detalhadas para o campo 'description'
         prompt = f"""
-        Context:
-        {cat_toon}
-        {acc_toon}
+        Ctx:Cats:{cat_str}
         
-        Task: Extract receipt data (PT-BR).
+        Task: Extract Receipt Data (PT-BR).
         
-        Output JSON:
-        {{
-          "title": "Store Name (Business Name ONLY - No Location)",
-          "amount": 0.00 (Total),
-          "date": "YYYY-MM-DD",
-          "description": "Rich description: Location, Listing of items with qty, Discounts applied. Ex: 'Mercado X - Av. Paulista: 2x Leite, 1x Pão. Desconto R$ 2,00.'",
-          "category_id": "best_match_id",
-          "payment_method": "credit_card|debit_card|cash|pix",
-          "account_id": "best_match_account_based_on_name_payment",
-          "location": "Address or City found",
-          "items": [
-             {{ "description": "Item 1", "amount": 10.00, "category_id": "match_id" }},
-             {{ "description": "Item 2", "amount": 20.00, "category_id": "match_id" }}
-          ]
-        }}
+        Output Format: TOON (Single Line, Pipe Separated)
+        R[date|amount|title|category_id|payment_method|description]
         
-        Rules:
-        - **Total Amount**: Must be the final value paid.
-        - **Date**: If missing, use today.
-        - **Title**: STRICTLY the Store/Establishment Name. Do NOT include address.
-        - **Description**: create a summary string that includes the Store Name, Location (if valid), and a summary of items. Mention discounts if any.
-        - **Payment**: Map to credit_card, debit_card, cash, pix.
-        - **Account**: Guess Account based on store name (e.g. if I pay iFood usually with Nubank) or payment method.
+        Fields:
+        - date: YYYY-MM-DD
+        - amount: Total Value (Float)
+        - title: Store Name (Ex: Casa Publicadora Brasileira)
+        - category_id: Best Match ID
+        - payment_method: credit_card, debit_card, pix, cash
+        - description: MUST FOLLOW THIS STRUCTURE: 
+          [Full Address]. Items: [Qty x Name (Price) - Discount]. 
+          Example: "Rua ABC, 123, SP. Items: 1x Livro A (R$10) - Desc R$2; 2x Caneta (R$5). Total Desc: R$2."
+
+        Important: Capture the address from the header or footer. List ALL items found.
+        Return ONLY the TOON line starting with R[.
         """
         
-        # PRO TIER LIMITATION: No Item extraction, just totals.
-        if tier == 'pro':
-             prompt += "\nNOTE: Extract ONLY total Amount, Date, Store Name. DO NOT extract items list (return empty items [])."
-             # For Pro we can still give a basic description
-             prompt += "\nNOTE: For description, just use 'Purchase at [Store Name]'."
-        
-        
-        # 3. Cria objeto de imagem para o Gemini
-        cookie_picture = {
-            'mime_type': mime_type,
-            'data': image_bytes
-        }
-        
-        # 4. Chama a IA (Visual)
-        response = model.generate_content([prompt, cookie_picture])
+        response = _call_with_retry(model, [
+            prompt, 
+            {'mime_type': mime_type, 'data': image_bytes}
+        ])
         text = response.text.strip()
         
-        # Limpa markdown ```json ... ``` se houver
-        if text.startswith("```"):
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
+        # Limpeza de markdown
+        if "```" in text:
+            text = text.replace("```", "").replace("toon", "").strip()
+            if "\n" in text:
+                text = text.split("\n")[0]
+
+        if text.startswith("R["):
+            content = text[2:-1]
+            # Usamos o split com limite para evitar que pipes dentro da descrição quebrem o código
+            parts = content.split("|")
+            
+            if len(parts) >= 6:
+                return {
+                    "date": parts[0].strip(),
+                    "amount": float(parts[1].strip().replace(",", ".") or 0),
+                    "title": parts[2].strip(),
+                    "category_id": parts[3].strip(),
+                    "payment_method": parts[4].strip(),
+                    "description": parts[5].strip(),
+                    "items": [] # Mantido para compatibilidade
+                }
         
-        return json.loads(text)
+        print(f"⚠️ AI Parse Failed. Response: {text}")
+        return None
 
     except Exception as e:
-        print(f"❌ Error parsing receipt: {e}")
+        print(f"❌ Receipt Error: {e}")
         return None
 
 def generate_monthly_report(user_id: str, month: int, year: int, tier: str = 'pro') -> str:
     """
-    Gera um relatório qualitativo do mês usando IA.
+    Relatório mensal com Cache e Modelo Dinâmico.
     """
     if not GENAI_API_KEY:
-        return "IA indisponível no momento."
+        return "IA indisponível."
 
     try:
-        # 1. Coleta Dados do Mês Atual
+        # 1. Dados
         start_date = datetime(year, month, 1)
         if month == 12:
-            end_date = datetime(year + 1, 1, 1) - timedelta(microseconds=1)
+            end_date = datetime(year + 1, 1, 1) - timedelta(seconds=1)
         else:
-            end_date = datetime(year, month + 1, 1) - timedelta(microseconds=1)
+            end_date = datetime(year, month + 1, 1) - timedelta(seconds=1)
             
-        txs_current = transaction_service.list_transactions(user_id, start_date=start_date, end_date=end_date)
-        
-        # --- SMART CACHING START ---
-        # Calculate Hash of current data state to avoid re-generation if nothing changed
-        # We assume if ID, Amount, Category or Date changed, the report might change.
-        # Sorting ensures consistent order for hashing.
-        
-        # Simple Hash: user_id + month + year + (id, amount, cat_id) of all txs
-        cache_data_str = f"{user_id}-{month}-{year}"
-        sorted_txs_for_hash = sorted(txs_current, key=lambda x: x.id)
-        for t in sorted_txs_for_hash:
-            cat_id = t.category.id if t.category else "none"
-            cache_data_str += f"|{t.id}:{t.amount}:{cat_id}"
-            
-        data_hash = hashlib.md5(cache_data_str.encode('utf-8')).hexdigest()
-        
-        db = get_db()
-        # Report Path: users/{uid}/reports/{YYYY-MM}
-        report_ref = db.collection('users').document(user_id).collection('reports').document(f"{year}-{month}")
-        report_doc = report_ref.get()
-        
-        if report_doc.exists:
-            cached_data = report_doc.to_dict()
-            if cached_data.get('hash') == data_hash and cached_data.get('content'):
-                print(f"✨ Report Cache Hit ({month}/{year})")
-                return cached_data.get('content')
-        # --- SMART CACHING END ---
-
-        total_current = 0
-        cat_current = {}
-        for t in txs_current:
-            if t.type == 'expense':
-                val = abs(t.amount)
-                total_current += val
-                c_name = t.category.name if t.category else "Outros"
-                cat_current[c_name] = cat_current.get(c_name, 0) + val
-                
-        # 2. Coleta Dados do Mês Anterior (para comparação)
-        last_month_date = start_date - timedelta(days=1)
-        m_prev = last_month_date.month
-        y_prev = last_month_date.year
-        start_prev = datetime(y_prev, m_prev, 1)
-        end_prev = last_month_date
-        
-        txs_prev = transaction_service.list_transactions(user_id, start_date=start_prev, end_date=end_prev)
-        total_prev = 0
-        cat_prev = {}
-        for t in txs_prev:
-            if t.type == 'expense':
-                val = abs(t.amount)
-                total_prev += val
-                c_name = t.category.name if t.category else "Outros"
-                cat_prev[c_name] = cat_prev.get(c_name, 0) + val
-        
-        # 3. Análise Avançada (Forecasting & Outliers)
-        now = datetime.now()
-        is_current_month = (now.month == month and now.year == year)
-        projection_text = "N/A (Closed Month)"
-        
-        if is_current_month:
-            days_passed = now.day
-            import calendar
-            _, days_in_month = calendar.monthrange(year, month)
-            
-            daily_avg = total_current / max(1, days_passed)
-            projected_total = daily_avg * days_in_month
-            projection_text = f"R${projected_total:.2f} (Based on R${daily_avg:.2f}/day)"
-        
-        # Top 3 Maiores Gastos (Outliers)
-        # Assuming txs_current is list of objects
-        sorted_txs = sorted([t for t in txs_current if t.type == 'expense'], key=lambda x: x.amount, reverse=True)
-        top_txs = []
-        for t in sorted_txs[:3]:
-             top_txs.append(f"{t.title}: R${t.amount:.0f}")
-
-        # 4. Formata Contexto para IA
-        context = f"""
-        Current Month ({month}/{year}):
-        - Total Spent: R${total_current:.0f}
-        - Top 5 Categories: {json.dumps(dict(sorted(cat_current.items(), key=lambda x: x[1], reverse=True)[:5]), ensure_ascii=False)}
-        - Largest Expenses: {", ".join(top_txs)}
-        - Forecast (if current): {projection_text}
-        
-        Previous Month ({m_prev}/{y_prev}):
-        - Total Spent: R${total_prev:.0f}
-        - Top Categories: {json.dumps(dict(sorted(cat_prev.items(), key=lambda x: x[1], reverse=True)[:3]), ensure_ascii=False)}
-        """
-        
-        # 5. Prompt Premium
-        model = genai.GenerativeModel(AI_MODEL_NAME)
-        prompt = f"""
-        Data:
-        {context}
-        
-        Role: Senior Financial Advisor.
-        Task: Write a PREMIUM Monthly Report (PT-BR). Markdown format.
-        
-        Structure:
-        1. **Resumo Executivo & Nota**: Start with a Health Score (0-10) and brief summary.
-        2. **Análise de Tendência**: Compare with last month. Why did it go up/down?
-        3. **Previsão (Forecasting)**: If current month, warn about the projection.
-        4. **Vilões do Mês**: Comment on specific categories or large expenses.
-        5. **Dica de Ouro**: One specific action to save money next month.
-        
-        Style: Professional but accessible. Use emojis. Bold key numbers.
-        """
-        
-        if tier == 'pro':
-            # SIMPLE REPORT FOR PRO
-            prompt = f"""
-            Data:
-            {context}
-            
-            Role: Financial Assistant.
-            Task: Write a SIMPLE Monthly Summary (PT-BR). Markdown.
-            
-            Structure:
-            1. **Resumo**: Total spent and comparison with last month.
-            2. **Maiores Gastos**: List top 3 expenses.
-            3. **Categorias**: Top spending category.
-            
-            Keep it short and direct. No advanced forecasting or personality.
-            """
-        
-        
-        response = model.generate_content(prompt)
-        text_content = response.text
-        
-        # --- SAVE TO CACHE ---
-        report_ref.set({
-            'created_at': datetime.now(),
-            'hash': data_hash,
-            'content': text_content,
-            'month': month,
-            'year': year
-        })
-        
-        return text_content
-
-    except Exception as e:
-        print(f"❌ Error generating monthly report: {e}")
-        return f"Não foi possível gerar o relatório de IA no momento. Erro: {str(e)}"
-
-def generate_budget_plan(user_id: str) -> str:
-    """
-    Gera um plano de orçamento detalhado (Tabela) baseado na média de 3 meses.
-    """
-    if not GENAI_API_KEY:
-            return "IA Indisponível."
-            
-    try:
-        # 1. Coleta dados dos últimos 3 meses (90 dias)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=90)
-        
         txs = transaction_service.list_transactions(user_id, start_date=start_date, end_date=end_date)
         
-        # Agrega por categoria
-        cat_totals = {}
+        # 2. Cache Key (Hash: User+Date+DataHash+Tier)
+        # Se mudar o tier, muda o modelo, então pode querer gerar novo relatório melhor/pior.
+        tx_hash_str = "".join([f"{t.id}{t.amount}" for t in txs])
+        full_hash = hashlib.md5(f"{user_id}{month}{year}{tx_hash_str}{tier}".encode()).hexdigest()
+        
+        db = get_db()
+        report_ref = db.collection('users').document(user_id).collection('reports').document(f"{year}-{month}")
+        doc = report_ref.get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get('hash') == full_hash and d.get('content'):
+                return d.get('content')
+
+        # 3. Processamento
+        total = 0
+        cat_vals = {}
         for t in txs:
             if t.type == 'expense':
-                c_name = t.category.name if t.category else "Outros"
-                cat_totals[c_name] = cat_totals.get(c_name, 0) + abs(t.amount)
+                v = abs(t.amount)
+                total += v
+                c = t.category.name if t.category else "Oth"
+                cat_vals[c] = cat_vals.get(c, 0) + v
+                
+        top3 = dict(sorted(cat_vals.items(), key=lambda x: x[1], reverse=True)[:3])
         
-        # Calcula Média Mensal (Total / 3)
-        cat_avg = {k: v / 3 for k, v in cat_totals.items()}
+        # 4. Prompt
+        ctx = f"M:{month}/{year}. Tot:R${total:.0f}. Top3:{json.dumps(top3, ensure_ascii=False)}"
         
-        # 2. Prompt
-        context = f"Monthly Averages (Last 3 Months): {json.dumps(dict(sorted(cat_avg.items(), key=lambda x: x[1], reverse=True)), ensure_ascii=False)}"
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
         
-        model = genai.GenerativeModel(AI_MODEL_NAME)
-        prompt = f"""
-        Data:
-        {context}
+        if tier == 'premium':
+            prompt = f"""
+            Data:{ctx}
+            Role:Expert Advisor.
+            Task:Premium Report (PT-BR).
+            1.Health Score(0-10).
+            2.Trends.
+            3.Forecast.
+            4.Actionable Tip.
+            """
+        else:
+            prompt = f"""
+            Data:{ctx}
+            Role:Assistant.
+            Task:Simple Summary (PT-BR).
+            1.Total.
+            2.Top Cats.
+            Keep it short.
+            """
+            
+        response = _call_with_retry(model, prompt)
+        content = response.text
         
-        Role: Financial Planner.
-        Task: Create a BUDGET PLAN to save 20% total.
+        # 5. Salvar Cache
+        report_ref.set({
+            'created_at': datetime.now(),
+            'hash': full_hash,
+            'content': content,
+            'month': month,
+            'year': year,
+            'tier': tier
+        })
         
-        Output:
-        1. Introduction: "Baseado nos seus últimos 3 meses..."
-        2. Markdown Table: | Categoria | Média Atual | Meta Sugerida | Corte |
-            - Suggest realistic cuts (more on leisure, less on essentials).
-        3. Summary: "Se seguir isso, você economiza R$ X/mês."
-        
-        Language: PT-BR.
-        """
-        
-        response = model.generate_content(prompt)
-        return response.text
-        
-    except Exception as e:
-        print(f"❌ Budget Plan Error: {e}")
-        return "Erro ao gerar plano de orçamento."
-
-def analyze_cost_of_living(user_id: str, data: dict, tier: str = 'free') -> str:
-    """
-    Analisa os dados de custo de vida e gera insights (Premium).
-    """
-    if tier != 'premium':
-        return "A análise de IA do Custo de Vida é exclusiva para usuários Premium."
-        
-    if not GENAI_API_KEY:
-        return "IA Indisponível no momento."
-
-    try:
-        # data contém: { range, realized, committed, variable_avg, total_estimated_monthly }
-        
-        realized_total = data.get('realized', {}).get('average_total', 0)
-        committed_total = data.get('committed', {}).get('total', 0)
-        total_est = data.get('total_estimated_monthly', 0)
-        
-        cats = data.get('realized', {}).get('by_category', {})
-        top_cats = dict(sorted(cats.items(), key=lambda x: x[1], reverse=True)[:5])
-        
-        context = f"""
-        User Financial Data (Monthly Average):
-        - Total Estimated Cost: R${total_est:.2f}
-        - Fixed/Committed Cost: R${committed_total:.2f} ({(committed_total/total_est)*100 if total_est else 0:.1f}%)
-        - Variable Cost: R${realized_total:.2f} ({(realized_total/total_est)*100 if total_est else 0:.1f}%)
-        - Top Variable Categories: {json.dumps(top_cats, ensure_ascii=False)}
-        """
-        
-        model = genai.GenerativeModel(AI_MODEL_NAME)
-        prompt = f"""
-        Data:
-        {context}
-        
-        Role: Efficient Financial Strategist.
-        Task: Analyze the Cost of Living structure.
-        
-        Output (PT-BR, Markdown):
-        1. **Diagnóstico**: Is the fixed cost too high? (>50% is risky). Is the variable cost out of control?
-        2. **Alerta**: Point out the biggest offender in variable costs.
-        3. **Sugestão Prática**: One concrete step to lower the Cost of Living based on this data.
-        
-        Keep it concise (max 300 words). Use bullet points.
-        """
-        
-        response = model.generate_content(prompt)
-        return response.text
+        return content
 
     except Exception as e:
-        print(f"❌ Cost of Living Analysis Error: {e}")
-        return "Não foi possível gerar a análise. Tente novamente mais tarde."
+        print(f"❌ Report Error: {e}")
+        return "Erro ao gerar."
 
-def generate_debt_advice(user_id: str, debts_data: list, current_surplus: float) -> str:
+def generate_budget_plan(user_id: str, tier: str = 'pro') -> str:
     """
-    Gera um relatório holístico de consultoria para quitação de dívidas.
-    Analisa Dívidas vs. Sobra Mensal vs. Gastos Recentes.
+    Gera um plano orçamentário (50/30/20 ou Base Zero) com base nos gastos recentes.
     """
     if not GENAI_API_KEY:
-        return "IA Indisponível."
+        return "IA indisponível. Verifique a API Key."
 
     try:
-        # 1. Coleta Contexto de Gastos (Onde cortar?)
-        # Pega últimos 30 dias para ver 'ralos' de dinheiro
+        # 1. Analisar últimos 30 dias
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)
-        recent_txs = transaction_service.list_transactions(user_id, start_date=start_date, end_date=end_date)
+        txs = transaction_service.list_transactions(user_id, start_date=start_date, end_date=end_date)
         
-        expense_cats = {}
-        for t in recent_txs:
-            if t.type == 'expense':
-                c_name = t.category.name if t.category else "Outros"
-                expense_cats[c_name] = expense_cats.get(c_name, 0) + abs(t.amount)
+        income = 0
+        expenses = 0
+        cat_map = {}
         
-        top_expenses = dict(sorted(expense_cats.items(), key=lambda x: x[1], reverse=True)[:5])
+        for t in txs:
+            val = float(t.amount)
+            if t.type == 'income':
+                income += val
+            elif t.type == 'expense':
+                expenses += abs(val)
+                cat_name = t.category.name if t.category else "Outros"
+                cat_map[cat_name] = cat_map.get(cat_name, 0) + abs(val)
+        
+        # Se não houver dados suficientes
+        if income == 0 and expenses == 0:
+            return "Não há transações suficientes nos últimos 30 dias para gerar um plano."
 
-        # 2. Formata Dados das Dívidas
-        total_debt = sum(d.get('total_amount', 0) for d in debts_data)
-        debts_summary = []
-        for d in debts_data:
-            debts_summary.append(f"- {d.get('name')}: R${d.get('total_amount'):.2f} ({d.get('interest_rate')}% {d.get('interest_period')})")
+        # 2. Contexto Otimizado (TOON)
+        # I:Income, E:Expense, C:[Cat:Val]
+        top_cats = dict(sorted(cat_map.items(), key=lambda x: x[1], reverse=True)[:10])
+        cat_str = "|".join([f"{k}:{v:.0f}" for k, v in top_cats.items()])
         
-        debts_str = "\n".join(debts_summary)
-
-        # 3. Monta Contexto
-        context = f"""
-        User Financial Picture:
-        - Monthly Surplus (Income - Existing expenses): R$ {current_surplus:.2f}
-        - Total Debt Load: R$ {total_debt:.2f}
+        ctx = f"I:{income:.0f}|E:{expenses:.0f}|C:[{cat_str}]"
         
-        Debts:
-        {debts_str}
+        # 3. Prompt
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
         
-        Recent Top Expenses (Last 30 days - Potential Cuts):
-        {json.dumps(top_expenses, ensure_ascii=False)}
-        """
-
-        # 4. Prompt Consultor
-        model = genai.GenerativeModel(AI_MODEL_NAME)
         prompt = f"""
-        Data:
-        {context}
+        Data:{ctx}
+        Role:Financial Planner.
+        Task:Create a monthly budget plan (PT-BR).
         
-        Role: Expert Debt Consultant (Dave Ramsey style but Brazilian context).
-        Task: Create a minimal, actionable Debt Payoff Strategy (PT-BR).
+        Steps:
+        1. Analyze I vs E (Savings rate?).
+        2. Suggest 50/30/20 split based on I.
+        3. Recommend specific limits for top C to fit the plan.
+        4. Actionable advice to reduce E if E > I.
         
-        Output (Markdown):
-        1. **Diagnóstico 🩺**:
-           - One sentence reality check. Is it critical? Manageable?
-        
-        2. **Onde Cortar (Sugestões) ✂️**:
-           - Look at 'Recent Top Expenses'. Suggest 2 specific cuts to free up cash.
-           - Calculate how much extra cash this would generate.
-           
-        3. **Estratégia Recomendada 🎯**:
-           - Suggest Snowball (Bola de Neve) if motivation is needed (many small debts).
-           - Suggest Avalanche if there are high interest rates (>10% monthly).
-           - Explain WHY in 1 sentence.
-
-        4. **Plano de Ação 🚀**:
-           - 3 bullet points of what to do TODAY.
-           
-        Format: Use bolding and emojis. Be direct and encouraging.
+        Format: Markdown. Concise. Use bullets.
         """
         
-        response = model.generate_content(prompt)
+        response = _call_with_retry(model, prompt)
+        return response.text
+
+    except Exception as e:
+        print(f"❌ Budget Plan Error: {e}")
+        return "Erro ao gerar plano orçamentário."
+
+def generate_debt_advice(user_id: str, debts_data: list, current_surplus: float, tier: str = 'pro') -> str:
+    """
+    Gera conselhos sobre dívidas (Avalanche vs Bola de Neve).
+    debts_data: Lista de dicts ou objetos com {name, total_amount, interest_rate, minimum_payment}
+    """
+    if not GENAI_API_KEY:
+        return "IA indisponível."
+
+    try:
+        # 1. Formatar dados das dívidas
+        # D:[Name:Val@Rate%(Min)]
+        debt_list = []
+        total_debt = 0
+        for d in debts_data:
+            # Handle object or dict safely
+            if isinstance(d, dict):
+                name = d.get('name', 'Debt')
+                amt = float(d.get('total_amount', 0))
+                rate = float(d.get('interest_rate', 0))
+                min_pay = float(d.get('minimum_payment', 0))
+            else:
+                name = getattr(d, 'name', 'Debt')
+                amt = float(getattr(d, 'total_amount', 0))
+                rate = float(getattr(d, 'interest_rate', 0))
+                min_pay = float(getattr(d, 'minimum_payment', 0))
+            
+            total_debt += amt
+            debt_list.append(f"{name}:{amt:.0f}@{rate}%(Min:{min_pay:.0f})")
+            
+        debts_str = "|".join(debt_list)
+        
+        # 2. Prompt
+        ctx = f"Debts:[{debts_str}]|Surplus:{current_surplus:.0f}|Total:{total_debt:.0f}"
+        
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
+        
+        prompt = f"""
+        Data:{ctx}
+        Role:Debt Specialist.
+        Task:Debt Payoff Strategy (PT-BR).
+        
+        Steps:
+        1. Compare 'Snowball' (Smallest first) vs 'Avalanche' (Highest Interest first) for this specific scenario.
+        2. Recommend the best one mathematically vs psychologically.
+        3. Estimate payoff time with Surplus.
+        
+        Format: Markdown. Short and encouraging.
+        """
+        
+        response = _call_with_retry(model, prompt)
         return response.text
 
     except Exception as e:
         print(f"❌ Debt Advice Error: {e}")
-        return "Erro ao gerar consultoria. Verifique seus dados."
+        return "Erro ao analisar dívidas."
+

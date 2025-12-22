@@ -21,10 +21,11 @@ class DocumentAnalysisService:
         # (Optional) Double check tier here if not done in API
         pref = get_preferences(user_id)
         if pref.subscription_tier != 'premium':
-             return {"error": "Feature available for Premium users only."}
+             # Return error that frontend can parse
+             return {"error": "Recurso disponível apenas para usuários Premium."}
 
         if not GENAI_API_KEY:
-             return {"error": "AI Service unavailable."}
+             return {"error": "Serviço de IA indisponível no momento."}
 
         try:
             model = genai.GenerativeModel(AI_MODEL_NAME)
@@ -66,12 +67,12 @@ class DocumentAnalysisService:
             
             # Clean Markdown
             if text.startswith("```"):
-                text = text.split("```")[1]
+                text = (text.split("```")[1]).strip()
                 if text.startswith("json"):
-                    text = text[4:]
+                    text = text[4:].strip()
             
             return json.loads(text)
             
         except Exception as e:
             print(f"❌ Error analyzing document: {e}")
-            return {"error": f"Failed to analyze document: {str(e)}"}
+            return {"error": f"Falha ao analisar documento: {str(e)}"}

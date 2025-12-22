@@ -17,7 +17,7 @@ from app.services import (
 
 from app.schemas.account import Account, AccountCreate
 from app.schemas.category import Category, CategoryCreate, CategoryType
-from app.schemas.transaction import Transaction, TransactionCreate
+from app.schemas.transaction import Transaction, TransactionCreate, TransactionUpdate
 from app.schemas.budget import Budget, BudgetCreate
 from app.schemas.dashboard import DashboardSummary
 from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
@@ -109,7 +109,7 @@ def read_transactions(
 
 @router.put("/transactions/{transaction_id}", response_model=Transaction)
 @limiter.limit("10 per minute")
-def update_transaction(request: Request, transaction_id: str, transaction: TransactionCreate, current_user: dict = Depends(get_current_user)):
+def update_transaction(request: Request, transaction_id: str, transaction: TransactionUpdate, current_user: dict = Depends(get_current_user)):
     return transaction_service.update_transaction(transaction_id, transaction, current_user['uid'])
 
 @router.get("/transactions/upcoming", response_model=List[Transaction])

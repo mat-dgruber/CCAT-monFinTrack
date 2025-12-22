@@ -5,6 +5,7 @@ from app.services import category as category_service
 from app.core.date_utils import get_month_range
 from typing import Optional
 from fastapi import HTTPException
+from datetime import datetime, timezone
 
 COLLECTION_NAME = "budgets"
 
@@ -77,9 +78,15 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
             t_data = t.to_dict()
             transaction_date = t_data.get("date")
             
+            # Ensure transaction_date is datetime
+            if isinstance(transaction_date, str):
+                try:
+                    transaction_date = datetime.fromisoformat(transaction_date.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+
             # Verificar se a data é naive e converter se necessário (hack de segurança)
-            if transaction_date and transaction_date.tzinfo is None:
-                 from datetime import timezone
+            if transaction_date and isinstance(transaction_date, datetime) and transaction_date.tzinfo is None:
                  transaction_date = transaction_date.replace(tzinfo=timezone.utc)
 
             if t_data.get("type") == "expense" and transaction_date and start_date <= transaction_date <= end_date:

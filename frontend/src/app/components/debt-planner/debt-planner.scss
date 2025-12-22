@@ -13,16 +13,11 @@
     color: var(--text-color);
 }
 
-/* Header Styling */
-h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    background: linear-gradient(90deg, #60a5fa, #c084fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-}
+/* Base Card Revamp - Removed to use Tailwind/PrimeFlex global utilities */
+/* .card { ... } */
+
+/* Header Styling - Removed to use standard h1/h2 classes */
+/* h2 { ... } */
 
 /* Tabs Customization */
 ::ng-deep .p-tabs {
@@ -136,11 +131,100 @@ label {
     text-align: center;
     padding: 4rem 2rem;
     color: var(--text-color-secondary);
+    }
 
-    i {
-        font-size: 3rem;
-        opacity: 0.5;
-        margin-bottom: 1rem;
-        display: block;
+
+/* Upload Zone & Scanner Animations */
+.upload-zone {
+    border: 2px dashed var(--surface-border, rgba(255,255,255,0.1));
+    border-radius: 1rem;
+    background: rgba(255,255,255,0.015);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+        border-color: var(--primary-color, #60a5fa);
+        background: rgba(96, 165, 250, 0.05);
+    }
+
+    &.drag-over {
+        border-color: var(--primary-color, #60a5fa);
+        background: rgba(96, 165, 250, 0.1);
+        transform: scale(1.01);
+    }
+}
+
+/* Scanner Beam Effect */
+@keyframes scan-beam {
+    0% { top: 0%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+@keyframes scan-line {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(400px); }
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom,
+        rgba(99, 102, 241, 0) 0%,
+        rgba(99, 102, 241, 0.1) 50%,
+        rgba(99, 102, 241, 0) 100%);
+    z-index: 10;
+    pointer-events: none;
+    animation: scan-beam 2s infinite ease-in-out;
+    border-bottom: 2px solid #6366f1;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+}
+
+.scan-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: #00ff88;
+        box-shadow: 0 0 15px #00ff88, 0 0 30px #00ff88;
+        animation: scan-line 2s linear infinite;
+        z-index: 20;
+    }
+}
+
+.processing-pulse {
+    animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+/* Hide default FileUpload Toolbar and Chrome for Custom Look */
+/* Hide default FileUpload Toolbar/Header and Chrome */
+::ng-deep .p-fileupload {
+    .p-fileupload-buttonbar,
+    .p-fileupload-header {
+        display: none !important;
+    }
+    .p-fileupload-content {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
     }
 }

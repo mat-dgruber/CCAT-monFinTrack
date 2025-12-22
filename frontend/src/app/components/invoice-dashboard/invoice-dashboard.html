@@ -1,4 +1,4 @@
-<div class="p-4 fade-in-up">
+<div [class]="isWidget ? 'fade-in-up' : 'p-4 fade-in-up'">
     @if (!isWidget) {
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -24,7 +24,7 @@
             </div>
         }
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div [class]="isWidget ? 'grid grid-cols-1 xl:grid-cols-2 gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'">
             <div *ngFor="let invoice of invoices()" class="col-span-1">
                  <div class="bg-white dark:bg-slate-800 p-6 shadow-md dark:shadow-none dark:border dark:border-gray-700 rounded-xl h-full flex flex-col relative overflow-hidden transition-all hover:shadow-lg">
                       <!-- Status Ribbon -->

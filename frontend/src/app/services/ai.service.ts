@@ -27,7 +27,8 @@ export class AIService {
     location: string,
     payment_method: string,
     account_id: string,
-    description?: string
+    description?: string,
+    attachment_url?: string
   }> {
     const formData = new FormData();
     formData.append('file', file);
@@ -40,8 +41,44 @@ export class AIService {
       location: string,
       payment_method: string,
       account_id: string,
-      description?: string
+      description?: string,
+      attachment_url?: string
     }>(`${this.apiUrl}/scan`, formData);
+  }
+
+  scanReceiptFromUrl(url: string): Observable<{
+    title: string,
+    amount: number,
+    date: string,
+    category_id: string,
+    items: { description: string, amount: number, category_id: string }[],
+    location: string,
+    payment_method: string,
+    account_id: string,
+    description?: string,
+    attachment_url?: string
+  }> {
+    // We send as a query param or form data? The backend expects multipart/form-data with 'file' or 'file_url'
+    // But 'file_url' is a string. We can send as query param?
+    // My backend implementation:
+    // async def scan_receipt_endpoint(file: Optional[UploadFile] = File(None), file_url: Optional[str] = None, ...):
+    // FastAPI handles 'file_url' as a query param by default if not specified as Form(...) or Body(...).
+    // Let's check my backend code again.
+    // I defined: file_url: Optional[str] = None.
+    // If I didn't use Form(), it defaults to Query param.
+    // Let's assume query param for simplicity.
+    return this.http.post<{
+        title: string,
+        amount: number,
+        date: string,
+        category_id: string,
+        items: { description: string, amount: number, category_id: string }[],
+        location: string,
+        payment_method: string,
+        account_id: string,
+        description?: string,
+        attachment_url?: string
+      }>(`${this.apiUrl}/scan`, null, { params: { file_url: url } });
   }
 
   getSubscriptionSuggestions(): Observable<any[]> {
@@ -58,5 +95,9 @@ export class AIService {
   analyzeCostOfLiving(data: any): Observable<{ analysis: string }> {
     // Touching file to force recompile
     return this.http.post<{ analysis: string }>(`${this.apiUrl}/cost-of-living-analysis`, { data });
+  }
+
+  getLimits(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/limits`);
   }
 }
