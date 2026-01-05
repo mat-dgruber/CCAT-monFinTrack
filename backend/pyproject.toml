@@ -21,4 +21,5 @@ dependencies = [
     "pandas>=2.0.0",
     "google-generativeai",
     "ofxparse",
+    "fastapi-mail>=1.6.1",
 ]
