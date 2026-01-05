@@ -7,6 +7,7 @@ import { UserPreferenceService } from './services/user-preference.service';
 
 import { PwaService } from './services/pwa.service';
 import { ChatComponent } from './components/chat/chat.component';
+import { PushNotificationService } from './services/push-notification.service';
 
 @Component({
   selector: 'app-root',
@@ -23,6 +24,10 @@ import { ChatComponent } from './components/chat/chat.component';
 export class App {
   constructor(
       private userPrefs: UserPreferenceService,
-      private pwaService: PwaService // Inicializa o serviço PWA
-  ) {}
+      private pwaService: PwaService,
+      private pushService: PushNotificationService
+  ) {
+      // Solicitar permissão de notificação ao iniciar
+      this.pushService.requestPermission();
+  }
 }

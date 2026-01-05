@@ -67,6 +67,9 @@ app.include_router(debt_router, prefix="/api")
 from app.api.resources import router as resources_router
 app.include_router(resources_router)
 
+from app.api.jobs import router as jobs_router
+app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
+
 from fastapi.staticfiles import StaticFiles
 import os
 

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumo Semanal MonFinTrack</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #4CAF50; /* Cor Principal do App */
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .highlight {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .expense {
+            color: #e53935;
+        }
+        .income {
+            color: #43a047;
+        }
+        .footer {
+            background-color: #e0e0e0;
+            color: #666;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MonFinTrack</h1>
+            <p>Seu Resumo Semanal</p>
+        </div>
+        <div class="content">
+            <p>Olá, <strong>{{ name }}</strong>!</p>
+            <p>Aqui está o resumo das suas finanças nesta semana:</p>
+
+            <div class="card">
+                <h3>💰 Balanço da Semana</h3>
+                <p>Receitas: <span class="highlight income">R$ {{ data.income_total }}</span></p>
+                <p>Despesas: <span class="highlight expense">R$ {{ data.expense_total }}</span></p>
+                <p>Saldo: <span class="highlight">R$ {{ data.balance }}</span></p>
+            </div>
+
+            {% if data.top_expenses %}
+            <div class="card">
+                <h3>📉 Maiores Gastos</h3>
+                <ul>
+                    {% for expense in data.top_expenses %}
+                    <li>{{ expense.description }}: R$ {{ expense.amount }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if data.alerts %}
+            <div class="card" style="border-left: 4px solid #ff9800;">
+                <h3>⚠️ Alertas</h3>
+                <ul>
+                    {% for alert in data.alerts %}
+                    <li>{{ alert }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div style="text-align: center;">
+                <a href="https://ccat-monfintrack.web.app/dashboard" class="button">Ver Detalhes no App</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Enviado automaticamente por MonFinTrack.</p>
+            <p>Se você não deseja receber estes emails, ajuste suas preferências no app.</p>
+        </div>
+    </div>
+</body>
+</html>
