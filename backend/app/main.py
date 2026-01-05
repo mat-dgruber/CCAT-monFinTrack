@@ -58,8 +58,14 @@ app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
 app.include_router(import_transactions.router, prefix="/api/import", tags=["Import"])
 app.include_router(attachments.router, prefix="/api/attachments", tags=["Attachments"])
 
+from app.api.calculator import router as calculator_router
+app.include_router(calculator_router, prefix="/api", tags=["Calculator"])
+
 from app.api.debts import router as debt_router
 app.include_router(debt_router, prefix="/api")
+
+from app.api.resources import router as resources_router
+app.include_router(resources_router)
 
 from fastapi.staticfiles import StaticFiles
 import os

@@ -20,6 +20,10 @@ class UserPreferenceBase(BaseModel):
     # Subscription Tier (free, pro, premium)
     subscription_tier: Optional[str] = "free"
 
+    # Notifications & Privacy
+    email_digest_enabled: Optional[bool] = False
+    privacy_share_data: Optional[bool] = True
+
 class UserPreferenceCreate(UserPreferenceBase):
     pass
 

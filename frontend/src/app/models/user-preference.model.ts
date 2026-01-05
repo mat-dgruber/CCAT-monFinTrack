@@ -18,6 +18,10 @@ export interface UserPreference {
 
      // Subscription
      subscription_tier?: 'free' | 'pro' | 'premium';
+
+     // Notifications & Privacy
+     email_digest_enabled?: boolean;
+     privacy_share_data?: boolean;
 }
 
 export interface UserPreferenceCreate {
@@ -35,4 +39,6 @@ export interface UserPreferenceCreate {
      auto_apply_tithe?: boolean;
      auto_apply_offering?: boolean;
      subscription_tier?: 'free' | 'pro' | 'premium';
+     email_digest_enabled?: boolean;
+     privacy_share_data?: boolean;
 }

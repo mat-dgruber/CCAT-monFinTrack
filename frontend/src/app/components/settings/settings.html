@@ -51,6 +51,17 @@
           />
         </div>
 
+        <!-- Birthday -->
+        <div class="flex flex-col gap-2">
+            <label class="font-medium text-secondary">Data de Nascimento</label>
+            <p-datePicker
+                [(ngModel)]="birthday"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full"
+            ></p-datePicker>
+        </div>
+
         <!-- Update Button -->
         <div class="mt-auto pt-2">
           <p-button
@@ -69,12 +80,12 @@
            <i class="pi pi-shield text-2xl text-primary"></i>
            <h2 class="text-xl font-semibold text-color m-0">Central de Segurança</h2>
        </div>
-       
+
        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8 mb-8">
            <!-- Col 1: Access -->
            <div class="flex flex-col gap-6">
                <h3 class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0">Credenciais de Acesso</h3>
-               
+
                <!-- Email -->
                <div class="flex flex-col gap-2">
                    <div class="flex justify-between items-center">
@@ -107,10 +118,63 @@
                </div>
            </div>
 
+           <!-- Col 3: Notifications & Privacy (Wide) -->
+           <div class="col-span-1 lg:col-span-2 border-t border-surface-border pt-6 mt-2">
+               <h3 class="text-base font-bold text-color uppercase tracking-wider text-xs mb-6">Privacidade e Notificações</h3>
+
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Notifications -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-color">Notificações Push</span>
+                                <span class="text-xs text-secondary">Alertas no navegador/celular.</span>
+                            </div>
+                            <p-toggleswitch
+                                [(ngModel)]="preferences!.notifications_enabled"
+                                (ngModelChange)="onNotificationChange($event)"
+                            ></p-toggleswitch>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-color">Resumo por Email</span>
+                                    <p-tag value="PRO" severity="info" styleClass="text-xs py-0"></p-tag>
+                                </div>
+                                <span class="text-xs text-secondary">Relatório semanal da sua vida financeira.</span>
+                            </div>
+                            <p-toggleswitch
+                                [ngModel]="emailDigestEnabled()"
+                                (ngModelChange)="emailDigestEnabled.set($event); onEmailDigestChange()"
+                                [disabled]="selectedTier() === 'free'"
+                                pTooltip="Disponível apenas para membros PRO"
+                                tooltipPosition="top"
+                                [tooltipDisabled]="selectedTier() !== 'free'"
+                            ></p-toggleswitch>
+                        </div>
+                    </div>
+
+                    <!-- Privacy -->
+                    <div class="flex flex-col gap-4">
+                         <div class="flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-color">Melhoria de IA</span>
+                                <span class="text-xs text-secondary">Compartilhar dados anônimos para treinar modelos.</span>
+                            </div>
+                            <p-toggleswitch
+                                [ngModel]="privacyShared()"
+                                (ngModelChange)="privacyShared.set($event); onPrivacyChange()"
+                            ></p-toggleswitch>
+                        </div>
+                    </div>
+               </div>
+           </div>
+
            <!-- Col 2: MFA -->
            <div class="flex flex-col gap-6">
                <h3 class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0">Autenticação em Duas Etapas (MFA)</h3>
-               
+
                <div class="flex flex-col gap-4">
                    <div class="flex items-start gap-4">
                         <div class="mt-1">
@@ -252,7 +316,7 @@
           <h2 class="text-xl font-semibold text-color m-0">Uso de IA</h2>
           <p-tag [value]="aiLimits()?.tier" severity="info" styleClass="uppercase"></p-tag>
       </div>
-      
+
       <div class="flex flex-col gap-6 flex-1">
           @if (aiLimits()) {
               <div class="flex flex-col gap-5">
@@ -274,7 +338,7 @@
                       <p-progressBar [value]="aiLimits().chat.limit > 0 ? (aiLimits().chat.used / aiLimits().chat.limit) * 100 : 0" [showValue]="false" styleClass="h-2"></p-progressBar>
                   </div>
               </div>
-              
+
               <div class="mt-auto p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex gap-3 text-sm text-blue-800 dark:text-blue-200">
                   <i class="pi pi-sparkles mt-1"></i>
                   <p class="m-0 leading-tight">Seu plano permite acesso a recursos avançados de análise.</p>
@@ -352,7 +416,7 @@
         }
       </div>
     </div>
-  
+
   </div> <!-- End Grid -->
 </div>
 

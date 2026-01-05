@@ -76,7 +76,7 @@ Para que a aplicação se conecte ao Firestore, você precisa das credenciais de
 Para iniciar o servidor de desenvolvimento com *hot-reload*:
 
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 O servidor iniciará por padrão em `http://127.0.0.1:8000`.

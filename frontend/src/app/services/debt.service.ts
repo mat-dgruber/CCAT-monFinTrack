@@ -68,4 +68,21 @@ export class DebtService {
     const params = new HttpParams().set('monthly_surplus', monthlySurplus.toString());
     return this.http.post(`${this.apiUrl}/advice`, {}, { params });
   }
+
+  // --- CALCULATOR ---
+
+  calculatePresentValue(
+    parcelValue: number,
+    monthlyRate: number,
+    dueDate: string, // YYYY-MM-DD
+    paymentDate?: string // YYYY-MM-DD
+  ): Observable<any> {
+    const payload = {
+        parcel_value: parcelValue,
+        monthly_interest_rate: monthlyRate,
+        due_date: dueDate,
+        payment_date: paymentDate
+    };
+    return this.http.post(`${environment.apiUrl}/calculator/present-value`, payload);
+  }
 }

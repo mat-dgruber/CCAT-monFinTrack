@@ -1,13 +1,15 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date
-from app.models.debt import DebtType, InterestPeriod, AmortizationSystem
+from app.models.debt import DebtType, InterestPeriod, AmortizationSystem, CardBrand, IndexerType, DebtStatus
 from app.core.validators import sanitize_html
 
 class DebtBase(BaseModel):
     name: str = Field(..., min_length=2, description="Nome da dívida (ex: Nubank, Financiamento Casa)")
     debt_type: DebtType = Field(default=DebtType.OTHER, description="Tipo da dívida")
     
+    status: DebtStatus = Field(default=DebtStatus.ON_TIME, description="Status da dívida (Em dia, Atrasado, Negociação)")
+
     total_amount: float = Field(..., ge=0, description="Saldo Devedor Atual")
     original_amount: Optional[float] = Field(default=None, ge=0, description="Valor Original (ou negociado)")
     
@@ -16,14 +18,36 @@ class DebtBase(BaseModel):
     
     cet: Optional[float] = Field(default=None, ge=0, description="Custo Efetivo Total (%)")
     
-    minimum_payment: Optional[float] = Field(default=None, ge=0, description="Pagamento Mínimo (obrigatório para Cartão/Cheque)")
+    minimum_payment: Optional[float] = Field(default=None, ge=0, description="Pagamento Mínimo (obrigatório para Cartão/Cheque/Parcela)")
     due_day: Optional[int] = Field(default=None, ge=1, le=31, description="Dia do vencimento")
+    closing_day: Optional[int] = Field(default=None, ge=1, le=31, description="Dia de fechamento da fatura (Cartão)")
     
     remaining_installments: Optional[int] = Field(default=None, ge=0, description="Parcelas restantes (para financiamentos/parcelados)")
     
     category_id: Optional[str] = Field(default=None, description="Categoria de despesa vinculada")
     
-    # Advanced / Premium / Financing
+    # --- Advanced / Specific Fields ---
+    
+    # Credit Card
+    card_brand: Optional[CardBrand] = Field(default=None, description="Bandeira do Cartão")
+    card_limit: Optional[float] = Field(default=None, ge=0, description="Limite Total do Cartão")
+    
+    # Loans / Financing
+    contract_number: Optional[str] = Field(default=None, description="Número do Contrato")
+    allow_early_amortization: bool = Field(default=True, description="Permite amortização antecipada?")
+    
+    # Mortgage (Real Estate)
+    indexer: Optional[IndexerType] = Field(default=None, description="Indexador (TR, IPCA, etc)")
+    insurance_value: Optional[float] = Field(default=None, ge=0, description="Valor dos Seguros (MIP/DFI)")
+    property_value: Optional[float] = Field(default=None, ge=0, description="Valor do Imóvel na Compra")
+    current_property_value: Optional[float] = Field(default=None, ge=0, description="Valor Atual de Mercado")
+    fgts_usage_interval: Optional[int] = Field(default=24, description="Intervalo em meses para uso do FGTS")
+    
+    # Overdraft
+    daily_interest_rate: Optional[float] = Field(default=None, ge=0, description="Juro diário (%) para Cheque Especial")
+    days_used_in_month: Optional[int] = Field(default=0, ge=0, le=31, description="Dias utilizados no mês")
+
+    # Premium
     contract_file_path: Optional[str] = Field(default=None, description="Caminho do contrato analisado (Premium)")
     amortization_system: Optional[AmortizationSystem] = Field(default=AmortizationSystem.NONE, description="Sistema de amortização (SAC/PRICE)")
     is_subsidized: bool = Field(default=False, description="Se possui subsídio (ex: MCMV)")
@@ -39,6 +63,7 @@ class DebtCreate(DebtBase):
 class DebtUpdate(BaseModel):
     name: Optional[str] = None
     debt_type: Optional[DebtType] = None
+    status: Optional[DebtStatus] = None
     total_amount: Optional[float] = None
     original_amount: Optional[float] = None
     interest_rate: Optional[float] = None
@@ -46,11 +71,24 @@ class DebtUpdate(BaseModel):
     cet: Optional[float] = None
     minimum_payment: Optional[float] = None
     due_day: Optional[int] = None
+    closing_day: Optional[int] = None
     remaining_installments: Optional[int] = None
     category_id: Optional[str] = None
     contract_file_path: Optional[str] = None
     amortization_system: Optional[AmortizationSystem] = None
     is_subsidized: Optional[bool] = None
+    
+    card_brand: Optional[CardBrand] = None
+    card_limit: Optional[float] = None
+    contract_number: Optional[str] = None
+    allow_early_amortization: Optional[bool] = None
+    indexer: Optional[IndexerType] = None
+    insurance_value: Optional[float] = None
+    property_value: Optional[float] = None
+    current_property_value: Optional[float] = None
+    fgts_usage_interval: Optional[int] = None
+    daily_interest_rate: Optional[float] = None
+    days_used_in_month: Optional[int] = None
 
 class Debt(DebtBase):
     id: str

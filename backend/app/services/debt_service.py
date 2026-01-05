@@ -115,6 +115,9 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
     # Sort logic for "Targeting"
     # Snowball: Lowest Balance first
     # Avalanche: Highest Rate first
+    # Sort logic for "Targeting"
+    # Snowball: Lowest Balance first
+    # Avalanche: Highest Rate first
     def get_priority_debt(active_debts):
         if strategy == 'avalanche':
             # Sort by rate DESC
@@ -122,6 +125,26 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
         else:
             # Snowball: Sort by balance ASC
             return sorted(active_debts, key=lambda x: x['balance'])[0]
+
+    # --- SEASONAL INCOME FETCH ---
+    def fetch_seasonal_resources(uid: str) -> List[Dict[str, Any]]:
+        db = get_db()
+        docs = db.collection('seasonal_incomes').where('user_id', '==', uid).stream()
+        res = []
+        for doc in docs:
+            d = doc.to_dict()
+            # Normalize date
+            if 'receive_date' in d:
+                # Assuming stored as ISO string YYYY-MM-DD based on API
+                 try:
+                     d['date_obj'] = date.fromisoformat(d['receive_date'])
+                 except:
+                     continue
+            res.append(d)
+        return res
+
+    seasonal_resources = fetch_seasonal_resources(user_id)
+    # -----------------------------
 
     current_date = date.today()
     steps = []
@@ -145,8 +168,6 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
             d['interest_paid_total'] += interest
             total_interest_global += interest
             
-            # Record interest step? Maybe only payment step
-            
             # Min Payment: Usually % of balance or fixed. Use stored min_payment.
             # However, if balance < min_payment, min_payment = balance
             payment = min(d['balance'], d['min_payment'])
@@ -156,6 +177,33 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
         # 2. Determine Budget
         # If totalmins > budget, we have a problem (underpayment). We assume user pays at least mins.
         available_for_debts = max(monthly_budget, total_min_required)
+        
+        # --- APPLY SEASONAL RESOURCES ---
+        monthly_bonus = 0.0
+        for res in seasonal_resources:
+            r_date = res.get('date_obj')
+            if not r_date: continue
+            
+            is_recurrence = res.get('is_recurrence', False)
+            match = False
+            
+            if is_recurrence:
+                # Match Month
+                if r_date.month == current_date_step.month:
+                    match = True
+            else:
+                # Match exact month/year
+                if r_date.month == current_date_step.month and r_date.year == current_date_step.year:
+                    match = True
+            
+            if match:
+                monthly_bonus += float(res.get('amount', 0))
+        
+        if monthly_bonus > 0:
+             # Add bonus to available budget
+             available_for_debts += monthly_bonus
+        # --------------------------------
+
         extra_cash = available_for_debts - total_min_required
         
         # 3. Pay Minimums
@@ -163,19 +211,13 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
             pay_amount = d['current_payment']
             d['balance'] -= pay_amount
             
-            # Step record (aggregated per debt? or per month?)
-            # Usually plan shows one line per month or detailed.
-            # We'll generate steps for user history. Too many steps if detail every debt every month.
-            # Output format: Grouped by month? Or flat list of interactions?
-            # User wants "Plan". Usually: "Month 1: Pay X to A, Y to B."
-            
         # 4. Apply Extra (Snowball/Avalanche)
-        if extra_cash > 0 and active_debts:
-            # Re-check balances after min payment
+        if extra_cash > 0:
+            # Re-check active debts (some might be paid by min payment if balance was low? unlikely logic there but safe to re-filter)
             active_debts = [d for d in sim_debts if d['balance'] > 0.01]
             if active_debts:
                 # Loop to distribute extra if multiple debts get paid off
-                while extra_cash > 0 and active_debts:
+                while extra_cash > 0.01 and active_debts:
                     target = get_priority_debt(active_debts)
                     payment = min(target['balance'], extra_cash)
                     target['balance'] -= payment
@@ -195,11 +237,16 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
         # Or detailed: "Month 1: Debt A - Paid 100. Debt B - Paid 500."
         for d in sim_debts:
             if d.get('current_payment', 0) > 0:
+                # Flag if this step included bonus
+                step_note = ""
+                if monthly_bonus > 0:
+                     step_note = " (Inclui Recurso Sazonal)"
+                     
                 steps.append(PaymentStep(
                     month_index=month_idx,
                     date=current_date_step.isoformat(),
                     payment_amount=round(d['current_payment'], 2),
-                    interest_paid=0.0, # Approximate, tracked in aggregate
+                    interest_paid=0.0, # Approximate
                     principal_paid=0.0,
                     remaining_balance=round(d['balance'], 2),
                     debt_id=d['id'],

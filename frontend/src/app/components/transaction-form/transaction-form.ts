@@ -23,10 +23,10 @@ import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { AIService } from '../../services/ai.service';
+import { AttachmentService } from '../../services/attachment.service';
 import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
 import { HttpClient } from '@angular/common/http';
-import { AttachmentService } from '../../services/attachment.service';
 
 import { Category } from '../../models/category.model';
 import { Transaction } from '../../models/transaction.model';
@@ -69,6 +69,7 @@ export class TransactionForm implements OnInit {
 
   private preferenceService = inject(UserPreferenceService);
   private aiService = inject(AIService);
+  private attachmentService = inject(AttachmentService);
   private firebaseService = inject(FirebaseWrapperService);
   private http = inject(HttpClient);
 
@@ -240,8 +241,6 @@ export class TransactionForm implements OnInit {
         }
     });
 
-
-
     // AI Classification logic
     this.form.get('title')?.valueChanges.pipe(
         takeUntilDestroyed(),
@@ -307,7 +306,7 @@ export class TransactionForm implements OnInit {
                 if (data.attachment_url) {
                     const baseUrl = environment.apiUrl.replace('/api', '');
                     const fullUrl = data.attachment_url.startsWith('http') ? data.attachment_url : `${baseUrl}${data.attachment_url}`;
-                    
+
                     const current = this.form.get('attachments')?.value || [];
                     patch.attachments = [...current, fullUrl];
                 }
@@ -325,23 +324,6 @@ export class TransactionForm implements OnInit {
     }
   }
 
-import { AttachmentService } from '../../services/attachment.service';
-
-// ... imports
-
-@Component({
-  // ... selector etc
-})
-export class TransactionForm implements OnInit {
-  // ... services
-  private attachmentService = inject(AttachmentService);
-  
-  // ...
-
-  // ... constructor etc
-
-  // --- Attachment Methods ---
-
   onUpload(event: any) {
     const file = event.target.files[0];
     if (!file) return;
@@ -352,16 +334,16 @@ export class TransactionForm implements OnInit {
     }
 
     this.isUploading.set(true);
-    
+
     this.attachmentService.uploadFile(file).subscribe({
         next: (res) => {
             // Resolve URL (if relative)
             const baseUrl = environment.apiUrl.replace('/api', '');
             const fullUrl = res.url.startsWith('http') ? res.url : `${baseUrl}${res.url}`;
-            
+
             const current = this.form.get('attachments')?.value || [];
             this.form.patchValue({ attachments: [...current, fullUrl] });
-            
+
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Arquivo anexado.' });
             this.isUploading.set(false);
         },
@@ -371,26 +353,22 @@ export class TransactionForm implements OnInit {
             this.isUploading.set(false);
         }
     });
-    
+
     event.target.value = ''; // Reset
   }
-  
+
   scanAttachment(url: string) {
-       // Extract relative path if needed, or pass full url if backend supports it.
-       // Backend expects: /static/attachments/...
-       // Our fullUrl is http://localhost:8000/static/attachments/...
-       
        let relativeUrl = url;
        try {
            const urlObj = new URL(url);
-           relativeUrl = urlObj.pathname; // /static/attachments/filename.jpg
+           relativeUrl = urlObj.pathname;
        } catch (e) {
            // already relative or invalid
        }
-       
+
        this.isScanning.set(true);
        this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando anexo...' });
-       
+
        this.aiService.scanReceiptFromUrl(relativeUrl).subscribe({
             next: (data) => {
                  const patch: any = {};
@@ -416,7 +394,10 @@ export class TransactionForm implements OnInit {
        });
   }
 
-
+  removeAttachment(url: string) {
+      const current = this.form.get('attachments')?.value || [];
+      this.form.patchValue({ attachments: current.filter((u: string) => u !== url) });
+  }
 
   ngOnInit() {
     this.loadCategories();
@@ -711,38 +692,5 @@ export class TransactionForm implements OnInit {
         }
       }
     });
-  }
-  scanReceipt(file: File) {
-      this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando imagem...' });
-      const formData = new FormData();
-      formData.append('file', file);
-
-      this.http.post<any>(`${environment.apiUrl}/ai/scan`, formData).subscribe({
-          next: (data) => {
-              if (data) {
-                 const patch: any = {};
-                 if (data.title) patch.title = data.title;
-                 if (data.amount) patch.amount = data.amount;
-                 if (data.date) patch.date = new Date(data.date);
-                 if (data.description) patch.description = data.description;
-                 if (data.payment_method) patch.payment_method = data.payment_method;
-
-                 if (data.category_id) {
-                     const cat = this.categories().find(c => c.id === data.category_id);
-                     if (cat) patch.category = cat;
-                 }
-                 this.form.patchValue(patch);
-                 this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Dados preenchidos!' });
-              }
-          },
-          error: () => {
-              this.messageService.add({ severity: 'warn', summary: 'IA', detail: 'Não foi possível ler o comprovante.' });
-          }
-      });
-  }
-
-  removeAttachment(url: string) {
-      const current = this.form.get('attachments')?.value || [];
-      this.form.patchValue({ attachments: current.filter((u: string) => u !== url) });
   }
 }

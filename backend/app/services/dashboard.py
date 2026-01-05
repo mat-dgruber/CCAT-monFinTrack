@@ -41,8 +41,35 @@ def get_dashboard_data(
         ref_date = now
         
     transactions_query = db.collection("transactions").where("user_id", "==", user_id)
-    all_transactions_stream = list(transactions_query.stream())
-    all_transactions_data = [doc.to_dict() for doc in all_transactions_stream] # Cache in memory
+    
+    # DETERMINE O RANGE TOTAL NECESSÁRIO (Mês Atual + 6 Meses de Evolução)
+    # Start: O menor entre (current_start) e (6 meses atrás)
+    # End: O maior entre (current_end) e (hoje - caso futuro?)
+    
+    # 6 Months ago from ref_date
+    evolution_start = ref_date - timedelta(days=200) # Safe buffer
+    
+    # Normalize Timezones
+    if evolution_start.tzinfo is None: evolution_start = evolution_start.replace(tzinfo=timezone.utc)
+    if current_start.tzinfo is None: current_start = current_start.replace(tzinfo=timezone.utc)
+    if current_end.tzinfo is None: current_end = current_end.replace(tzinfo=timezone.utc)
+    
+    query_start = min(current_start, evolution_start)
+    query_end = current_end
+    
+    # Ensure optimized query
+    # Using transaction_service to leverage the logic we just fixed
+    # list_transactions returns Pydantic models. We convert to dicts to maintain compatibility with below logic.
+    from app.services import transaction as transaction_service
+    
+    pydantic_txs = transaction_service.list_transactions(
+        user_id=user_id,
+        start_date=query_start,
+        end_date=query_end,
+        limit=2000 # 6 months * ~300 tx/mo = 1800. Safe cap.
+    )
+    
+    all_transactions_data = [t.model_dump() for t in pydantic_txs]
 
     # Fetch Invoice Category ID once
     invoice_category_id = None

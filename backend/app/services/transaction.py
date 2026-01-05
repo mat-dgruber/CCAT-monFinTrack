@@ -210,23 +210,62 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
     if not start_date and not end_date and month and year:
         start_date, end_date = get_month_range(month, year)
 
+    # OTIMIZAÇÃO: Filtro no Banco de Dados (Requer Índice Composto user_id + date)
+    if start_date and end_date:
+        # Garante UTC/Aware para consulta
+        if start_date.tzinfo is None:
+             # Assume start of day in UTC if naive, or keep naive if DB is naive?
+             # Standardizing to UTC best practice if DB stores Timestamps.
+             # If logic above used get_month_range, it returns aware (UTC).
+             # Let's ensure compatibility.
+             pass
+        
+        # Firestore pode reclamar de offset-naive vs access-aware.
+        # Mas .where aceita datetime python.
+        
+        # IMPORTANTE: Se o banco guarda string (ISO), a comparação funciona lexicograficamente.
+        # Se guarda Timestamp, funciona por data.
+        # O código antigo fazia parse de string 'Z' -> isoformat. Isso sugere string.
+        # Vamos tentar passar o objeto datetime. O driver deve tratar ou se for string ISO, o python datetime str() tb funciona.
+        # Mas para garantir, se for string no banco, precisamos passar string.
+        # create_transaction salva `data['date'] = due_date` (datetime).
+        # Firestore client converte datetime -> Timestamp.
+        # Mas `_update_account_balance` lê `.to_dict()`.
+        # Vamos assumir Timestamp/Datetime nativo do Firestore.
+        
+        query = query.where("date", ">=", start_date).where("date", "<=", end_date)
+        
+        # OTIMIZAÇÃO EXTRA: Ordenação e Limite no DB
+        # Isso requer índice: user_id ASC, date DESC
+        query = query.order_by("date", direction=firestore.Query.DESCENDING)
+        
+        if limit:
+             query = query.limit(limit)
+
+    
+    try:
+        all_transactions = query.stream()
+    except Exception as e:
+        print(f"Erro ao consultar DB (Provavelmente falta índice): {e}")
+        # Fallback: Busca tudo e filtra na memória (Comportamento antigo, lento mas funcional)
+        query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+        all_transactions = query.stream()
+
     for t in all_transactions:
         data = t.to_dict()
         
-        # Date Filtering
+        # Double Check Date (Caso o fallback tenha sido ativado ou para garantir ranges precisos)
         if start_date and end_date:
             t_date = data.get("date")
-            
             if t_date:
-                # If it's a string, try to parse
-                if isinstance(t_date, str):
-                    try:
+                 if isinstance(t_date, str):
+                     try:
                         t_date = datetime.fromisoformat(t_date.replace('Z', '+00:00'))
-                    except:
-                        pass 
-                
-                if isinstance(t_date, datetime):
-                     # Make naive for comparison if needed
+                     except:
+                        continue
+                 
+                 # Normalize for comparison
+                 if isinstance(t_date, datetime):
                      if t_date.tzinfo and not start_date.tzinfo:
                           t_date = t_date.replace(tzinfo=None)
                      elif not t_date.tzinfo and start_date.tzinfo:
@@ -235,10 +274,6 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
                      
                      if not (start_date <= t_date <= end_date):
                           continue
-                else:
-                     continue
-            else:
-                 continue
 
         cat_id = data.get("category_id")
         category = category_service.get_category(cat_id)

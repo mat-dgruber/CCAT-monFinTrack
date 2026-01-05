@@ -34,6 +34,10 @@
               <i class="pi pi-file-pdf mr-2"></i>
               IA Scanner
           </p-tab>
+          <p-tab [value]="4">
+              <i class="pi pi-calendar-plus mr-2"></i>
+              Recursos & Estratégia
+          </p-tab>
       </p-tablist>
 
       <p-tabpanels>
@@ -86,28 +90,53 @@
                       <tr>
                           <td class="font-medium">{{ debt.name }}</td>
                           <td>
-                            <!-- Simple logic to color code badges based on type keywords -->
-                            <span class="badge-soft"
-                                  [ngClass]="{
-                                    'blue': debt.debt_type.includes('card'),
-                                    'purple': debt.debt_type.includes('loan'),
-                                    'orange': debt.debt_type.includes('financing'),
-                                    'green': debt.debt_type.includes('consigned')
-                                  }">
-                                {{ getDebtLabel(debt.debt_type) }}
-                            </span>
+                            <div class="flex flex-col gap-2">
+                                <!-- TYPE BADGE -->
+                                <span class="badge-soft w-fit text-xs"
+                                      [ngClass]="{
+                                        'blue': debt.debt_type.includes('card'),
+                                        'purple': debt.debt_type.includes('loan'),
+                                        'orange': debt.debt_type.includes('financing'),
+                                        'green': debt.debt_type.includes('consigned')
+                                      }">
+                                    {{ getDebtLabel(debt.debt_type) }}
+                                </span>
+
+                                <!-- PRIORITY INDICATOR -->
+                                @if (isHighPriority(debt)) {
+                                    <div class="flex items-center gap-1 text-red-500 text-xs font-bold animate-pulse" pTooltip="Prioridade: Juros Altos ou Atraso" tooltipPosition="top">
+                                        <i class="pi pi-bolt"></i>
+                                        <span>PRIORIDADE</span>
+                                    </div>
+                                }
+
+                                <!-- STATUS BADGE -->
+                                @if (debt.status) {
+                                    <p-tag [value]="getDebtStatusLabel(debt.status)"
+                                           [severity]="getDebtStatusSeverity(debt.status)"
+                                           [rounded]="true"
+                                           [icon]="getDebtStatusIcon(debt.status)"
+                                           styleClass="text-xs"></p-tag>
+                                }
+                            </div>
                           </td>
                           <td class="text-red-500 font-bold text-lg">{{ debt.total_amount | currency:'BRL' }}</td>
                           <td>
                               <div class="flex flex-column">
                                   <span class="font-bold">{{ debt.interest_period === 'yearly' ? convertToMonthly(debt.interest_rate) + '%' : debt.interest_rate + '%' }} <span class="text-xs font-normal text-500">a.m.</span></span>
-                                  @if (debt.interest_period === 'yearly') {
-                                      <span class="text-xs text-500">({{debt.interest_rate}}% a.a.)</span>
+                                  @if (debt.cet && debt.cet > 0) {
+                                    <small class="text-pink-500 font-bold" pTooltip="Custo Efetivo Total">CET: {{ debt.cet }}%</small>
                                   }
                               </div>
                           </td>
                           <td class="text-right">
                             <div class="flex justify-content-end gap-1">
+                                <p-button icon="pi pi-calculator" [text]="true" [rounded]="true" severity="success" (onClick)="openCalculator(debt)" pTooltip="Simular Antecipação"></p-button>
+
+                                @if (debt.status === 'overdue' || debt.status === 'negotiation') {
+                                    <p-button icon="pi pi-handshake" [text]="true" [rounded]="true" severity="help" (onClick)="openAgreement(debt)" pTooltip="Simular Acordo"></p-button>
+                                }
+
                                 <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary" (onClick)="editDebt(debt)"></p-button>
                                 <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" (onClick)="deleteDebt(debt.id)"></p-button>
                             </div>
@@ -415,6 +444,87 @@
               </div>
           </p-tabpanel>
 
+        <!-- TAB 4: RECURSOS SAZONAIS -->
+        <p-tabpanel [value]="4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- FORM -->
+                <div class="card p-4 bg-white dark:surface-card rounded shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="pi pi-plus-circle text-green-600"></i>
+                        Novo Recurso
+                    </h3>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="field">
+                            <label class="font-semibold block mb-1">Nome / Origem</label>
+                            <input pInputText [(ngModel)]="newResource.name" placeholder="Ex: 13º Salário, Bônus, PLR" class="w-full" />
+                        </div>
+
+                        <div class="field">
+                            <label class="font-semibold block mb-1">Valor Líquido</label>
+                            <p-inputNumber [(ngModel)]="newResource.amount" mode="currency" currency="BRL" locale="pt-BR" styleClass="w-full"></p-inputNumber>
+                        </div>
+
+                        <div class="field">
+                            <label class="font-semibold block mb-1">Data Prevista</label>
+                            <p-datepicker [(ngModel)]="newResource.receive_date" dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" appendTo="body"></p-datepicker>
+                        </div>
+
+                        <div class="field flex items-center gap-2 mt-2">
+                            <p-checkbox [(ngModel)]="newResource.is_recurrence" [binary]="true" inputId="recurrence"></p-checkbox>
+                            <label for="recurrence" class="cursor-pointer">Repetir todo ano?</label>
+                        </div>
+
+                        <button pButton label="Adicionar Recurso" icon="pi pi-check" (click)="addResource()" [loading]="resourceLoading" class="p-button-success w-full mt-2"></button>
+                    </div>
+                </div>
+
+                <!-- LIST -->
+                <div class="card p-4 bg-white dark:surface-card rounded shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="pi pi-briefcase text-blue-600"></i>
+                        Recursos Planejados
+                    </h3>
+
+                    @if (resources().length === 0) {
+                        <div class="flex flex-col items-center justify-center p-6 text-gray-400">
+                            <i class="pi pi-calendar-times text-4xl mb-2"></i>
+                            <p>Nenhum recurso cadastrado.</p>
+                            <small>Cadastre entradas futuras para simular amortizações.</small>
+                        </div>
+                    } @else {
+                        <div class="flex flex-col gap-3">
+                            @for (res of resources(); track res.id) {
+                                <div class="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
+                                            R$
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-gray-800">{{ res.name }}</div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ res.receive_date | date:'dd/MM/yyyy' }}
+                                                @if(res.is_recurrence) { <i class="pi pi-sync text-xs ml-1" pTooltip="Recorrente"></i> }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-green-600 text-lg">{{ res.amount | currency:'BRL' }}</div>
+                                        <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm -mr-2" (click)="deleteResource(res.id)"></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <button pButton label="Simular Impacto no Plano" icon="pi pi-chart-line" class="p-button-help w-full" outline="true" (click)="simulateImpact()"></button>
+                        <small class="block text-center text-gray-500 mt-2">Visualizar como estes recursos reduzem o tempo da dívida.</small>
+                    </div>
+                </div>
+            </div>
+        </p-tabpanel>
+
       </p-tabpanels>
     </p-tabs>
 
@@ -422,66 +532,187 @@
     <p-confirmDialog [style]="{width: '450px'}" rejectButtonStyleClass="p-button-text p-button-secondary" acceptButtonStyleClass="p-button-danger"></p-confirmDialog>
 
     <!-- DEBT FORM DIALOG -->
-    <p-dialog [(visible)]="debtDialog" [style]="{width: '500px', 'max-width': '95vw'}" header="Detalhes da Dívida" [modal]="true" styleClass="p-fluid">
+    <p-dialog [(visible)]="debtDialog" [style]="{width: '600px', 'max-width': '95vw'}" header="Detalhes da Dívida" [modal]="true" styleClass="p-fluid">
         <ng-template pTemplate="content">
             <form [formGroup]="debtForm" class="flex flex-col gap-4">
 
-                <span class="text-primary font-bold block uppercase text-xs tracking-wider">Informações Básicas</span>
+                <!-- 1. TIPO & IDENTIFICAÇÃO -->
+                <p-accordion [value]="0">
+                    <p-accordion-panel [value]="0">
+                        <p-accordion-header>Identificação</p-accordion-header>
+                        <p-accordion-content>
+                            <div class="field">
+                                <label for="name">Nome da Dívida</label>
+                                <input pInputText id="name" formControlName="name" class="w-full" placeholder="Ex: Cartão Nubank" autocomplete="off" />
+                                @if (submitted && !debtForm.controls.name.valid) {
+                                    <small class="p-error block">Este campo é obrigatório.</small>
+                                }
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="field col-span-1">
+                                    <label>Tipo de Dívida</label>
+                                    <p-select [options]="debtTypes" formControlName="debt_type" optionLabel="label" optionValue="value" placeholder="Selecione..." appendTo="body"></p-select>
+                                </div>
+                                <div class="field col-span-1">
+                                    <label>Status Atual</label>
+                                    <p-select [options]="debtStatuses" formControlName="status" optionLabel="label" optionValue="value" appendTo="body">
+                                        <ng-template pTemplate="selectedItem" let-selected>
+                                            <div class="flex items-center gap-2" *ngIf="selected">
+                                                <i [class]="selected.icon" [style.color]="selected.color"></i>
+                                                <div>{{ selected.label }}</div>
+                                            </div>
+                                        </ng-template>
+                                        <ng-template let-item pTemplate="item">
+                                            <div class="flex items-center gap-2">
+                                                <i [class]="item.icon" [style.color]="item.color"></i>
+                                                <div>{{ item.label }}</div>
+                                            </div>
+                                        </ng-template>
+                                    </p-select>
+                                </div>
+                            </div>
+                        </p-accordion-content>
+                    </p-accordion-panel>
 
-                <div class="field">
-                    <label for="name">Nome da Dívida</label>
-                    <input pInputText id="name" formControlName="name" class="w-full" placeholder="Ex: Cartão Nubank" autocomplete="off" />
-                    @if (submitted && !debtForm.controls.name.valid) {
-                        <small class="p-error block">Este campo é obrigatório.</small>
+                    <!-- 2. DETALHES ESPECÍFICOS (CONDICIONAL) -->
+                    @if (debtForm.get('debt_type')?.value; as type) {
+
+                        <!-- CARTÃO DE CRÉDITO -->
+                        @if (type === DebtType.CREDIT_CARD_ROTATING || type === DebtType.CREDIT_CARD_INSTALLMENT) {
+                            <p-accordion-panel [value]="1">
+                                <p-accordion-header>Detalhes do Cartão</p-accordion-header>
+                                <p-accordion-content>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="field col-span-1">
+                                            <label>Bandeira</label>
+                                            <p-select [options]="cardBrands" formControlName="card_brand" optionLabel="label" optionValue="value" placeholder="Visa/Master..." appendTo="body"></p-select>
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Dia Fechamento</label>
+                                            <p-inputNumber formControlName="closing_day" [min]="1" [max]="31" suffix=" de cada mês"></p-inputNumber>
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Limite Total</label>
+                                            <p-inputNumber formControlName="card_limit" mode="currency" currency="BRL" locale="pt-BR"></p-inputNumber>
+                                        </div>
+                                    </div>
+                                </p-accordion-content>
+                            </p-accordion-panel>
+                        }
+
+                        <!-- EMPRÉSTIMOS / FINANCIAMENTOS -->
+                        @if (type === DebtType.PERSONAL_LOAN || type === DebtType.VEHICLE_FINANCING || type === DebtType.CONSIGNED_CREDIT) {
+                            <p-accordion-panel [value]="2">
+                                <p-accordion-header>Contrato & Prazos</p-accordion-header>
+                                <p-accordion-content>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="field col-span-1">
+                                            <label>Nº Contrato (Opcional)</label>
+                                            <input pInputText formControlName="contract_number" placeholder="Para portabilidade" />
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Parcelas Restantes</label>
+                                            <p-inputNumber formControlName="remaining_installments" [min]="0"></p-inputNumber>
+                                        </div>
+                                        <div class="field col-span-2 flex align-items-center gap-2">
+                                             <p-checkbox formControlName="allow_early_amortization" [binary]="true" label="Permite amortização antecipada?"></p-checkbox>
+                                        </div>
+                                    </div>
+                                </p-accordion-content>
+                            </p-accordion-panel>
+                        }
+
+                        <!-- IMOBILIÁRIO -->
+                        @if (type === DebtType.REAL_ESTATE_FINANCING) {
+                            <p-accordion-panel [value]="3">
+                                <p-accordion-header>Habitação & Indexadores</p-accordion-header>
+                                <p-accordion-content>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="field col-span-1">
+                                            <label>Sistema</label>
+                                            <p-select [options]="amortizationSystems" formControlName="amortization_system" optionLabel="label" optionValue="value" appendTo="body"></p-select>
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Indexador</label>
+                                            <p-select [options]="indexers" formControlName="indexer" optionLabel="label" optionValue="value" appendTo="body"></p-select>
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Valor Imóvel (Atual)</label>
+                                            <p-inputNumber formControlName="current_property_value" mode="currency" currency="BRL" locale="pt-BR"></p-inputNumber>
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Seguros (MIP/DFI)</label>
+                                            <p-inputNumber formControlName="insurance_value" mode="currency" currency="BRL" locale="pt-BR" placeholder="Embutido na parcela"></p-inputNumber>
+                                        </div>
+                                    </div>
+                                </p-accordion-content>
+                            </p-accordion-panel>
+                        }
+
+                        <!-- CHEQUE ESPECIAL -->
+                        @if (type === DebtType.OVERDRAFT) {
+                            <p-accordion-panel [value]="4">
+                                <p-accordion-header>Urgência (Cheque Especial)</p-accordion-header>
+                                <p-accordion-content>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="field col-span-1">
+                                            <label>Juros Diário (%)</label>
+                                            <p-inputNumber formControlName="daily_interest_rate" [minFractionDigits]="2" suffix="% a.d."></p-inputNumber>
+                                        </div>
+                                        <div class="field col-span-1">
+                                            <label>Dias usados (Mês)</label>
+                                            <p-inputNumber formControlName="days_used_in_month" [min]="0" [max]="31"></p-inputNumber>
+                                        </div>
+                                    </div>
+                                </p-accordion-content>
+                            </p-accordion-panel>
+                        }
                     }
-                </div>
-                <div class="field">
-                    <label>Tipo de Dívida</label>
-                    <p-select [options]="debtTypes" formControlName="debt_type" optionLabel="label" optionValue="value" placeholder="Selecione..." appendTo="body"></p-select>
-                </div>
 
-                <span class="text-primary font-bold block uppercase text-xs tracking-wider">Financeiro</span>
+                    <!-- 3. FINANCEIRO (COMUM A TODOS) -->
+                    <p-accordion-panel [value]="5">
+                        <p-accordion-header>Valores & Taxas</p-accordion-header>
+                        <p-accordion-content>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="field col-span-1">
+                                    <label for="total_amount">Saldo Devedor *</label>
+                                    <p-inputNumber id="total_amount" formControlName="total_amount" mode="currency" currency="BRL" locale="pt-BR" placeholder="R$ 0,00" class="p-inputtext-lg font-bold"></p-inputNumber>
+                                </div>
+                                <div class="field col-span-1">
+                                    <label for="min_payment">Parcela / Mínimo</label>
+                                    <p-inputNumber id="min_payment" formControlName="minimum_payment" mode="currency" currency="BRL" locale="pt-BR" placeholder="R$ 0,00"></p-inputNumber>
+                                </div>
+                            </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="field col-span-1">
-                        <label for="total_amount">Saldo Devedor</label>
-                        <p-inputNumber id="total_amount" formControlName="total_amount" mode="currency" currency="BRL" locale="pt-BR" placeholder="R$ 0,00"></p-inputNumber>
-                    </div>
-                    <div class="field col-span-1">
-                        <label for="min_payment">Mínimo Mensal</label>
-                        <p-inputNumber id="min_payment" formControlName="minimum_payment" mode="currency" currency="BRL" locale="pt-BR" placeholder="R$ 0,00"></p-inputNumber>
-                    </div>
-                </div>
+                            <div class="grid grid-cols-2 gap-4 mt-2">
+                                 <div class="field col-span-1">
+                                    <label for="interest_rate">Taxa de Juros (%)</label>
+                                    <p-inputNumber id="interest_rate" formControlName="interest_rate" [minFractionDigits]="2" suffix="%"></p-inputNumber>
+                                </div>
+                                <div class="field col-span-1">
+                                    <label>Período</label>
+                                    <p-selectButton [options]="[{label:'Mês', value:'monthly'}, {label:'Ano', value:'yearly'}]" formControlName="interest_period" optionLabel="label" optionValue="value"></p-selectButton>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-2">
+                                <div class="field col-span-1">
+                                    <label>CET (Total) %</label>
+                                    <p-inputNumber formControlName="cet" [minFractionDigits]="2" suffix="%" placeholder="Opcional"></p-inputNumber>
+                                </div>
+                                <div class="field col-span-1">
+                                    <label for="due_day">Dia Vencimento</label>
+                                    <p-inputNumber id="due_day" formControlName="due_day" [min]="1" [max]="31"></p-inputNumber>
+                                </div>
+                            </div>
+                        </p-accordion-content>
+                    </p-accordion-panel>
+                </p-accordion>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="field col-span-1">
-                        <label for="interest_rate">Taxa de Juros (%)</label>
-                        <p-inputNumber id="interest_rate" formControlName="interest_rate" [minFractionDigits]="2" suffix="%"></p-inputNumber>
-                    </div>
-                    <div class="field col-span-1">
-                        <label>Período da Taxa</label>
-                         <div class="flex gap-4 h-full items-center">
-                             <div class="flex items-center gap-2">
-                                <p-radioButton name="interest_period" value="monthly" formControlName="interest_period" inputId="period_monthly"></p-radioButton>
-                                <label for="period_monthly" class="cursor-pointer">Mês</label>
-                             </div>
-                             <div class="flex items-center gap-2">
-                                <p-radioButton name="interest_period" value="yearly" formControlName="interest_period" inputId="period_yearly"></p-radioButton>
-                                <label for="period_yearly" class="cursor-pointer">Ano</label>
-                             </div>
-                         </div>
-                    </div>
-                </div>
-
-                <div class="field">
-                    <label for="due_day">Dia do Vencimento</label>
-                    <p-inputNumber id="due_day" formControlName="due_day" [showButtons]="false" [min]="1" [max]="31" placeholder="Dia (1-31)" styleClass="w-full"></p-inputNumber>
-                </div>
             </form>
         </ng-template>
 
         <ng-template pTemplate="footer">
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-2 mt-4">
                 <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
                 <button pButton pRipple label="Salvar Dívida" icon="pi pi-check" (click)="saveDebt()"></button>
             </div>
@@ -505,6 +736,116 @@
                 <div class="mt-4 flex justify-end">
                     <p-button label="Fechar" icon="pi pi-check" (onClick)="adviceDialog = false"></p-button>
                 </div>
+            </div>
+        }
+    </p-dialog>
+
+    <!-- CALCULATOR DIALOG -->
+    <p-dialog [(visible)]="calcDialog" [style]="{width: '500px', 'max-width': '95vw'}" header="Simular Antecipação" [modal]="true" styleClass="p-fluid">
+        @if (calcDebt) {
+            <div class="flex flex-col gap-4">
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-round mb-2">
+                    <span class="block text-sm text-500 mb-1">Dívida Selecionada</span>
+                    <span class="text-xl font-bold text-primary">{{ calcDebt.name }}</span>
+                    <div class="flex justify-between mt-2 text-sm">
+                        <span>Taxa: {{ calcDebt.interest_rate }}% {{ calcDebt.interest_period === 'monthly' ? 'a.m.' : 'a.a.' }}</span>
+                        <span>Saldo: {{ calcDebt.total_amount | currency:'BRL' }}</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Valor da Parcela (Cheia)</label>
+                    <p-inputNumber [(ngModel)]="calcAmount" mode="currency" currency="BRL" locale="pt-BR"></p-inputNumber>
+                </div>
+
+                <div class="field">
+                    <label>Data de Vencimento Original</label>
+                    <p-datepicker [(ngModel)]="calcDate" dateFormat="dd/mm/yy" appendTo="body" [showIcon]="true"></p-datepicker>
+                </div>
+
+                <p-button label="Calcular Desconto" icon="pi pi-calculator" (onClick)="simulateDiscount()" [loading]="calcLoading"></p-button>
+
+                @if (calcResult) {
+                     <div class="surface-card p-4 border-round border-1 surface-border mt-3 text-center animate-fade-in">
+                         <span class="text-sm text-500 uppercase tracking-wider block mb-2">Resultado da Antecipação</span>
+
+                         <div class="text-4xl font-bold text-green-500 mb-1">
+                             {{ calcResult.discounted_amount | currency:'BRL' }}
+                         </div>
+                         <span class="text-500 text-sm line-through block mb-4">Original: {{ calcResult.original_amount | currency:'BRL' }}</span>
+
+                         <div class="flex justify-center gap-4 border-top-1 surface-border pt-3">
+                             <div>
+                                 <span class="block text-xs text-500">Economia</span>
+                                 <span class="font-bold text-primary">{{ calcResult.discount_obtained | currency:'BRL' }}</span>
+                             </div>
+                             <div>
+                                 <span class="block text-xs text-500">% Desconto</span>
+                                 <span class="font-bold text-primary">{{ calcResult.percent_saved }}%</span>
+                             </div>
+                             <div>
+                                 <span class="block text-xs text-500">Meses</span>
+                                 <span class="font-bold text-primary">-{{ calcResult.months_anticipated }}</span>
+                             </div>
+                         </div>
+                     </div>
+                }
+            </div>
+        }
+    </p-dialog>
+
+    <!-- AGREEMENT SIMULATOR DIALOG -->
+    <p-dialog header="Simulação de Acordo" [(visible)]="agreementDialog" [modal]="true" [style]="{width: '450px'}" [draggable]="false" [resizable]="false">
+        @if (agreementDebt) {
+            <div class="flex flex-col gap-4">
+                <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-2">
+                    <span class="text-sm text-purple-600 block mb-1">Dívida Original</span>
+                    <span class="text-2xl font-bold text-purple-900">{{ agreementDebt.total_amount | currency:'BRL' }}</span>
+                    <div class="text-xs text-purple-500 mt-1">{{ agreementDebt.name }}</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1 col-span-2">
+                        <label class="text-sm font-semibold">Valor Proposto (Total)</label>
+                        <p-inputNumber [(ngModel)]="agreementProposal.discountedTotal" mode="currency" currency="BRL" locale="pt-BR" [min]="0" styleClass="w-full"></p-inputNumber>
+                        <small class="text-gray-500">Valor total a pagar negociado</small>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold">Entrada</label>
+                        <p-inputNumber [(ngModel)]="agreementProposal.entryValue" mode="currency" currency="BRL" locale="pt-BR" [min]="0" styleClass="w-full"></p-inputNumber>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold">Parcelas</label>
+                        <p-inputNumber [(ngModel)]="agreementProposal.installmentCount" [min]="1" [max]="120" [showButtons]="true" styleClass="w-full"></p-inputNumber>
+                    </div>
+                </div>
+
+                <button pButton label="Calcular Economia" icon="pi pi-calculator" class="p-button-help w-full" (click)="simulateAgreement()"></button>
+
+                @if (agreementResult) {
+                    <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200 animate-fadeIn">
+                        <h4 class="text-green-800 font-bold mb-3 flex items-center gap-2">
+                            <i class="pi pi-check-circle"></i> Resultado da Proposta
+                        </h4>
+
+                        <div class="flex justify-between items-center mb-2 border-b border-green-200 pb-2">
+                            <span class="text-green-700">Economia Total</span>
+                            <span class="font-bold text-green-700 text-lg">{{ agreementResult.savings | currency:'BRL' }} ({{ agreementResult.savingsPercent | number:'1.0-1' }}%)</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="text-gray-600">Entrada:</div>
+                            <div class="text-right font-medium">{{ agreementResult.entry | currency:'BRL' }}</div>
+
+                            <div class="text-gray-600">Parcelas ({{ agreementProposal.installmentCount }}x):</div>
+                            <div class="text-right font-medium">{{ agreementResult.installmentValue | currency:'BRL' }}</div>
+
+                            <div class="text-gray-600 font-bold">Total a Pagar:</div>
+                            <div class="text-right font-bold text-green-800">{{ agreementResult.totalPaid | currency:'BRL' }}</div>
+                        </div>
+                    </div>
+                }
             </div>
         }
     </p-dialog>

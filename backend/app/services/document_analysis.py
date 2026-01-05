@@ -46,13 +46,14 @@ class DocumentAnalysisService:
                 "installments_total": 0 (Total number of installments),
                 "installments_paid": 0 (Number of paid installments),
                 "due_day": 0 (Day of month),
-                "debt_type": "type_enum" (Guesstimate: credit_card, financing, personal_loan, etc.)
+                "debt_type": "type_enum" (Allowed: credit_card_rotating, credit_card_installment, personal_loan, vehicle_financing, real_estate_financing, overdraft, consigned_credit, other)
             }
             
             Rules:
             - If a value is not found, use null or 0.
             - Ensure 'interest_rate' is the MONTHLY rate. If yearly is found, convert or note it.
             - Look for "Taxa de Juros", "CET", "Saldo Devedor".
+            - 'debt_type' MUST be one of the allowed values above.
             - Return PURE JSON.
             """
             
