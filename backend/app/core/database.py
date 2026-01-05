@@ -35,3 +35,5 @@ def get_db():
         print("✅ Conexão com Firestore estabelecida!")
         
     return firestore.client()
+
+db = get_db()
