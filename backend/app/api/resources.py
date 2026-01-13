@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/resources", tags=["Resources"])
 def get_current_user_id():
     return "test_user_id" 
 
-@router.get("/", response_model=List[SeasonalIncome])
+@router.get("", response_model=List[SeasonalIncome])
 def list_resources(user_id: str = Depends(get_current_user_id)):
     """Listar todos os recursos sazonais do usuário"""
     resources_ref = db.collection('seasonal_incomes').where('user_id', '==', user_id)
@@ -27,7 +27,7 @@ def list_resources(user_id: str = Depends(get_current_user_id)):
     resources.sort(key=lambda x: x.get('receive_date', ''))
     return resources
 
-@router.post("/", response_model=SeasonalIncome, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=SeasonalIncome, status_code=status.HTTP_201_CREATED)
 def create_resource(resource: SeasonalIncomeCreate, user_id: str = Depends(get_current_user_id)):
     """Cadastrar novo recurso sazonal"""
     new_id = str(uuid.uuid4())

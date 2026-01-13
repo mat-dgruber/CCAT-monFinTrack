@@ -22,4 +22,5 @@ dependencies = [
     "google-generativeai",
     "ofxparse",
     "fastapi-mail>=1.6.1",
+    "stripe>=14.1.0",
 ]

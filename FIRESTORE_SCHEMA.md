@@ -7,7 +7,9 @@ Este documento detalha o modelo de dados utilizado no Firestore. Os modelos são
 ---
 
 ## 1. Users (`users`)
+
 Armazena preferências e perfil do usuário.
+
 - `user_id` (String, PK)
 - `language` (String): ex: "pt-BR"
 - `theme` (String): "light" ou "dark"
@@ -17,11 +19,18 @@ Armazena preferências e perfil do usuário.
 - `enable_tithes_offerings` (Boolean): Ativa módulo de dízimos
 - `default_tithe_percentage` (Float)
 - `privacy_share_data` (Boolean)
+- **Stripe Integration:**
+  - `stripe_customer_id` (String): ID do cliente no Stripe
+  - `stripe_subscription_id` (String): ID da assinatura corrente
+  - `subscription_status` (Enum): active, past_due, canceled, trialing
+  - `current_period_end` (Timestamp): Data de expiração/renovação
 
 ---
 
 ## 2. Accounts (`accounts`)
+
 Representa locais onde o dinheiro está armazenado ou fontes de crédito.
+
 - `name` (String)
 - `type` (Enum): checking, savings, investment, cash, credit_card
 - `balance` (Float): Saldo atual. Se `credit_card`, geralmente representa o saldo devedor ou disponível dependendo da lógica.
@@ -33,7 +42,9 @@ Representa locais onde o dinheiro está armazenado ou fontes de crédito.
 ---
 
 ## 3. Categories (`categories`)
+
 Classificação de transações.
+
 - `name` (String)
 - `icon` (String)
 - `color` (String)
@@ -45,7 +56,9 @@ Classificação de transações.
 ---
 
 ## 4. Transactions (`transactions`)
+
 O coração do sistema. Cada entrada ou saída financeira.
+
 - `title` (String)
 - `description` (String, HTML Sanitized)
 - `amount` (Float): Valor absoluto.
@@ -72,7 +85,9 @@ O coração do sistema. Cada entrada ou saída financeira.
 ---
 
 ## 5. Debts (`debts`)
+
 Gestão de Dívidas, Financiamentos e Empréstimos. Difere de transações parceladas por ter juros compostos e lógica de amortização.
+
 - `name` (String)
 - `debt_type` (Enum): loan, financing, credit_card (rotativo), overdraft (cheque especial)
 - `status` (Enum): on_time, late, negotiation
@@ -94,5 +109,19 @@ Gestão de Dívidas, Financiamentos e Empréstimos. Difere de transações parce
 ---
 
 ## Notas de Implementação
+
 - **Ids:** UUIDs v4 (strings) gerados geralmente pelo backend ou auto-id do Firestore.
 - **Datas:** Armazenadas como Timestamp nativo do Firestore ou ISO String dependendo da serialização. O Backend usa `datetime` do Python.
+
+---
+
+## 6. Storage Structure (Firebase Storage)
+
+Estrutura de pastas para arquivos envidados:
+
+- `users/{userId}/profile/`
+  - Imagens de perfil (jpg, png). Limitado a 5MB.
+- `users/{userId}/attachments/`
+  - Comprovantes e anexos de transações. Imagens ou PDF. Limitado a 10MB.
+- `users/{userId}/debts/`
+  - Contratos e documentos de dívidas. Imagens ou PDF. Limitado a 15MB.

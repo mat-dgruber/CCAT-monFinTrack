@@ -15,11 +15,11 @@ router = APIRouter(prefix="/debts", tags=["Debts"])
 
 # --- CRUD ---
 
-@router.post("/", response_model=Debt)
+@router.post("", response_model=Debt)
 def create_debt_endpoint(debt_in: DebtCreate, current_user: dict = Depends(get_current_user)):
     return create_debt(current_user['uid'], debt_in)
 
-@router.get("/", response_model=List[Debt])
+@router.get("", response_model=List[Debt])
 def list_debts_endpoint(current_user: dict = Depends(get_current_user)):
     return list_debts(current_user['uid'])
 

@@ -1,0 +1,29 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/monfintrack-backend', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/monfintrack-backend']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'monfintrack-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/monfintrack-backend'
+      - '--region'
+      - 'southamerica-east1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      # Environmental variables can be set here or mapped from Secret Manager
+      # - '--set-env-vars'
+      # - 'STORAGE_BUCKET=ccat-monfintrack.firebasestorage.app'
+
+images:
+  - 'gcr.io/$PROJECT_ID/monfintrack-backend'

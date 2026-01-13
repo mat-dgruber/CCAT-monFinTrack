@@ -5,12 +5,12 @@ from app.services import user_preference as preference_service
 
 router = APIRouter()
 
-@router.get("/", response_model=UserPreference)
+@router.get("", response_model=UserPreference)
 def get_my_preferences(current_user: dict = Depends(get_current_user)):
     user_id = current_user['uid']
     return preference_service.get_preferences(user_id)
 
-@router.put("/", response_model=UserPreference)
+@router.put("", response_model=UserPreference)
 def update_my_preferences(
     preference_in: UserPreferenceCreate,
     current_user: dict = Depends(get_current_user)

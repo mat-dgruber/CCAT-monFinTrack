@@ -12,20 +12,25 @@ class EmailService:
         self.mail_from = os.getenv("MAIL_FROM", self.mail_username)
         self.mail_port = int(os.getenv("MAIL_PORT", 587))
         self.mail_server = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-        self.mail_starttls = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
         self.mail_ssl_tls = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
 
-        self.conf = ConnectionConfig(
-            MAIL_USERNAME=self.mail_username,
-            MAIL_PASSWORD=self.mail_password,
-            MAIL_FROM=self.mail_from,
-            MAIL_PORT=self.mail_port,
-            MAIL_SERVER=self.mail_server,
-            MAIL_STARTTLS=self.mail_starttls,
-            MAIL_SSL_TLS=self.mail_ssl_tls,
-            USE_CREDENTIALS=True,
-            VALIDATE_CERTS=True
-        )
+        try:
+            self.conf = ConnectionConfig(
+                MAIL_USERNAME=self.mail_username,
+                MAIL_PASSWORD=self.mail_password,
+                MAIL_FROM=self.mail_from,
+                MAIL_PORT=self.mail_port,
+                MAIL_SERVER=self.mail_server,
+                MAIL_STARTTLS=self.mail_starttls,
+                MAIL_SSL_TLS=self.mail_ssl_tls,
+                USE_CREDENTIALS=True,
+                VALIDATE_CERTS=True
+            )
+            self.enabled = True
+        except Exception as e:
+            print(f"⚠️ EmailService disabled due to missing config: {e}")
+            self.conf = None
+            self.enabled = False
         
         # Configuração do Template
         template_dir = Path(__file__).parent.parent / "templates"
@@ -35,6 +40,10 @@ class EmailService:
         )
 
     async def send_email(self, subject: str, recipients: list[str], body: str, subtype: MessageType = MessageType.html):
+        if not self.enabled or not self.conf:
+            print(f"⚠️ Email skipped (service disabled): {subject} -> {recipients}")
+            return
+
         message = MessageSchema(
             subject=subject,
             recipients=recipients,

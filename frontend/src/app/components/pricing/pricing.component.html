@@ -1,0 +1,271 @@
+<div
+  class="min-h-screen w-full flex flex-col items-center py-12 px-4 relative overflow-hidden"
+>
+  <!-- Background Decoration -->
+  <div
+    class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary-500/10 blur-[120px] rounded-full pointer-events-none z-0"
+  ></div>
+  <div
+    class="absolute bottom-0 right-0 w-[300px] h-[300px] bg-purple-500/10 blur-[100px] rounded-full pointer-events-none z-0"
+  ></div>
+
+  <div class="text-center mb-12 relative z-10">
+    <h1
+      class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight"
+    >
+      Escolha seu Plano
+    </h1>
+    <p class="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+      Desbloqueie todo o potencial da sua vida financeira com o poder da
+      Inteligência Artificial.
+    </p>
+  </div>
+
+    <!-- Toggle Annual/Monthly -->
+    <div class="flex items-center justify-center mb-20 relative z-10 scale-110">
+        <div class="bg-surface-card p-2 rounded-full border border-surface-border shadow-md flex relative gap-1">
+            <button class="px-8 py-3 rounded-full text-base font-bold transition-all duration-300 relative z-10 focus:outline-none flex items-center gap-2"
+                [class.bg-primary-500]="!isAnnual()"
+                [class.text-white]="!isAnnual()"
+                [class.shadow-lg]="!isAnnual()"
+                [class.shadow-primary-500/30]="!isAnnual()"
+                [class.text-gray-500]="isAnnual()"
+                [class.hover:text-gray-900]="isAnnual()"
+                [class.dark:hover:text-white]="isAnnual()"
+                (click)="isAnnual.set(false)">
+                <i class="pi pi-calendar-minus" *ngIf="!isAnnual()"></i>
+                Mensal
+            </button>
+            
+            <button class="px-8 py-3 rounded-full text-base font-bold transition-all duration-300 relative z-10 flex items-center gap-2 focus:outline-none"
+                [class.bg-primary-500]="isAnnual()"
+                [class.text-white]="isAnnual()"
+                [class.shadow-lg]="isAnnual()"
+                [class.shadow-primary-500/30]="isAnnual()"
+                [class.text-gray-500]="!isAnnual()"
+                [class.hover:text-gray-900]="!isAnnual()"
+                [class.dark:hover:text-white]="!isAnnual()"
+                (click)="isAnnual.set(true)">
+                <i class="pi pi-calendar" *ngIf="isAnnual()"></i>
+                Anual
+                <span *ngIf="isAnnual()" class="bg-yellow-400 text-gray-900 text-[10px] px-2 py-0.5 rounded-full ml-1 font-extrabold shadow-sm animate-fadein">
+                    -17%
+                </span>
+                <span *ngIf="!isAnnual()" class="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-2 py-0.5 rounded-full ml-1 font-bold">
+                    -17%
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl px-4 relative z-10 items-stretch mt-12">
+        <!-- FREE TIER -->
+        <div class="bg-surface-card/50 backdrop-blur-xl rounded-3xl p-8 border border-surface-border flex flex-col gap-8 transition-all hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg dark:hover:shadow-gray-900/10">
+             
+             <div class="flex justify-between items-start">
+                 <div>
+                     <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Gratuito</h3>
+                     <p class="text-gray-500 text-sm">Para começar a se organizar</p>
+                 </div>
+                 <div *ngIf="currentTier() === 'free'">
+                    <p-tag severity="secondary" value="Seu Plano" [rounded]="true"></p-tag>
+                 </div>
+             </div>
+
+             <div class="text-4xl font-extrabold text-gray-900 dark:text-white">
+                 R$ 0
+             </div>
+             
+             <ul class="flex flex-col gap-4 flex-1">
+                 @for(feature of features.free; track feature) {
+                     <li class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
+                         <i class="pi pi-check-circle text-gray-400 mt-0.5"></i>
+                         <span>{{feature}}</span>
+                     </li>
+                 }
+             </ul>
+
+             <div class="mt-auto">
+                 <button pButton 
+                    label="Plano Atual" 
+                    [disabled]="true" 
+                    class="w-full p-button-outlined p-button-secondary rounded-xl font-bold py-3"
+                    *ngIf="currentTier() === 'free'">
+                 </button>
+             </div>
+        </div>
+
+        <!-- PRO TIER -->
+        <div class="bg-surface-card rounded-3xl p-8 border-2 border-primary-500 relative shadow-2xl shadow-primary-500/20 transform md:-translate-y-8 flex flex-col gap-8 z-20">
+            <!-- Improved Badge -->
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 px-6 py-2 rounded-full text-xs tracking-widest font-black shadow-xl shadow-orange-500/20 uppercase whitespace-nowrap border-4 border-surface-ground">
+                <i class="pi pi-bolt text-gray-900 text-xs"></i>
+                Mais Popular
+                <i class="pi pi-bolt text-gray-900 text-xs"></i>
+            </div>
+            
+            <div class="flex justify-between items-start pt-4">
+                <div>
+                    <h3 class="text-xl font-bold text-primary-500 mb-2">Pro</h3>
+                    <p class="text-gray-500 text-sm">Automação para escalar</p>
+                </div>
+                <div *ngIf="currentTier() === 'pro'">
+                    <p-tag severity="success" value="Seu Plano" [rounded]="true"></p-tag>
+                 </div>
+            </div>
+
+            <div class="flex items-baseline gap-1">
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white">
+                    {{ isAnnual() ? 'R$ 300' : 'R$ 30' }}
+                </span>
+                <span class="text-gray-500 font-medium">/{{ isAnnual() ? 'ano' : 'mês' }}</span>
+                <span class="text-xs text-green-500 font-bold ml-2 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md" *ngIf="isAnnual()">
+                    Economize R$ 60
+                </span>
+            </div>
+
+      <div class="h-px w-full bg-surface-border"></div>
+
+      <ul class="flex flex-col gap-4 flex-1">
+        <li
+          class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2"
+        >
+          <i class="pi pi-plus text-xs"></i>
+          Tudo do Gratuito, mais:
+        </li>
+        @for(feature of features.pro; track feature) {
+        <li
+          class="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300"
+        >
+          <i class="pi pi-check text-primary-500 mt-0.5 font-bold"></i>
+          <span>{{ feature }}</span>
+        </li>
+        }
+      </ul>
+
+      <div class="mt-auto">
+        <p-button
+          [label]="
+            currentTier() === 'pro' ? 'Gerenciar Assinatura' : 'Assinar Pro'
+          "
+          [loading]="loading() === 'pro'"
+          styleClass="w-full rounded-xl font-bold py-3"
+          (onClick)="
+            currentTier() === 'pro' ? manageSubscription() : subscribe('pro')
+          "
+          [severity]="currentTier() === 'pro' ? 'secondary' : 'primary'"
+        >
+        </p-button>
+      </div>
+    </div>
+
+    <!-- PREMIUM TIER -->
+    <div
+      class="bg-gradient-to-b from-slate-900 to-slate-950 dark:from-gray-800 dark:to-gray-900 text-white rounded-3xl p-1 p-[1px] relative overflow-hidden group flex flex-col h-full"
+    >
+      <!-- Gradient Border -->
+      <div
+        class="absolute inset-0 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-orange-500 opacity-100 group-hover:opacity-100 transition-opacity"
+      ></div>
+
+      <div
+        class="bg-slate-900 dark:bg-gray-900 rounded-[23px] h-full p-8 relative z-10 flex flex-col gap-8"
+      >
+        <!-- Spotlight Effect -->
+        <div
+          class="absolute -top-[200px] -right-[200px] w-[500px] h-[500px] bg-purple-500/20 blur-[100px] rounded-full pointer-events-none"
+        ></div>
+
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h3
+              class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400 mb-2"
+            >
+              Premium
+            </h3>
+            <p class="text-gray-400 text-sm">Poder Máximo da IA</p>
+          </div>
+          <div *ngIf="currentTier() === 'premium'">
+            <p-tag severity="info" value="Seu Plano" [rounded]="true"></p-tag>
+          </div>
+        </div>
+
+        <div class="flex items-baseline gap-1 relative z-10">
+          <span class="text-4xl font-extrabold text-white">
+            {{ isAnnual() ? "R$ 500" : "R$ 50" }}
+          </span>
+          <span class="text-gray-400 font-medium"
+            >/{{ isAnnual() ? "ano" : "mês" }}</span
+          >
+        </div>
+
+        <div
+          class="bg-white/5 rounded-xl p-4 border border-white/10 relative z-10"
+        >
+          <p
+            class="text-sm text-purple-200 font-medium mb-1 flex items-center gap-2"
+          >
+            <i class="pi pi-bolt text-yellow-400"></i>
+            Upgrade Geral
+          </p>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Todas as funcionalidades do Pro são <strong>turbinadas</strong> com
+            nossos modelos de IA mais avançados. Mais rápido, mais profundo, sem
+            limites.
+          </p>
+        </div>
+
+        <ul class="flex flex-col gap-4 flex-1 relative z-10">
+          <li class="font-bold text-sm text-white flex items-center gap-2">
+            <i class="pi pi-star-fill text-yellow-500 text-xs"></i>
+            Tudo do Pro melhorado, mais:
+          </li>
+          @for(feature of features.premium; track feature) {
+          <li class="flex items-start gap-3 text-sm text-gray-200">
+            <i
+              class="pi pi-check text-purple-400 mt-0.5 font-bold shadow-lg shadow-purple-500/50 rounded-full"
+            ></i>
+            <span>{{ feature }}</span>
+          </li>
+          }
+        </ul>
+
+        <div class="mt-auto relative z-10">
+          <p-button
+            [label]="
+              currentTier() === 'premium'
+                ? 'Gerenciar Assinatura'
+                : 'Quero o Poder Total'
+            "
+            [loading]="loading() === 'premium'"
+            styleClass="w-full rounded-xl font-bold py-3 gradient-button border-0"
+            (onClick)="
+              currentTier() === 'premium'
+                ? manageSubscription()
+                : subscribe('premium')
+            "
+          >
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ or Secure Badge could go here -->
+  <div class="mt-16 flex items-center gap-2 text-gray-400 text-sm">
+    <i class="pi pi-lock"></i>
+    Pagamentos processados com segurança pelo Stripe
+  </div>
+</div>
+
+<style>
+  .gradient-button {
+    background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%) !important;
+    transition: all 0.3s ease !important;
+  }
+  .gradient-button:hover {
+    background: linear-gradient(90deg, #9333ea 0%, #db2777 100%) !important;
+    box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.4);
+    transform: translateY(-1px);
+  }
+</style>

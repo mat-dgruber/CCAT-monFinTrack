@@ -16,8 +16,10 @@ import { DialogModule } from 'primeng/dialog'; // Import Dialog
 import { ConfirmDialogModule } from 'primeng/confirmdialog'; // Import ConfirmDialog
 import { ConfirmationService } from 'primeng/api'; // Import ConfirmationService
 import { MarkdownModule } from 'ngx-markdown'; // Import Markdown Module if used
-import { RouterModule } from '@angular/router';
-
+import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and RouterModule
+import { SkeletonModule } from 'primeng/skeleton'; // Import SkeletonModule
+import { MessageService } from 'primeng/api'; // Import MessageService
+import { ToastModule } from 'primeng/toast'; // Import ToastModule
 
 // Services
 import { DashboardService, DashboardSummary } from '../../services/dashboard.service';
@@ -35,9 +37,6 @@ import { BudgetManager } from '../budget-manager/budget-manager';
 import { InvoiceDashboard } from '../invoice-dashboard/invoice-dashboard';
 import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
 
-
-import { SkeletonModule } from 'primeng/skeleton';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -51,17 +50,18 @@ import { SkeletonModule } from 'primeng/skeleton';
     AccountManager,
     BudgetManager,
     AccountManager,
-    BudgetManager,
+    BudgetManager, // Duplicate removed if found
     InvoiceDashboard,
     RecentTransactionsComponent,
     SkeletonModule,
-    DialogModule, // Add Dialog
-    ConfirmDialogModule, // Add ConfirmDialog
-    MarkdownModule, // Add Markdown
-    ButtonModule, // Add Button
-    RouterModule
+    DialogModule,
+    ConfirmDialogModule,
+    MarkdownModule,
+    ButtonModule,
+    RouterModule,
+    ToastModule // Add ToastModule
   ],
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, MessageService], // Add MessageService
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -72,9 +72,12 @@ export class Dashboard implements OnInit {
   private filterService = inject(FilterService);
   private analysisService = inject(AnalysisService);
   private accountService = inject(AccountService);
-  private aiService = inject(AIService); // Inject AI Service
+  private aiService = inject(AIService);
   private confirmationService = inject(ConfirmationService);
   subscriptionService = inject(SubscriptionService);
+  private route = inject(ActivatedRoute); // Inject ActivatedRoute
+  private router = inject(Router); // Inject Router
+  private messageService = inject(MessageService); // Inject MessageService
 
 
   summary = signal<DashboardSummary | null>(null);
@@ -86,20 +89,10 @@ export class Dashboard implements OnInit {
   reportLoading = false;
   reportContent = '';
 
-
-
-
   // Filters
   accounts = signal<Account[]>([]);
 
-
-
-
-
   constructor() {
-
-
-    // Efeito para recarregar os dados do dashboard quando o sinal de refresh for acionado
     effect(() => {
       const m = this.filterService.month();
       const y = this.filterService.year();
@@ -111,6 +104,30 @@ export class Dashboard implements OnInit {
   ngOnInit() {
     this.initChartOptions();
     this.loadAccounts();
+    this.checkPaymentStatus();
+  }
+
+  checkPaymentStatus() {
+      this.route.queryParams.subscribe(params => {
+          if (params['payment'] === 'success') {
+              this.messageService.add({ severity: 'success', summary: 'Pagamento Confirmado!', detail: 'Obrigado por assinar. Seu plano foi atualizado.' });
+              // Clear param
+              this.router.navigate([], {
+                  relativeTo: this.route,
+                  queryParams: { payment: null },
+                  queryParamsHandling: 'merge'
+              });
+              // Force refresh specific logic if needed? subscription service is reactive to user prefs update.
+              // Assuming backend webhook already fired? Race condition possible.
+          } else if (params['payment'] === 'canceled') {
+              this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'O processo de pagamento foi cancelado.' });
+               this.router.navigate([], {
+                  relativeTo: this.route,
+                  queryParams: { payment: null },
+                  queryParamsHandling: 'merge'
+              });
+          }
+      });
   }
   // Chart
   chartData: any;

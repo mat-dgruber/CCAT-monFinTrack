@@ -45,7 +45,13 @@ app.add_middleware(
     allow_methods=["*"],          # Quais métodos (GET, POST, etc)
     allow_headers=["*"],          # Quais cabeçalhos
 )
-# -------------------------------------------------
+
+# --- CRITICAL: FIX HTTPS REDIRECTS ON CLOUD RUN ---
+# Diga ao FastAPI que ele está atrás de um proxy HTTPS (Cloud Run/Firebase)
+# Isso evita redirects para http:// e erros de Mixed Content
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+# --------------------------------------------------
 
 
 #  Adicione as rotas ao app principal
@@ -57,6 +63,9 @@ app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
 app.include_router(import_transactions.router, prefix="/api/import", tags=["Import"])
 app.include_router(attachments.router, prefix="/api/attachments", tags=["Attachments"])
+
+from app.api.routers import stripe
+app.include_router(stripe.router, prefix="/api/stripe", tags=["Stripe"])
 
 from app.api.calculator import router as calculator_router
 app.include_router(calculator_router, prefix="/api", tags=["Calculator"])
