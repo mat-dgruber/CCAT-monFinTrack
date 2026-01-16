@@ -13,6 +13,7 @@ class EmailService:
         self.mail_port = int(os.getenv("MAIL_PORT", 587))
         self.mail_server = os.getenv("MAIL_SERVER", "smtp.gmail.com")
         self.mail_ssl_tls = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
+        self.mail_starttls = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
 
         try:
             self.conf = ConnectionConfig(

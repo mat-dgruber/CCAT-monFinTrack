@@ -1,4 +1,5 @@
 import { Component, signal, ElementRef, ViewChild, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -121,6 +122,14 @@ import html2canvas from 'html2canvas';
                   [pTooltip]="!subscriptionService.canAccess('monthly_report') ? 'Disponível no plano PRO' : ''"
                   styleClass="w-full md:w-auto">
               </p-button>
+              <p-button
+                  *ngIf="!subscriptionService.canAccess('monthly_report')"
+                  label="Desbloquear Pro"
+                  icon="pi pi-lock-open"
+                  size="small"
+                  (onClick)="navigateToPricing()"
+                  styleClass="w-full md:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none">
+              </p-button>
           </div>
       </div>
 
@@ -169,6 +178,11 @@ import html2canvas from 'html2canvas';
 export class AdvancedGraphicsComponent {
   @ViewChild('dashboardGrid') dashboardGrid!: ElementRef;
   subscriptionService = inject(SubscriptionService);
+  router = inject(Router);
+
+  navigateToPricing() {
+      this.router.navigate(['/pricing']);
+  }
 
   widgets = signal<DashboardWidget[]>([
     {

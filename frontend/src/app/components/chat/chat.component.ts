@@ -14,6 +14,8 @@ interface ChatMessage {
     chartData?: any; // Optional chart config
 }
 
+import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-chat',
   standalone: true,
@@ -23,6 +25,7 @@ interface ChatMessage {
 })
 export class ChatComponent {
     private aiService = inject(AIService);
+    private router = inject(Router);
     subscriptionService = inject(SubscriptionService);
     canAccess = computed(() => this.subscriptionService.canAccess('chat'));
 
@@ -37,6 +40,12 @@ export class ChatComponent {
     constructor() {
         // Auto-scroll logic could go here in an effect, or just manual in settimeout
     }
+
+    navigateToPricing() {
+        this.router.navigate(['/pricing']);
+    }
+// ... rest of class
+
 
     toggleChat() {
         this.expanded.update(v => !v);

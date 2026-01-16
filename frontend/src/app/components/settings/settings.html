@@ -5,10 +5,13 @@
   </div>
 
   <!-- Organic Grid Layout -->
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start grid-flow-row-dense">
-
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start grid-flow-row-dense"
+  >
     <!-- 1. PROFILE (Standard) -->
-    <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1">
+    <div
+      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+    >
       <h2 class="text-xl font-semibold text-color mb-6">Meu Perfil</h2>
 
       <div class="flex flex-col gap-6">
@@ -19,7 +22,7 @@
               [src]="profileImageUrl()"
               alt="Profile"
               class="w-24 h-24 rounded-full object-cover border-4 border-surface-ground"
-              onerror="this.src='assets/default-avatar.png'"
+              onerror="this.src = 'assets/default-avatar.png'"
             />
           </div>
           <div class="flex flex-col gap-2">
@@ -53,13 +56,13 @@
 
         <!-- Birthday -->
         <div class="flex flex-col gap-2">
-            <label class="font-medium text-secondary">Data de Nascimento</label>
-            <p-datePicker
-                [(ngModel)]="birthday"
-                dateFormat="dd/mm/yy"
-                [showIcon]="true"
-                styleClass="w-full"
-            ></p-datePicker>
+          <label class="font-medium text-secondary">Data de Nascimento</label>
+          <p-datePicker
+            [(ngModel)]="birthday"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            styleClass="w-full"
+          ></p-datePicker>
         </div>
 
         <!-- Update Button -->
@@ -75,183 +78,239 @@
     </div>
 
     <!-- 2. SECURITY CENTER (Wide - Merged Email, MFA, Danger) -->
-    <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1 md:col-span-2">
-       <div class="flex items-center gap-3 mb-6">
-           <i class="pi pi-shield text-2xl text-primary"></i>
-           <h2 class="text-xl font-semibold text-color m-0">Central de Segurança</h2>
-       </div>
+    <div
+      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1 md:col-span-2"
+    >
+      <div class="flex items-center gap-3 mb-6">
+        <i class="pi pi-shield text-2xl text-primary"></i>
+        <h2 class="text-xl font-semibold text-color m-0">
+          Central de Segurança
+        </h2>
+      </div>
 
-       <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8 mb-8">
-           <!-- Col 1: Access -->
-           <div class="flex flex-col gap-6">
-               <h3 class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0">Credenciais de Acesso</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8 mb-8">
+        <!-- Col 1: Access -->
+        <div class="flex flex-col gap-6">
+          <h3
+            class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
+          >
+            Credenciais de Acesso
+          </h3>
 
-               <!-- Email -->
-               <div class="flex flex-col gap-2">
-                   <div class="flex justify-between items-center">
-                        <span class="font-medium text-secondary">Email Cadastrado</span>
-                   </div>
-                   <div class="flex items-center gap-3 p-3 bg-surface-ground rounded-lg border border-surface-border">
-                     <i class="pi pi-envelope text-secondary"></i>
-                     <span class="text-color font-medium break-all flex-1">{{ email() }}</span>
-                     @if (auth.currentUser()?.emailVerified) {
-                        <i class="pi pi-check-circle text-green-500" pTooltip="Verificado"></i>
-                     } @else {
-                        <i class="pi pi-exclamation-circle text-orange-500 cursor-pointer" (click)="verifyEmail()" pTooltip="Não verificado. Clique para enviar email."></i>
-                     }
-                   </div>
-               </div>
-
-               <!-- Password -->
-               <div class="flex justify-between items-center gap-4 p-3 bg-surface-ground rounded-lg border border-surface-border">
-                   <div class="flex items-center gap-3">
-                       <i class="pi pi-lock text-secondary"></i>
-                       <span class="font-medium text-secondary">Senha de Acesso</span>
-                   </div>
-                   <p-button
-                     label="Alterar"
-                     [text]="true"
-                     size="small"
-                     (onClick)="sendPasswordReset()"
-                   >
-                   </p-button>
-               </div>
-           </div>
-
-           <!-- Col 3: Notifications & Privacy (Wide) -->
-           <div class="col-span-1 lg:col-span-2 border-t border-surface-border pt-6 mt-2">
-               <h3 class="text-base font-bold text-color uppercase tracking-wider text-xs mb-6">Privacidade e Notificações</h3>
-
-               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Notifications -->
-                    <div class="flex flex-col gap-4">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-color">Notificações Push</span>
-                                <span class="text-xs text-secondary">Alertas no navegador/celular.</span>
-                            </div>
-                            <p-toggleswitch
-                                [(ngModel)]="preferences!.notifications_enabled"
-                                (ngModelChange)="onNotificationChange($event)"
-                            ></p-toggleswitch>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium text-color">Resumo por Email</span>
-                                    <p-tag value="PRO" severity="info" styleClass="text-xs py-0"></p-tag>
-                                </div>
-                                <span class="text-xs text-secondary">Relatório semanal da sua vida financeira.</span>
-                            </div>
-                            <p-toggleswitch
-                                [ngModel]="emailDigestEnabled()"
-                                (ngModelChange)="emailDigestEnabled.set($event); onEmailDigestChange()"
-                                [disabled]="selectedTier() === 'free'"
-                                pTooltip="Disponível apenas para membros PRO"
-                                tooltipPosition="top"
-                                [tooltipDisabled]="selectedTier() !== 'free'"
-                            ></p-toggleswitch>
-                        </div>
-                    </div>
-
-                    <!-- Privacy -->
-                    <div class="flex flex-col gap-4">
-                         <div class="flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-color">Melhoria de IA</span>
-                                <span class="text-xs text-secondary">Compartilhar dados anônimos para treinar modelos.</span>
-                            </div>
-                            <p-toggleswitch
-                                [ngModel]="privacyShared()"
-                                (ngModelChange)="privacyShared.set($event); onPrivacyChange()"
-                            ></p-toggleswitch>
-                        </div>
-                    </div>
-               </div>
-           </div>
-
-           <!-- Col 2: MFA -->
-           <div class="flex flex-col gap-6">
-               <h3 class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0">Autenticação em Duas Etapas (MFA)</h3>
-
-               <div class="flex flex-col gap-4">
-                   <div class="flex items-start gap-4">
-                        <div class="mt-1">
-                            @if (mfaEnabled()) {
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                    <i class="pi pi-check text-xl"></i>
-                                </div>
-                            } @else {
-                                <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                                    <i class="pi pi-shield text-xl"></i>
-                                </div>
-                            }
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="font-semibold text-color">Status de Proteção</span>
-                                @if (mfaEnabled()) {
-                                    <p-tag value="Ativado" severity="success"></p-tag>
-                                } @else {
-                                    <p-tag value="Recomendado" severity="warn"></p-tag>
-                                }
-                            </div>
-                            <p class="text-sm text-secondary m-0 line-clamp-2">
-                                Proteja sua conta solicitando um código do seu aplicativo autenticador ao fazer login.
-                            </p>
-                        </div>
-                   </div>
-
-                   @if (!mfaEnabled()) {
-                    <p-button
-                        label="Configurar Agora"
-                        styleClass="w-full p-button-secondary"
-                        (onClick)="startMfaSetup()"
-                    ></p-button>
-                   } @else {
-                    <p-button
-                        label="Desativar Proteção"
-                        styleClass="w-full p-button-outlined p-button-danger"
-                        (onClick)="disableMFA()"
-                    ></p-button>
-                   }
-               </div>
-           </div>
-       </div>
-
-       <!-- Danger Zone (Bottom) -->
-       <div class="mt-auto pt-6 border-t border-surface-border">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <span class="text-sm text-secondary font-medium">Zona de Perigo</span>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <p-button
-                    label="Limpar Dados"
-                    styleClass="p-button-text p-button-secondary p-button-sm flex-1 sm:flex-none"
-                    icon="pi pi-trash"
-                    (onClick)="onResetAccount()"
-                    >
-                    </p-button>
-                    <p-button
-                    label="Excluir Conta"
-                    styleClass="p-button-text p-button-danger p-button-sm flex-1 sm:flex-none"
-                    icon="pi pi-times"
-                    (onClick)="confirmDelete()"
-                    >
-                    </p-button>
-                </div>
+          <!-- Email -->
+          <div class="flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-secondary">Email Cadastrado</span>
             </div>
-       </div>
+            <div
+              class="flex items-center gap-3 p-3 bg-surface-ground rounded-lg border border-surface-border"
+            >
+              <i class="pi pi-envelope text-secondary"></i>
+              <span class="text-color font-medium break-all flex-1">{{
+                email()
+              }}</span>
+              @if (auth.currentUser()?.emailVerified) {
+                <i
+                  class="pi pi-check-circle text-green-500"
+                  pTooltip="Verificado"
+                ></i>
+              } @else {
+                <i
+                  class="pi pi-exclamation-circle text-orange-500 cursor-pointer"
+                  (click)="verifyEmail()"
+                  pTooltip="Não verificado. Clique para enviar email."
+                ></i>
+              }
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div
+            class="flex justify-between items-center gap-4 p-3 bg-surface-ground rounded-lg border border-surface-border"
+          >
+            <div class="flex items-center gap-3">
+              <i class="pi pi-lock text-secondary"></i>
+              <span class="font-medium text-secondary">Senha de Acesso</span>
+            </div>
+            <p-button
+              label="Alterar"
+              [text]="true"
+              size="small"
+              (onClick)="sendPasswordReset()"
+            >
+            </p-button>
+          </div>
+        </div>
+
+        <!-- Col 3: Notifications & Privacy (Wide) -->
+        <div
+          class="col-span-1 lg:col-span-2 border-t border-surface-border pt-6 mt-2"
+        >
+          <h3
+            class="text-base font-bold text-color uppercase tracking-wider text-xs mb-6"
+          >
+            Privacidade e Notificações
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Notifications -->
+            <div class="flex flex-col gap-4">
+              <div class="flex justify-between items-center">
+                <div class="flex flex-col">
+                  <span class="font-medium text-color">Notificações Push</span>
+                  <span class="text-xs text-secondary"
+                    >Alertas no navegador/celular.</span
+                  >
+                </div>
+                <p-toggleswitch
+                  [(ngModel)]="preferences!.notifications_enabled"
+                  (ngModelChange)="onNotificationChange($event)"
+                ></p-toggleswitch>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium text-color">Resumo por Email</span>
+                    <p-tag
+                      value="PRO"
+                      severity="info"
+                      styleClass="text-xs py-0"
+                    ></p-tag>
+                  </div>
+                  <span class="text-xs text-secondary"
+                    >Relatório semanal da sua vida financeira.</span
+                  >
+                </div>
+                <p-toggleswitch
+                  [ngModel]="emailDigestEnabled()"
+                  (ngModelChange)="
+                    emailDigestEnabled.set($event); onEmailDigestChange()
+                  "
+                  [disabled]="selectedTier() === 'free'"
+                  pTooltip="Disponível apenas para membros PRO"
+                  tooltipPosition="top"
+                  [tooltipDisabled]="selectedTier() !== 'free'"
+                ></p-toggleswitch>
+              </div>
+            </div>
+
+            <!-- Privacy -->
+            <div class="flex flex-col gap-4">
+              <div class="flex justify-between items-center">
+                <div class="flex flex-col">
+                  <span class="font-medium text-color">Melhoria de IA</span>
+                  <span class="text-xs text-secondary"
+                    >Compartilhar dados anônimos para treinar modelos.</span
+                  >
+                </div>
+                <p-toggleswitch
+                  [ngModel]="privacyShared()"
+                  (ngModelChange)="privacyShared.set($event); onPrivacyChange()"
+                ></p-toggleswitch>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: MFA -->
+        <div class="flex flex-col gap-6">
+          <h3
+            class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
+          >
+            Autenticação em Duas Etapas (MFA)
+          </h3>
+
+          <div class="flex flex-col gap-4">
+            <div class="flex items-start gap-4">
+              <div class="mt-1">
+                @if (mfaEnabled()) {
+                  <div
+                    class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"
+                  >
+                    <i class="pi pi-check text-xl"></i>
+                  </div>
+                } @else {
+                  <div
+                    class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600"
+                  >
+                    <i class="pi pi-shield text-xl"></i>
+                  </div>
+                }
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-semibold text-color"
+                    >Status de Proteção</span
+                  >
+                  @if (mfaEnabled()) {
+                    <p-tag value="Ativado" severity="success"></p-tag>
+                  } @else {
+                    <p-tag value="Recomendado" severity="warn"></p-tag>
+                  }
+                </div>
+                <p class="text-sm text-secondary m-0 line-clamp-2">
+                  Proteja sua conta solicitando um código do seu aplicativo
+                  autenticador ao fazer login.
+                </p>
+              </div>
+            </div>
+
+            @if (!mfaEnabled()) {
+              <p-button
+                label="Configurar Agora"
+                styleClass="w-full p-button-secondary"
+                (onClick)="startMfaSetup()"
+              ></p-button>
+            } @else {
+              <p-button
+                label="Desativar Proteção"
+                styleClass="w-full p-button-outlined p-button-danger"
+                (onClick)="disableMFA()"
+              ></p-button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone (Bottom) -->
+      <div class="mt-auto pt-6 border-t border-surface-border">
+        <div
+          class="flex flex-col sm:flex-row justify-between items-center gap-4"
+        >
+          <span class="text-sm text-secondary font-medium">Zona de Perigo</span>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <p-button
+              label="Limpar Dados"
+              styleClass="p-button-text p-button-secondary p-button-sm flex-1 sm:flex-none"
+              icon="pi pi-trash"
+              (onClick)="onResetAccount()"
+            >
+            </p-button>
+            <p-button
+              label="Excluir Conta"
+              styleClass="p-button-text p-button-danger p-button-sm flex-1 sm:flex-none"
+              icon="pi pi-times"
+              (onClick)="confirmDelete()"
+            >
+            </p-button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 3. APP PREFERENCES (Merged General + System) -->
-    <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1">
+    <div
+      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+    >
       <h2 class="text-xl font-semibold text-color mb-6">Sistema e Aparência</h2>
 
       <div class="flex flex-col gap-5">
         <!-- Theme -->
         <div class="field">
-          <label class="font-medium text-secondary block mb-2">Tema da Interface</label>
+          <label class="font-medium text-secondary block mb-2"
+            >Tema da Interface</label
+          >
           <p-select
             [options]="themeOptions"
             [(ngModel)]="selectedTheme"
@@ -264,10 +323,14 @@
         </div>
 
         <!-- Wake Lock -->
-        <div class="flex justify-between items-center py-2 border-y border-surface-border">
+        <div
+          class="flex justify-between items-center py-2 border-y border-surface-border"
+        >
           <div class="flex flex-col">
             <span class="font-medium text-color">Manter Tela Ligada</span>
-            <span class="text-xs text-secondary">Evita bloqueio automático.</span>
+            <span class="text-xs text-secondary"
+              >Evita bloqueio automático.</span
+            >
           </div>
           <p-toggleswitch
             [ngModel]="wakeLockEnabled()"
@@ -277,24 +340,54 @@
 
         <!-- Install App -->
         @if (pwaService.isInstallable) {
-        <div class="flex justify-between items-center">
-          <div class="flex flex-col">
-            <span class="font-medium text-color">Instalar App</span>
-            <span class="text-xs text-secondary">Versão desktop/mobile.</span>
+          <div class="flex justify-between items-center">
+            <div class="flex flex-col">
+              <span class="font-medium text-color">Instalar App</span>
+              <span class="text-xs text-secondary">Versão desktop/mobile.</span>
+            </div>
+            <p-button
+              icon="pi pi-download"
+              [rounded]="true"
+              [text]="true"
+              (onClick)="installApp()"
+              pTooltip="Instalar"
+            ></p-button>
           </div>
-          <p-button
-            icon="pi pi-download"
-            [rounded]="true"
-            [text]="true"
-            (onClick)="installApp()"
-            pTooltip="Instalar"
-          ></p-button>
-        </div>
         }
+
+        <!-- Subscription Management -->
+        <div class="mt-auto pt-4 border-t border-surface-border">
+          <label class="font-medium text-secondary block mb-2"
+            >Minha Assinatura</label
+          >
+          <div class="flex flex-col gap-2">
+            <div
+              class="flex justify-between items-center bg-surface-ground p-3 rounded-lg border border-surface-border"
+            >
+              <div class="flex flex-col">
+                <span
+                  class="font-bold text-color uppercase text-xs tracking-wider"
+                  >{{ preferences?.subscription_tier || "FREE" }}</span
+                >
+                <span class="text-xs text-secondary">Plano Atual</span>
+              </div>
+              <p-button
+                label="Gerenciar"
+                icon="pi pi-external-link"
+                [text]="true"
+                size="small"
+                (onClick)="navigateToPricing()"
+              ></p-button>
+            </div>
+          </div>
+        </div>
 
         <!-- Subscription Mode (Test) -->
         <div class="mt-auto pt-4">
-          <label class="font-medium text-secondary block mb-2 text-xs uppercase tracking-wider">Ambiente de Teste (Tier)</label>
+          <label
+            class="font-medium text-secondary block mb-2 text-xs uppercase tracking-wider"
+            >Ambiente de Teste (Tier)</label
+          >
           <div class="flex items-center gap-2">
             <p-select
               [options]="tierOptions"
@@ -311,53 +404,90 @@
     </div>
 
     <!-- 4. AI INTEGRATION -->
-    <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1">
+    <div
+      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+    >
       <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-color m-0">Uso de IA</h2>
-          <p-tag [value]="aiLimits()?.tier" severity="info" styleClass="uppercase"></p-tag>
+        <h2 class="text-xl font-semibold text-color m-0">Uso de IA</h2>
+        <p-tag
+          [value]="aiLimits()?.tier"
+          severity="info"
+          styleClass="uppercase"
+        ></p-tag>
       </div>
 
       <div class="flex flex-col gap-6 flex-1">
-          @if (aiLimits()) {
-              <div class="flex flex-col gap-5">
-                  <!-- Classify Limit -->
-                  <div>
-                      <div class="flex justify-between mb-2">
-                          <span class="font-medium text-sm">Scanner</span>
-                          <span class="text-xs text-secondary">{{ aiLimits().classify.used }} / {{ aiLimits().classify.limit }}</span>
-                      </div>
-                      <p-progressBar [value]="aiLimits().classify.limit > 0 ? (aiLimits().classify.used / aiLimits().classify.limit) * 100 : 0" [showValue]="false" styleClass="h-2"></p-progressBar>
-                  </div>
+        @if (aiLimits()) {
+          <div class="flex flex-col gap-5">
+            <!-- Classify Limit -->
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="font-medium text-sm">Scanner</span>
+                <span class="text-xs text-secondary"
+                  >{{ aiLimits().classify.used }} /
+                  {{ aiLimits().classify.limit }}</span
+                >
+              </div>
+              <p-progressBar
+                [value]="
+                  aiLimits().classify.limit > 0
+                    ? (aiLimits().classify.used / aiLimits().classify.limit) *
+                      100
+                    : 0
+                "
+                [showValue]="false"
+                styleClass="h-2"
+              ></p-progressBar>
+            </div>
 
-                  <!-- Chat Limit -->
-                  <div>
-                       <div class="flex justify-between mb-2">
-                          <span class="font-medium text-sm">Chat</span>
-                          <span class="text-xs text-secondary">{{ aiLimits().chat.used }} / {{ aiLimits().chat.limit }}</span>
-                      </div>
-                      <p-progressBar [value]="aiLimits().chat.limit > 0 ? (aiLimits().chat.used / aiLimits().chat.limit) * 100 : 0" [showValue]="false" styleClass="h-2"></p-progressBar>
-                  </div>
+            <!-- Chat Limit -->
+            <div>
+              <div class="flex justify-between mb-2">
+                <span class="font-medium text-sm">Chat</span>
+                <span class="text-xs text-secondary"
+                  >{{ aiLimits().chat.used }} /
+                  {{ aiLimits().chat.limit }}</span
+                >
               </div>
+              <p-progressBar
+                [value]="
+                  aiLimits().chat.limit > 0
+                    ? (aiLimits().chat.used / aiLimits().chat.limit) * 100
+                    : 0
+                "
+                [showValue]="false"
+                styleClass="h-2"
+              ></p-progressBar>
+            </div>
+          </div>
 
-              <div class="mt-auto p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex gap-3 text-sm text-blue-800 dark:text-blue-200">
-                  <i class="pi pi-sparkles mt-1"></i>
-                  <p class="m-0 leading-tight">Seu plano permite acesso a recursos avançados de análise.</p>
-              </div>
-          } @else {
-              <div class="flex flex-col items-center justify-center h-40 gap-3">
-                  <p-progressSpinner styleClass="w-2rem h-2rem"></p-progressSpinner>
-                  <span class="text-secondary text-sm">Carregando limites...</span>
-              </div>
-          }
+          <div
+            class="mt-auto p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex gap-3 text-sm text-blue-800 dark:text-blue-200"
+          >
+            <i class="pi pi-sparkles mt-1"></i>
+            <p class="m-0 leading-tight">
+              Seu plano permite acesso a recursos avançados de análise.
+            </p>
+          </div>
+        } @else {
+          <div class="flex flex-col items-center justify-center h-40 gap-3">
+            <p-progressSpinner styleClass="w-2rem h-2rem"></p-progressSpinner>
+            <span class="text-secondary text-sm">Carregando limites...</span>
+          </div>
+        }
       </div>
     </div>
 
     <!-- 5. TITHES -->
-    <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1">
+    <div
+      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+    >
       <h2 class="text-xl font-semibold text-color mb-6">Dízimos</h2>
 
       <div class="flex flex-col gap-6">
-        <div class="flex justify-between items-center gap-4 bg-surface-ground p-3 rounded-lg border border-surface-border">
+        <div
+          class="flex justify-between items-center gap-4 bg-surface-ground p-3 rounded-lg border border-surface-border"
+        >
           <span class="font-medium text-color">Habilitar Recurso</span>
           <p-toggleswitch
             [(ngModel)]="tithesEnabled"
@@ -366,63 +496,83 @@
         </div>
 
         @if (tithesEnabled()) {
-        <div class="grid grid-cols-2 gap-3">
-             <div class="flex flex-col gap-2">
-                <span class="font-medium text-xs text-secondary uppercase">Dízimo</span>
-                <p-inputNumber
-                    [(ngModel)]="defaultTithePct"
-                    (onBlur)="onTitheSettingsChange()"
-                    suffix="%"
-                    [min]="0"
-                    [max]="100"
-                    [showButtons]="true"
-                    buttonLayout="horizontal"
-                    inputParam="size"
-                    [inputStyle]="{ width: '100%', 'text-align': 'center', 'padding': '0.5rem' }"
-                    styleClass="w-full"
-                ></p-inputNumber>
-             </div>
-             <div class="flex flex-col gap-2">
-                <span class="font-medium text-xs text-secondary uppercase">Oferta</span>
-                <p-inputNumber
-                    [(ngModel)]="defaultOfferingPct"
-                    (onBlur)="onTitheSettingsChange()"
-                    suffix="%"
-                    [min]="0"
-                    [max]="100"
-                    [showButtons]="true"
-                    buttonLayout="horizontal"
-                    inputParam="size"
-                    [inputStyle]="{ width: '100%', 'text-align': 'center', 'padding': '0.5rem' }"
-                    styleClass="w-full"
-                ></p-inputNumber>
-             </div>
-        </div>
-
-        <div class="flex flex-col gap-3 mt-auto">
-             <div class="flex justify-between items-center text-sm">
-                 <span class="text-secondary">Dízimo Automático</span>
-                 <p-toggleswitch [(ngModel)]="autoApplyTithe" (ngModelChange)="onTitheSettingsChange()" styleClass="scale-75"></p-toggleswitch>
-             </div>
-             <div class="flex justify-between items-center text-sm">
-                 <span class="text-secondary">Oferta Automática</span>
-                 <p-toggleswitch [(ngModel)]="autoApplyOffering" (ngModelChange)="onTitheSettingsChange()" styleClass="scale-75"></p-toggleswitch>
-             </div>
-        </div>
-        } @else {
-            <div class="flex items-center justify-center flex-1 opacity-50">
-                <i class="pi pi-heart text-4xl text-surface-border"></i>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-2">
+              <span class="font-medium text-xs text-secondary uppercase"
+                >Dízimo</span
+              >
+              <p-inputNumber
+                [(ngModel)]="defaultTithePct"
+                (onBlur)="onTitheSettingsChange()"
+                suffix="%"
+                [min]="0"
+                [max]="100"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                inputParam="size"
+                [inputStyle]="{
+                  width: '100%',
+                  'text-align': 'center',
+                  padding: '0.5rem',
+                }"
+                styleClass="w-full"
+              ></p-inputNumber>
             </div>
+            <div class="flex flex-col gap-2">
+              <span class="font-medium text-xs text-secondary uppercase"
+                >Oferta</span
+              >
+              <p-inputNumber
+                [(ngModel)]="defaultOfferingPct"
+                (onBlur)="onTitheSettingsChange()"
+                suffix="%"
+                [min]="0"
+                [max]="100"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                inputParam="size"
+                [inputStyle]="{
+                  width: '100%',
+                  'text-align': 'center',
+                  padding: '0.5rem',
+                }"
+                styleClass="w-full"
+              ></p-inputNumber>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 mt-auto">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-secondary">Dízimo Automático</span>
+              <p-toggleswitch
+                [(ngModel)]="autoApplyTithe"
+                (ngModelChange)="onTitheSettingsChange()"
+                styleClass="scale-75"
+              ></p-toggleswitch>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-secondary">Oferta Automática</span>
+              <p-toggleswitch
+                [(ngModel)]="autoApplyOffering"
+                (ngModelChange)="onTitheSettingsChange()"
+                styleClass="scale-75"
+              ></p-toggleswitch>
+            </div>
+          </div>
+        } @else {
+          <div class="flex items-center justify-center flex-1 opacity-50">
+            <i class="pi pi-heart text-4xl text-surface-border"></i>
+          </div>
         }
       </div>
     </div>
-
-  </div> <!-- End Grid -->
+  </div>
+  <!-- End Grid -->
 </div>
 
 <!-- Dialogs & Toasts -->
 <p-toast></p-toast>
-<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+<p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
 
 <p-dialog
   header="Configurar MFA"

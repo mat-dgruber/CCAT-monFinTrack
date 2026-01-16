@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FileUploadModule } from 'primeng/fileupload';
@@ -67,9 +68,14 @@ export class ImportTransactionsComponent {
 
   subscriptionService = inject(SubscriptionService);
   canAccess = computed(() => this.subscriptionService.canAccess('import'));
+  private router = inject(Router);
 
   constructor() {
     this.loadData();
+  }
+
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
   }
 
   loadData() {

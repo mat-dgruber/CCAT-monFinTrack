@@ -440,4 +440,8 @@ export class Settings {
       this.pwaService.releaseWakeLock();
     }
   }
+
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
+  }
 }

@@ -15,6 +15,7 @@ import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly } f
 import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 interface Message {
     severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
@@ -84,6 +85,12 @@ export class CostOfLivingComponent implements OnInit {
       html = html.replace(/\n/g, '<br>');
       return html;
   });
+
+  private router = inject(Router);
+
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
+  }
 
   constructor(private analysisService: AnalysisService, private aiService: AIService) { // Inject AIService
     // Effect to update breakdown chart when data changes
