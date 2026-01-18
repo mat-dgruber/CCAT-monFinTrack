@@ -8,6 +8,7 @@ import { UserPreferenceService } from '../../services/user-preference.service';
 import { MFAService } from '../../services/mfa.service';
 import { AIService } from '../../services/ai.service';
 import { UserPreference } from '../../models/user-preference.model';
+import { environment } from '../../../environments/environment';
 
 // PrimeNG Imports
 import { CardModule } from 'primeng/card';
@@ -109,12 +110,17 @@ export class Settings {
     { label: 'Sistema', value: 'system' }
   ];
 
-  // Tithes & Offerings
+// ...
+
+    // Tithes & Offerings
   tithesEnabled = signal(false);
   defaultTithePct = signal(10);
   defaultOfferingPct = signal(5);
   autoApplyTithe = signal(false);
   autoApplyOffering = signal(false);
+
+  // Environment
+  isProduction = signal(environment.production);
 
   // Subscription (Test Mode)
   selectedTier = signal<'free' | 'pro' | 'premium'>('free');

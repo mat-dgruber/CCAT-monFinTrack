@@ -383,23 +383,25 @@
         </div>
 
         <!-- Subscription Mode (Test) -->
-        <div class="mt-auto pt-4">
-          <label
-            class="font-medium text-secondary block mb-2 text-xs uppercase tracking-wider"
-            >Ambiente de Teste (Tier)</label
-          >
-          <div class="flex items-center gap-2">
-            <p-select
-              [options]="tierOptions"
-              [(ngModel)]="selectedTier"
-              (onChange)="onTierChange($event)"
-              optionLabel="label"
-              optionValue="value"
-              styleClass="w-full"
-              appendTo="body"
-            ></p-select>
+        @if (!isProduction()) {
+          <div class="mt-auto pt-4">
+            <label
+              class="font-medium text-secondary block mb-2 text-xs uppercase tracking-wider"
+              >Ambiente de Teste (Tier)</label
+            >
+            <div class="flex items-center gap-2">
+              <p-select
+                [options]="tierOptions"
+                [(ngModel)]="selectedTier"
+                (onChange)="onTierChange($event)"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              ></p-select>
+            </div>
           </div>
-        </div>
+        }
       </div>
     </div>
 
