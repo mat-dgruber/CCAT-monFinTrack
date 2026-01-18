@@ -14,7 +14,8 @@ export type Feature =
   'credit_card_mgmt' |
   'receipt_scanner' |
   'ai_advisor' |
-  'invoices';
+  'invoices' |
+  'debts';
 
 @Injectable({
   providedIn: 'root'
@@ -70,6 +71,7 @@ export class SubscriptionService {
     if (feature === 'invoices') return { label: 'PRO', severity: 'info' };
     if (feature === 'credit_card_mgmt') return { label: 'PRO', severity: 'info' };
     if (feature === 'receipt_scanner') return { label: 'PRO', severity: 'info' };
+    if (feature === 'debts') return { label: 'PRO', severity: 'info' };
 
     if (feature === 'roast_mode') return { label: 'PREMIUM', severity: 'warn' };
     if (feature === 'subscription_hunter') return { label: 'PREMIUM', severity: 'warn' };

@@ -26,6 +26,8 @@ import { TagModule } from 'primeng/tag';
 
 import { DebtService } from '../../services/debt.service';
 import { ResourceService } from '../../services/resource.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { Router } from '@angular/router';
 import { Debt, PaymentPlan, AmortizationSystem, DebtType, DebtStatus, CardBrand, IndexerType, InterestPeriod } from '../../models/debt.model';
 import { SeasonalIncome, SeasonalIncomeCreate } from '../../models/seasonal-income.model';
 
@@ -67,6 +69,14 @@ export class DebtPlannerComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private resourceService = inject(ResourceService);
   private fb = inject(FormBuilder);
+  public subscriptionService = inject(SubscriptionService);
+  private router = inject(Router);
+
+  canAccess = computed(() => this.subscriptionService.canAccess('debts'));
+
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
+  }
 
   activeIndex = signal(0);
   debts = signal<Debt[]>([]);

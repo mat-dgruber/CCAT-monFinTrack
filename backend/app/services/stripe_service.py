@@ -60,6 +60,7 @@ class StripeService:
                         "quantity": 1,
                     }
                 ],
+                allow_promotion_codes=True,
                 mode="subscription",
                 success_url=success_url,
                 cancel_url=cancel_url,
