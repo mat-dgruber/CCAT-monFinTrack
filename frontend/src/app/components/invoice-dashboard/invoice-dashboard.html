@@ -1,156 +1,313 @@
 <div [class]="isWidget ? 'fade-in-up' : 'p-4 fade-in-up'">
+  @if (canAccess()) {
     @if (!isWidget) {
-    <div class="flex justify-between items-center mb-6">
+      <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold m-0 text-gray-800 dark:text-white">Faturas</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">Gerencie suas faturas de cartão de crédito.</p>
+          <h1 class="text-3xl font-bold m-0 text-gray-800 dark:text-white">
+            Faturas
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Gerencie suas faturas de cartão de crédito.
+          </p>
         </div>
-        <p-button icon="pi pi-refresh" (onClick)="loadInvoices()" [loading]="loading()" [rounded]="true" [text]="true"></p-button>
-    </div>
+        <p-button
+          icon="pi pi-refresh"
+          (onClick)="loadInvoices()"
+          [loading]="loading()"
+          [rounded]="true"
+          [text]="true"
+        ></p-button>
+      </div>
     }
 
     @if (loading()) {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-             <div class="col-span-1" *ngFor="let i of [1,2,3]">
-                 <p-skeleton height="200px" styleClass="mb-2"></p-skeleton>
-             </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="col-span-1" *ngFor="let i of [1, 2, 3]">
+          <p-skeleton height="200px" styleClass="mb-2"></p-skeleton>
         </div>
+      </div>
     } @else {
-        @if (invoices().length === 0) {
-            <div class="flex flex-col items-center justify-center p-12 text-center text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-                <i class="pi pi-inbox text-5xl mb-4 text-gray-300 dark:text-gray-600"></i>
-                <span class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300">Nenhuma fatura encontrada</span>
-                <p class="text-sm max-w-xs mx-auto">Cadastre cartões de crédito em suas contas e realize transações para vê-las aqui.</p>
-            </div>
-        }
-
-        <div [class]="isWidget ? 'grid grid-cols-1 xl:grid-cols-2 gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'">
-            <div *ngFor="let invoice of invoices()" class="col-span-1">
-                 <div class="bg-white dark:bg-slate-800 p-6 shadow-md dark:shadow-none dark:border dark:border-gray-700 rounded-xl h-full flex flex-col relative overflow-hidden transition-all hover:shadow-lg">
-                      <!-- Status Ribbon -->
-                      <div class="absolute top-0 right-0 m-4 px-3 py-1 rounded-full text-xs font-bold tracking-wide"
-                           [ngClass]="{
-                               'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400': invoice.status === 'open',
-                               'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400': invoice.status === 'closed',
-                               'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': invoice.status === 'overdue',
-                               'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400': invoice.status === 'paid'
-                           }">
-                           {{ invoice.status === 'open' ? 'ABERTA' : (invoice.status === 'closed' ? 'FECHADA' : (invoice.status === 'overdue' ? 'ATRASADA' : 'PAGA')) }}
-                      </div>
-
-                      <div class="flex items-center gap-4 mb-6">
-                          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-sm ring-2 ring-white dark:ring-slate-700"
-                               [style.background]="invoice.card_color">
-                               <i class="pi pi-credit-card"></i>
-                          </div>
-                          <div>
-                              <div class="text-lg font-bold text-gray-900 dark:text-white leading-tight">{{ invoice.card_name }}</div>
-                              <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-0.5">{{ invoice.card_brand }}</div>
-                          </div>
-                      </div>
-
-                      <div class="space-y-3 mb-6">
-                          <div class="flex justify-between items-center text-sm">
-                              <span class="text-gray-500 dark:text-gray-400">Referência</span>
-                              <span class="font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded">{{ invoice.month | number:'2.0' }}/{{ invoice.year }}</span>
-                          </div>
-
-                          <div class="flex justify-between items-center text-sm">
-                              <span class="text-gray-500 dark:text-gray-400">Vencimento</span>
-                              <span class="font-medium" [class.text-red-500]="invoice.status === 'overdue'" [class.text-gray-900]="invoice.status !== 'overdue'" [class.dark:text-white]="invoice.status !== 'overdue'">
-                                  {{ invoice.due_date | date:'dd/MM/yyyy' }}
-                              </span>
-                          </div>
-
-                          <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-500 dark:text-gray-400">Fechamento</span>
-                            <span class="font-medium text-gray-900 dark:text-white">
-                                {{ invoice.closing_date | date:'dd/MM/yyyy' }}
-                            </span>
-                        </div>
-                      </div>
-
-                      <div class="mt-4 mb-4" *ngIf="invoice.card_limit">
-                          <div class="flex justify-between text-xs mb-1">
-                              <span class="text-gray-500 dark:text-gray-400">Limite Utilizado</span>
-                              <span class="font-medium text-gray-700 dark:text-gray-300">
-                                  {{ (invoice.amount / invoice.card_limit) * 100 | number:'1.0-0' }}%
-                              </span>
-                          </div>
-                          <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                              <div class="h-full rounded-full transition-all duration-500"
-                                   [style.width.%]="(invoice.amount / invoice.card_limit) * 100"
-                                   [style.background]="invoice.card_color"></div>
-                          </div>
-                          <div class="flex justify-between text-xs mt-1 text-gray-400">
-                              <span>{{ invoice.amount | currency:'BRL' }}</span>
-                              <span>{{ invoice.card_limit | currency:'BRL' }}</span>
-                          </div>
-                      </div>
-
-                      <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-                          <div class="flex justify-between items-end mb-4">
-                              <span class="text-sm text-gray-500 dark:text-gray-400 mb-1">Valor Total</span>
-                              <span class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{{ invoice.amount | currency:'BRL' }}</span>
-                          </div>
-
-                          @if (invoice.status === 'paid') {
-                              <p-button label="Fatura Paga" icon="pi pi-check"
-                                        styleClass="w-full p-button-success"
-                                        [outlined]="true"
-                                        [disabled]="true"></p-button>
-                          } @else {
-                              <p-button label="Pagar Fatura" icon="pi pi-check-circle"
-                                        styleClass="w-full"
-                                        [outlined]="true"
-                                        (onClick)="openPaymentDialog(invoice)"></p-button>
-                          }
-                      </div>
-                 </div>
-            </div>
+      @if (invoices().length === 0) {
+        <div
+          class="flex flex-col items-center justify-center p-12 text-center text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl"
+        >
+          <i
+            class="pi pi-inbox text-5xl mb-4 text-gray-300 dark:text-gray-600"
+          ></i>
+          <span
+            class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300"
+            >Nenhuma fatura encontrada</span
+          >
+          <p class="text-sm max-w-xs mx-auto">
+            Cadastre cartões de crédito em suas contas e realize transações para
+            vê-las aqui.
+          </p>
         </div>
+      }
+
+      <div
+        [class]="
+          isWidget
+            ? 'grid grid-cols-1 xl:grid-cols-2 gap-4'
+            : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+        "
+      >
+        <div *ngFor="let invoice of invoices()" class="col-span-1">
+          <div
+            class="bg-white dark:bg-slate-800 p-6 shadow-md dark:shadow-none dark:border dark:border-gray-700 rounded-xl h-full flex flex-col relative overflow-hidden transition-all hover:shadow-lg"
+          >
+            <!-- Status Ribbon -->
+            <div
+              class="absolute top-0 right-0 m-4 px-3 py-1 rounded-full text-xs font-bold tracking-wide"
+              [ngClass]="{
+                'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400':
+                  invoice.status === 'open',
+                'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400':
+                  invoice.status === 'closed',
+                'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400':
+                  invoice.status === 'overdue',
+                'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400':
+                  invoice.status === 'paid',
+              }"
+            >
+              {{
+                invoice.status === "open"
+                  ? "ABERTA"
+                  : invoice.status === "closed"
+                    ? "FECHADA"
+                    : invoice.status === "overdue"
+                      ? "ATRASADA"
+                      : "PAGA"
+              }}
+            </div>
+
+            <div class="flex items-center gap-4 mb-6">
+              <div
+                class="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-sm ring-2 ring-white dark:ring-slate-700"
+                [style.background]="invoice.card_color"
+              >
+                <i class="pi pi-credit-card"></i>
+              </div>
+              <div>
+                <div
+                  class="text-lg font-bold text-gray-900 dark:text-white leading-tight"
+                >
+                  {{ invoice.card_name }}
+                </div>
+                <div
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-0.5"
+                >
+                  {{ invoice.card_brand }}
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400">Referência</span>
+                <span
+                  class="font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded"
+                  >{{ invoice.month | number: "2.0" }}/{{ invoice.year }}</span
+                >
+              </div>
+
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400">Vencimento</span>
+                <span
+                  class="font-medium"
+                  [class.text-red-500]="invoice.status === 'overdue'"
+                  [class.text-gray-900]="invoice.status !== 'overdue'"
+                  [class.dark:text-white]="invoice.status !== 'overdue'"
+                >
+                  {{ invoice.due_date | date: "dd/MM/yyyy" }}
+                </span>
+              </div>
+
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400">Fechamento</span>
+                <span class="font-medium text-gray-900 dark:text-white">
+                  {{ invoice.closing_date | date: "dd/MM/yyyy" }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-4 mb-4" *ngIf="invoice.card_limit">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-gray-500 dark:text-gray-400"
+                  >Limite Utilizado</span
+                >
+                <span class="font-medium text-gray-700 dark:text-gray-300">
+                  {{
+                    (invoice.amount / invoice.card_limit) * 100
+                      | number: "1.0-0"
+                  }}%
+                </span>
+              </div>
+              <div
+                class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden"
+              >
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  [style.width.%]="(invoice.amount / invoice.card_limit) * 100"
+                  [style.background]="invoice.card_color"
+                ></div>
+              </div>
+              <div class="flex justify-between text-xs mt-1 text-gray-400">
+                <span>{{ invoice.amount | currency: "BRL" }}</span>
+                <span>{{ invoice.card_limit | currency: "BRL" }}</span>
+              </div>
+            </div>
+
+            <div
+              class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700"
+            >
+              <div class="flex justify-between items-end mb-4">
+                <span class="text-sm text-gray-500 dark:text-gray-400 mb-1"
+                  >Valor Total</span
+                >
+                <span
+                  class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight"
+                  >{{ invoice.amount | currency: "BRL" }}</span
+                >
+              </div>
+
+              @if (invoice.status === "paid") {
+                <p-button
+                  label="Fatura Paga"
+                  icon="pi pi-check"
+                  styleClass="w-full p-button-success"
+                  [outlined]="true"
+                  [disabled]="true"
+                ></p-button>
+              } @else {
+                <p-button
+                  label="Pagar Fatura"
+                  icon="pi pi-check-circle"
+                  styleClass="w-full"
+                  [outlined]="true"
+                  (onClick)="openPaymentDialog(invoice)"
+                ></p-button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
     }
+  } @else {
+    <div
+      class="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 h-full min-h-[500px]"
+    >
+      <div class="text-6xl mb-4">💎</div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        Recurso Pro
+      </h2>
+      <p
+        class="text-gray-500 dark:text-gray-400 max-w-md mb-8 text-center text-balance"
+      >
+        O gerenciamento avançado de
+        <strong>Faturas e Cartões de Crédito</strong> é exclusivo para
+        assinantes.
+      </p>
+      <p-button
+        label="Upgrade para Pro"
+        icon="pi pi-bolt"
+        styleClass="p-button-rounded p-button-primary"
+        (onClick)="navigateToPricing()"
+      ></p-button>
+    </div>
+  }
 </div>
 
 <!-- Modal de Pagamento -->
-<p-dialog header="Pagar Fatura" [(visible)]="paymentVisible" [modal]="true" [style]="{width: '400px'}" styleClass="dark:bg-slate-800">
-    @if (selectedInvoice()) {
-        <div class="flex flex-col gap-4 pt-2">
-            <div class="p-4 bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-gray-700 rounded-lg">
-                <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Fatura de</div>
-                <div class="flex items-center gap-2 mb-2">
-                     <div class="w-3 h-3 rounded-full" [style.background]="selectedInvoice()?.card_color"></div>
-                     <span class="font-bold text-gray-800 dark:text-gray-200">{{ selectedInvoice()?.card_name }}</span>
-                     <span class="text-gray-400 dark:text-gray-500 text-sm">({{ selectedInvoice()?.month | number:'2.0' }}/{{ selectedInvoice()?.year }})</span>
-                </div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                    {{ selectedInvoice()?.amount | currency:'BRL' }}
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label class="font-semibold text-gray-700 dark:text-gray-200 text-sm">Conta de Origem</label>
-                <p-select [options]="accounts()" [(ngModel)]="selectedAccount" optionLabel="name" optionValue="id"
-                          placeholder="Selecione..." [style]="{width: '100%'}" appendTo="body" styleClass="w-full">
-                     <ng-template pTemplate="item" let-acc>
-                         <div class="flex items-center gap-2">
-                             <i [class]="acc.icon"></i>
-                             <span>{{ acc.name }}</span>
-                         </div>
-                     </ng-template>
-                </p-select>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label class="font-semibold text-gray-700 dark:text-gray-200 text-sm">Data de Pagamento</label>
-                <p-datepicker [(ngModel)]="paymentDate" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [style]="{width: '100%'}" inputStyleClass="w-full"></p-datepicker>
-            </div>
+<p-dialog
+  header="Pagar Fatura"
+  [(visible)]="paymentVisible"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  styleClass="dark:bg-slate-800"
+>
+  @if (selectedInvoice()) {
+    <div class="flex flex-col gap-4 pt-2">
+      <div
+        class="p-4 bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-gray-700 rounded-lg"
+      >
+        <div
+          class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+        >
+          Fatura de
         </div>
-    }
-    <ng-template pTemplate="footer">
-        <div class="flex gap-2 justify-end mt-4">
-            <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="paymentVisible.set(false)"></p-button>
-            <p-button label="Confirmar" icon="pi pi-check" (onClick)="confirmPayment()" [loading]="paymentLoading()"></p-button>
+        <div class="flex items-center gap-2 mb-2">
+          <div
+            class="w-3 h-3 rounded-full"
+            [style.background]="selectedInvoice()?.card_color"
+          ></div>
+          <span class="font-bold text-gray-800 dark:text-gray-200">{{
+            selectedInvoice()?.card_name
+          }}</span>
+          <span class="text-gray-400 dark:text-gray-500 text-sm"
+            >({{ selectedInvoice()?.month | number: "2.0" }}/{{
+              selectedInvoice()?.year
+            }})</span
+          >
         </div>
-    </ng-template>
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ selectedInvoice()?.amount | currency: "BRL" }}
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-semibold text-gray-700 dark:text-gray-200 text-sm"
+          >Conta de Origem</label
+        >
+        <p-select
+          [options]="accounts()"
+          [(ngModel)]="selectedAccount"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Selecione..."
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="item" let-acc>
+            <div class="flex items-center gap-2">
+              <i [class]="acc.icon"></i>
+              <span>{{ acc.name }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-semibold text-gray-700 dark:text-gray-200 text-sm"
+          >Data de Pagamento</label
+        >
+        <p-datepicker
+          [(ngModel)]="paymentDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          appendTo="body"
+          [style]="{ width: '100%' }"
+          inputStyleClass="w-full"
+        ></p-datepicker>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-end mt-4">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        [text]="true"
+        severity="secondary"
+        (onClick)="paymentVisible.set(false)"
+      ></p-button>
+      <p-button
+        label="Confirmar"
+        icon="pi pi-check"
+        (onClick)="confirmPayment()"
+        [loading]="paymentLoading()"
+      ></p-button>
+    </div>
+  </ng-template>
 </p-dialog>

@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, inject, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, effect, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 
@@ -77,6 +78,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   private aiService = inject(AIService); // Inject AI Service
   subscriptionService = inject(SubscriptionService);
   private fb = inject(FormBuilder);
+  private router = inject(Router); // Injected Router
 
   recurrences = signal<Recurrence[]>([]);
   transactions = signal<Transaction[]>([]);
@@ -85,6 +87,10 @@ export class SubscriptionsDashboardComponent implements OnInit {
   suggestions = signal<any[]>([]); // New signal for suggestions
   currentDate = signal(new Date());
   loading = signal(true);
+
+  navigateToPricing() {
+      this.router.navigate(['/pricing']);
+  }
 
   // Dialog State
   displayDialog = false;

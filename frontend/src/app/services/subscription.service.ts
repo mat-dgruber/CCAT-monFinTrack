@@ -13,7 +13,8 @@ export type Feature =
   'import' |
   'credit_card_mgmt' |
   'receipt_scanner' |
-  'ai_advisor';
+  'ai_advisor' |
+  'invoices';
 
 @Injectable({
   providedIn: 'root'
@@ -51,6 +52,7 @@ export class SubscriptionService {
         // - receipt_scanner (Simple)
         // - chat
         // - recurring_dashboard
+        // - invoices
     }
 
     // Premium Access (Everything)
@@ -65,6 +67,7 @@ export class SubscriptionService {
     if (feature === 'chat') return { label: 'PRO', severity: 'info' };
     if (feature === 'cost_of_living') return { label: 'PRO', severity: 'info' };
     if (feature === 'import') return { label: 'PRO', severity: 'info' };
+    if (feature === 'invoices') return { label: 'PRO', severity: 'info' };
     if (feature === 'credit_card_mgmt') return { label: 'PRO', severity: 'info' };
     if (feature === 'receipt_scanner') return { label: 'PRO', severity: 'info' };
 
