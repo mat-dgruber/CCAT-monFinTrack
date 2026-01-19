@@ -51,11 +51,14 @@ def delete_account(account_id: str, user_id: str):
     return {"status": "success"}
 
 # Helper para uso interno (Transaction Service usa isso)
-def get_account(account_id: str):
+def get_account(account_id: str, user_id: str = None):
     db = get_db()
     doc = db.collection(COLLECTION_NAME).document(account_id).get()
     if doc.exists:
-        return Account(id=doc.id, **doc.to_dict())
+        data = doc.to_dict()
+        if user_id and data.get('user_id') != user_id:
+             return None
+        return Account(id=doc.id, **data)
     return None
 
 def delete_all_accounts(user_id: str):

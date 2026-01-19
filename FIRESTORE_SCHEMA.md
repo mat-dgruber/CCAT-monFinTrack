@@ -31,6 +31,7 @@ Armazena preferências e perfil do usuário.
 
 Representa locais onde o dinheiro está armazenado ou fontes de crédito.
 
+- `user_id` (String): Dono da conta [Indexado]
 - `name` (String)
 - `type` (Enum): checking, savings, investment, cash, credit_card
 - `balance` (Float): Saldo atual. Se `credit_card`, geralmente representa o saldo devedor ou disponível dependendo da lógica.
@@ -45,6 +46,7 @@ Representa locais onde o dinheiro está armazenado ou fontes de crédito.
 
 Classificação de transações.
 
+- `user_id` (String): Dono da categoria [Indexado]
 - `name` (String)
 - `icon` (String)
 - `color` (String)
@@ -59,6 +61,7 @@ Classificação de transações.
 
 O coração do sistema. Cada entrada ou saída financeira.
 
+- `user_id` (String): Dono da transação [Indexado]
 - `title` (String)
 - `description` (String, HTML Sanitized)
 - `amount` (Float): Valor absoluto.
@@ -88,6 +91,7 @@ O coração do sistema. Cada entrada ou saída financeira.
 
 Gestão de Dívidas, Financiamentos e Empréstimos. Difere de transações parceladas por ter juros compostos e lógica de amortização.
 
+- `user_id` (String): Dono da dívida [Indexado]
 - `name` (String)
 - `debt_type` (Enum): loan, financing, credit_card (rotativo), overdraft (cheque especial)
 - `status` (Enum): on_time, late, negotiation
@@ -125,3 +129,59 @@ Estrutura de pastas para arquivos envidados:
   - Comprovantes e anexos de transações. Imagens ou PDF. Limitado a 10MB.
 - `users/{userId}/debts/`
   - Contratos e documentos de dívidas. Imagens ou PDF. Limitado a 15MB.
+
+---
+
+## 7. Budgets (`budgets`)
+
+Metas de gastos mensais ou anuais por categoria.
+
+- `user_id` (String): Dono do orçamento [Indexado]
+- `category_id` (String)
+- `amount` (Float): Meta de valor.
+- `month` (Int, Opcional)
+- `year` (Int, Opcional)
+- `period` (Enum): monthly, yearly
+
+---
+
+## 8. Recurrences (`recurrences`)
+
+Regras para transações que se repetem (Assinaturas, Salários).
+
+- `user_id` (String): Dono da recorrência [Indexado]
+- `title` (String)
+- `amount` (Float)
+- `next_date` (Timestamp)
+- `frequency` (Enum): daily, weekly, monthly, yearly
+- `interval` (Int): De quanto em quanto tempo (ex: a cada 2 semanas).
+- `skipped_dates` (Array[Date]): Ocorrências puladas.
+- `category_id` (String)
+- `account_id` (String)
+
+---
+
+## 9. Seasonal Incomes (`seasonal_incomes`)
+
+Planejamento de receitas variáveis (ex: Bônus, 13º).
+
+- `user_id` (String): PK [Indexado]
+- `name` (String)
+- `amount` (Float)
+- `receive_date` (Date)
+- `is_recurrence` (Boolean)
+
+---
+
+## 10. Invoices (`invoices`)
+
+Faturas de cartão de crédito (Snapshots mensais).
+
+- `user_id` (String)
+- `credit_card_id` (String)
+- `month` (Int)
+- `year` (Int)
+- `total_amount` (Float)
+- `status` (Enum): open, closed, paid
+- `due_date` (Date)
+- `closing_date` (Date)

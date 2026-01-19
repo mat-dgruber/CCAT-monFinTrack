@@ -53,6 +53,7 @@ class AccountCreate(AccountBase):
 
 class Account(AccountBase):
     id: str
+    user_id: str
 
     class Config:
         from_attributes = True

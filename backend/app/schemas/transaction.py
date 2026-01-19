@@ -140,6 +140,7 @@ class TransactionUpdate(BaseModel):
 # Para ler, queremos o objeto Categoria completo (nome, cor, icone)
 class Transaction(TransactionBase):
      id: str
+     user_id: str
      category: Category
      account: Account
      destination_account: Optional[Account] = None

@@ -72,16 +72,16 @@ def _update_account_balance(db, account_id: str, amount: float, type: str, user_
 def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Transaction:
     db = get_db()
     
-    category = category_service.get_category(transaction_in.category_id)
+    category = category_service.get_category(transaction_in.category_id, user_id)
     # Aqui também seria ideal verificar se a categoria é do usuário
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
-    account = account_service.get_account(transaction_in.account_id)
+    account = account_service.get_account(transaction_in.account_id, user_id)
     
     destination_account = None
     if transaction_in.destination_account_id:
-         destination_account = account_service.get_account(transaction_in.destination_account_id)
+         destination_account = account_service.get_account(transaction_in.destination_account_id, user_id)
 
     # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO E NÃO FOR CARTÃO DE CRÉDITO
     if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
@@ -276,20 +276,20 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
                           continue
 
         cat_id = data.get("category_id")
-        category = category_service.get_category(cat_id)
+        category = category_service.get_category(cat_id, user_id)
         if not category:
-             category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+             category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense", user_id=user_id)
 
         acc_id = data.get("account_id")
-        account = account_service.get_account(acc_id)
+        account = account_service.get_account(acc_id, user_id)
         if not account:
-            account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="")
+            account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="", user_id=user_id)
 
         # Helper to get destination account if exists
         dest_acc_id = data.get("destination_account_id")
         destination_account = None
         if dest_acc_id:
-             destination_account = account_service.get_account(dest_acc_id)
+             destination_account = account_service.get_account(dest_acc_id, user_id)
 
         # Sanitize boolean fields for Pydantic
         if data.get('is_auto_pay') is None:
@@ -367,18 +367,18 @@ def update_transaction(transaction_id: str, transaction_in: TransactionUpdate, u
     category_id = new_full_data.get("category_id")
     account_id = new_full_data.get("account_id")
     
-    category = category_service.get_category(category_id)
+    category = category_service.get_category(category_id, user_id)
     if not category:
-         category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+         category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense", user_id=user_id)
 
-    account = account_service.get_account(account_id)
+    account = account_service.get_account(account_id, user_id)
     if not account:
-        account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="")
+        account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="", user_id=user_id)
     
     dest_acc_id = new_full_data.get("destination_account_id")
     destination_account = None
     if dest_acc_id:
-         destination_account = account_service.get_account(dest_acc_id)
+         destination_account = account_service.get_account(dest_acc_id, user_id)
 
     # Sanitize boolean fields for Pydantic (TransactionBase expects bool, not None)
     if new_full_data.get('is_auto_pay') is None:
@@ -487,14 +487,14 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
         data = t.to_dict()
         
         cat_id = data.get("category_id")
-        category = category_service.get_category(cat_id)
+        category = category_service.get_category(cat_id, user_id)
         if not category:
-             category = Category(id="deleted", name="?", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+             category = Category(id="deleted", name="?", icon="pi pi-question", color="#ccc", is_custom=False, type="expense", user_id=user_id)
 
         acc_id = data.get("account_id")
-        account = account_service.get_account(acc_id)
+        account = account_service.get_account(acc_id, user_id)
         if not account:
-            account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
+            account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="", user_id=user_id)
 
         if 'title' not in data and 'description' in data:
              data['title'] = data.pop('description')
@@ -504,7 +504,7 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
         dest_acc_id = data.get("destination_account_id")
         destination_account = None
         if dest_acc_id:
-             destination_account = account_service.get_account(dest_acc_id)
+             destination_account = account_service.get_account(dest_acc_id, user_id)
 
         # Sanitize boolean fields for Pydantic
         if data.get('is_auto_pay') is None:

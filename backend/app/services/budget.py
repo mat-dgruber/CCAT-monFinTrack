@@ -12,7 +12,7 @@ COLLECTION_NAME = "budgets"
 def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
     
-    cat = category_service.get_category(budget_in.category_id)
+    cat = category_service.get_category(budget_in.category_id, user_id)
     
     # Validate Category Type
     if cat.type != CategoryType.EXPENSE:
@@ -126,6 +126,9 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
             # Mocking minimal structure expected by frontend
             cat_obj = cat_data
             cat_obj['id'] = cat_id
+            # Ensure user_id is present in category object (Fix for Schema Validation)
+            if 'user_id' not in cat_obj:
+                cat_obj['user_id'] = user_id
 
         # CÁLCULO DE GASTO AGREGADO (Meta da Categoria + Subcategorias)
         target_ids = get_descendants(cat_id)
@@ -136,6 +139,7 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
         
         budgets.append({
             "id": doc.id,
+            "user_id": user_id, # REQUIRED by Budget Schema
             "category_id": cat_id,
             "category": cat_obj, # Pydantic model expects obj, but dict works if schema allows or if we cast.
             "amount": limit,
@@ -155,7 +159,7 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
         # Retornamos erro ou None, aqui vou levantar erro genérico para simplificar
         raise Exception("Budget not found or access denied")
     
-    cat = category_service.get_category(budget_in.category_id)
+    cat = category_service.get_category(budget_in.category_id, user_id)
     
     # Validate Category Type
     if cat.type != CategoryType.EXPENSE:
