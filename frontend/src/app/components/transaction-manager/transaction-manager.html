@@ -548,7 +548,7 @@
                   ></i>
                 </div>
               </td>
-              <td class="text-right">
+          <td class="text-right">
                 <span
                   [class]="
                     t.category?.is_hidden ||
@@ -1117,6 +1117,16 @@
             appendTo="body"
             panelStyleClass="dark:bg-slate-800 dark:border-gray-700"
           >
+          </p-select>
+        </div>
+
+        <!-- Tithe Status Filter (NEW) -->
+        <div class="flex flex-col gap-2">
+          <span class="font-bold text-gray-700 dark:text-gray-200">Situação do Dízimo</span>
+          <p-select [ngModel]="mobileTitheStatusFilter()" [options]="titheStatusOptions"
+            (onChange)="mobileTitheStatusFilter.set($event.value)" placeholder="Qualquer" optionLabel="label" optionValue="value"
+            name="titheStatusFilter"
+            styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
           </p-select>
         </div>
 
