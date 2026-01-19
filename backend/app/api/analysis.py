@@ -130,6 +130,14 @@ def get_monthly_averages(
     """
     user_id = current_user['uid']
     
+    # Tier Check (Pro+)
+    from app.services import user_preference as preference_service
+    prefs = preference_service.get_preferences(user_id)
+    tier = prefs.subscription_tier or 'free'
+    
+    if tier == 'free':
+        raise HTTPException(status_code=403, detail="Cost of Living Analysis is available for Pro and Premium users.")
+
     # 1. Determine Timeframe (Adaptive)
     if not end_date:
         end_date = date.today()
@@ -247,6 +255,19 @@ def get_monthly_averages(
 def get_inflation_rate(current_user: dict = Depends(get_current_user)):
     return get_projection_inflation()
 
+@router.get("/subscriptions")
+def check_subscriptions(current_user: dict = Depends(get_current_user)):
+    from app.services.analysis_service import analysis_service
+    # Tier Check (Premium)
+    from app.services import user_preference as preference_service
+    prefs = preference_service.get_preferences(current_user['uid'])
+    tier = prefs.subscription_tier or 'free'
+    
+    if tier != 'premium':
+         raise HTTPException(status_code=403, detail="Anomaly/Subscription Detection is available only for Premium users.")
+
+    return analysis_service.detect_subscriptions(current_user['uid'])
+
 @router.get("/anomalies")
 def check_anomalies(
     month: Optional[int] = None,
@@ -257,6 +278,15 @@ def check_anomalies(
     Detects spending anomalies for a specific month compared to 6-month average.
     """
     user_id = current_user['uid']
+    
+    # Tier Check (Pro+)
+    from app.services import user_preference as preference_service
+    prefs = preference_service.get_preferences(user_id)
+    tier = prefs.subscription_tier or 'free'
+    
+    if tier == 'free':
+        raise HTTPException(status_code=403, detail="Anomaly Detection is available for Pro and Premium users.")
+    
     today = date.today()
     
     target_month = month if month else today.month

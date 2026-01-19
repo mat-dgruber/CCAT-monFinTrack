@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ViewChild, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, effect, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TransactionService } from '../../services/transaction.service';
@@ -21,6 +21,9 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class RecentTransactionsComponent implements OnInit {
   @ViewChild(TransactionForm) transactionForm!: TransactionForm;
+  
+  @Input() limit: number = 7;
+  @Input() compact: boolean = false;
 
   private transactionService = inject(TransactionService);
   private refreshService = inject(RefreshService);
@@ -44,8 +47,8 @@ export class RecentTransactionsComponent implements OnInit {
 
   loadRecentTransactions() {
     this.loading.set(true);
-    // Fetch last 7 transactions (no month/year filter to get global recent)
-    this.transactionService.getTransactions(undefined, undefined, 7).subscribe({
+    // Fetch last transactions
+    this.transactionService.getTransactions(undefined, undefined, this.limit).subscribe({
       next: (data) => {
         this.transactions.set(data);
         this.groupTransactionsByDate(data);

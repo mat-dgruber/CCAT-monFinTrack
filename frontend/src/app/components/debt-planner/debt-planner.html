@@ -1,0 +1,1492 @@
+<div class="p-6 animate-fade-in">
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 dark:text-white m-0 mb-1">
+        Planejador de Dívidas
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 m-0">
+        Gerencie suas dívidas e simule estratégias de quitação.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <p-button
+        label="Simulação Habitacional"
+        icon="pi pi-home"
+        styleClass="p-button-outlined p-button-secondary"
+        (onClick)="activeIndex.set(2)"
+      ></p-button>
+      <p-button
+        label="Consultor IA"
+        icon="pi pi-sparkles"
+        styleClass="p-button-help ai-button-glow"
+        (onClick)="openAdvice()"
+      ></p-button>
+    </div>
+  </div>
+
+  <!-- FEATURE GATE -->
+  @if (canAccess()) {
+    <!-- TABS -->
+    <p-tabs
+      [value]="activeIndex()"
+      (valueChange)="activeIndex.set($any($event))"
+    >
+      <p-tablist>
+        <p-tab [value]="0">
+          <i class="pi pi-list mr-2"></i>
+          Minhas Dívidas
+        </p-tab>
+        <p-tab [value]="1">
+          <i class="pi pi-chart-line mr-2"></i>
+          Plano de Pagamento
+        </p-tab>
+        <p-tab [value]="2">
+          <i class="pi pi-home mr-2"></i>
+          Financiamento
+        </p-tab>
+        <p-tab [value]="3">
+          <i class="pi pi-file-pdf mr-2"></i>
+          IA Scanner
+        </p-tab>
+        <p-tab [value]="4">
+          <i class="pi pi-calendar-plus mr-2"></i>
+          Recursos & Estratégia
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- TAB 1: GERENCIAR DÍVIDAS -->
+        <p-tabpanel [value]="0">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xl font-semibold">Lista de Dívidas</span>
+            <p-button
+              label="Nova Dívida"
+              icon="pi pi-plus"
+              (onClick)="openNewDebt()"
+              styleClass="p-button-sm"
+            ></p-button>
+          </div>
+
+          <!-- SKELETON LOADING -->
+          @if (loading()) {
+            <div class="fade-in">
+              <div
+                class="flex justify-between items-center px-3 py-2 border-bottom-1 surface-border"
+              >
+                <p-skeleton width="10rem" height="1.5rem"></p-skeleton>
+                <p-skeleton
+                  width="8rem"
+                  height="2rem"
+                  borderRadius="16px"
+                ></p-skeleton>
+              </div>
+              <div
+                class="p-4 surface-card border-round border-1 surface-border"
+              >
+                <div class="flex flex-col gap-4">
+                  @for (i of [1, 2, 3, 4, 5]; track $index) {
+                    <div class="flex justify-between">
+                      <div class="flex gap-4 w-full">
+                        <p-skeleton width="20%" height="1.5rem"></p-skeleton>
+                        <p-skeleton width="15%" height="1.5rem"></p-skeleton>
+                        <p-skeleton width="15%" height="1.5rem"></p-skeleton>
+                        <p-skeleton width="10%" height="1.5rem"></p-skeleton>
+                        <div class="flex gap-2 ml-auto">
+                          <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                          <p-skeleton shape="circle" size="2rem"></p-skeleton>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <!-- DATA TABLE -->
+            <p-table
+              [value]="debts()"
+              styleClass="p-datatable-sm"
+              [rowHover]="true"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Nome</th>
+                  <th>Tipo</th>
+                  <th>Saldo Devedor</th>
+                  <th>Juros</th>
+                  <th class="text-right">Ações</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-debt>
+                <tr>
+                  <td class="font-medium">{{ debt.name }}</td>
+                  <td>
+                    <div class="flex flex-col gap-2">
+                      <!-- TYPE BADGE -->
+                      <span
+                        class="badge-soft w-fit text-xs"
+                        [ngClass]="{
+                          blue: debt.debt_type.includes('card'),
+                          purple: debt.debt_type.includes('loan'),
+                          orange: debt.debt_type.includes('financing'),
+                          green: debt.debt_type.includes('consigned'),
+                        }"
+                      >
+                        {{ getDebtLabel(debt.debt_type) }}
+                      </span>
+
+                      <!-- PRIORITY INDICATOR -->
+                      @if (isHighPriority(debt)) {
+                        <div
+                          class="flex items-center gap-1 text-red-500 text-xs font-bold animate-pulse"
+                          pTooltip="Prioridade: Juros Altos ou Atraso"
+                          tooltipPosition="top"
+                        >
+                          <i class="pi pi-bolt"></i>
+                          <span>PRIORIDADE</span>
+                        </div>
+                      }
+
+                      <!-- STATUS BADGE -->
+                      @if (debt.status) {
+                        <p-tag
+                          [value]="getDebtStatusLabel(debt.status)"
+                          [severity]="getDebtStatusSeverity(debt.status)"
+                          [rounded]="true"
+                          [icon]="getDebtStatusIcon(debt.status)"
+                          styleClass="text-xs"
+                        ></p-tag>
+                      }
+                    </div>
+                  </td>
+                  <td class="text-red-500 font-bold text-lg">
+                    {{ debt.total_amount | currency: "BRL" }}
+                  </td>
+                  <td>
+                    <div class="flex flex-column">
+                      <span class="font-bold"
+                        >{{
+                          debt.interest_period === "yearly"
+                            ? convertToMonthly(debt.interest_rate) + "%"
+                            : debt.interest_rate + "%"
+                        }}
+                        <span class="text-xs font-normal text-500"
+                          >a.m.</span
+                        ></span
+                      >
+                      @if (debt.cet && debt.cet > 0) {
+                        <small
+                          class="text-pink-500 font-bold"
+                          pTooltip="Custo Efetivo Total"
+                          >CET: {{ debt.cet }}%</small
+                        >
+                      }
+                    </div>
+                  </td>
+                  <td class="text-right">
+                    <div class="flex justify-content-end gap-1">
+                      <p-button
+                        icon="pi pi-calculator"
+                        [text]="true"
+                        [rounded]="true"
+                        severity="success"
+                        (onClick)="openCalculator(debt)"
+                        pTooltip="Simular Antecipação"
+                      ></p-button>
+
+                      @if (
+                        debt.status === "overdue" ||
+                        debt.status === "negotiation"
+                      ) {
+                        <p-button
+                          icon="pi pi-handshake"
+                          [text]="true"
+                          [rounded]="true"
+                          severity="help"
+                          (onClick)="openAgreement(debt)"
+                          pTooltip="Simular Acordo"
+                        ></p-button>
+                      }
+
+                      <p-button
+                        icon="pi pi-pencil"
+                        [text]="true"
+                        [rounded]="true"
+                        severity="secondary"
+                        (onClick)="editDebt(debt)"
+                      ></p-button>
+                      <p-button
+                        icon="pi pi-trash"
+                        [text]="true"
+                        [rounded]="true"
+                        severity="danger"
+                        (onClick)="deleteDebt(debt.id)"
+                      ></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <i class="pi pi-wallet"></i>
+                      <p class="m-0 font-medium text-lg">
+                        Você ainda não cadastrou dívidas.
+                      </p>
+                      <p class="mt-1 text-sm">
+                        Adicione suas pendências para gerar um plano de
+                        pagamento.
+                      </p>
+                      <p-button
+                        label="Adicionar Agora"
+                        [link]="true"
+                        (onClick)="openNewDebt()"
+                      ></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          }
+        </p-tabpanel>
+
+        <!-- TAB 2: PLANO DE PAGAMENTO -->
+        <p-tabpanel [value]="1">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-4">
+              <div
+                class="surface-card p-4 border-round border-1 surface-border h-full"
+              >
+                <h3 class="mt-0 mb-4 text-primary">Configurar Plano</h3>
+                <div class="flex flex-col gap-4">
+                  <div class="field">
+                    <label class="font-bold">Orçamento Mensal (R$)</label>
+                    <p-inputNumber
+                      [(ngModel)]="monthlyBudget"
+                      mode="currency"
+                      currency="BRL"
+                      locale="pt-BR"
+                      placeholder="Quanto sobe por mês?"
+                    ></p-inputNumber>
+                    <small class="block mt-2 text-500 line-height-3"
+                      >Valor total disponível para pagar dívidas (incluindo
+                      mínimos).</small
+                    >
+                  </div>
+                  <div class="field">
+                    <label class="font-bold">Estratégia</label>
+                    <p-selectButton
+                      [options]="strategies"
+                      [(ngModel)]="selectedStrategy"
+                      optionLabel="name"
+                      optionValue="value"
+                      styleClass="w-full"
+                    ></p-selectButton>
+
+                    @if (selectedStrategy === "snowball") {
+                      <div
+                        class="mt-3 p-3 surface-ground dark:surface-card border-round text-sm"
+                      >
+                        <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+                        <span class="font-medium text-blue-500"
+                          >Bola de Neve:</span
+                        >
+                        Elimina dívidas menores primeiro. Ótimo para motivação
+                        rápida.
+                      </div>
+                    }
+                    @if (selectedStrategy === "avalanche") {
+                      <div
+                        class="mt-3 p-3 surface-ground dark:surface-card border-round text-sm"
+                      >
+                        <i class="pi pi-info-circle text-green-500 mr-2"></i>
+                        <span class="font-medium text-green-500"
+                          >Avalanche:</span
+                        >
+                        Foca nos juros mais altos. Matematicamente mais
+                        eficiente.
+                      </div>
+                    }
+                  </div>
+                  <p-button
+                    label="Gerar Simulação"
+                    icon="pi pi-bolt"
+                    (onClick)="generatePlan()"
+                    [loading]="simulating()"
+                    styleClass="w-full"
+                  ></p-button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-12 md:col-span-8">
+              @if (paymentPlan()) {
+                <div class="fade-in">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="col-span-1">
+                      <div class="stat-card">
+                        <span class="block text-500 text-sm mb-2"
+                          >Tempo Total</span
+                        >
+                        <span class="text-2xl font-bold text-primary"
+                          >{{ paymentPlan()!.total_months }} meses</span
+                        >
+                      </div>
+                    </div>
+                    <div class="col-span-1">
+                      <div class="stat-card">
+                        <span class="block text-500 text-sm mb-2"
+                          >Juros Pagos</span
+                        >
+                        <span class="text-2xl font-bold text-red-500">{{
+                          paymentPlan()!.total_interest_paid | currency: "BRL"
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="col-span-1">
+                      <div class="stat-card">
+                        <span class="block text-500 text-sm mb-2"
+                          >Liberdade Financeira</span
+                        >
+                        <span class="text-2xl font-bold text-green-500">{{
+                          paymentPlan()!.payoff_date | date: "MM/yyyy"
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="surface-card border-round p-3 border-1 surface-border"
+                  >
+                    <h4 class="m-0 mb-3 ml-2">Cronograma Sugerido</h4>
+                    <p-table
+                      [value]="paymentPlan()!.steps"
+                      [paginator]="true"
+                      [rows]="6"
+                      styleClass="p-datatable-sm"
+                      responsiveLayout="scroll"
+                    >
+                      <ng-template pTemplate="header">
+                        <tr>
+                          <th>Mês</th>
+                          <th>Data</th>
+                          <th>Focar em</th>
+                          <th>Pagar</th>
+                          <th>Saldo Restante</th>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="body" let-step>
+                        <tr>
+                          <td>
+                            <span class="font-bold text-500"
+                              >#{{ step.month_index }}</span
+                            >
+                          </td>
+                          <td>{{ step.date | date: "MM/yyyy" }}</td>
+                          <td class="font-bold text-primary">
+                            {{ step.debt_name }}
+                          </td>
+                          <td class="text-green-600 font-bold">
+                            + {{ step.payment_amount | currency: "BRL" }}
+                          </td>
+                          <td class="text-500">
+                            {{ step.remaining_balance | currency: "BRL" }}
+                          </td>
+                        </tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </div>
+              }
+
+              @if (!paymentPlan() && !simulating()) {
+                <div
+                  class="h-full flex flex-col items-center justify-center p-6 border-1 surface-border border-round border-dashed text-center opacity-70"
+                >
+                  <i class="pi pi-chart-bar text-6xl mb-3 text-500"></i>
+                  <p class="text-xl font-medium m-0">Aguardando Simulação</p>
+                  <p class="text-500">
+                    Defina seu orçamento e estratégia ao lado para visualizar o
+                    plano.
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- TAB 3: FINANCIAMENTO (MCMV) -->
+        <p-tabpanel [value]="2">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-5">
+              <div
+                class="surface-card p-4 border-round border-1 surface-border h-full"
+              >
+                <h3 class="mt-0 text-blue-600">Simulador Habitacional</h3>
+                <p class="text-sm text-500 mb-4">
+                  Simule financiamentos imobiliários (SAC/Price) e veja se você
+                  se enquadra no MCMV.
+                </p>
+
+                <div class="flex flex-col gap-3">
+                  <div class="field">
+                    <label>Renda Bruta Familiar</label>
+                    <p-inputNumber
+                      [(ngModel)]="housingIncome"
+                      (onBlur)="loadHousingDefaults()"
+                      mode="currency"
+                      currency="BRL"
+                      locale="pt-BR"
+                    ></p-inputNumber>
+                  </div>
+                  <div class="field">
+                    <label>Valor do Imóvel</label>
+                    <p-inputNumber
+                      [(ngModel)]="housingValue"
+                      mode="currency"
+                      currency="BRL"
+                      locale="pt-BR"
+                    ></p-inputNumber>
+                  </div>
+                  <div class="field">
+                    <label>Entrada (FGTS + Poupança)</label>
+                    <p-inputNumber
+                      [(ngModel)]="housingEntry"
+                      mode="currency"
+                      currency="BRL"
+                      locale="pt-BR"
+                    ></p-inputNumber>
+                  </div>
+                  <div class="field">
+                    <label>Taxa de Juros (% a.a.)</label>
+                    <div class="p-inputgroup">
+                      <p-inputNumber
+                        [(ngModel)]="housingRate"
+                        [minFractionDigits]="2"
+                        [maxFractionDigits]="2"
+                      ></p-inputNumber>
+                      @if (housingProgram) {
+                        <span
+                          class="p-inputgroup-addon bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-none"
+                          [pTooltip]="housingProgram"
+                        >
+                          <i class="pi pi-info-circle"></i>
+                        </span>
+                      }
+                    </div>
+                    @if (housingProgram) {
+                      <small class="text-primary font-bold mt-1 block"
+                        >Programa: {{ housingProgram }}</small
+                      >
+                    }
+                  </div>
+                  <div class="field">
+                    <label>Total de Parcelas (Meses)</label>
+                    <p-inputNumber
+                      [ngModel]="360"
+                      [disabled]="true"
+                    ></p-inputNumber>
+                  </div>
+                  <div class="field mt-2">
+                    <label class="mb-2 block">Sistema de Amortização</label>
+                    <div
+                      class="flex flex-wrap gap-4 p-3 border-1 surface-border border-round"
+                    >
+                      <div class="flex items-center gap-2">
+                        <p-radioButton
+                          name="sys"
+                          value="sac"
+                          [(ngModel)]="housingSystem"
+                          inputId="sys_sac"
+                        ></p-radioButton>
+                        <label for="sys_sac" class="cursor-pointer"
+                          >SAC (Decrescente)</label
+                        >
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <p-radioButton
+                          name="sys"
+                          value="price"
+                          [(ngModel)]="housingSystem"
+                          inputId="sys_price"
+                        ></p-radioButton>
+                        <label for="sys_price" class="cursor-pointer"
+                          >Price (Fixa)</label
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <p-button
+                    label="Calcular Agora"
+                    (onClick)="runHousingSim()"
+                    [loading]="housingSimulating"
+                    styleClass="w-full mt-2"
+                  ></p-button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-12 md:col-span-7">
+              @if (housingResult) {
+                <div class="flex flex-col h-full">
+                  <div class="grid grid-cols-2 gap-4 mb-3">
+                    <div class="col-span-1">
+                      <div class="stat-card h-full">
+                        <div class="text-500 text-sm mb-1">
+                          Primeira Parcela
+                        </div>
+                        <div class="text-2xl font-bold">
+                          {{
+                            housingResult.first_installment | currency: "BRL"
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-span-1">
+                      <div class="stat-card h-full">
+                        <div class="text-500 text-sm mb-1">Última Parcela</div>
+                        <div class="text-2xl font-bold">
+                          {{ housingResult.last_installment | currency: "BRL" }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="surface-card p-5 border-round border-1 surface-border flex-grow-1 flex flex-col justify-center text-center"
+                  >
+                    <h2
+                      class="text-4xl font-bold text-primary mb-2 line-height-2"
+                    >
+                      {{ housingResult.total_paid | currency: "BRL" }}
+                    </h2>
+                    <span
+                      class="text-500 uppercase tracking-widest text-sm font-semibold"
+                      >Total a Pagar (30 Anos)</span
+                    >
+
+                    <div
+                      class="mt-5 pt-5 border-top-1 surface-border grid grid-cols-1"
+                    >
+                      <div class="col-span-1 text-center">
+                        <span class="block text-500 mb-2"
+                          >Juros Acumulados</span
+                        >
+                        <span class="text-xl font-bold text-red-500">{{
+                          housingResult.total_interest | currency: "BRL"
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border-round text-blue-900 dark:text-blue-100 text-sm line-height-3"
+                  >
+                    <i class="pi pi-verified mr-2"></i>
+                    Análise: Com renda de
+                    <strong>{{ housingIncome | currency: "BRL" }}</strong
+                    >, você se enquadra no
+                    <strong>{{
+                      housingProgram || "Financiamento Padrão"
+                    }}</strong
+                    >.
+                    {{
+                      housingResult.total_interest < housingValue
+                        ? "Ótimo negócio! Juros totais abaixo do valor do imóvel."
+                        : ""
+                    }}
+                  </div>
+                </div>
+              } @else {
+                <div
+                  class="h-full flex items-center justify-center p-6 border-1 surface-border border-round border-dashed opacity-60"
+                >
+                  <div class="text-center">
+                    <i class="pi pi-home text-6xl mb-3 text-500"></i>
+                    <p>Preencha os dados ao lado para simular.</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- TAB 4: DOCUMENT ANALYSIS (PREMIUM) -->
+        <p-tabpanel [value]="3">
+          <div class="flex flex-col h-full min-h-[500px]">
+            <!-- IDLE STATE: DRAG & DROP ZONE -->
+            @if (!analyzing) {
+              <div class="mb-6">
+                <p-fileUpload
+                  #fileUploader
+                  mode="advanced"
+                  name="file"
+                  accept="image/*,application/pdf"
+                  [maxFileSize]="5000000"
+                  [auto]="true"
+                  [customUpload]="true"
+                  (uploadHandler)="onUpload($event)"
+                  [showUploadButton]="false"
+                  [showCancelButton]="false"
+                  styleClass="w-full"
+                >
+                  <!-- Hide Default Header/Toolbar -->
+                  <ng-template pTemplate="header">
+                    <div class="hidden"></div>
+                  </ng-template>
+
+                  <ng-template pTemplate="content">
+                    <div
+                      class="upload-zone flex-grow flex flex-col items-center justify-center p-8 relative transition-all duration-300 group border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-white/5"
+                      (click)="fileUploader.choose()"
+                      (dragenter)="fileUploader.onDragEnter($event)"
+                      (dragleave)="fileUploader.onDragLeave($event)"
+                    >
+                      <div
+                        class="relative z-10 text-center pointer-events-none"
+                      >
+                        <div
+                          class="bg-indigo-50 dark:bg-indigo-900/30 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300"
+                        >
+                          <i
+                            class="pi pi-cloud-upload text-4xl text-indigo-500 dark:text-indigo-400"
+                          ></i>
+                        </div>
+
+                        <h2
+                          class="text-2xl font-bold mb-3 text-gray-800 dark:text-gray-100"
+                        >
+                          Scanner de Contratos IA
+                        </h2>
+                        <p
+                          class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-8 leading-relaxed"
+                        >
+                          Arraste e solte seu contrato (PDF) ou fatura (IMG)
+                          aqui para uma análise automática de juros e prazos.
+                        </p>
+
+                        <button
+                          type="button"
+                          class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2 mx-auto pointer-events-auto"
+                          (click)="fileUploader.choose()"
+                        >
+                          <i class="pi pi-search"></i>
+                          Selecionar Arquivo
+                        </button>
+                      </div>
+                    </div>
+                  </ng-template>
+                </p-fileUpload>
+              </div>
+            } @else {
+              <!-- ANALYZING STATE: SCANNER ANIMATION -->
+              <div
+                class="flex-grow flex flex-col items-center justify-center p-8 scan-container bg-black/5 dark:bg-black/20 rounded-xl"
+              >
+                <!-- Central Pulsing Icon -->
+                <div class="relative mb-8">
+                  <div
+                    class="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-20 processing-pulse"
+                  ></div>
+                  <div
+                    class="bg-gray-900 text-white w-20 h-20 rounded-full flex items-center justify-center relative z-10 shadow-2xl border border-gray-700"
+                  >
+                    <i class="pi pi-spin pi-cog text-3xl text-indigo-400"></i>
+                  </div>
+                </div>
+
+                <h3 class="text-xl font-bold mb-2 animate-pulse">
+                  Processando Documento...
+                </h3>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mb-8">
+                  Nossa IA está extraindo as claúsulas financeiras.
+                </p>
+
+                <!-- Fake Progress Steps -->
+                <div class="w-full max-w-sm space-y-3">
+                  <div
+                    class="flex items-center gap-3 text-sm text-green-500 font-medium"
+                  >
+                    <i class="pi pi-check-circle"></i>
+                    <span>Upload concluído</span>
+                  </div>
+                  <div
+                    class="flex items-center gap-3 text-sm text-indigo-400 font-medium animate-pulse"
+                  >
+                    <i class="pi pi-sync pi-spin"></i>
+                    <span>Analisando texto (OCR)...</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-sm text-gray-400">
+                    <i class="pi pi-circle"></i>
+                    <span>Identificando juros...</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- TAB 4: RECURSOS SAZONAIS -->
+        <p-tabpanel [value]="4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- FORM -->
+            <div
+              class="card p-4 bg-white dark:surface-card rounded shadow-sm border border-gray-200"
+            >
+              <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="pi pi-plus-circle text-green-600"></i>
+                Novo Recurso
+              </h3>
+
+              <div class="flex flex-col gap-3">
+                <div class="field">
+                  <label class="font-semibold block mb-1">Nome / Origem</label>
+                  <input
+                    pInputText
+                    [(ngModel)]="newResource.name"
+                    placeholder="Ex: 13º Salário, Bônus, PLR"
+                    class="w-full"
+                  />
+                </div>
+
+                <div class="field">
+                  <label class="font-semibold block mb-1">Valor Líquido</label>
+                  <p-inputNumber
+                    [(ngModel)]="newResource.amount"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    styleClass="w-full"
+                  ></p-inputNumber>
+                </div>
+
+                <div class="field">
+                  <label class="font-semibold block mb-1">Data Prevista</label>
+                  <p-datepicker
+                    [(ngModel)]="newResource.receive_date"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    styleClass="w-full"
+                    appendTo="body"
+                  ></p-datepicker>
+                </div>
+
+                <div class="field flex items-center gap-2 mt-2">
+                  <p-checkbox
+                    [(ngModel)]="newResource.is_recurrence"
+                    [binary]="true"
+                    inputId="recurrence"
+                  ></p-checkbox>
+                  <label for="recurrence" class="cursor-pointer"
+                    >Repetir todo ano?</label
+                  >
+                </div>
+
+                <button
+                  pButton
+                  label="Adicionar Recurso"
+                  icon="pi pi-check"
+                  (click)="addResource()"
+                  [loading]="resourceLoading"
+                  class="p-button-success w-full mt-2"
+                ></button>
+              </div>
+            </div>
+
+            <!-- LIST -->
+            <div
+              class="card p-4 bg-white dark:surface-card rounded shadow-sm border border-gray-200"
+            >
+              <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="pi pi-briefcase text-blue-600"></i>
+                Recursos Planejados
+              </h3>
+
+              @if (resources().length === 0) {
+                <div
+                  class="flex flex-col items-center justify-center p-6 text-gray-400"
+                >
+                  <i class="pi pi-calendar-times text-4xl mb-2"></i>
+                  <p>Nenhum recurso cadastrado.</p>
+                  <small
+                    >Cadastre entradas futuras para simular amortizações.</small
+                  >
+                </div>
+              } @else {
+                <div class="flex flex-col gap-3">
+                  @for (res of resources(); track res.id) {
+                    <div
+                      class="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold"
+                        >
+                          R$
+                        </div>
+                        <div>
+                          <div class="font-bold text-gray-800">
+                            {{ res.name }}
+                          </div>
+                          <div class="text-sm text-gray-500">
+                            {{ res.receive_date | date: "dd/MM/yyyy" }}
+                            @if (res.is_recurrence) {
+                              <i
+                                class="pi pi-sync text-xs ml-1"
+                                pTooltip="Recorrente"
+                              ></i>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <div class="font-bold text-green-600 text-lg">
+                          {{ res.amount | currency: "BRL" }}
+                        </div>
+                        <button
+                          pButton
+                          icon="pi pi-trash"
+                          class="p-button-text p-button-danger p-button-sm -mr-2"
+                          (click)="deleteResource(res.id)"
+                        ></button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <div class="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  pButton
+                  label="Simular Impacto no Plano"
+                  icon="pi pi-chart-line"
+                  class="p-button-help w-full"
+                  outline="true"
+                  (click)="simulateImpact()"
+                ></button>
+                <small class="block text-center text-gray-500 mt-2"
+                  >Visualizar como estes recursos reduzem o tempo da
+                  dívida.</small
+                >
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  } @else {
+    <!-- LOCKED STATE FOR FREE USERS -->
+    <div
+      class="flex flex-col items-center justify-center p-8 bg-surface-50 dark:bg-surface-900 border-round-xl border-1 surface-border"
+    >
+      <div class="bg-gray-100 dark:bg-gray-800 rounded-full p-6 mb-4">
+        <i class="pi pi-lock text-5xl text-gray-400"></i>
+      </div>
+
+      <h2 class="text-2xl font-bold mb-2">Planejador de Dívidas PRO</h2>
+      <p class="text-gray-500 text-center max-w-lg mb-6">
+        Este módulo avançado usa IA para analisar contratos, montar planos de
+        quitação "Bola de Neve" e simular financiamentos habitacionais MCMV.
+        Disponível apenas para assinantes PRO.
+      </p>
+
+      <button
+        pButton
+        label="Desbloquear Recurso"
+        icon="pi pi-bolt"
+        (click)="navigateToPricing()"
+        class="p-button-rounded p-button-lg shadow-lg"
+      ></button>
+    </div>
+  }
+
+  <!-- Confirm Dialog -->
+  <p-confirmDialog
+    [style]="{ width: '450px' }"
+    rejectButtonStyleClass="p-button-text p-button-secondary"
+    acceptButtonStyleClass="p-button-danger"
+  ></p-confirmDialog>
+
+  <!-- DEBT FORM DIALOG -->
+  <p-dialog
+    [(visible)]="debtDialog"
+    [style]="{ width: '600px', 'max-width': '95vw' }"
+    header="Detalhes da Dívida"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <ng-template pTemplate="content">
+      <form [formGroup]="debtForm" class="flex flex-col gap-4">
+        <!-- 1. TIPO & IDENTIFICAÇÃO -->
+        <p-accordion [value]="0">
+          <p-accordion-panel [value]="0">
+            <p-accordion-header>Identificação</p-accordion-header>
+            <p-accordion-content>
+              <div class="field">
+                <label for="name">Nome da Dívida</label>
+                <input
+                  pInputText
+                  id="name"
+                  formControlName="name"
+                  class="w-full"
+                  placeholder="Ex: Cartão Nubank"
+                  autocomplete="off"
+                />
+                @if (submitted && !debtForm.controls.name.valid) {
+                  <small class="p-error block">Este campo é obrigatório.</small>
+                }
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="field col-span-1">
+                  <label>Tipo de Dívida</label>
+                  <p-select
+                    [options]="debtTypes"
+                    formControlName="debt_type"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Selecione..."
+                    appendTo="body"
+                  ></p-select>
+                </div>
+                <div class="field col-span-1">
+                  <label>Status Atual</label>
+                  <p-select
+                    [options]="debtStatuses"
+                    formControlName="status"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  >
+                    <ng-template pTemplate="selectedItem" let-selected>
+                      <div class="flex items-center gap-2" *ngIf="selected">
+                        <i
+                          [class]="selected.icon"
+                          [style.color]="selected.color"
+                        ></i>
+                        <div>{{ selected.label }}</div>
+                      </div>
+                    </ng-template>
+                    <ng-template let-item pTemplate="item">
+                      <div class="flex items-center gap-2">
+                        <i [class]="item.icon" [style.color]="item.color"></i>
+                        <div>{{ item.label }}</div>
+                      </div>
+                    </ng-template>
+                  </p-select>
+                </div>
+              </div>
+            </p-accordion-content>
+          </p-accordion-panel>
+
+          <!-- 2. DETALHES ESPECÍFICOS (CONDICIONAL) -->
+          @if (debtForm.get("debt_type")?.value; as type) {
+            <!-- CARTÃO DE CRÉDITO -->
+            @if (
+              type === DebtType.CREDIT_CARD_ROTATING ||
+              type === DebtType.CREDIT_CARD_INSTALLMENT
+            ) {
+              <p-accordion-panel [value]="1">
+                <p-accordion-header>Detalhes do Cartão</p-accordion-header>
+                <p-accordion-content>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="field col-span-1">
+                      <label>Bandeira</label>
+                      <p-select
+                        [options]="cardBrands"
+                        formControlName="card_brand"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Visa/Master..."
+                        appendTo="body"
+                      ></p-select>
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Dia Fechamento</label>
+                      <p-inputNumber
+                        formControlName="closing_day"
+                        [min]="1"
+                        [max]="31"
+                        suffix=" de cada mês"
+                      ></p-inputNumber>
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Limite Total</label>
+                      <p-inputNumber
+                        formControlName="card_limit"
+                        mode="currency"
+                        currency="BRL"
+                        locale="pt-BR"
+                      ></p-inputNumber>
+                    </div>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
+            }
+
+            <!-- EMPRÉSTIMOS / FINANCIAMENTOS -->
+            @if (
+              type === DebtType.PERSONAL_LOAN ||
+              type === DebtType.VEHICLE_FINANCING ||
+              type === DebtType.CONSIGNED_CREDIT
+            ) {
+              <p-accordion-panel [value]="2">
+                <p-accordion-header>Contrato & Prazos</p-accordion-header>
+                <p-accordion-content>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="field col-span-1">
+                      <label>Nº Contrato (Opcional)</label>
+                      <input
+                        pInputText
+                        formControlName="contract_number"
+                        placeholder="Para portabilidade"
+                      />
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Parcelas Restantes</label>
+                      <p-inputNumber
+                        formControlName="remaining_installments"
+                        [min]="0"
+                      ></p-inputNumber>
+                    </div>
+                    <div class="field col-span-2 flex align-items-center gap-2">
+                      <p-checkbox
+                        formControlName="allow_early_amortization"
+                        [binary]="true"
+                        label="Permite amortização antecipada?"
+                      ></p-checkbox>
+                    </div>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
+            }
+
+            <!-- IMOBILIÁRIO -->
+            @if (type === DebtType.REAL_ESTATE_FINANCING) {
+              <p-accordion-panel [value]="3">
+                <p-accordion-header>Habitação & Indexadores</p-accordion-header>
+                <p-accordion-content>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="field col-span-1">
+                      <label>Sistema</label>
+                      <p-select
+                        [options]="amortizationSystems"
+                        formControlName="amortization_system"
+                        optionLabel="label"
+                        optionValue="value"
+                        appendTo="body"
+                      ></p-select>
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Indexador</label>
+                      <p-select
+                        [options]="indexers"
+                        formControlName="indexer"
+                        optionLabel="label"
+                        optionValue="value"
+                        appendTo="body"
+                      ></p-select>
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Valor Imóvel (Atual)</label>
+                      <p-inputNumber
+                        formControlName="current_property_value"
+                        mode="currency"
+                        currency="BRL"
+                        locale="pt-BR"
+                      ></p-inputNumber>
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Seguros (MIP/DFI)</label>
+                      <p-inputNumber
+                        formControlName="insurance_value"
+                        mode="currency"
+                        currency="BRL"
+                        locale="pt-BR"
+                        placeholder="Embutido na parcela"
+                      ></p-inputNumber>
+                    </div>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
+            }
+
+            <!-- CHEQUE ESPECIAL -->
+            @if (type === DebtType.OVERDRAFT) {
+              <p-accordion-panel [value]="4">
+                <p-accordion-header
+                  >Urgência (Cheque Especial)</p-accordion-header
+                >
+                <p-accordion-content>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="field col-span-1">
+                      <label>Juros Diário (%)</label>
+                      <p-inputNumber
+                        formControlName="daily_interest_rate"
+                        [minFractionDigits]="2"
+                        suffix="% a.d."
+                      ></p-inputNumber>
+                    </div>
+                    <div class="field col-span-1">
+                      <label>Dias usados (Mês)</label>
+                      <p-inputNumber
+                        formControlName="days_used_in_month"
+                        [min]="0"
+                        [max]="31"
+                      ></p-inputNumber>
+                    </div>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
+            }
+          }
+
+          <!-- 3. FINANCEIRO (COMUM A TODOS) -->
+          <p-accordion-panel [value]="5">
+            <p-accordion-header>Valores & Taxas</p-accordion-header>
+            <p-accordion-content>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="field col-span-1">
+                  <label for="total_amount">Saldo Devedor *</label>
+                  <p-inputNumber
+                    id="total_amount"
+                    formControlName="total_amount"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="R$ 0,00"
+                    class="p-inputtext-lg font-bold"
+                  ></p-inputNumber>
+                </div>
+                <div class="field col-span-1">
+                  <label for="min_payment">Parcela / Mínimo</label>
+                  <p-inputNumber
+                    id="min_payment"
+                    formControlName="minimum_payment"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    placeholder="R$ 0,00"
+                  ></p-inputNumber>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mt-2">
+                <div class="field col-span-1">
+                  <label for="interest_rate">Taxa de Juros (%)</label>
+                  <p-inputNumber
+                    id="interest_rate"
+                    formControlName="interest_rate"
+                    [minFractionDigits]="2"
+                    suffix="%"
+                  ></p-inputNumber>
+                </div>
+                <div class="field col-span-1">
+                  <label>Período</label>
+                  <p-selectButton
+                    [options]="[
+                      { label: 'Mês', value: 'monthly' },
+                      { label: 'Ano', value: 'yearly' },
+                    ]"
+                    formControlName="interest_period"
+                    optionLabel="label"
+                    optionValue="value"
+                  ></p-selectButton>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 mt-2">
+                <div class="field col-span-1">
+                  <label>CET (Total) %</label>
+                  <p-inputNumber
+                    formControlName="cet"
+                    [minFractionDigits]="2"
+                    suffix="%"
+                    placeholder="Opcional"
+                  ></p-inputNumber>
+                </div>
+                <div class="field col-span-1">
+                  <label for="due_day">Dia Vencimento</label>
+                  <p-inputNumber
+                    id="due_day"
+                    formControlName="due_day"
+                    [min]="1"
+                    [max]="31"
+                  ></p-inputNumber>
+                </div>
+              </div>
+            </p-accordion-content>
+          </p-accordion-panel>
+        </p-accordion>
+      </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2 mt-4">
+        <button
+          pButton
+          pRipple
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-text"
+          (click)="hideDialog()"
+        ></button>
+        <button
+          pButton
+          pRipple
+          label="Salvar Dívida"
+          icon="pi pi-check"
+          (click)="saveDebt()"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+  <!-- ADVICE DIALOG -->
+  <p-dialog
+    [(visible)]="adviceDialog"
+    [style]="{ width: '600px', 'max-width': '95vw' }"
+    header="Consultoria Financeira IA"
+    [modal]="true"
+    class="p-fluid"
+  >
+    @if (adviceLoading()) {
+      <div class="flex flex-col items-center justify-center p-6">
+        <p-progressSpinner styleClass="w-3rem h-3rem mb-3"></p-progressSpinner>
+        <span class="text-primary font-medium text-lg"
+          >Analisando suas finanças...</span
+        >
+        <span class="text-500 text-sm mt-2"
+          >Verificando gastos, dívidas e sobras.</span
+        >
+      </div>
+    }
+
+    @if (!adviceLoading() && adviceResult()) {
+      <div class="line-height-3 text-lg">
+        <!-- Simple Pre-wrap for now. In a real app, use MarkdownPipe -->
+        <div
+          class="p-4 surface-ground border-round surface-border border-1"
+          style="white-space: pre-wrap; font-family: sans-serif"
+        >
+          {{ adviceResult() }}
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <p-button
+            label="Fechar"
+            icon="pi pi-check"
+            (onClick)="adviceDialog = false"
+          ></p-button>
+        </div>
+      </div>
+    }
+  </p-dialog>
+
+  <!-- CALCULATOR DIALOG -->
+  <p-dialog
+    [(visible)]="calcDialog"
+    [style]="{ width: '500px', 'max-width': '95vw' }"
+    header="Simular Antecipação"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    @if (calcDebt) {
+      <div class="flex flex-col gap-4">
+        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-round mb-2">
+          <span class="block text-sm text-500 mb-1">Dívida Selecionada</span>
+          <span class="text-xl font-bold text-primary">{{
+            calcDebt.name
+          }}</span>
+          <div class="flex justify-between mt-2 text-sm">
+            <span
+              >Taxa: {{ calcDebt.interest_rate }}%
+              {{
+                calcDebt.interest_period === "monthly" ? "a.m." : "a.a."
+              }}</span
+            >
+            <span>Saldo: {{ calcDebt.total_amount | currency: "BRL" }}</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Valor da Parcela (Cheia)</label>
+          <p-inputNumber
+            [(ngModel)]="calcAmount"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+          ></p-inputNumber>
+        </div>
+
+        <div class="field">
+          <label>Data de Vencimento Original</label>
+          <p-datepicker
+            [(ngModel)]="calcDate"
+            dateFormat="dd/mm/yy"
+            appendTo="body"
+            [showIcon]="true"
+          ></p-datepicker>
+        </div>
+
+        <p-button
+          label="Calcular Desconto"
+          icon="pi pi-calculator"
+          (onClick)="simulateDiscount()"
+          [loading]="calcLoading"
+        ></p-button>
+
+        @if (calcResult) {
+          <div
+            class="surface-card p-4 border-round border-1 surface-border mt-3 text-center animate-fade-in"
+          >
+            <span class="text-sm text-500 uppercase tracking-wider block mb-2"
+              >Resultado da Antecipação</span
+            >
+
+            <div class="text-4xl font-bold text-green-500 mb-1">
+              {{ calcResult.discounted_amount | currency: "BRL" }}
+            </div>
+            <span class="text-500 text-sm line-through block mb-4"
+              >Original:
+              {{ calcResult.original_amount | currency: "BRL" }}</span
+            >
+
+            <div
+              class="flex justify-center gap-4 border-top-1 surface-border pt-3"
+            >
+              <div>
+                <span class="block text-xs text-500">Economia</span>
+                <span class="font-bold text-primary">{{
+                  calcResult.discount_obtained | currency: "BRL"
+                }}</span>
+              </div>
+              <div>
+                <span class="block text-xs text-500">% Desconto</span>
+                <span class="font-bold text-primary"
+                  >{{ calcResult.percent_saved }}%</span
+                >
+              </div>
+              <div>
+                <span class="block text-xs text-500">Meses</span>
+                <span class="font-bold text-primary"
+                  >-{{ calcResult.months_anticipated }}</span
+                >
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </p-dialog>
+
+  <!-- AGREEMENT SIMULATOR DIALOG -->
+  <p-dialog
+    header="Simulação de Acordo"
+    [(visible)]="agreementDialog"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    @if (agreementDebt) {
+      <div class="flex flex-col gap-4">
+        <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-2">
+          <span class="text-sm text-purple-600 block mb-1"
+            >Dívida Original</span
+          >
+          <span class="text-2xl font-bold text-purple-900">{{
+            agreementDebt.total_amount | currency: "BRL"
+          }}</span>
+          <div class="text-xs text-purple-500 mt-1">
+            {{ agreementDebt.name }}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1 col-span-2">
+            <label class="text-sm font-semibold">Valor Proposto (Total)</label>
+            <p-inputNumber
+              [(ngModel)]="agreementProposal.discountedTotal"
+              mode="currency"
+              currency="BRL"
+              locale="pt-BR"
+              [min]="0"
+              styleClass="w-full"
+            ></p-inputNumber>
+            <small class="text-gray-500">Valor total a pagar negociado</small>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">Entrada</label>
+            <p-inputNumber
+              [(ngModel)]="agreementProposal.entryValue"
+              mode="currency"
+              currency="BRL"
+              locale="pt-BR"
+              [min]="0"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">Parcelas</label>
+            <p-inputNumber
+              [(ngModel)]="agreementProposal.installmentCount"
+              [min]="1"
+              [max]="120"
+              [showButtons]="true"
+              styleClass="w-full"
+            ></p-inputNumber>
+          </div>
+        </div>
+
+        <button
+          pButton
+          label="Calcular Economia"
+          icon="pi pi-calculator"
+          class="p-button-help w-full"
+          (click)="simulateAgreement()"
+        ></button>
+
+        @if (agreementResult) {
+          <div
+            class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200 animate-fadeIn"
+          >
+            <h4 class="text-green-800 font-bold mb-3 flex items-center gap-2">
+              <i class="pi pi-check-circle"></i> Resultado da Proposta
+            </h4>
+
+            <div
+              class="flex justify-between items-center mb-2 border-b border-green-200 pb-2"
+            >
+              <span class="text-green-700">Economia Total</span>
+              <span class="font-bold text-green-700 text-lg"
+                >{{ agreementResult.savings | currency: "BRL" }} ({{
+                  agreementResult.savingsPercent | number: "1.0-1"
+                }}%)</span
+              >
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="text-gray-600">Entrada:</div>
+              <div class="text-right font-medium">
+                {{ agreementResult.entry | currency: "BRL" }}
+              </div>
+
+              <div class="text-gray-600">
+                Parcelas ({{ agreementProposal.installmentCount }}x):
+              </div>
+              <div class="text-right font-medium">
+                {{ agreementResult.installmentValue | currency: "BRL" }}
+              </div>
+
+              <div class="text-gray-600 font-bold">Total a Pagar:</div>
+              <div class="text-right font-bold text-green-800">
+                {{ agreementResult.totalPaid | currency: "BRL" }}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </p-dialog>
+</div>

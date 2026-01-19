@@ -10,386 +10,536 @@
     </div>
   </div>
 
-  @if (loading()) {
-  <!-- Skeleton Layout -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
-    >
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+  @if (canAccess()) {
+    @if (loading()) {
+      <!-- Skeleton Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+              <p-skeleton width="120px" height="2rem"></p-skeleton>
+            </div>
+            <p-skeleton shape="circle" size="3rem"></p-skeleton>
+          </div>
+          <p-skeleton width="180px"></p-skeleton>
+        </div>
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+              <p-skeleton width="120px" height="2rem"></p-skeleton>
+            </div>
+            <p-skeleton shape="circle" size="3rem"></p-skeleton>
+          </div>
+          <p-skeleton width="180px"></p-skeleton>
+        </div>
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
+              <p-skeleton width="120px" height="2rem"></p-skeleton>
+            </div>
+            <p-skeleton shape="circle" size="3rem"></p-skeleton>
+          </div>
+          <p-skeleton width="180px"></p-skeleton>
+        </div>
+      </div>
+
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 h-[500px]"
+      >
+        <div
+          class="flex gap-4 mb-4 border-b border-gray-100 dark:border-gray-700 pb-2"
+        >
+          <p-skeleton width="120px" height="2rem"></p-skeleton>
           <p-skeleton width="120px" height="2rem"></p-skeleton>
         </div>
-        <p-skeleton shape="circle" size="3rem"></p-skeleton>
-      </div>
-      <p-skeleton width="180px"></p-skeleton>
-    </div>
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
-    >
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-          <p-skeleton width="120px" height="2rem"></p-skeleton>
-        </div>
-        <p-skeleton shape="circle" size="3rem"></p-skeleton>
-      </div>
-      <p-skeleton width="180px"></p-skeleton>
-    </div>
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-[140px]"
-    >
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-          <p-skeleton width="120px" height="2rem"></p-skeleton>
-        </div>
-        <p-skeleton shape="circle" size="3rem"></p-skeleton>
-      </div>
-      <p-skeleton width="180px"></p-skeleton>
-    </div>
-  </div>
-
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 h-[500px]">
-    <div
-      class="flex gap-4 mb-4 border-b border-gray-100 dark:border-gray-700 pb-2"
-    >
-      <p-skeleton width="120px" height="2rem"></p-skeleton>
-      <p-skeleton width="120px" height="2rem"></p-skeleton>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-      <div class="flex justify-center">
-        <p-skeleton shape="circle" size="300px"></p-skeleton>
-      </div>
-      <div>
-        <p-skeleton width="200px" height="1.5rem" styleClass="mb-4"></p-skeleton>
-        <p-skeleton width="100%" height="3rem" styleClass="mb-2"></p-skeleton>
-        <p-skeleton width="100%" height="3rem" styleClass="mb-2"></p-skeleton>
-        <p-skeleton width="100%" height="3rem" styleClass="mb-2"></p-skeleton>
-      </div>
-    </div>
-  </div>
-  } @else {
-
-  <!-- Messages -->
-  <div class="mb-6">
-    @for (msg of inflationMessages; track msg) {
-    <p-message
-      [severity]="msg.severity"
-      [text]="msg.detail"
-      styleClass="w-full block"
-    ></p-message>
-    }
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <!-- Summary Cards -->
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-blue-500"
-    >
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <span class="block text-gray-500 dark:text-gray-400 font-medium mb-1"
-            >Média Realizada</span
-          >
-          <div class="text-gray-900 dark:text-white font-bold text-2xl">
-            {{ data()?.realized?.average_total | currency : "BRL" }}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div class="flex justify-center">
+            <p-skeleton shape="circle" size="300px"></p-skeleton>
           </div>
-        </div>
-        <div
-          class="flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-lg w-10 h-10"
-        >
-          <i class="pi pi-receipt text-blue-500 text-xl"></i>
-        </div>
-      </div>
-      <span class="text-sm text-gray-500 dark:text-gray-300">
-        Média baseada nos últimos {{ data()?.range?.months_count | number:'1.0-0' }} meses
-      </span>
-    </div>
-
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-green-500"
-    >
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <span class="block text-gray-500 dark:text-gray-400 font-medium mb-1"
-            >Custo Comprometido</span
-          >
-          <div class="text-gray-900 dark:text-white font-bold text-2xl">
-            {{ data()?.committed?.total | currency : "BRL" }}
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded-lg w-10 h-10"
-        >
-          <i class="pi pi-calendar-times text-green-500 text-xl"></i>
-        </div>
-      </div>
-      <span class="text-sm text-gray-500 dark:text-gray-300">
-        Total em assinaturas e contas fixas ativas
-      </span>
-    </div>
-
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-orange-500"
-    >
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <span class="block text-gray-500 dark:text-gray-400 font-medium mb-1"
-            >Inflação (IPCA 12m)</span
-          >
-          <div class="text-gray-900 dark:text-white font-bold text-2xl">
-            {{ inflation()?.rate | number : "1.2-2" }}%
-          </div>
-        </div>
-        <div
-          class="flex items-center justify-center bg-orange-100 dark:bg-orange-900/30 rounded-lg w-10 h-10"
-        >
-          <i class="pi pi-chart-line text-orange-500 text-xl"></i>
-        </div>
-      </div>
-      <div class="flex flex-col">
-        <span
-          class="text-sm text-gray-500 dark:text-gray-300"
-          *ngIf="!inflation()?.is_fallback"
-        >
-          Dados do Banco Central do Brasil
-        </span>
-        <span
-          class="text-sm text-orange-500 font-medium"
-          *ngIf="inflation()?.is_fallback"
-        >
-          Estimativa (API Indisponível)
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Spending Anomalies Alert -->
-  <div class="mb-6" *ngIf="anomalies().length > 0">
-    <div
-      class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-red-500"
-    >
-      <div class="flex items-center mb-4">
-        <i class="pi pi-exclamation-triangle text-red-500 mr-2 text-xl"></i>
-        <span class="font-bold text-xl text-gray-900 dark:text-white"
-          >Alertas de Gastos</span
-        >
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div
-          *ngFor="let anomaly of anomalies()"
-          class="p-4 rounded-lg bg-red-50 dark:bg-red-900/10 flex items-center justify-between border border-red-100 dark:border-red-900/20"
-        >
           <div>
-            <div class="font-bold text-red-900 dark:text-red-300">
-              {{ anomaly.category }}
-            </div>
-            <div class="text-sm text-red-700 dark:text-red-400">
-              Média: {{ anomaly.average | currency : "BRL" }}
-            </div>
+            <p-skeleton
+              width="200px"
+              height="1.5rem"
+              styleClass="mb-4"
+            ></p-skeleton>
+            <p-skeleton
+              width="100%"
+              height="3rem"
+              styleClass="mb-2"
+            ></p-skeleton>
+            <p-skeleton
+              width="100%"
+              height="3rem"
+              styleClass="mb-2"
+            ></p-skeleton>
+            <p-skeleton
+              width="100%"
+              height="3rem"
+              styleClass="mb-2"
+            ></p-skeleton>
           </div>
-          <div class="text-right">
-            <div class="text-xl font-bold text-red-600 dark:text-red-400">
-              {{ anomaly.current | currency : "BRL" }}
+        </div>
+      </div>
+    } @else {
+      <!-- Messages -->
+      <div class="mb-6">
+        @for (msg of inflationMessages; track msg) {
+          <p-message
+            [severity]="msg.severity"
+            [text]="msg.detail"
+            styleClass="w-full block"
+          ></p-message>
+        }
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- Summary Cards -->
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-blue-500"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <span
+                class="block text-gray-500 dark:text-gray-400 font-medium mb-1"
+                >Média Realizada</span
+              >
+              <div class="text-gray-900 dark:text-white font-bold text-2xl">
+                {{ data()?.realized?.average_total | currency: "BRL" }}
+              </div>
             </div>
             <div
-              class="inline-block text-xs font-bold bg-white dark:bg-red-900/50 text-red-500 dark:text-red-300 px-2 py-1 rounded mt-1"
+              class="flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-lg w-10 h-10"
             >
-              +{{ anomaly.pct_increase | number : "1.0-0" }}%
+              <i class="pi pi-receipt text-blue-500 text-xl"></i>
+            </div>
+          </div>
+          <span class="text-sm text-gray-500 dark:text-gray-300">
+            Média baseada nos últimos
+            {{ data()?.range?.months_count | number: "1.0-0" }} meses
+          </span>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-green-500"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <span
+                class="block text-gray-500 dark:text-gray-400 font-medium mb-1"
+                >Custo Comprometido</span
+              >
+              <div class="text-gray-900 dark:text-white font-bold text-2xl">
+                {{ data()?.committed?.total | currency: "BRL" }}
+              </div>
+            </div>
+            <div
+              class="flex items-center justify-center bg-green-100 dark:bg-green-900/30 rounded-lg w-10 h-10"
+            >
+              <i class="pi pi-calendar-times text-green-500 text-xl"></i>
+            </div>
+          </div>
+          <span class="text-sm text-gray-500 dark:text-gray-300">
+            Total em assinaturas e contas fixas ativas
+          </span>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-orange-500"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <span
+                class="block text-gray-500 dark:text-gray-400 font-medium mb-1"
+                >Inflação (IPCA 12m)</span
+              >
+              <div class="text-gray-900 dark:text-white font-bold text-2xl">
+                {{ inflation()?.rate | number: "1.2-2" }}%
+              </div>
+            </div>
+            <div
+              class="flex items-center justify-center bg-orange-100 dark:bg-orange-900/30 rounded-lg w-10 h-10"
+            >
+              <i class="pi pi-chart-line text-orange-500 text-xl"></i>
+            </div>
+          </div>
+          <div class="flex flex-col">
+            <span
+              class="text-sm text-gray-500 dark:text-gray-300"
+              *ngIf="!inflation()?.is_fallback"
+            >
+              Dados do Banco Central do Brasil
+            </span>
+            <span
+              class="text-sm text-orange-500 font-medium"
+              *ngIf="inflation()?.is_fallback"
+            >
+              Estimativa (API Indisponível)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insufficient Data Warning -->
+      <div class="mb-6" *ngIf="insufficientData()">
+        <p-message
+          severity="info"
+          text="Poucos dados para análise. Adicione transações ou configure recorrências para ver seu Custo de Vida."
+          styleClass="w-full block"
+        ></p-message>
+      </div>
+
+      <!-- AI Analysis (Premium) -->
+      <div class="mb-6" *ngIf="canUseAi() && !insufficientData()">
+        <div
+          class="ai-card-gradient rounded-xl p-8 text-white shadow-xl relative overflow-hidden transition-all duration-300"
+        >
+          <!-- Background Decoration -->
+          <div
+            class="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl"
+          ></div>
+          <div
+            class="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-purple-500 opacity-20 rounded-full blur-2xl"
+          ></div>
+
+          <!-- 1. EMPTY STATE (Call to Action) -->
+          <div
+            *ngIf="!aiAnalysis() && !aiLoading()"
+            class="flex flex-col items-center justify-center py-6 text-center animate-fade-in-up"
+          >
+            <div class="bg-white/20 p-4 rounded-full mb-4 backdrop-blur-md">
+              <i class="pi pi-sparkles text-yellow-300 text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">
+              Análise Inteligente de Custos
+            </h3>
+            <p class="text-white/80 max-w-lg mb-8">
+              Utilize a IA para diagnosticar sua saúde financeira, identificar
+              riscos de inflação e encontrar oportunidades de economia baseadas
+              nos seus gastos reais.
+            </p>
+            <p-button
+              label="Gerar Análise Agora"
+              icon="pi pi-bolt"
+              (onClick)="analyzeWithAi()"
+              styleClass="p-button-lg font-bold bg-white text-indigo-600 border-none hover:bg-gray-100 shadow-lg ai-button-glow px-8 py-3 rounded-full"
+            >
+            </p-button>
+          </div>
+
+          <!-- 2. LOADING STATE (Shimmer) -->
+          <div *ngIf="aiLoading()" class="py-4 animate-fade-in">
+            <div class="flex items-center gap-3 mb-6">
+              <i class="pi pi-spin pi-spinner text-white/70 text-2xl"></i>
+              <span class="text-lg font-medium text-white/90"
+                >A IA está analisando seus dados...</span
+              >
+            </div>
+            <div class="space-y-4 opacity-50">
+              <div class="h-4 w-3/4 rounded shimmer-text"></div>
+              <div class="h-4 w-full rounded shimmer-text"></div>
+              <div class="h-4 w-5/6 rounded shimmer-text"></div>
+              <div class="h-4 w-2/3 rounded shimmer-text"></div>
+            </div>
+          </div>
+
+          <!-- 3. RESULT STATE (Content) -->
+          <div *ngIf="aiAnalysis()" class="relative z-10 animate-fade-in-up">
+            <div
+              class="flex items-center justify-between mb-6 border-b border-white/20 pb-4"
+            >
+              <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <i class="pi pi-check-circle text-green-300 text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-lg m-0">Análise Concluída</h3>
+                  <p class="text-white/70 text-sm m-0">
+                    Baseado nos dados dos últimos 6 meses
+                  </p>
+                </div>
+              </div>
+              <!-- Slight pulse re-trigger or visual cue? -->
+            </div>
+
+            <div
+              class="bg-black/10 rounded-xl p-6 backdrop-blur-md border border-white/5"
+            >
+              <div
+                class="prose prose-invert max-w-none text-base leading-relaxed text-white/95 text-justify"
+                [innerHTML]="formattedAnalysis()"
+              ></div>
+            </div>
+
+            <div class="mt-4 text-center">
+              <button
+                (click)="analyzeWithAi()"
+                class="text-white/50 text-sm hover:text-white transition-colors underline decoration-dotted"
+              >
+                Regerar Análise
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Spending Anomalies Alert -->
+      <div class="mb-6" *ngIf="anomalies().length > 0">
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border-l-4 border-red-500"
+        >
+          <div class="flex items-center mb-4">
+            <i class="pi pi-exclamation-triangle text-red-500 mr-2 text-xl"></i>
+            <span class="font-bold text-xl text-gray-900 dark:text-white"
+              >Alertas de Gastos</span
+            >
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              *ngFor="let anomaly of anomalies()"
+              class="p-4 rounded-lg bg-red-50 dark:bg-red-900/10 flex items-center justify-between border border-red-100 dark:border-red-900/20"
+            >
+              <div>
+                <div class="font-bold text-red-900 dark:text-red-300">
+                  {{ anomaly.category }}
+                </div>
+                <div class="text-sm text-red-700 dark:text-red-400">
+                  Média: {{ anomaly.average | currency: "BRL" }}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-red-600 dark:text-red-400">
+                  {{ anomaly.current | currency: "BRL" }}
+                </div>
+                <div
+                  class="inline-block text-xs font-bold bg-white dark:bg-red-900/50 text-red-500 dark:text-red-300 px-2 py-1 rounded mt-1"
+                >
+                  +{{ anomaly.pct_increase | number: "1.0-0" }}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
+        <p-tabs value="0">
+          <p-tablist>
+            <p-tab value="0">
+              <i class="pi pi-chart-pie mr-2"></i>
+              Análise de Gastos
+            </p-tab>
+            <p-tab value="1">
+              <i class="pi pi-trending-up mr-2"></i>
+              Projeção Futura
+            </p-tab>
+          </p-tablist>
+          <p-tabpanels>
+            <p-tabpanel value="0">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                <div class="flex justify-center">
+                  <div class="w-full max-w-lg">
+                    <h3
+                      class="text-center text-gray-700 dark:text-white mb-6 font-medium"
+                    >
+                      Distribuição Média (Realizado)
+                    </h3>
+                    <div class="h-[350px]">
+                      <p-chart
+                        type="doughnut"
+                        [data]="breakdownChartData()"
+                        [options]="breakdownChartOptions()"
+                        class="h-full w-full"
+                      ></p-chart>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 class="text-gray-700 dark:text-white mb-6 font-medium">
+                    Detalhes por Categoria
+                  </h3>
+                  <p-table
+                    [value]="breakdownChartData()?.labels"
+                    [scrollable]="true"
+                    scrollHeight="350px"
+                    styleClass="p-datatable-sm"
+                  >
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th
+                          class="bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300"
+                        >
+                          Categoria
+                        </th>
+                        <th
+                          class="bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-right"
+                        >
+                          Média Mensal
+                        </th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-cat let-i="rowIndex">
+                      <tr>
+                        <td class="text-gray-700 dark:text-gray-300">
+                          <span
+                            class="inline-block w-3 h-3 rounded-full mr-2"
+                            [style.background-color]="
+                              breakdownChartData().datasets[0].backgroundColor[
+                                i
+                              ]
+                            "
+                          >
+                          </span>
+                          {{ cat }}
+                        </td>
+                        <td
+                          class="text-right font-medium text-gray-700 dark:text-gray-300"
+                        >
+                          {{
+                            breakdownChartData().datasets[0].data[i]
+                              | currency: "BRL"
+                          }}
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+              </div>
+            </p-tabpanel>
+            <p-tabpanel value="1">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                <div class="flex flex-col gap-2">
+                  <label
+                    for="baseCost"
+                    class="text-gray-700 dark:text-gray-200 font-medium"
+                    >Custo Base Mensal</label
+                  >
+                  <p-inputNumber
+                    id="baseCost"
+                    [(ngModel)]="baseMonthlyCost"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    styleClass="w-full"
+                    class="w-full"
+                    inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  ></p-inputNumber>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label
+                    for="inflation"
+                    class="text-gray-700 dark:text-gray-200 font-medium"
+                    >Taxa de Inflação Anual (%)</label
+                  >
+                  <p-inputNumber
+                    id="inflation"
+                    [(ngModel)]="inflationRate"
+                    suffix="%"
+                    [minFractionDigits]="2"
+                    styleClass="w-full"
+                    class="w-full"
+                    inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  ></p-inputNumber>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label
+                    for="years"
+                    class="text-gray-700 dark:text-gray-200 font-medium"
+                    >Período de Projeção (Anos)</label
+                  >
+                  <p-inputNumber
+                    id="years"
+                    [(ngModel)]="projectionYears"
+                    [min]="1"
+                    [max]="50"
+                    styleClass="w-full"
+                    class="w-full"
+                    inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  ></p-inputNumber>
+                </div>
+              </div>
+
+              <div class="mt-8 h-[400px]">
+                <p-chart
+                  type="line"
+                  [data]="projectionChartData()"
+                  [options]="projectionChartOptions()"
+                  class="h-full w-full"
+                ></p-chart>
+              </div>
+
+              <div
+                class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-center"
+              >
+                <div>
+                  <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl">
+                    <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+                      Daqui a 1 ano
+                    </div>
+                    <div
+                      class="text-2xl font-bold text-blue-600 dark:text-blue-400"
+                    >
+                      {{ getYearlyProjection(1) | currency: "BRL" }}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl">
+                    <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+                      Daqui a 5 anos
+                    </div>
+                    <div
+                      class="text-2xl font-bold text-blue-600 dark:text-blue-400"
+                    >
+                      {{ getYearlyProjection(5) | currency: "BRL" }}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl">
+                    <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+                      Daqui a 10 anos
+                    </div>
+                    <div
+                      class="text-2xl font-bold text-blue-600 dark:text-blue-400"
+                    >
+                      {{ getYearlyProjection(10) | currency: "BRL" }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
+      </div>
+    }
+  } @else {
+    <div
+      class="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 animate-fade-in text-center h-[500px]"
+    >
+      <div class="text-6xl mb-4">💎</div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        Recurso Exclusivo Pro
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-md mb-8">
+        O recurso <strong>Custo de Vida</strong> utiliza análise avançada para
+        projetar seus gastos futuros e identificar anomalias. Atualize para o
+        plano Pro para desbloquear.
+      </p>
+      <p-button
+        label="Upgrade para Pro"
+        icon="pi pi-bolt"
+        styleClass="p-button-rounded p-button-primary"
+        (onClick)="navigateToPricing()"
+      ></p-button>
     </div>
-  </div>
-
-  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
-    <p-tabs value="0">
-      <p-tablist>
-        <p-tab value="0">
-          <i class="pi pi-chart-pie mr-2"></i>
-          Análise de Gastos
-        </p-tab>
-        <p-tab value="1">
-          <i class="pi pi-trending-up mr-2"></i>
-          Projeção Futura
-        </p-tab>
-      </p-tablist>
-      <p-tabpanels>
-        <p-tabpanel value="0">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-            <div class="flex justify-center">
-              <div class="w-full max-w-lg">
-                <h3
-                  class="text-center text-gray-700 dark:text-white mb-6 font-medium"
-                >
-                  Distribuição Média (Realizado)
-                </h3>
-                <div class="h-[350px]">
-                  <p-chart
-                    type="doughnut"
-                    [data]="breakdownChartData()"
-                    [options]="breakdownChartOptions()"
-                    class="h-full w-full"
-                  ></p-chart>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 class="text-gray-700 dark:text-white mb-6 font-medium">
-                Detalhes por Categoria
-              </h3>
-              <p-table
-                [value]="breakdownChartData()?.labels"
-                [scrollable]="true"
-                scrollHeight="350px"
-                styleClass="p-datatable-sm"
-              >
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th
-                      class="bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300"
-                    >
-                      Categoria
-                    </th>
-                    <th
-                      class="bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-right"
-                    >
-                      Média Mensal
-                    </th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-cat let-i="rowIndex">
-                  <tr>
-                    <td class="text-gray-700 dark:text-gray-300">
-                      <span
-                        class="inline-block w-3 h-3 rounded-full mr-2"
-                        [style.background-color]="
-                          breakdownChartData().datasets[0].backgroundColor[i]
-                        "
-                      >
-                      </span>
-                      {{ cat }}
-                    </td>
-                    <td
-                      class="text-right font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      {{
-                        breakdownChartData().datasets[0].data[i]
-                          | currency : "BRL"
-                      }}
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-          </div>
-        </p-tabpanel>
-        <p-tabpanel value="1">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-            <div class="flex flex-col gap-2">
-              <label
-                for="baseCost"
-                class="text-gray-700 dark:text-gray-200 font-medium"
-                >Custo Base Mensal</label
-              >
-              <p-inputNumber
-                id="baseCost"
-                [(ngModel)]="baseMonthlyCost"
-                mode="currency"
-                currency="BRL"
-                locale="pt-BR"
-                styleClass="w-full"
-                class="w-full"
-                inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              ></p-inputNumber>
-            </div>
-            <div class="flex flex-col gap-2">
-              <label
-                for="inflation"
-                class="text-gray-700 dark:text-gray-200 font-medium"
-                >Taxa de Inflação Anual (%)</label
-              >
-              <p-inputNumber
-                id="inflation"
-                [(ngModel)]="inflationRate"
-                suffix="%"
-                [minFractionDigits]="2"
-                styleClass="w-full"
-                class="w-full"
-                inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              ></p-inputNumber>
-            </div>
-            <div class="flex flex-col gap-2">
-              <label
-                for="years"
-                class="text-gray-700 dark:text-gray-200 font-medium"
-                >Período de Projeção (Anos)</label
-              >
-              <p-inputNumber
-                id="years"
-                [(ngModel)]="projectionYears"
-                [min]="1"
-                [max]="50"
-                styleClass="w-full"
-                class="w-full"
-                inputStyleClass="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              ></p-inputNumber>
-            </div>
-          </div>
-
-          <div class="mt-8 h-[400px]">
-            <p-chart
-              type="line"
-              [data]="projectionChartData()"
-              [options]="projectionChartOptions()"
-              class="h-full w-full"
-            ></p-chart>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-center">
-            <div>
-              <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl">
-                <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-                  Daqui a 1 ano
-                </div>
-                <div
-                  class="text-2xl font-bold text-blue-600 dark:text-blue-400"
-                >
-                  {{ getYearlyProjection(1) | currency : "BRL" }}
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl">
-                <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-                  Daqui a 5 anos
-                </div>
-                <div
-                  class="text-2xl font-bold text-blue-600 dark:text-blue-400"
-                >
-                  {{ getYearlyProjection(5) | currency : "BRL" }}
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl">
-                <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-                  Daqui a 10 anos
-                </div>
-                <div
-                  class="text-2xl font-bold text-blue-600 dark:text-blue-400"
-                >
-                  {{ getYearlyProjection(10) | currency : "BRL" }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
-  </div>
   }
 </div>

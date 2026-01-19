@@ -23,8 +23,8 @@ export class TransactionService {
           return this.http.get<Transaction[]>(url);
      }
 
-     createTransaction(transaction: Transaction): Observable<Transaction> {
-          return this.http.post<Transaction>(this.apiUrl, transaction);
+     createTransaction(transaction: Transaction): Observable<Transaction[]> {
+          return this.http.post<Transaction[]>(this.apiUrl, transaction);
      }
 
      // Atualiza uma transação existente

@@ -16,6 +16,7 @@ import { Category } from '../../models/category.model';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { ColorService } from '../../services/color.service';
+import { SubscriptionService } from '../../services/subscription.service';
 import html2canvas from 'html2canvas';
 
 interface TreemapNode {
@@ -110,7 +111,13 @@ interface SankeyLink {
             </button>
 
             <!-- Export Button -->
-            <button pButton icon="pi pi-image" class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8" (click)="exportChart()" pTooltip="Exportar Imagem"></button>
+            <button pButton 
+                    icon="pi pi-image" 
+                    class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8" 
+                    (click)="exportChart()" 
+                    [disabled]="!subscriptionService.canAccess('monthly_report')"
+                    [pTooltip]="!subscriptionService.canAccess('monthly_report') ? 'Disponível no plano PRO' : 'Exportar Imagem'">
+            </button>
 
             <!-- Settings Button -->
             <button pButton icon="pi pi-cog" class="p-button-text p-button-secondary p-button-sm p-0 w-8 h-8" (click)="op.toggle($event)" pTooltip="Configurações"></button>
@@ -121,7 +128,19 @@ interface SankeyLink {
                     <!-- Filters moved here -->
                     <div class="flex flex-col gap-2">
                         <label class="text-xs text-gray-500 dark:text-gray-400 dark:border-slate-800">Tipo de Gráfico</label>
-                        <p-select [options]="chartTypes" [(ngModel)]="widgetConfig.type" (onChange)="updateChart()" optionLabel="label" optionValue="value" size="small" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700"></p-select>
+                        <p-select [options]="chartTypes()" [(ngModel)]="widgetConfig.type" (onChange)="updateChart()" optionLabel="label" optionValue="value" optionDisabled="disabled" size="small" styleClass="w-full" appendTo="body" panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                             <ng-template pTemplate="selectedItem" let-selectedOption>
+                                <div class="flex items-center gap-2">
+                                    <span>{{ selectedOption.label }}</span>
+                                </div>
+                            </ng-template>
+                            <ng-template pTemplate="item" let-item>
+                                <div class="flex items-center justify-between w-full gap-2">
+                                    <span>{{ item.label }}</span>
+                                    <span *ngIf="item.pro" class="text-[10px] uppercase font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 rounded-full">Pro</span>
+                                </div>
+                            </ng-template>
+                        </p-select>
                     </div>
 
                     <div class="flex flex-col gap-2">
@@ -163,7 +182,16 @@ interface SankeyLink {
                          <p-toggleButton [(ngModel)]="widgetConfig.showSummary" onLabel="Sim" offLabel="Não" size="small" styleClass="w-16 text-xs"></p-toggleButton>
                     </div>
 
-                    <p-button label="Exportar CSV" icon="pi pi-file-excel" size="small" severity="secondary" (onClick)="exportCSV()" styleClass="w-full"></p-button>
+                    <p-button 
+                        label="Exportar CSV" 
+                        icon="pi pi-file-excel" 
+                        size="small" 
+                        severity="secondary" 
+                        (onClick)="exportCSV()" 
+                        [disabled]="!subscriptionService.canAccess('monthly_report')"
+                        [pTooltip]="!subscriptionService.canAccess('monthly_report') ? 'Disponível no plano PRO' : ''"
+                        styleClass="w-full">
+                    </p-button>
                 </div>
             </p-popover>
 
@@ -423,6 +451,7 @@ export class ChartWidgetComponent implements OnInit, OnChanges {
     private transactionService = inject(TransactionService);
     private categoryService = inject(CategoryService);
     private colorService = inject(ColorService);
+    public subscriptionService = inject(SubscriptionService);
 
     isLoading = signal<boolean>(false);
 
@@ -467,16 +496,19 @@ export class ChartWidgetComponent implements OnInit, OnChanges {
         lastDate: null
     };
 
-    chartTypes = [
-        { label: 'Pizza', value: 'pie' },
-        { label: 'Rosca', value: 'doughnut' },
-        { label: 'Barras', value: 'bar' },
-        { label: 'Linha', value: 'line' },
-        { label: 'Treemap (Categorias)', value: 'treemap' },
-        { label: 'Box Plot (Distribuição)', value: 'boxplot' },
-        { label: 'Sankey (Fluxo)', value: 'sankey' }
-        // { label: 'Heatmap (Calendário)', value: 'heatmap' } // Disabled
-    ];
+    // Computed chart types with Pro check
+    chartTypes = computed(() => {
+        const canAccessPro = this.subscriptionService.canAccess('monthly_report');
+        return [
+            { label: 'Pizza', value: 'pie' },
+            { label: 'Rosca', value: 'doughnut' },
+            { label: 'Barras', value: 'bar' },
+            { label: 'Linha', value: 'line' },
+            { label: 'Treemap (Categorias)', value: 'treemap', pro: true, disabled: !canAccessPro },
+            { label: 'Box Plot (Distribuição)', value: 'boxplot', pro: true, disabled: !canAccessPro },
+            { label: 'Sankey (Fluxo)', value: 'sankey', pro: true, disabled: !canAccessPro }
+        ];
+    });
 
     datePresets = [
         { label: 'Esse Mês', value: 'this-month' },
@@ -607,6 +639,7 @@ export class ChartWidgetComponent implements OnInit, OnChanges {
     }
 
     exportChart() {
+        if (!this.subscriptionService.canAccess('monthly_report')) return;
         const element = this.elementRef.nativeElement.querySelector('.relative'); // Target the chart container
         if (element) {
             html2canvas(element).then((canvas: HTMLCanvasElement) => {
@@ -619,6 +652,7 @@ export class ChartWidgetComponent implements OnInit, OnChanges {
     }
 
     exportCSV() {
+        if (!this.subscriptionService.canAccess('monthly_report')) return;
         if (!this.allTransactions || this.allTransactions.length === 0) return;
 
         // Headers
@@ -649,12 +683,15 @@ export class ChartWidgetComponent implements OnInit, OnChanges {
     }
 
     getChartLabel(type: string): string {
-        return this.chartTypes.find(t => t.value === type)?.label || type;
+        return this.chartTypes().find(t => t.value === type)?.label || type;
     }
 
     private updateChartDataLocal() {
         // Filter based on ValueFilter
         const filteredTransactions = this.allTransactions.filter(t => {
+            // Exclude 'transfer' type (like Fatura Cartão) from charts to avoid duplication/noise
+            if (t.type === 'transfer') return false;
+
             if (this.widgetConfig.valueFilter === 'income' && t.type !== 'income') return false;
             if (this.widgetConfig.valueFilter === 'expense' && t.type !== 'expense') return false;
             return true;

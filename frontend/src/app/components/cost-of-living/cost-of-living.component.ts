@@ -12,6 +12,10 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 
 import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly } from '../../services/analysis.service';
+import { AIService } from '../../services/ai.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 interface Message {
     severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
@@ -62,8 +66,33 @@ export class CostOfLivingComponent implements OnInit {
 
   // UX
   inflationMessages: Message[] = [];
+  insufficientData = signal(false);
 
-  constructor(private analysisService: AnalysisService) {
+  // AI Analysis (Premium)
+  aiAnalysis = signal<string | null>(null);
+  aiLoading = signal(false);
+
+  subscriptionService = inject(SubscriptionService);
+  canAccess = computed(() => this.subscriptionService.canAccess('cost_of_living'));
+  canUseAi = computed(() => this.subscriptionService.canAccess('ai_advisor'));
+
+  // Markdown parsing (simple for now, just preserving newlines)
+  formattedAnalysis = computed(() => {
+      const raw = this.aiAnalysis();
+      if (!raw) return '';
+      // Simple format: * -> <li>, ** -> <b>
+      let html = raw.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+  });
+
+  private router = inject(Router);
+
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
+  }
+
+  constructor(private analysisService: AnalysisService, private aiService: AIService) { // Inject AIService
     // Effect to update breakdown chart when data changes
     effect(() => {
         const d = this.data();
@@ -72,6 +101,20 @@ export class CostOfLivingComponent implements OnInit {
            // Initialize projection base cost if 0
            if (this.baseMonthlyCost() === 0) {
                this.baseMonthlyCost.set(d.total_estimated_monthly);
+           }
+
+           // Check for Insufficient Data
+           if (d.total_estimated_monthly === 0) {
+               this.insufficientData.set(true);
+           } else {
+               this.insufficientData.set(false);
+
+               this.insufficientData.set(false);
+
+               // Auto-trigger REMOVED as per user request (On-demand only)
+               // if (this.canUseAi() && !this.aiAnalysis()) {
+               //     this.analyzeWithAi();
+               // }
            }
         }
     });
@@ -114,6 +157,24 @@ export class CostOfLivingComponent implements OnInit {
     });
 
     this.loading.set(false);
+  }
+
+  analyzeWithAi() {
+      const d = this.data();
+      if (!d || d.total_estimated_monthly === 0) return;
+
+      this.aiLoading.set(true);
+      // Calling AI Service
+      this.aiService.analyzeCostOfLiving(d).subscribe({
+          next: (res: { analysis: string }) => {
+              this.aiAnalysis.set(res.analysis);
+              this.aiLoading.set(false);
+          },
+          error: (err: any) => {
+              console.error(err);
+              this.aiLoading.set(false);
+          }
+      });
   }
 
   initBreakdownChart(data: MonthlyAverageResponse) {

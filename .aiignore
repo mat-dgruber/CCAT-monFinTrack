@@ -1,0 +1,57 @@
+# Version Control
+.git/
+.gitignore
+
+# IDE & Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependencies & Locks
+node_modules/
+package-lock.json
+yarn.lock
+uv.lock
+poetry.lock
+venv/
+.venv/
+
+# Build & Dist
+dist/
+build/
+out-tsc/
+*.py[oc]
+__pycache__/
+
+# Environment & Secrets
+.env
+.env.*
+certs/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Large Context / Generated Files
+llms-full.txt
+llms.txt
+coverage/
+htmlcov/
+.angular/
+
+# Assets (Binary)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.pdf
+*.zip
+*.tar.gz
+
+# Firebase
+.firebase/
+.firebaserc
+firestore.indexes.json

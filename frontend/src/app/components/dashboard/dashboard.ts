@@ -12,8 +12,14 @@ import { MultiSelectModule } from 'primeng/multiselect'; // For p-multiSelect
 import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { RouterModule } from '@angular/router';
-
+import { DialogModule } from 'primeng/dialog'; // Import Dialog
+import { ConfirmDialogModule } from 'primeng/confirmdialog'; // Import ConfirmDialog
+import { ConfirmationService } from 'primeng/api'; // Import ConfirmationService
+import { MarkdownModule } from 'ngx-markdown'; // Import Markdown Module if used
+import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and RouterModule
+import { SkeletonModule } from 'primeng/skeleton'; // Import SkeletonModule
+import { MessageService } from 'primeng/api'; // Import MessageService
+import { ToastModule } from 'primeng/toast'; // Import ToastModule
 
 // Services
 import { DashboardService, DashboardSummary } from '../../services/dashboard.service';
@@ -21,6 +27,8 @@ import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
 import { AccountService } from '../../services/account.service';
 import { AnalysisService } from '../../services/analysis.service';
+import { AIService } from '../../services/ai.service'; // Import AI Service
+import { SubscriptionService } from '../../services/subscription.service';
 import { Account } from '../../models/account.model';
 
 // Components
@@ -28,9 +36,6 @@ import { AccountManager } from '../account-manager/account-manager';
 import { BudgetManager } from '../budget-manager/budget-manager';
 import { InvoiceDashboard } from '../invoice-dashboard/invoice-dashboard';
 import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
-
-
-import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-dashboard',
@@ -45,12 +50,18 @@ import { SkeletonModule } from 'primeng/skeleton';
     AccountManager,
     BudgetManager,
     AccountManager,
-    BudgetManager,
+    BudgetManager, // Duplicate removed if found
     InvoiceDashboard,
     RecentTransactionsComponent,
     SkeletonModule,
-    RouterModule
+    DialogModule,
+    ConfirmDialogModule,
+    MarkdownModule,
+    ButtonModule,
+    RouterModule,
+    ToastModule // Add ToastModule
   ],
+  providers: [ConfirmationService, MessageService], // Add MessageService
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -61,24 +72,27 @@ export class Dashboard implements OnInit {
   private filterService = inject(FilterService);
   private analysisService = inject(AnalysisService);
   private accountService = inject(AccountService);
+  private aiService = inject(AIService);
+  private confirmationService = inject(ConfirmationService);
+  subscriptionService = inject(SubscriptionService);
+  private route = inject(ActivatedRoute); // Inject ActivatedRoute
+  private router = inject(Router); // Inject Router
+  private messageService = inject(MessageService); // Inject MessageService
+
 
   summary = signal<DashboardSummary | null>(null);
   costOfLiving = signal<number | null>(null);
   loading = signal(true);
 
-
+  // AI Report
+  showReportDialog = false;
+  reportLoading = false;
+  reportContent = '';
 
   // Filters
   accounts = signal<Account[]>([]);
 
-
-
-
-
   constructor() {
-
-
-    // Efeito para recarregar os dados do dashboard quando o sinal de refresh for acionado
     effect(() => {
       const m = this.filterService.month();
       const y = this.filterService.year();
@@ -90,6 +104,30 @@ export class Dashboard implements OnInit {
   ngOnInit() {
     this.initChartOptions();
     this.loadAccounts();
+    this.checkPaymentStatus();
+  }
+
+  checkPaymentStatus() {
+      this.route.queryParams.subscribe(params => {
+          if (params['payment'] === 'success') {
+              this.messageService.add({ severity: 'success', summary: 'Pagamento Confirmado!', detail: 'Obrigado por assinar. Seu plano foi atualizado.' });
+              // Clear param
+              this.router.navigate([], {
+                  relativeTo: this.route,
+                  queryParams: { payment: null },
+                  queryParamsHandling: 'merge'
+              });
+              // Force refresh specific logic if needed? subscription service is reactive to user prefs update.
+              // Assuming backend webhook already fired? Race condition possible.
+          } else if (params['payment'] === 'canceled') {
+              this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'O processo de pagamento foi cancelado.' });
+               this.router.navigate([], {
+                  relativeTo: this.route,
+                  queryParams: { payment: null },
+                  queryParamsHandling: 'merge'
+              });
+          }
+      });
   }
   // Chart
   chartData: any;
@@ -102,6 +140,39 @@ export class Dashboard implements OnInit {
 
   loadAccounts() {
     this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
+  }
+
+  generateReport() {
+    this.confirmationService.confirm({
+        message: 'Deseja gerar o relatório mensal com nosso Assistente IA? (Isso pode levar alguns segundos)',
+        header: 'Confirmar Geração',
+        icon: 'pi pi-sparkles',
+        acceptLabel: 'Gerar Relatório',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-outlined p-button-success',
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => {
+            this.showReportDialog = true;
+            this.reportLoading = true;
+            this.reportContent = '';
+
+            // Use current month/year from filter
+            const m = this.filterService.month();
+            const y = this.filterService.year();
+
+            this.aiService.generateMonthlyReport(m, y).subscribe({
+                next: (res) => {
+                    this.reportContent = res.content;
+                    this.reportLoading = false;
+                },
+                error: (err) => {
+                    console.error('Error generating report', err);
+                    this.reportContent = "Desculpe, não consegui gerar o relatório agora. Tente mais tarde!";
+                    this.reportLoading = false;
+                }
+            })
+        }
+    });
   }
 
   loadDashboard(m: number, y: number) {
@@ -118,14 +189,16 @@ export class Dashboard implements OnInit {
       }
     });
 
-    this.analysisService.getMonthlyAverages().subscribe({
-      next: (data) => {
-        if (data && data.realized) {
-            this.costOfLiving.set(data.realized.average_total);
-        }
-      },
-      error: (err) => console.error('Error fetching cost of living', err)
-    });
+    if (this.subscriptionService.canAccess('cost_of_living')) {
+      this.analysisService.getMonthlyAverages().subscribe({
+        next: (data) => {
+          if (data && data.realized) {
+              this.costOfLiving.set(data.realized.average_total);
+          }
+        },
+        error: (err) => console.error('Error fetching cost of living', err)
+      });
+    }
   }
 
   setupChart(data: DashboardSummary) {

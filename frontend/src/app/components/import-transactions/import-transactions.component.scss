@@ -1,0 +1,67 @@
+/* import-transactions.component.scss */
+.card {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Upload Zone & Animations (Shared Style) */
+.upload-zone {
+    border: 2px dashed var(--surface-border, rgba(255,255,255,0.1));
+    border-radius: 1rem;
+    background: rgba(255,255,255,0.015);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+        border-color: var(--primary-color, #60a5fa);
+        background: rgba(96, 165, 250, 0.05);
+    }
+
+    &.drag-over {
+        border-color: var(--primary-color, #60a5fa);
+        background: rgba(96, 165, 250, 0.1);
+        transform: scale(1.01);
+    }
+}
+
+@keyframes scan-beam {
+    0% { top: 0%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom,
+        rgba(99, 102, 241, 0) 0%,
+        rgba(99, 102, 241, 0.1) 50%,
+        rgba(99, 102, 241, 0) 100%);
+    z-index: 10;
+    pointer-events: none;
+    animation: scan-beam 2s infinite ease-in-out;
+    border-bottom: 2px solid #6366f1;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+}
+
+/* Hide default FileUpload Toolbar and Chrome for Custom Look */
+/* Hide default FileUpload Toolbar/Header and Chrome */
+::ng-deep .p-fileupload {
+    .p-fileupload-buttonbar,
+    .p-fileupload-header {
+        display: none !important;
+    }
+    .p-fileupload-content {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+}

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 // PrimeNG
 import { TableModule, Table } from 'primeng/table';
@@ -24,11 +24,16 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { AccountService } from '../../services/account.service';
+import { UserPreferenceService } from '../../services/user-preference.service';
+import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
+import { HttpClient } from '@angular/common/http';
 
 // Models
 import { Transaction } from '../../models/transaction.model';
 import { Category } from '../../models/category.model';
 import { Account } from '../../models/account.model';
+import { environment } from '../../../environments/environment';
+import { ImportTransactionsComponent } from '../import-transactions/import-transactions.component';
 
 // Components & Pipes
 import { TransactionForm } from '../transaction-form/transaction-form';
@@ -40,6 +45,7 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     TableModule,
     ButtonModule,
     InputTextModule,
@@ -55,7 +61,8 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     InputIconModule,
     SkeletonModule,
     ConfirmDialogModule,
-    InputNumberModule
+    InputNumberModule,
+    ConfirmDialogModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss'
@@ -69,6 +76,19 @@ export class TransactionManager implements OnInit, AfterViewInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
+  private userPreferenceService = inject(UserPreferenceService);
+  private firebaseService = inject(FirebaseWrapperService);
+  private http = inject(HttpClient);
+
+  // User Preferences
+  userPreferences = signal<any>(null);
+  canUpload = computed(() => {
+    const tier = this.userPreferences()?.subscription_tier;
+    return tier === 'pro' || tier === 'premium';
+  });
+  canScan = computed(() => {
+    return this.userPreferences()?.subscription_tier === 'premium';
+  });
 
   // Data
   transactions = signal<Transaction[]>([]);
@@ -120,6 +140,15 @@ export class TransactionManager implements OnInit, AfterViewInit {
   // View State for Stats
   currentViewTransactions = signal<Transaction[]>([]);
 
+  // Type Options for Filter
+  typeOptions = [
+    { label: 'Despesa', value: 'expense' },
+    { label: 'Receita', value: 'income' },
+    { label: 'Transferência', value: 'transfer' }
+  ];
+
+  mobileTypeFilter = signal<string | null>(null);
+
   paymentMethods = [
     { label: 'Cartão de Crédito', value: 'credit_card' },
     { label: 'Débito', value: 'debit_card' },
@@ -148,6 +177,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
     // Load metadata
     this.categoryService.getCategories().subscribe(cats => this.categories.set(cats));
     this.accountService.getAccounts().subscribe(accs => this.accounts.set(accs));
+    this.userPreferenceService.preferences$.subscribe(prefs => this.userPreferences.set(prefs));
   }
 
   ngAfterViewInit() {
@@ -258,7 +288,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
     for (const t of list) {
       const amount = t.amount;
       if (t.type === 'income') totalIncome += amount;
-      else totalExpense += amount;
+      else if (t.type === 'expense') totalExpense += amount;
 
       if (amount > maxTx) maxTx = amount;
       if (t.type === 'expense' && amount > maxExpense) maxExpense = amount;
@@ -318,6 +348,12 @@ export class TransactionManager implements OnInit, AfterViewInit {
       filtered = filtered.filter(t => t.account?.name === acc.name);
     }
 
+    // 2.5 Apply Type Filter
+    const type = this.mobileTypeFilter();
+    if (type) {
+        filtered = filtered.filter(t => t.type === type);
+    }
+
     // 3. Apply Title/Description Filter
     const title = this.mobileTitleFilter();
     if (title) {
@@ -365,6 +401,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
   clearMobileFilters() {
     this.mobileCategoryFilter.set(null);
     this.mobileAccountFilter.set(null);
+    this.mobileTypeFilter.set(null);
     this.mobileTitleFilter.set('');
     this.mobileStatusFilter.set(null);
     this.mobileTitheStatusFilter.set(null);
@@ -594,5 +631,124 @@ export class TransactionManager implements OnInit, AfterViewInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  // --- Attachments & AI ---
+
+  isScanning = signal(false);
+  tempAttachments = signal<string[]>([]);
+
+  async onFileUpload(event: any) {
+      const file = event.files[0];
+      if (!file) return;
+
+      if (!this.canUpload()) {
+          this.messageService.add({ severity: 'warn', summary: 'Upgrade Necessário', detail: 'Recurso disponível apenas para planos Pro e Premium.' });
+          return;
+      }
+
+      try {
+          this.loading.set(true);
+
+          // 1. Upload to Storage
+          const path = `receipts/${this.userPreferences().user_id}/${Date.now()}_${file.name}`;
+          const url = await this.firebaseService.uploadFile(path, file);
+          this.tempAttachments.update(list => [...list, url]);
+
+          // Add to form
+          const currentAttachments = this.transactionForm.form.get('attachments')?.value || [];
+          this.transactionForm.form.patchValue({ attachments: [...currentAttachments, url] });
+
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Arquivo anexado!' });
+
+          // 2. AI Scan (Premium Only)
+          if (this.canScan() && file.type.startsWith('image/')) {
+              this.scanReceipt(file);
+          }
+
+      } catch (e) {
+          console.error(e);
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha no upload.' });
+      } finally {
+          this.loading.set(false);
+          event.originalEvent.target.value = ''; // Reset input
+      }
+  }
+
+  async scanReceipt(file: File) {
+      this.isScanning.set(true);
+      this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando comprovante...' });
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // We need to import environment to get API URL properly or use a service
+      // Assuming a service method exists would be cleaner, but I'll make a direct call for now or use transactionService if avoiding new service files.
+      // Ideally, create a ScannerService. For speed, I'll direct call here using injected http.
+      const apiUrl = 'http://localhost:8000/api/ai/scan'; // Better to use environment
+
+      // Using fetch or http client? I injected http.
+      // Need dynamic URL from environment
+      // Let's assume relative path /api/ai/scan works due to proxy or base url
+      // Actually, transactionService has apiUrl.
+
+      // Quick fix for URL:
+      const url = `${environment.apiUrl}/ai/scan`;
+
+      this.http.post<any>(url, formData).subscribe({
+          next: (data) => {
+              if (data) {
+                  // 1. Build Description from Items & Location
+                  let desc = '';
+                  if (data.location) {
+                      desc += `📍 Local: ${data.location}\n`;
+                  }
+                  
+                  if (data.items && data.items.length > 0) {
+                      desc += '\nItens:\n';
+                      data.items.forEach((item: any) => {
+                          desc += `- ${item.description}: ${item.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n`;
+                      });
+                  }
+
+                  // 2. Patch Form
+                  this.transactionForm.form.patchValue({
+                      title: data.title || this.transactionForm.form.get('title')?.value,
+                      amount: data.amount || this.transactionForm.form.get('amount')?.value,
+                      date: data.date ? new Date(data.date) : this.transactionForm.form.get('date')?.value,
+                      description: desc, // Formatted description
+                      payment_method: data.payment_method || this.transactionForm.form.get('payment_method')?.value
+                  });
+
+                  if (data.category_id) {
+                      const cat = this.categories().find(c => c.id === data.category_id);
+                      if (cat) this.transactionForm.form.patchValue({ category: cat });
+                  }
+
+                  if (data.account_id) {
+                      const acc = this.accounts().find(a => a.id === data.account_id);
+                      if (acc) this.transactionForm.form.patchValue({ account: acc });
+                  }
+
+                  this.messageService.add({ severity: 'success', summary: 'IA Concluída', detail: 'Itens detalhados e conta sugerida!' });
+              }
+              this.isScanning.set(false);
+          },
+          error: (e) => {
+              console.error(e);
+              this.messageService.add({ severity: 'warn', summary: 'IA', detail: 'Não foi possível ler o comprovante.' });
+              this.isScanning.set(false);
+          }
+      });
+  }
+
+  removeAttachment(url: string) {
+      // Remove from form
+      const current = this.transactionForm.form.get('attachments')?.value || [];
+      const updated = current.filter((u: string) => u !== url);
+      this.transactionForm.form.patchValue({ attachments: updated });
+
+      // Optional: Delete from storage (could be risky if shared, but usually fine here)
+      // For now, just unlink.
   }
 }

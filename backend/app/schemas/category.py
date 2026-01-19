@@ -34,6 +34,7 @@ class CategoryCreate(CategoryBase):
 
 class Category(CategoryBase):
     id: str
+    user_id: str
     subcategories: List["Category"] = Field(default_factory=list)
 
     class Config:

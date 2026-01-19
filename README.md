@@ -47,6 +47,16 @@ To enable automated deployment to Firebase Hosting, you must add the following s
 3. Name: `FIREBASE_TOKEN`
 4. Value: The output of running `firebase login:ci` locally.
 
+### Security Rules
+The project uses `firestore.rules` and `storage.rules` to enforce strict user data isolation.
+- **Firestore**: Users can only access documents in `users/{userId}` and related subcollections.
+- **Storage**: Users can only access files in `storage/{userId}/`.
+
+Deploy rules with:
+```bash
+firebase deploy --only firestore:rules,storage
+```
+
 ## 🚀 Production Deployment
 
 ### Frontend (Firebase Hosting)
@@ -111,6 +121,30 @@ ng serve
 ```
 
 Access at `http://localhost:4200`.
+
+### Running Tests
+
+#### Frontend Unit Tests (Karma)
+```bash
+cd frontend
+npm test
+```
+Runs tests in Headless Chrome with increased timeouts for stability.
+
+#### Frontend E2E Tests (Playwright)
+```bash
+cd frontend
+# Install browsers (first time only)
+npx playwright install
+npm run test:e2e
+```
+Runs end-to-end login and flow tests.
+
+#### Backend Unit Tests (pytest)
+```bash
+cd backend
+python -m pytest
+```
 
 ### Running Backend Locally
 

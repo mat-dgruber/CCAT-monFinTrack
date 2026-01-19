@@ -41,7 +41,16 @@ export const routes: Routes = [
         loadComponent: () => import('./components/invoice-dashboard/invoice-dashboard').then(m => m.InvoiceDashboard),
         canActivate: [authGuard]
       },
-      { path: 'cost-of-living', loadComponent: () => import('./components/cost-of-living/cost-of-living.component').then(m => m.CostOfLivingComponent) }
+      {
+        path: 'import',
+        loadComponent: () => import('./components/import-transactions/import-transactions.component').then(m => m.ImportTransactionsComponent)
+      },
+      {
+        path: 'debt-planner',
+        loadComponent: () => import('./components/debt-planner/debt-planner.component').then(m => m.DebtPlannerComponent)
+      },
+      { path: 'cost-of-living', loadComponent: () => import('./components/cost-of-living/cost-of-living.component').then(m => m.CostOfLivingComponent) },
+      { path: 'pricing', loadComponent: () => import('./components/pricing/pricing.component').then(m => m.PricingComponent) }
     ]
   },
   { path: 'verify-email', component: EmailVerification },

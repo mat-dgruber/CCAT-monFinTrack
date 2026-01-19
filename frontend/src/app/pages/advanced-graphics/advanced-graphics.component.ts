@@ -1,4 +1,5 @@
-import { Component, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -6,12 +7,14 @@ import { SelectModule } from 'primeng/select';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ChartWidgetComponent } from '../../components/chart-widget/chart-widget.component';
 import { DashboardWidget, DateRangePreset, WidgetType } from '../../models/dashboard-widget.model';
+import { SubscriptionService } from '../../services/subscription.service';
+import { TooltipModule } from 'primeng/tooltip';
 import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-advanced-graphics',
   standalone: true,
-  imports: [CommonModule, ButtonModule, ChartWidgetComponent, FormsModule, SelectModule, ToolbarModule],
+  imports: [CommonModule, ButtonModule, ChartWidgetComponent, FormsModule, SelectModule, ToolbarModule, TooltipModule],
   template: `
     <div class="p-6" #dashboardGrid>
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -61,6 +64,17 @@ import html2canvas from 'html2canvas';
                       styleClass="w-full md:w-40"
                       appendTo="body"
                       panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
+                      <ng-template pTemplate="selectedItem" let-selectedOption>
+                          <div class="flex items-center gap-2">
+                              <span>{{ selectedOption.label }}</span>
+                          </div>
+                      </ng-template>
+                      <ng-template pTemplate="item" let-item>
+                          <div class="flex items-center justify-between w-full gap-2">
+                              <span>{{ item.label }}</span>
+                              <span *ngIf="item.pro" class="text-[10px] uppercase font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 rounded-full">Pro</span>
+                          </div>
+                      </ng-template>
                   </p-select>
 
                   <p-select
@@ -94,6 +108,8 @@ import html2canvas from 'html2canvas';
                   size="small"
                   severity="secondary"
                   (onClick)="exportAllPNG()"
+                  [disabled]="!subscriptionService.canAccess('monthly_report')"
+                  [pTooltip]="!subscriptionService.canAccess('monthly_report') ? 'Disponível no plano PRO' : ''"
                   styleClass="w-full md:w-auto">
               </p-button>
                <p-button
@@ -102,7 +118,17 @@ import html2canvas from 'html2canvas';
                   size="small"
                   severity="secondary"
                   (onClick)="exportAllCSV()"
+                  [disabled]="!subscriptionService.canAccess('monthly_report')"
+                  [pTooltip]="!subscriptionService.canAccess('monthly_report') ? 'Disponível no plano PRO' : ''"
                   styleClass="w-full md:w-auto">
+              </p-button>
+              <p-button
+                  *ngIf="!subscriptionService.canAccess('monthly_report')"
+                  label="Desbloquear Pro"
+                  icon="pi pi-lock-open"
+                  size="small"
+                  (onClick)="navigateToPricing()"
+                  styleClass="w-full md:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none">
               </p-button>
           </div>
       </div>
@@ -151,6 +177,12 @@ import html2canvas from 'html2canvas';
 })
 export class AdvancedGraphicsComponent {
   @ViewChild('dashboardGrid') dashboardGrid!: ElementRef;
+  subscriptionService = inject(SubscriptionService);
+  router = inject(Router);
+
+  navigateToPricing() {
+      this.router.navigate(['/pricing']);
+  }
 
   widgets = signal<DashboardWidget[]>([
     {
@@ -188,15 +220,15 @@ export class AdvancedGraphicsComponent {
     { label: 'Essa Semana', value: 'this-week' }
   ];
 
-  chartTypes = [
+  chartTypes: { label: string, value: string, pro?: boolean }[] = [
     { label: 'Sem Alteração', value: 'none' },
     { label: 'Pizza', value: 'pie' },
     { label: 'Rosca', value: 'doughnut' },
     { label: 'Barras', value: 'bar' },
     { label: 'Linha', value: 'line' },
-    { label: 'Treemap', value: 'treemap' },
-    { label: 'Box Plot', value: 'boxplot' },
-    { label: 'Sankey', value: 'sankey' }
+    { label: 'Treemap', value: 'treemap', pro: true },
+    { label: 'Box Plot', value: 'boxplot', pro: true },
+    { label: 'Sankey', value: 'sankey', pro: true }
   ];
 
   groupingOptions = [
@@ -214,7 +246,12 @@ export class AdvancedGraphicsComponent {
         newW.datePreset = this.globalDatePreset as DateRangePreset;
       }
       if (this.globalType !== 'none') {
-        newW.type = this.globalType as WidgetType;
+        const isProType = this.chartTypes.find(t => t.value === this.globalType)?.pro;
+        if (isProType && !this.subscriptionService.canAccess('monthly_report')) {
+            // Cannot apply pro type
+        } else {
+            newW.type = this.globalType as WidgetType;
+        }
       }
       if (this.globalGroupBy !== 'none') {
         newW.groupBy = this.globalGroupBy as any;
@@ -279,6 +316,7 @@ export class AdvancedGraphicsComponent {
 
   // --- Export Logic ---
   exportAllPNG() {
+    if (!this.subscriptionService.canAccess('monthly_report')) return;
     if (this.dashboardGrid) {
       html2canvas(this.dashboardGrid.nativeElement).then((canvas: HTMLCanvasElement) => {
         const link = document.createElement('a');
@@ -290,6 +328,7 @@ export class AdvancedGraphicsComponent {
   }
 
   exportAllCSV() {
+    if (!this.subscriptionService.canAccess('monthly_report')) return;
     // Create a summary CSV of all widgets configuration
     const headers = ['ID', 'Tipo', 'Período', 'Agrupamento', 'Filtro Valor', 'Resumo Ativo'];
     const rows = this.widgets().map(w => [

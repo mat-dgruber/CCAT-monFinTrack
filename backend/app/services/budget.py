@@ -5,13 +5,14 @@ from app.services import category as category_service
 from app.core.date_utils import get_month_range
 from typing import Optional
 from fastapi import HTTPException
+from datetime import datetime, timezone
 
 COLLECTION_NAME = "budgets"
 
 def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
     
-    cat = category_service.get_category(budget_in.category_id)
+    cat = category_service.get_category(budget_in.category_id, user_id)
     
     # Validate Category Type
     if cat.type != CategoryType.EXPENSE:
@@ -77,9 +78,15 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
             t_data = t.to_dict()
             transaction_date = t_data.get("date")
             
+            # Ensure transaction_date is datetime
+            if isinstance(transaction_date, str):
+                try:
+                    transaction_date = datetime.fromisoformat(transaction_date.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+
             # Verificar se a data é naive e converter se necessário (hack de segurança)
-            if transaction_date and transaction_date.tzinfo is None:
-                 from datetime import timezone
+            if transaction_date and isinstance(transaction_date, datetime) and transaction_date.tzinfo is None:
                  transaction_date = transaction_date.replace(tzinfo=timezone.utc)
 
             if t_data.get("type") == "expense" and transaction_date and start_date <= transaction_date <= end_date:
@@ -119,6 +126,9 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
             # Mocking minimal structure expected by frontend
             cat_obj = cat_data
             cat_obj['id'] = cat_id
+            # Ensure user_id is present in category object (Fix for Schema Validation)
+            if 'user_id' not in cat_obj:
+                cat_obj['user_id'] = user_id
 
         # CÁLCULO DE GASTO AGREGADO (Meta da Categoria + Subcategorias)
         target_ids = get_descendants(cat_id)
@@ -129,6 +139,7 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
         
         budgets.append({
             "id": doc.id,
+            "user_id": user_id, # REQUIRED by Budget Schema
             "category_id": cat_id,
             "category": cat_obj, # Pydantic model expects obj, but dict works if schema allows or if we cast.
             "amount": limit,
@@ -148,7 +159,7 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
         # Retornamos erro ou None, aqui vou levantar erro genérico para simplificar
         raise Exception("Budget not found or access denied")
     
-    cat = category_service.get_category(budget_in.category_id)
+    cat = category_service.get_category(budget_in.category_id, user_id)
     
     # Validate Category Type
     if cat.type != CategoryType.EXPENSE:

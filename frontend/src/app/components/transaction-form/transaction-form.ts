@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Output, inject, signal, OnInit, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, EventEmitter, Output, inject, signal, OnInit, computed, DestroyRef } from '@angular/core';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -14,6 +14,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
@@ -21,12 +22,18 @@ import { TransactionService } from '../../services/transaction.service';
 import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
+import { AIService } from '../../services/ai.service';
+import { AttachmentService } from '../../services/attachment.service';
+import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
+import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
+import { HttpClient } from '@angular/common/http';
 
 import { Category } from '../../models/category.model';
 import { Transaction } from '../../models/transaction.model';
 import { Account } from '../../models/account.model';
 
 import { AccountTypePipe } from '../../pipes/account-type.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-transaction-form',
@@ -45,6 +52,7 @@ import { AccountTypePipe } from '../../pipes/account-type.pipe';
     CheckboxModule,
     TextareaModule,
     TooltipModule,
+    TagModule,
     AccountTypePipe
   ],
   templateUrl: './transaction-form.html',
@@ -58,7 +66,12 @@ export class TransactionForm implements OnInit {
   private refreshService = inject(RefreshService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+
   private preferenceService = inject(UserPreferenceService);
+  private aiService = inject(AIService);
+  private attachmentService = inject(AttachmentService);
+  private firebaseService = inject(FirebaseWrapperService);
+  private http = inject(HttpClient);
 
   visible = signal(false);
   preferences = toSignal(this.preferenceService.preferences$);
@@ -120,6 +133,8 @@ export class TransactionForm implements OnInit {
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
   editingId = signal<string | null>(null);
+  isUploading = signal(false);
+  isScanning = signal(false);
 
   @Output() save = new EventEmitter<void>();
 
@@ -195,7 +210,10 @@ export class TransactionForm implements OnInit {
 
     // Tithes & Offerings
     tithe_value: [10], // Default 10%
-    offering_value: [null]
+    offering_value: [null],
+
+    // Attachments
+    attachments: [[]]
   });
 
   availableCreditCards = signal<any[]>([]);
@@ -223,15 +241,162 @@ export class TransactionForm implements OnInit {
         }
     });
 
-    // Listen to Account Changes to load cards
-    this.form.get('account')?.valueChanges.subscribe((acc: Account | null) => {
-        if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
-            this.availableCreditCards.set(acc.credit_cards);
-        } else {
-            this.availableCreditCards.set([]);
-            this.form.patchValue({ credit_card_id: null });
+    // AI Classification logic
+    this.form.get('title')?.valueChanges.pipe(
+        takeUntilDestroyed(),
+        debounceTime(1500),
+        distinctUntilChanged(),
+        filter(val => val && val.length > 2), // At least 3 chars
+        tap(() => console.log('AI Checking...')),
+        switchMap(val => this.aiService.classifyTransaction(val))
+    ).subscribe({
+        next: (res) => {
+            if (res.category_id) {
+                // Check if current category is empty or system wants to suggest
+                // We only override if category is null to avoid annoying user overwrites
+                const currentCat = this.form.get('category')?.value;
+                if (!currentCat) {
+                     const cat = this.categories().find(c => c.id === res.category_id);
+                     if (cat) {
+                         this.form.patchValue({ category: cat });
+                         this.messageService.add({ severity: 'info', summary: '✨ AI Magic', detail: `Categoria sugerida: ${cat.name}`, life: 3000 });
+                     }
+                }
+            }
+        },
+        error: (err) => console.error('AI Error', err)
+    });
+
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+        if (this.preferences()?.subscription_tier !== 'premium') {
+             this.messageService.add({severity: 'warn', summary: 'Upgrade Necessário', detail: 'Leitura de comprovante é exclusiva Premium.'});
+             event.target.value = ''; // Reset input
+             return;
+        }
+
+        this.isScanning.set(true);
+        this.messageService.add({ severity: 'info', summary: 'Processando...', detail: 'Lendo comprovante com IA...', life: 3000 });
+
+        this.aiService.scanReceipt(file).subscribe({
+            next: (data) => {
+                const patch: any = {};
+                if (data.title) patch.title = data.title;
+                if (data.amount) patch.amount = data.amount;
+                if (data.date) patch.date = new Date(data.date);
+                if (data.description) patch.description = data.description;
+                if (data.payment_method) patch.payment_method = data.payment_method;
+
+                // Try to match category
+                if (data.category_id) {
+                    const cat = this.categories().find(c => c.id === data.category_id);
+                    if (cat) patch.category = cat;
+                }
+
+                // Suggest Account/Card if returned
+                if (data.account_id) {
+                     const acc = this.accounts().find(a => a.id === data.account_id);
+                     if (acc) patch.account = acc;
+                }
+
+                // Attachments
+                if (data.attachment_url) {
+                    const baseUrl = environment.apiUrl.replace('/api', '');
+                    const fullUrl = data.attachment_url.startsWith('http') ? data.attachment_url : `${baseUrl}${data.attachment_url}`;
+
+                    const current = this.form.get('attachments')?.value || [];
+                    patch.attachments = [...current, fullUrl];
+                }
+
+                this.form.patchValue(patch);
+                this.messageService.add({ severity: 'success', summary: 'Dados Extraídos!', detail: 'Verifique os campos preenchidos.' });
+                this.isScanning.set(false);
+            },
+            error: (err) => {
+                console.error('Scan Error', err);
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao ler comprovante.' });
+                this.isScanning.set(false);
+            }
+        });
+    }
+  }
+
+  onUpload(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (this.preferences()?.subscription_tier !== 'pro' && this.preferences()?.subscription_tier !== 'premium') {
+         this.messageService.add({severity: 'warn', summary: 'Upgrade Necessário', detail: 'Recurso Pro/Premium'});
+         return;
+    }
+
+    this.isUploading.set(true);
+
+    this.attachmentService.uploadFile(file).subscribe({
+        next: (res) => {
+            // Resolve URL (if relative)
+            const baseUrl = environment.apiUrl.replace('/api', '');
+            const fullUrl = res.url.startsWith('http') ? res.url : `${baseUrl}${res.url}`;
+
+            const current = this.form.get('attachments')?.value || [];
+            this.form.patchValue({ attachments: [...current, fullUrl] });
+
+            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Arquivo anexado.' });
+            this.isUploading.set(false);
+        },
+        error: (err) => {
+            console.error('Upload Error', err);
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha no upload' });
+            this.isUploading.set(false);
         }
     });
+
+    event.target.value = ''; // Reset
+  }
+
+  scanAttachment(url: string) {
+       let relativeUrl = url;
+       try {
+           const urlObj = new URL(url);
+           relativeUrl = urlObj.pathname;
+       } catch (e) {
+           // already relative or invalid
+       }
+
+       this.isScanning.set(true);
+       this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando anexo...' });
+
+       this.aiService.scanReceiptFromUrl(relativeUrl).subscribe({
+            next: (data) => {
+                 const patch: any = {};
+                 if (data.title) patch.title = data.title;
+                 if (data.amount) patch.amount = data.amount;
+                 if (data.date) patch.date = new Date(data.date);
+                 if (data.description) patch.description = data.description;
+                 if (data.payment_method) patch.payment_method = data.payment_method;
+
+                 if (data.category_id) {
+                     const cat = this.categories().find(c => c.id === data.category_id);
+                     if (cat) patch.category = cat;
+                 }
+                 this.form.patchValue(patch);
+                 this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Dados extraídos do anexo!' });
+                 this.isScanning.set(false);
+            },
+            error: (err) => {
+                 console.error('Scan Error', err);
+                 this.messageService.add({ severity: 'warn', summary: 'IA', detail: 'Não foi possível ler o comprovante.' });
+                 this.isScanning.set(false);
+            }
+       });
+  }
+
+  removeAttachment(url: string) {
+      const current = this.form.get('attachments')?.value || [];
+      this.form.patchValue({ attachments: current.filter((u: string) => u !== url) });
   }
 
   ngOnInit() {
@@ -336,7 +501,8 @@ export class TransactionForm implements OnInit {
             tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
             offering_value: transaction.offering_percentage || transaction.offering_amount || null,
 
-            credit_card_id: transaction.credit_card_id || null
+            credit_card_id: transaction.credit_card_id || null,
+            attachments: transaction.attachments || []
         });
 
     if (transaction.tithe_percentage) {
@@ -476,8 +642,19 @@ export class TransactionForm implements OnInit {
         });
       } else {
         this.transactionService.createTransaction(payload).subscribe({
-            next: () => {
+            next: (res: any) => {
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação criada.' });
+
+                // Check for Anomaly Warning
+                if (Array.isArray(res) && res.length > 0 && res[0].warning) {
+                    this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Gasto Atípico',
+                        detail: res[0].warning,
+                        life: 10000
+                    });
+                }
+
                 onSave();
             },
             error: (err) => {

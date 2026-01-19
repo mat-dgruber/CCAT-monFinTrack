@@ -16,6 +16,13 @@ class UserPreferenceBase(BaseModel):
     default_offering_percentage: Optional[float] = 5.0
     auto_apply_tithe: Optional[bool] = False
     auto_apply_offering: Optional[bool] = False
+    
+    # Subscription Tier (free, pro, premium)
+    subscription_tier: Optional[str] = "free"
+
+    # Notifications & Privacy
+    email_digest_enabled: Optional[bool] = False
+    privacy_share_data: Optional[bool] = True
 
 class UserPreferenceCreate(UserPreferenceBase):
     pass

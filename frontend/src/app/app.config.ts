@@ -12,6 +12,8 @@ registerLocaleData(localePt);
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { ConfirmationService, MessageService } from 'primeng/api'; // <--- Importe aqui
+import { provideMarkdown } from 'ngx-markdown';
+
 
 import { routes } from './app.routes';
 
@@ -68,6 +70,7 @@ export const appConfig: ApplicationConfig = {
 
     ConfirmationService,
     MessageService,
+    provideMarkdown(), // Enable Markdown
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000'

@@ -14,6 +14,18 @@ def get_my_invoices(
     Lista todas as faturas (Abertas, Fechadas) de todos os cartões.
     """
     user_id = current_user['uid']
+    
+    # Tier Check (Pro+)
+    from app.services import user_preference as preference_service
+    prefs = preference_service.get_preferences(user_id)
+    tier = prefs.subscription_tier or 'free'
+    
+    if tier == 'free':
+         # Allows 'get' maybe? Use cases say "Management". 
+         # Request: "Gerenciamento de Cartão de Crédito/fatura para pro ou superiores"
+         # This usually implies seeing the dashboard.
+         raise HTTPException(status_code=403, detail="Credit Card & Invoice Management is available for Pro and Premium users.")
+
     return invoice_service.get_invoices(user_id)
 
 @router.post("/pay")

@@ -40,10 +40,46 @@ def get_dashboard_data(
         current_start, current_end = get_month_range(now.month, now.year)
         ref_date = now
         
-    # Query Principal (Todas do usuário, filtra em memória)
     transactions_query = db.collection("transactions").where("user_id", "==", user_id)
-    all_transactions_stream = list(transactions_query.stream())
-    all_transactions_data = [doc.to_dict() for doc in all_transactions_stream] # Cache in memory
+    
+    # DETERMINE O RANGE TOTAL NECESSÁRIO (Mês Atual + 6 Meses de Evolução)
+    # Start: O menor entre (current_start) e (6 meses atrás)
+    # End: O maior entre (current_end) e (hoje - caso futuro?)
+    
+    # 6 Months ago from ref_date
+    evolution_start = ref_date - timedelta(days=200) # Safe buffer
+    
+    # Normalize Timezones
+    if evolution_start.tzinfo is None: evolution_start = evolution_start.replace(tzinfo=timezone.utc)
+    if current_start.tzinfo is None: current_start = current_start.replace(tzinfo=timezone.utc)
+    if current_end.tzinfo is None: current_end = current_end.replace(tzinfo=timezone.utc)
+    
+    query_start = min(current_start, evolution_start)
+    query_end = current_end
+    
+    # Ensure optimized query
+    # Using transaction_service to leverage the logic we just fixed
+    # list_transactions returns Pydantic models. We convert to dicts to maintain compatibility with below logic.
+    from app.services import transaction as transaction_service
+    
+    pydantic_txs = transaction_service.list_transactions(
+        user_id=user_id,
+        start_date=query_start,
+        end_date=query_end,
+        limit=2000 # 6 months * ~300 tx/mo = 1800. Safe cap.
+    )
+    
+    all_transactions_data = [t.model_dump() for t in pydantic_txs]
+
+    # Fetch Invoice Category ID once
+    invoice_category_id = None
+    # We must search for it. It's better to cache this or query once per request.
+    # Since this is "dashboard", one extra query is fine.
+    # Note: Using stream() on query object, not db
+    inv_query = db.collection("categories").where("name", "==", "Fatura Cartão").limit(1).stream()
+    for doc in inv_query:
+        invoice_category_id = doc.id
+        break
 
     # Filtrar para o Dashboard Principal (Mês Selecionado)
     # Helper para comparar datas naive/aware de forma segura
@@ -54,6 +90,12 @@ def get_dashboard_data(
         # Melhor abordagem: Firestore retorna Aware (UTC). Nossas Ranges são Aware (UTC).
         # Se date_val for Naive (ex: dados antigos bugados), assumir UTC.
         d = date_val
+        if isinstance(d, str):
+            try:
+                d = datetime.fromisoformat(d.replace("Z", "+00:00"))
+            except ValueError:
+                return False
+
         if d.tzinfo is None:
             d = d.replace(tzinfo=timezone.utc)
         
@@ -83,6 +125,10 @@ def get_dashboard_data(
     category_map = {}
 
     for data in current_transactions:
+        # Check exclusion for Invoice
+        if invoice_category_id and data.get("category_id") == invoice_category_id:
+            continue
+
         amount = data.get("amount", 0)
         t_type = data.get("type")
         cat_id = data.get("category_id")
@@ -140,6 +186,24 @@ def get_dashboard_data(
                 continue
                 
             if is_in_range(t.get("date"), m_start, m_end):
+                # EXCLUSÃO: Ignorar Fatura Cartão
+                # Precisamos pegar o nome da categoria. Como não temos o objeto categoria aqui fácil (só ID),
+                # vamos assumir que a Fatura Cartão tem um ID específico ou precisamos buscar.
+                # Mas fazer get_category n vezes é lento.
+                # Melhora: A Fatura Cartão é criada pelo sistema.
+                # O ideal é filtrar tudo que tiver "Fatura Cartão" no nome da Categoria SE tivermos o nome aqui.
+                # No `all_transactions_data` (linha 46), temos o dict do firestore.
+                # O firestore NÃO traz o nome da categoria junto, só o ID.
+                # Mas no começo do `dashboard.py` podemos pegar o ID da Fatura Cartão.
+                
+                # Para performance, vamos pegar o ID da Fatura Cartão uma vez só fora do loop.
+                # (Vou inserir essa busca antes dos loops)
+                
+                # Check exclusion based on cached ID (passed via closure/local var)
+                # Assuming `invoice_category_id` is defined above.
+                if t.get("category_id") == invoice_category_id:
+                     continue
+
                 val = t.get("amount", 0)
                 tp = t.get("type")
                 if tp == "income": m_income += val

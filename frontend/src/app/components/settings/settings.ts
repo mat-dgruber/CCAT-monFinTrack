@@ -6,7 +6,9 @@ import { AuthService } from '../../services/auth.service';
 // import { ThemeService } from '../../services/theme.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { MFAService } from '../../services/mfa.service';
+import { AIService } from '../../services/ai.service';
 import { UserPreference } from '../../models/user-preference.model';
+import { environment } from '../../../environments/environment';
 
 // PrimeNG Imports
 import { CardModule } from 'primeng/card';
@@ -24,6 +26,8 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 import { PwaService } from '../../services/pwa.service';
 
@@ -50,7 +54,9 @@ import { PwaService } from '../../services/pwa.service';
     FileUploadModule,
     DialogModule,
     TooltipModule,
-    RouterModule
+    RouterModule,
+    ProgressBarModule,
+    ProgressSpinnerModule
   ],
   providers: [MessageService]
 })
@@ -64,9 +70,13 @@ export class Settings {
   preferenceService = inject(UserPreferenceService);
   mfaService = inject(MFAService);
   pwaService = inject(PwaService);
+  aiService = inject(AIService);
 
   preferences: UserPreference | null = null;
   wakeLockEnabled = signal(false);
+
+  // AI Limits
+  aiLimits = signal<any>(null);
 
   // Computed signal for profile image
   profileImageUrl = computed(() => {
@@ -86,13 +96,10 @@ export class Settings {
 
   // Profile
   birthday = signal<Date | null>(null);
-  selectedTimezone = signal<string>('Europe/Paris');
-  timezones = [
-    { label: 'Europe/Paris', value: 'Europe/Paris' },
-    { label: 'America/New_York', value: 'America/New_York' },
-    { label: 'Asia/Tokyo', value: 'Asia/Tokyo' },
-    { label: 'America/Sao_Paulo', value: 'America/Sao_Paulo' }
-  ];
+
+  // Privacy & Notifications
+  emailDigestEnabled = signal(false);
+  privacyShared = signal(true);
 
   // Appearance
   selectedTheme = signal<'light' | 'dark' | 'system' | 'capycro'>('system');
@@ -103,12 +110,25 @@ export class Settings {
     { label: 'Sistema', value: 'system' }
   ];
 
-  // Tithes & Offerings
+// ...
+
+    // Tithes & Offerings
   tithesEnabled = signal(false);
   defaultTithePct = signal(10);
   defaultOfferingPct = signal(5);
   autoApplyTithe = signal(false);
   autoApplyOffering = signal(false);
+
+  // Environment
+  isProduction = signal(environment.production);
+
+  // Subscription (Test Mode)
+  selectedTier = signal<'free' | 'pro' | 'premium'>('free');
+  tierOptions = [
+      { label: 'Free (Grátis)', value: 'free' },
+      { label: 'Pro (Intermediário)', value: 'pro' },
+      { label: 'Premium (Completo)', value: 'premium' }
+  ];
 
   constructor() {
     // Initialize with current user data
@@ -126,7 +146,10 @@ export class Settings {
       if (prefs) {
         this.selectedTheme.set(prefs.theme);
         if (prefs.birthday) this.birthday.set(new Date(prefs.birthday));
-        if (prefs.timezone) this.selectedTimezone.set(prefs.timezone);
+
+        // Notifications & Privacy
+        this.emailDigestEnabled.set(!!prefs.email_digest_enabled);
+        this.privacyShared.set(prefs.privacy_share_data ?? true); // Default true if undefined
 
         // Tithes
         this.tithesEnabled.set(!!prefs.enable_tithes_offerings);
@@ -134,10 +157,21 @@ export class Settings {
         this.defaultOfferingPct.set(prefs.default_offering_percentage ?? 5);
         this.autoApplyTithe.set(!!prefs.auto_apply_tithe);
         this.autoApplyOffering.set(!!prefs.auto_apply_offering);
+
+        // Tier
+        this.selectedTier.set(prefs.subscription_tier || 'free');
       }
     });
 
     this.checkMfaStatus();
+    this.loadAiLimits();
+  }
+
+  loadAiLimits() {
+      this.aiService.getLimits().subscribe({
+          next: (res) => this.aiLimits.set(res),
+          error: () => console.error('Failed to load AI limits')
+      });
   }
 
   onTithesChange() {
@@ -233,11 +267,10 @@ export class Settings {
         await this.auth.updateProfileData(this.displayName());
       }
 
-      // 2. Update Preferences (Birthday, Timezone)
+      // 2. Update Preferences (Birthday)
       if (this.preferences) {
         const updates: any = {};
         if (this.birthday()) updates.birthday = this.birthday()?.toISOString();
-        if (this.selectedTimezone()) updates.timezone = this.selectedTimezone();
 
         if (Object.keys(updates).length > 0) {
           this.preferenceService.updatePreferences(updates).subscribe();
@@ -248,6 +281,31 @@ export class Settings {
     } catch (error) {
       this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar perfil' });
     }
+  }
+
+  onPrivacyChange() {
+      if (this.preferences) {
+          this.preferenceService.updatePreferences({
+              privacy_share_data: this.privacyShared()
+          }).subscribe({
+              next: () => this.messageService.add({severity: 'info', summary: 'Privacidade', detail: 'Preferências de dados atualizadas.'})
+          });
+      }
+  }
+
+  onEmailDigestChange() {
+      if (this.selectedTier() === 'free') {
+          // Revert toggle if user tries to enable on Free tier
+          setTimeout(() => this.emailDigestEnabled.set(false), 50);
+          this.messageService.add({ severity: 'warn', summary: 'Recurso Pro', detail: 'O resumo por email é exclusivo para assinantes.' });
+          return;
+      }
+
+      if (this.preferences) {
+          this.preferenceService.updatePreferences({
+              email_digest_enabled: this.emailDigestEnabled()
+          }).subscribe();
+      }
   }
 
   async verifyEmail() {
@@ -284,6 +342,17 @@ export class Settings {
     }
 
     // The service's tap/next will trigger applyTheme, so we don't need manual DOM manipulation here anymore.
+  }
+
+  onTierChange(event: any) {
+    if (this.preferences) {
+        this.preferenceService.updatePreferences({
+            subscription_tier: event.value
+        }).subscribe(() => {
+            this.messageService.add({severity: 'success', summary: 'Tier Atualizado', detail: `Agora você é ${event.value.toUpperCase()}!`});
+            this.loadAiLimits();
+        });
+    }
   }
 
   onLanguageChange(event: any) {
@@ -376,5 +445,9 @@ export class Settings {
     } else {
       this.pwaService.releaseWakeLock();
     }
+  }
+
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
   }
 }

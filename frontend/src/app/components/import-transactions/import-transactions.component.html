@@ -1,0 +1,198 @@
+<div class="p-4 md:p-6 mb-8">
+  <div
+    class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6"
+  >
+    <div>
+      <h2
+        class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2"
+      >
+        <i class="pi pi-upload text-blue-500"></i> Importar Extrato
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400">
+        Importe arquivos .OFX ou .CSV do seu banco.
+      </p>
+    </div>
+
+    <!-- Account Selector -->
+    <div class="w-full md:w-64">
+      <p-select
+        [options]="accounts()"
+        optionLabel="name"
+        [(ngModel)]="selectedAccount"
+        placeholder="Selecione a Conta"
+        styleClass="w-full"
+        [showClear]="true"
+      >
+        <ng-template pTemplate="selectedItem">
+          <div class="flex align-items-center gap-2" *ngIf="selectedAccount()">
+            <span>{{ selectedAccount()?.name }}</span>
+          </div>
+        </ng-template>
+        <ng-template let-acc pTemplate="item">
+          <div class="flex align-items-center gap-2">
+            <span>{{ acc.name }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+  </div>
+
+  @if (canAccess()) {
+    <!-- Upload Area -->
+    <div class="mb-6">
+      <p-fileUpload
+        #fileUploader
+        mode="advanced"
+        name="file"
+        accept=".ofx,.csv"
+        [maxFileSize]="1000000"
+        [customUpload]="true"
+        (uploadHandler)="myUploader($event)"
+        [auto]="true"
+        [showUploadButton]="false"
+        [showCancelButton]="false"
+        styleClass="w-full"
+      >
+        <!-- Hide Default Header/Toolbar -->
+        <ng-template pTemplate="header">
+          <div class="hidden"></div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+          <div
+            class="upload-zone flex flex-col items-center justify-center p-8 bg-white/5 dark:bg-white/5 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 transition-all group relative overflow-hidden text-center"
+            (click)="fileUploader.choose()"
+          >
+            <!-- Hover Effect Overlay -->
+            <div
+              class="absolute inset-0 scanner-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+
+            <div class="relative z-10 pointer-events-none">
+              <div
+                class="bg-blue-50 dark:bg-blue-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
+              >
+                <i
+                  class="pi pi-cloud-upload text-3xl text-blue-500 dark:text-blue-400"
+                ></i>
+              </div>
+
+              <h3
+                class="text-xl font-bold mb-2 text-gray-800 dark:text-gray-100"
+              >
+                Arraste seu Extrato Aqui
+              </h3>
+              <p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+                Suportamos arquivos <strong>.OFX</strong> e
+                <strong>.CSV</strong>. A IA categorizará suas transações
+                automaticamente.
+              </p>
+
+              <button
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2 mx-auto"
+              >
+                <i class="pi pi-folder-open"></i>
+                Selecionar Arquivo
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </p-fileUpload>
+    </div>
+
+    <!-- Preview Table -->
+    <div
+      class="card bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700"
+      *ngIf="transactions().length > 0"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white">
+          Pré-visualização ({{ transactions().length }})
+        </h3>
+        <p-button
+          label="Importar Selecionados"
+          icon="pi pi-check"
+          (onClick)="importSelected()"
+          [loading]="loading()"
+          [disabled]="!selectedAccount()"
+        >
+        </p-button>
+      </div>
+
+      <p-table
+        [value]="transactions()"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 4rem">
+              <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+            </th>
+            <!-- Select All logic needs implementation in component if using p-tableHeaderCheckbox, or simple custom -->
+            <!-- Ideally use selection logic or simplified check per row -->
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Categoria (Sugerida)</th>
+            <th>Ação</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-tx>
+          <tr>
+            <td>
+              <p-checkbox
+                [(ngModel)]="tx.selected"
+                [binary]="true"
+              ></p-checkbox>
+            </td>
+            <td>{{ tx.date | date: "dd/MM/yyyy" }}</td>
+            <td>{{ tx.description }}</td>
+            <td
+              [class.text-red-500]="tx.type === 'expense'"
+              [class.text-green-500]="tx.type === 'income'"
+            >
+              {{ tx.amount | currency: "BRL" }}
+            </td>
+            <td>
+              <p-select
+                [options]="categories()"
+                [(ngModel)]="tx.category_id"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Selecione..."
+                appendTo="body"
+                [style]="{ width: '200px' }"
+                [filter]="true"
+              >
+              </p-select>
+            </td>
+            <td>
+              <!-- Actions if needed -->
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  } @else {
+    <div
+      class="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 animate-fade-in text-center"
+    >
+      <div class="text-6xl mb-4">💎</div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        Recurso Exclusivo Pro
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-md mb-8">
+        A <strong>Importação de Extratos</strong> (OFX/CSV) com categorização
+        automática por IA é exclusiva para assinantes Pro.
+      </p>
+      <p-button
+        label="Upgrade para Pro"
+        icon="pi pi-bolt"
+        styleClass="p-button-rounded p-button-primary"
+        (onClick)="navigateToPricing()"
+      ></p-button>
+    </div>
+  }
+</div>
+<p-toast></p-toast>

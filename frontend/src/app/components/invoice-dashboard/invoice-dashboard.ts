@@ -1,9 +1,11 @@
-import { Component, OnInit, inject, signal, effect, Input } from '@angular/core';
+import { Component, OnInit, inject, signal, effect, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Required for ngModel in dialog
+import { Router } from '@angular/router'; // Import Router
 import { InvoiceService } from '../../services/invoice.service';
 import { AccountService } from '../../services/account.service';
 import { RefreshService } from '../../services/refresh.service';
+import { SubscriptionService } from '../../services/subscription.service'; // Import SubscriptionService
 import { InvoiceSummary } from '../../models/invoice.model';
 import { Account } from '../../models/account.model';
 
@@ -39,8 +41,16 @@ export class InvoiceDashboard implements OnInit {
   private accountService = inject(AccountService);
   private refreshService = inject(RefreshService);
   private messageService = inject(MessageService);
+  private subscriptionService = inject(SubscriptionService);
+  private router = inject(Router);
 
   @Input() isWidget = false;
+
+  canAccess = computed(() => this.subscriptionService.canAccess('invoices'));
+
+  navigateToPricing() {
+      this.router.navigate(['/pricing']);
+  }
 
   invoices = signal<InvoiceSummary[]>([]);
   loading = signal(true);

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from .category import Category
 from .account import Account
@@ -48,6 +48,9 @@ class TransactionBase(BaseModel):
      
      # Se a transação for feita via cartão de crédito específico
      credit_card_id: Optional[str] = Field(None, description="ID do cartão de crédito aninhado")
+     
+     # Destination Account for Transfers
+     destination_account_id: Optional[str] = Field(None, description="ID da conta de destino (apenas para transferências)")
 
      # Campos opcionais de Dízimos e Ofertas
      tithe_amount: Optional[float] = Field(None, description="Valor do dízimo")
@@ -57,6 +60,12 @@ class TransactionBase(BaseModel):
      net_amount: Optional[float] = Field(None, description="Valor líquido (lucro)")
      tithe_status: Optional[str] = Field(None, description="Status do dízimo: NONE, PENDING, PAID")
      gross_amount: Optional[float] = Field(None, description="Valor bruto da transação (antes das deduções)")
+     
+     # Anomaly Warning
+     warning: Optional[str] = Field(None, description="Avisos de anomalias (gastos excessivos)")
+
+     # Attachments (Firebase Storage URLs)
+     attachments: Optional[List[str]] = Field(default=[], description="URLs de comprovantes ou anexos")
 
      # --- BLOCO DE PROTEÇÃO XSS ---
      @field_validator('title', 'description')
@@ -85,13 +94,56 @@ class TransactionCreate(TransactionBase):
 
 
 
+class TransactionUpdate(BaseModel):
+     title: Optional[str] = Field(None, min_length=3, description="Título da transação")
+     description: Optional[str] = Field(None, description="Descrição detalhada")
+     amount: Optional[float] = Field(None, gt=0, description="Valor da transação")
+     date: Optional[datetime] = Field(None, description="Data da transação")
+     type: Optional[TransactionType] = Field(None, description="Tipo: Despesa ou Receita")
+     payment_method: Optional[PaymentMethod] = Field(None, description="Forma de pagamento")
+     status: Optional[TransactionStatus] = Field(None, description="Status da transação")
+     payment_date: Optional[datetime] = Field(None, description="Data efetiva do pagamento")
+     
+     category_id: Optional[str] = Field(None, description="ID da categoria")
+     account_id: Optional[str] = Field(None, description="ID da conta")
+     
+     recurrence_id: Optional[str] = None
+     installment_group_id: Optional[str] = None
+     installment_number: Optional[int] = None
+     total_installments: Optional[int] = None
+     is_auto_pay: Optional[bool] = None
+     
+     credit_card_id: Optional[str] = None
+     destination_account_id: Optional[str] = None
+
+     tithe_amount: Optional[float] = None
+     tithe_percentage: Optional[float] = None
+     offering_amount: Optional[float] = None
+     offering_percentage: Optional[float] = None
+     net_amount: Optional[float] = None
+     tithe_status: Optional[str] = None
+     gross_amount: Optional[float] = None
+     
+     warning: Optional[str] = None
+     attachments: Optional[List[str]] = None
+
+     # --- BLOCO DE PROTEÇÃO XSS ---
+     @field_validator('title', 'description')
+     @classmethod
+     def clean_description(cls, v):
+          if v is None: return v
+          return sanitize_html(v)
+     # -----------------------------
+
 # 4. Response: O que devolvemos para o Frontend?
 # (Inclui o ID, que é gerado pelo banco de dados, não pelo usuário)
 # Para ler, queremos o objeto Categoria completo (nome, cor, icone)
 class Transaction(TransactionBase):
      id: str
+     user_id: str
      category: Category
      account: Account
+     destination_account: Optional[Account] = None
 
 
      class Config:

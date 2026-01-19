@@ -1,0 +1,73 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // --- Helper Functions ---
+
+    // Check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Check if the user is accessing their own data
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Metadata Validations
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isPDF() {
+      return request.resource.contentType.matches('application/pdf');
+    }
+
+    // Size Validation (limit in MB)
+    function isBelowSize(maxMB) {
+      return request.resource.size < maxMB * 1024 * 1024;
+    }
+
+    // --- Rules ---
+
+    // 1. User Profile Images
+    // Path: users/{userId}/profile/{filename}
+    match /users/{userId}/profile/{fileName} {
+      allow read: if isOwner(userId); // Or allow public if needed: 'if true'
+      allow write: if isOwner(userId)
+                   && isImage()
+                   && isBelowSize(5); // Max 5MB
+    }
+
+    // 2. Transaction Attachments (Receipts, Invoices)
+    // Path: users/{userId}/attachments/{filename}
+    match /users/{userId}/attachments/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+                   && (isImage() || isPDF())
+                   && isBelowSize(10); // Max 10MB
+    }
+
+    // 3. Debt Contracts/Files
+    // Path: users/{userId}/debts/{filename}
+    match /users/{userId}/debts/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+                   && (isImage() || isPDF())
+                   && isBelowSize(15); // Max 15MB
+    }
+
+    // 4. Fallback/Generic User Storage
+    // Allows flexibility for other user files not strictly categorized yet
+    // Path: users/{userId}/...
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Deny access to root level files or non-user folders
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

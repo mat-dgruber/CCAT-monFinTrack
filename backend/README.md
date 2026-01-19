@@ -9,6 +9,7 @@ Este é o backend do projeto **monFinTrack**, uma aplicação para gerenciamento
 - [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup) - Integração com o Firebase Firestore.
 - [Pydantic](https://docs.pydantic.dev/) - Validação de dados.
 - [Uvicorn](https://www.uvicorn.org/) - Servidor ASGI.
+- [Google Generative AI](https://ai.google.dev/) - Inteligência Artificial Generativa.
 
 ## 📋 Pré-requisitos
 
@@ -75,10 +76,18 @@ Para que a aplicação se conecte ao Firestore, você precisa das credenciais de
 Para iniciar o servidor de desenvolvimento com *hot-reload*:
 
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 O servidor iniciará por padrão em `http://127.0.0.1:8000`.
+
+## 🧪 Testes
+
+Para executar os testes unitários:
+
+```bash
+python -m pytest
+```
 
 ## 📖 Documentação da API
 

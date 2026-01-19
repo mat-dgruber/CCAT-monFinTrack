@@ -1,6 +1,6 @@
 from google.cloud import firestore
 from app.core.database import get_db
-from app.schemas.transaction import TransactionCreate, Transaction, TransactionStatus
+from app.schemas.transaction import TransactionCreate, TransactionUpdate, Transaction, TransactionStatus, TransactionType
 from app.schemas.category import Category 
 from app.schemas.account import Account 
 from app.core.date_utils import get_month_range
@@ -12,23 +12,25 @@ from dateutil.relativedelta import relativedelta
 from app.services import category as category_service
 from app.services import account as account_service
 from app.services import recurrence as recurrence_service
+from app.services.analysis_service import analysis_service 
 from app.schemas.recurrence import RecurrenceCreate, RecurrencePeriodicity
 from fastapi import HTTPException
 
 COLLECTION_NAME = "transactions"
 
 # Função Auxiliar Blindada
-def _update_account_balance(db, account_id: str, amount: float, type: str, user_id: str, revert: bool = False):
+def _update_account_balance(db, account_id: str, amount: float, type: str, user_id: str, revert: bool = False, destination_account_id: str = None):
     if not account_id:
         return
 
+    # SOURCE ACCOUNT
     acc_ref = db.collection("accounts").document(account_id)
-    acc_doc = acc_ref.get()
+    acc_doc = acc_ref.get() 
     
-    # VERIFICAÇÃO DE SEGURANÇA: A conta existe E pertence ao usuário?
     if acc_doc.exists and acc_doc.to_dict().get('user_id') == user_id:
         current_balance = acc_doc.to_dict().get("balance", 0.0)
         
+        # LOGIC FOR SOURCE ACCOUNT
         if type == "expense":
             if revert:
                 current_balance += amount
@@ -39,27 +41,67 @@ def _update_account_balance(db, account_id: str, amount: float, type: str, user_
                 current_balance -= amount
             else:
                 current_balance += amount
-                
+        elif type == "transfer":
+            # Transfers always decrement source, unless reverting
+            if revert:
+                current_balance += amount
+            else:
+                current_balance -= amount
+
         acc_ref.update({"balance": current_balance})
     else:
         print(f"⚠️ Acesso negado ou conta inexistente para update de saldo. User: {user_id}, Acc: {account_id}")
 
+    # DESTINATION ACCOUNT (Only for Transfers with explicit destination)
+    if type == "transfer" and destination_account_id:
+        dest_ref = db.collection("accounts").document(destination_account_id)
+        dest_doc = dest_ref.get()
+        
+        if dest_doc.exists and dest_doc.to_dict().get('user_id') == user_id:
+            dest_balance = dest_doc.to_dict().get("balance", 0.0)
+            
+            if revert:
+                dest_balance -= amount # Reverting transfer: Remove from dest
+            else:
+                dest_balance += amount # Applying transfer: Add to dest
+                
+            dest_ref.update({"balance": dest_balance})
+        else:
+            print(f"⚠️ Acesso negado ou conta destino inexistente. User: {user_id}, DestAcc: {destination_account_id}")
+
 def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Transaction:
     db = get_db()
     
-    category = category_service.get_category(transaction_in.category_id)
+    category = category_service.get_category(transaction_in.category_id, user_id)
     # Aqui também seria ideal verificar se a categoria é do usuário
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
-    account = account_service.get_account(transaction_in.account_id)
+    account = account_service.get_account(transaction_in.account_id, user_id)
     
-    # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO
-    if transaction_in.status == TransactionStatus.PAID:
+    destination_account = None
+    if transaction_in.destination_account_id:
+         destination_account = account_service.get_account(transaction_in.destination_account_id, user_id)
+
+    # Atualiza Saldo (Passando user_id para segurança) - APENAS SE PAGO E NÃO FOR CARTÃO DE CRÉDITO
+    if transaction_in.status == TransactionStatus.PAID and not transaction_in.credit_card_id:
         _update_account_balance(
-            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
+            db, 
+            transaction_in.account_id, 
+            transaction_in.amount, 
+            transaction_in.type, 
+            user_id, 
+            revert=False,
+            destination_account_id=transaction_in.destination_account_id 
         )
     
+    # --- ANOMALY DETECTION (PRO) ---
+    if transaction_in.type == TransactionType.EXPENSE and not transaction_in.warning:
+        warning = analysis_service.analyze_transaction(user_id, transaction_in.amount, transaction_in.category_id)
+        if warning:
+            transaction_in.warning = warning
+    # -------------------------------
+
     data = transaction_in.model_dump()
     data['user_id'] = user_id # MARCA DONO
     
@@ -69,6 +111,7 @@ def create_transaction(transaction_in: TransactionCreate, user_id: str) -> Trans
         id=transaction_ref.id, 
         category=category, 
         account=account, 
+        destination_account=destination_account,
         **data
     )
 
@@ -98,38 +141,18 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
             t_data['installment_number'] = i + 1
             t_data['date'] = due_date
             
-            # Divide amount? No, usually user enters the installment value or total value?
-            # In this app context (monFinTrack), the form seems to send the 'amount' as the INSTALLMENT value (based on UI context usually)
-            # OR checking the form: "Valor" input. Usually in these apps it's the value of the transaction.
-            # If the user enters 1000 and 10x, is it 10x 100 or 10x 1000?
-            # Let's assume the input IS the installment value (standard in many personal finance apps, or user calculates).
-            # Looking at the code: `amount=transaction_in.amount` was passed to Recurrence. Recurrence used that amount. 
-            # So the input amount IS the installment amount.
-            
             # Status Logic
-            # 1st installment: Respeita o que veio do form (ex: Pago)
-            # Others: Always PENDING
             if i == 0:
-                 # Respeita o status que veio (pode ser PAID se usuario marcou "Pago")
                  pass
             else:
                  t_data['status'] = TransactionStatus.PENDING
                  t_data['is_paid'] = False
                  t_data['payment_date'] = None
-                 # Reset Tithe/Offering status for future installments?
-                 # Probably yes, they haven't happened yet.
                  if 'tithe_status' in t_data:
                       t_data['tithe_status'] = 'PENDING' if t_data.get('tithe_status') != 'NONE' else 'NONE'
             
-            # Description: "Title (1/10)"
             original_title = transaction_in.title
             t_data['description'] = f"{original_title} ({i+1}/{transaction_in.total_installments})"
-            # Also keep title clean? Or update title?
-            # Transaction schema has title. Let's update title.
-            # t_data['title'] = original_title # Keep main title clean? 
-            # The 'description' field is often used for details.
-            # But in the previous recurrence logic, description was set to "Name (MM/YYYY)".
-            # Let's append (x/y) to title to make it clear in lists that show title.
             t_data['title'] = f"{original_title} ({i+1}/{transaction_in.total_installments})"
 
             t_create = TransactionCreate(**t_data)
@@ -157,9 +180,6 @@ def create_unified_transaction(transaction_in: TransactionCreate, user_id: str) 
             t_data = transaction_in.model_dump()
             t_data['recurrence_id'] = recurrence.id
             
-            # Lógica de Auto-Pay para a primeira transação
-            # Se auto-pay estiver ativo, e a data for futura, deve nascer PENDENTE.
-            # Se for hoje ou passado, respeita o status do form (provavelmente PAGO se o user marcou).
             if transaction_in.recurrence_auto_pay:
                 today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
                 t_date = transaction_in.date
@@ -190,23 +210,62 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
     if not start_date and not end_date and month and year:
         start_date, end_date = get_month_range(month, year)
 
+    # OTIMIZAÇÃO: Filtro no Banco de Dados (Requer Índice Composto user_id + date)
+    if start_date and end_date:
+        # Garante UTC/Aware para consulta
+        if start_date.tzinfo is None:
+             # Assume start of day in UTC if naive, or keep naive if DB is naive?
+             # Standardizing to UTC best practice if DB stores Timestamps.
+             # If logic above used get_month_range, it returns aware (UTC).
+             # Let's ensure compatibility.
+             pass
+        
+        # Firestore pode reclamar de offset-naive vs access-aware.
+        # Mas .where aceita datetime python.
+        
+        # IMPORTANTE: Se o banco guarda string (ISO), a comparação funciona lexicograficamente.
+        # Se guarda Timestamp, funciona por data.
+        # O código antigo fazia parse de string 'Z' -> isoformat. Isso sugere string.
+        # Vamos tentar passar o objeto datetime. O driver deve tratar ou se for string ISO, o python datetime str() tb funciona.
+        # Mas para garantir, se for string no banco, precisamos passar string.
+        # create_transaction salva `data['date'] = due_date` (datetime).
+        # Firestore client converte datetime -> Timestamp.
+        # Mas `_update_account_balance` lê `.to_dict()`.
+        # Vamos assumir Timestamp/Datetime nativo do Firestore.
+        
+        query = query.where("date", ">=", start_date).where("date", "<=", end_date)
+        
+        # OTIMIZAÇÃO EXTRA: Ordenação e Limite no DB
+        # Isso requer índice: user_id ASC, date DESC
+        query = query.order_by("date", direction=firestore.Query.DESCENDING)
+        
+        if limit:
+             query = query.limit(limit)
+
+    
+    try:
+        all_transactions = query.stream()
+    except Exception as e:
+        print(f"Erro ao consultar DB (Provavelmente falta índice): {e}")
+        # Fallback: Busca tudo e filtra na memória (Comportamento antigo, lento mas funcional)
+        query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+        all_transactions = query.stream()
+
     for t in all_transactions:
         data = t.to_dict()
         
-        # Date Filtering
+        # Double Check Date (Caso o fallback tenha sido ativado ou para garantir ranges precisos)
         if start_date and end_date:
             t_date = data.get("date")
-            
             if t_date:
-                # If it's a string, try to parse
-                if isinstance(t_date, str):
-                    try:
+                 if isinstance(t_date, str):
+                     try:
                         t_date = datetime.fromisoformat(t_date.replace('Z', '+00:00'))
-                    except:
-                        pass 
-                
-                if isinstance(t_date, datetime):
-                     # Make naive for comparison if needed
+                     except:
+                        continue
+                 
+                 # Normalize for comparison
+                 if isinstance(t_date, datetime):
                      if t_date.tzinfo and not start_date.tzinfo:
                           t_date = t_date.replace(tzinfo=None)
                      elif not t_date.tzinfo and start_date.tzinfo:
@@ -215,25 +274,32 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
                      
                      if not (start_date <= t_date <= end_date):
                           continue
-                else:
-                     continue
-            else:
-                 continue
 
         cat_id = data.get("category_id")
-        category = category_service.get_category(cat_id)
+        category = category_service.get_category(cat_id, user_id)
         if not category:
-             category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+             category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense", user_id=user_id)
 
         acc_id = data.get("account_id")
-        account = account_service.get_account(acc_id)
+        account = account_service.get_account(acc_id, user_id)
         if not account:
-            account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="")
+            account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="", user_id=user_id)
+
+        # Helper to get destination account if exists
+        dest_acc_id = data.get("destination_account_id")
+        destination_account = None
+        if dest_acc_id:
+             destination_account = account_service.get_account(dest_acc_id, user_id)
+
+        # Sanitize boolean fields for Pydantic
+        if data.get('is_auto_pay') is None:
+            data['is_auto_pay'] = False
 
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
-            account=account, 
+            account=account,
+            destination_account=destination_account, 
             **data
         ))
         
@@ -245,44 +311,92 @@ def list_transactions(user_id: str, month: Optional[int] = None, year: Optional[
         
     return transactions
 
-def update_transaction(transaction_id: str, transaction_in: TransactionCreate, user_id: str) -> Transaction:
+def update_transaction(transaction_id: str, transaction_in: TransactionUpdate, user_id: str) -> Transaction:
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
+    doc = doc_ref.get() 
     
     # Verifica Propriedade
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
         raise HTTPException(status_code=404, detail="Transaction not found")
         
     old_data = doc.to_dict()
+    # Serialize Enums/Datetimes to JSON-compatible format for Firestore
+    update_data = transaction_in.model_dump(exclude_unset=True, mode='json')
+    
+    # Merge for logic check (simulating what the new state will be)
+    new_full_data = {**old_data, **update_data}
     
     old_status = old_data.get("status", TransactionStatus.PAID)
+    new_status = new_full_data.get("status", TransactionStatus.PAID)
     
-    # Estorna valor antigo APENAS SE ESTAVA PAGO
-    if old_status == TransactionStatus.PAID:
-        _update_account_balance(
-            db, old_data.get("account_id"), old_data.get("amount", 0), old_data.get("type"), user_id, revert=True
-        )
+    # --- BALANCE UPDATE LOGIC ---
+    fields_affecting_balance = ['amount', 'account_id', 'status', 'type', 'credit_card_id']
+    changed = any(old_data.get(f) != new_full_data.get(f) for f in fields_affecting_balance)
+    
+    if changed:
+        # 1. Revert Old (If it impacted balance)
+        if old_status == TransactionStatus.PAID and not old_data.get("credit_card_id"):
+             _update_account_balance(
+                db, 
+                old_data.get("account_id"), 
+                old_data.get("amount", 0), 
+                old_data.get("type"), 
+                user_id, 
+                revert=True,
+                destination_account_id=old_data.get("destination_account_id")
+            )
+            
+        # 2. Apply New (If it impacts balance)
+        if new_status == TransactionStatus.PAID and not new_full_data.get("credit_card_id"):
+             _update_account_balance(
+                db, 
+                new_full_data.get("account_id"), 
+                new_full_data.get("amount", 0), 
+                new_full_data.get("type"), 
+                user_id, 
+                revert=False,
+                destination_account_id=new_full_data.get("destination_account_id")
+            )
+    
+    # Apply Update (Using JSON compatible data)
+    if update_data:
+        doc_ref.update(update_data)
+    
+    # Construct Response
+    category_id = new_full_data.get("category_id")
+    account_id = new_full_data.get("account_id")
+    
+    category = category_service.get_category(category_id, user_id)
+    if not category:
+         category = Category(id="deleted", name="Deleted", icon="pi pi-question", color="#ccc", is_custom=False, type="expense", user_id=user_id)
 
-    # Aplica novo valor APENAS SE NOVO STATUS É PAGO
-    if transaction_in.status == TransactionStatus.PAID:
-        _update_account_balance(
-            db, transaction_in.account_id, transaction_in.amount, transaction_in.type, user_id, revert=False
-        )
+    account = account_service.get_account(account_id, user_id)
+    if not account:
+        account = Account(id="deleted", name="Deleted", type="checking", balance=0, icon="", color="", user_id=user_id)
     
-    data = transaction_in.model_dump()
-    data['user_id'] = user_id
-    doc_ref.set(data)
-    
-    category = category_service.get_category(transaction_in.category_id)
-    account = account_service.get_account(transaction_in.account_id)
-    
-    return Transaction(id=transaction_id, category=category, account=account, **data)
+    dest_acc_id = new_full_data.get("destination_account_id")
+    destination_account = None
+    if dest_acc_id:
+         destination_account = account_service.get_account(dest_acc_id, user_id)
+
+    # Sanitize boolean fields for Pydantic (TransactionBase expects bool, not None)
+    if new_full_data.get('is_auto_pay') is None:
+        new_full_data['is_auto_pay'] = False
+
+    # Ensure ID is present
+    return Transaction(
+        id=transaction_id, 
+        category=category, 
+        account=account, 
+        destination_account=destination_account, 
+        **new_full_data
+    )
 
 def delete_transaction(transaction_id: str, user_id: str):
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
+    doc = doc_ref.get() 
     
     # Verifica Propriedade
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
@@ -308,9 +422,18 @@ def delete_transaction(transaction_id: str, user_id: str):
             t_account_id = t_data.get("account_id")
             t_status = t_data.get("status", TransactionStatus.PAID)
             
-            # Estorna Saldo APENAS SE ESTAVA PAGO
-            if t_account_id and t_status == TransactionStatus.PAID:
-                _update_account_balance(db, t_account_id, t_amount, t_type, user_id, revert=True)
+            # Estorna Saldo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
+            t_credit_card_id = t_data.get("credit_card_id")
+            if t_account_id and t_status == TransactionStatus.PAID and not t_credit_card_id:
+                _update_account_balance(
+                     db, 
+                     t_account_id, 
+                     t_amount, 
+                     t_type, 
+                     user_id, 
+                     revert=True,
+                     destination_account_id=t_data.get("destination_account_id")
+                )
             
             db.collection(COLLECTION_NAME).document(t_id).delete()
             deleted_count += 1
@@ -326,7 +449,15 @@ def delete_transaction(transaction_id: str, user_id: str):
 
     # Estorna Saldo APENAS SE ESTAVA PAGO E NÃO ERA CARTÃO
     if account_id and status == TransactionStatus.PAID and not credit_card_id:
-        _update_account_balance(db, account_id, amount, t_type, user_id, revert=True)
+        _update_account_balance(
+             db, 
+             account_id, 
+             amount, 
+             t_type, 
+             user_id, 
+             revert=True,
+             destination_account_id=data.get("destination_account_id")
+        )
 
     doc_ref.delete()
     
@@ -356,23 +487,34 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
         data = t.to_dict()
         
         cat_id = data.get("category_id")
-        category = category_service.get_category(cat_id)
+        category = category_service.get_category(cat_id, user_id)
         if not category:
-             category = Category(id="deleted", name="?", icon="pi pi-question", color="#ccc", is_custom=False, type="expense")
+             category = Category(id="deleted", name="?", icon="pi pi-question", color="#ccc", is_custom=False, type="expense", user_id=user_id)
 
         acc_id = data.get("account_id")
-        account = account_service.get_account(acc_id)
+        account = account_service.get_account(acc_id, user_id)
         if not account:
-            account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="")
+            account = Account(id="deleted", name="?", type="checking", balance=0, icon="", color="", user_id=user_id)
 
         if 'title' not in data and 'description' in data:
              data['title'] = data.pop('description')
              data['description'] = None
 
+        # Helper to get destination account if exists
+        dest_acc_id = data.get("destination_account_id")
+        destination_account = None
+        if dest_acc_id:
+             destination_account = account_service.get_account(dest_acc_id, user_id)
+
+        # Sanitize boolean fields for Pydantic
+        if data.get('is_auto_pay') is None:
+            data['is_auto_pay'] = False
+
         transactions.append(Transaction(
             id=t.id, 
             category=category, 
             account=account, 
+            destination_account=destination_account,
             **data
         ))
         
@@ -437,4 +579,3 @@ def get_first_transaction_date(user_id: str) -> Optional[datetime]:
         return first_date
         
     return None
-

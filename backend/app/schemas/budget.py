@@ -10,6 +10,7 @@ class BudgetCreate(BudgetBase):
 
 class Budget(BudgetBase):
     id: str
+    user_id: str
     category_id: str
     # Opcional: Podemos incluir o objeto categoria completo se quisermos mostrar o ícone
     category: Category | None = None
