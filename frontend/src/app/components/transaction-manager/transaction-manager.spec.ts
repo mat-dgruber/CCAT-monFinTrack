@@ -9,6 +9,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { Transaction } from '../../models/transaction.model';
 import { Table } from 'primeng/table';
+import { ActivatedRoute } from '@angular/router';
 
 // Register locale data
 import { registerLocaleData } from '@angular/common';
@@ -24,49 +25,92 @@ describe('TransactionManager', () => {
     {
       id: '1',
       description: 'Compra Supermercado',
-      amount: 150.00,
+      amount: 150.0,
       date: '2023-10-27',
       type: 'expense',
       payment_method: 'credit_card',
-      category: { id: 'c1', name: 'Alimentação', icon: 'pi pi-apple', color: 'red', type: 'expense', is_custom: false },
-      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' }
+      category: {
+        id: 'c1',
+        name: 'Alimentação',
+        icon: 'pi pi-apple',
+        color: 'red',
+        type: 'expense',
+        is_custom: false,
+      },
+      account: {
+        id: 'a1',
+        name: 'Conta Corrente',
+        type: 'checking',
+        balance: 1000,
+        color: 'blue',
+      },
     },
     {
       id: '2',
       description: 'Salário',
-      amount: 5000.00,
+      amount: 5000.0,
       date: '2023-10-05',
       type: 'income',
       payment_method: 'bank_transfer',
-      category: { id: 'c2', name: 'Salário', icon: 'pi pi-money-bill', color: 'green', type: 'income', is_custom: false },
-      account: { id: 'a1', name: 'Conta Corrente', type: 'checking', balance: 1000, color: 'blue' }
-    }
+      category: {
+        id: 'c2',
+        name: 'Salário',
+        icon: 'pi pi-money-bill',
+        color: 'green',
+        type: 'income',
+        is_custom: false,
+      },
+      account: {
+        id: 'a1',
+        name: 'Conta Corrente',
+        type: 'checking',
+        balance: 1000,
+        color: 'blue',
+      },
+    },
   ];
 
   beforeEach(async () => {
-    const transactionServiceSpy = jasmine.createSpyObj('TransactionService', ['getTransactions', 'deleteTransaction', 'updateTransaction']);
-    const categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getCategories']);
-    const accountServiceSpy = jasmine.createSpyObj('AccountService', ['getAccounts']);
+    const transactionServiceSpy = jasmine.createSpyObj('TransactionService', [
+      'getTransactions',
+      'deleteTransaction',
+      'updateTransaction',
+    ]);
+    const categoryServiceSpy = jasmine.createSpyObj('CategoryService', [
+      'getCategories',
+    ]);
+    const accountServiceSpy = jasmine.createSpyObj('AccountService', [
+      'getAccounts',
+    ]);
 
     transactionServiceSpy.getTransactions.and.returnValue(of(mockTransactions));
     categoryServiceSpy.getCategories.and.returnValue(of([]));
     accountServiceSpy.getAccounts.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
-      imports: [TransactionManager, HttpClientTestingModule, NoopAnimationsModule],
+      imports: [
+        TransactionManager,
+        HttpClientTestingModule,
+        NoopAnimationsModule,
+      ],
       providers: [
         { provide: TransactionService, useValue: transactionServiceSpy },
         { provide: CategoryService, useValue: categoryServiceSpy },
         { provide: AccountService, useValue: accountServiceSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParams: {} }, queryParams: of({}) },
+        },
         ConfirmationService,
-        MessageService
-      ]
-    })
-      .compileComponents();
+        MessageService,
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TransactionManager);
     component = fixture.componentInstance;
-    transactionService = TestBed.inject(TransactionService) as jasmine.SpyObj<TransactionService>;
+    transactionService = TestBed.inject(
+      TransactionService,
+    ) as jasmine.SpyObj<TransactionService>;
     fixture.detectChanges();
   });
 
@@ -86,7 +130,13 @@ describe('TransactionManager', () => {
 
     component.onDateRangeChange();
 
-    expect(transactionService.getTransactions).toHaveBeenCalledWith(undefined, undefined, undefined, start.toISOString(), end.toISOString());
+    expect(transactionService.getTransactions).toHaveBeenCalledWith(
+      undefined,
+      undefined,
+      undefined,
+      start.toISOString(),
+      end.toISOString(),
+    );
   });
 
   it('should clear filters', () => {
@@ -102,7 +152,9 @@ describe('TransactionManager', () => {
   });
 
   it('should handle error on load', () => {
-    transactionService.getTransactions.and.returnValue(throwError(() => new Error('Error')));
+    transactionService.getTransactions.and.returnValue(
+      throwError(() => new Error('Error')),
+    );
     component.loadData();
     expect(component.loading()).toBeFalse();
     // Verify message service call if possible, but it requires spying on MessageService in beforeEach
@@ -113,7 +165,7 @@ describe('TransactionManager', () => {
     const t = mockTransactions[0];
 
     // Mock ConfirmationService
-    // Since we provided ConfirmationService, we can modify how it works? 
+    // Since we provided ConfirmationService, we can modify how it works?
     // Actually we injected the real service? No, we provided it in providers array, so it is the real one or a mock if we provided one.
     // In TestBed specific providers usually override.
     // Ideally we spy on confirmationService.confirm
