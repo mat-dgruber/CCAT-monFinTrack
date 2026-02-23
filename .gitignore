@@ -67,3 +67,5 @@ llms.txt
 # Docker
 .docker/
 
+/.agent
+*.txt
