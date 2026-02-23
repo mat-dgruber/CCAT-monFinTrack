@@ -23,6 +23,9 @@ def create_recurrence(recurrence_in: RecurrenceCreate, user_id: str) -> Recurren
 
     if 'skipped_dates' in data and data['skipped_dates'] is not None:
         data['skipped_dates'] = [d.isoformat() if hasattr(d, 'isoformat') else d for d in data['skipped_dates']]
+
+    if 'start_date' in data and data['start_date'] is not None:
+         data['start_date'] = data['start_date'].isoformat() if hasattr(data['start_date'], 'isoformat') else data['start_date']
         
     update_time, recurrence_ref = db.collection(COLLECTION_NAME).add(data)
     
@@ -89,6 +92,9 @@ def update_recurrence(recurrence_id: str, recurrence_in: RecurrenceUpdate, user_
         if 'periodicity' in update_data and update_data['periodicity']:
             update_data['periodicity'] = update_data['periodicity'].value
             
+        if 'start_date' in update_data and update_data['start_date'] is not None:
+             update_data['start_date'] = update_data['start_date'].isoformat() if hasattr(update_data['start_date'], 'isoformat') else update_data['start_date']
+
         new_data.update(update_data)
         
         # Set new creation date and ensure active
@@ -109,6 +115,9 @@ def update_recurrence(recurrence_id: str, recurrence_in: RecurrenceUpdate, user_
     if 'skipped_dates' in data and data['skipped_dates'] is not None:
         # Convert date objects to strings for Firestore
         data['skipped_dates'] = [d.isoformat() if hasattr(d, 'isoformat') else d for d in data['skipped_dates']]
+    
+    if 'start_date' in data and data['start_date'] is not None:
+         data['start_date'] = data['start_date'].isoformat() if hasattr(data['start_date'], 'isoformat') else data['start_date']
         
     doc_ref.update(data)
     

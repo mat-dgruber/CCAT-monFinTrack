@@ -120,6 +120,7 @@ def get_dashboard_data(
     if payment_methods:
         current_transactions = [t for t in current_transactions if t.get("payment_method") in payment_methods]
         
+    # ... (Keep existing code above) ...
     income = 0.0
     expense = 0.0
     category_map = {}
@@ -137,18 +138,44 @@ def get_dashboard_data(
             income += amount
         elif t_type == "expense":
             expense += amount
-            if cat_id in category_map:
-                category_map[cat_id] += amount
+            # Use 'uncategorized' key for None or missing IDs effectively handled later
+            key = cat_id if cat_id else "unknown"
+            if key in category_map:
+                category_map[key] += amount
             else:
-                category_map[cat_id] = amount
+                category_map[key] = amount
+
+    # --- Pre-fetch categories to optimize and handle orphans ---
+    # Fetch all user categories (including subcategories flattened)
+    all_user_cats = category_service.list_categories(user_id)
+    
+    flat_cat_map = {}
+    def flatten_cats(cats):
+        for c in cats:
+            flat_cat_map[c.id] = c
+            if c.subcategories:
+                flatten_cats(c.subcategories)
+    
+    flatten_cats(all_user_cats)
 
     categories_list = []
+    
     for cat_id, total in category_map.items():
-        cat_obj = category_service.get_category(cat_id)
+        if not total: continue
+
+        cat_obj = flat_cat_map.get(cat_id)
+        
         if cat_obj:
             categories_list.append(CategoryTotal(
                 category_name=cat_obj.name,
                 color=cat_obj.color,
+                total=total
+            ))
+        else:
+            # Handle Deleted or Unknown categories
+            categories_list.append(CategoryTotal(
+                category_name="Sem Categoria" if cat_id == "unknown" else "Categoria Excluída",
+                color="#94A3B8", # Slate 400 (Gray)
                 total=total
             ))
             

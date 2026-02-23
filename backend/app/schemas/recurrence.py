@@ -23,6 +23,7 @@ class RecurrenceBase(BaseModel):
     due_month: Optional[int] = Field(None, ge=1, le=12, description="Mês de vencimento para recorrências anuais")
     active: bool = Field(True, description="Se a recorrência está ativa")
     skipped_dates: List[date] = Field(default_factory=list, description="Lista de datas (vencimentos) puladas/excluídas")
+    start_date: Optional[date] = Field(None, description="Data de início da recorrência (para simulações retroativas)")
     
     # Novo campo para suportar Transferência (Pagamento de Fatura)
     type: TransactionType = Field(default=TransactionType.EXPENSE, description="Tipo da transação gerada")
@@ -49,6 +50,7 @@ class RecurrenceUpdate(BaseModel):
     last_processed_at: Optional[datetime] = None
     type: Optional[TransactionType] = None
     skipped_dates: Optional[List[date]] = None
+    start_date: Optional[date] = None
 
 class Recurrence(RecurrenceBase):
     id: str

@@ -21,10 +21,19 @@ class StripeService:
             "premium_yearly": os.getenv("STRIPE_PRICE_PREMIUM_YEARLY"),
         }
         self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+        
+        # Verify keys
+        missing_keys = [k for k, v in self.prices.items() if not v]
+        if missing_keys:
+             logger.warning(f"⚠️  Missing Stripe Price IDs for: {missing_keys}. Checkout will fail for these plans.")
+             
+        if not stripe.api_key:
+             logger.critical("❌ STRIPE_SECRET_KEY is not set!")
 
     def _get_price_id(self, plan: str):
         price_id = self.prices.get(plan)
         if not price_id:
+            logger.error(f"❌ Plan '{plan}' not found in configuration. Available: {list(self.prices.keys())}")
             raise HTTPException(status_code=400, detail=f"Invalid plan or missing configuration for: {plan}")
         return price_id
 
