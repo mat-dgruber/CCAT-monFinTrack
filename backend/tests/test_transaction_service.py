@@ -40,8 +40,8 @@ def test_create_transaction_simple(mock_db, mock_external_services):
     )
     
     # Mocks
-    cat_mock.get_category.return_value = Category(id="cat1", name="Food", type="expense", icon="", color="", is_custom=False)
-    acc_mock.get_account.return_value = Account(id="acc1", name="Bank", type="checking", balance=100)
+    cat_mock.get_category.return_value = Category(id="cat1", name="Food", type="expense", icon="", color="", is_custom=False, user_id=user_id)
+    acc_mock.get_account.return_value = Account(id="acc1", name="Bank", type="checking", balance=100, user_id=user_id)
     
     mock_doc_ref = MagicMock()
     mock_doc_ref.id = "trans1"
@@ -54,7 +54,15 @@ def test_create_transaction_simple(mock_db, mock_external_services):
     assert result.id == "trans1"
     assert result.amount == 50.0
     # Create should trigger balance update if PAID
-    balance_mock.assert_called_once()
+    balance_mock.assert_called_once_with(
+        mock_db, 
+        t_in.account_id, 
+        t_in.amount, 
+        t_in.type.value, 
+        user_id, 
+        revert=False,
+        destination_account_id=t_in.destination_account_id
+    )
     mock_db.collection.return_value.add.assert_called_once()
 
 def test_create_unified_transaction_installments(mock_db, mock_external_services):
@@ -76,8 +84,8 @@ def test_create_unified_transaction_installments(mock_db, mock_external_services
     )
     
     # Mocks
-    cat_mock.get_category.return_value = Category(id="cat1", name="Tech", type="expense", icon="", color="", is_custom=False)
-    acc_mock.get_account.return_value = Account(id="acc1", name="Bank", type="checking", balance=1000)
+    cat_mock.get_category.return_value = Category(id="cat1", name="Tech", type="expense", icon="", color="", is_custom=False, user_id=user_id)
+    acc_mock.get_account.return_value = Account(id="acc1", name="Bank", type="checking", balance=1000, user_id=user_id)
     
     # Mock db add - returns distinct IDs
     def add_side_effect(data):
@@ -128,8 +136,8 @@ def test_create_unified_transaction_recurrence(mock_db, mock_external_services):
     )
     
     rec_mock.create_recurrence.return_value = MagicMock(id="rec1")
-    cat_mock.get_category.return_value = Category(id="cat1", name="Sub", type="expense", icon="", color="", is_custom=False)
-    acc_mock.get_account.return_value = Account(id="acc1", name="Bank", type="checking", balance=1000)
+    cat_mock.get_category.return_value = Category(id="cat1", name="Sub", type="expense", icon="", color="", is_custom=False, user_id=user_id)
+    acc_mock.get_account.return_value = Account(id="acc1", name="Bank", type="checking", balance=1000, user_id=user_id)
     
     mock_db.collection.return_value.add.return_value = (None, MagicMock(id="trans1"))
 
@@ -163,5 +171,13 @@ def test_delete_transaction_simple(mock_db, mock_external_services):
     # Verify
     mock_db.collection.return_value.document.return_value.delete.assert_called_once()
     # Should revert balance because it was PAID expense
-    balance_mock.assert_called_once_with(mock_db, "acc1", 50.0, "expense", user_id, revert=True)
+    balance_mock.assert_called_once_with(
+        mock_db, 
+        "acc1", 
+        50.0, 
+        "expense", 
+        user_id, 
+        revert=True,
+        destination_account_id=None
+    )
 
