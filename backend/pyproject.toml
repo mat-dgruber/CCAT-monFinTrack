@@ -23,4 +23,6 @@ dependencies = [
     "ofxparse",
     "fastapi-mail>=1.6.1",
     "stripe>=14.1.0",
+    "pytest>=9.0.2",
+    "pytest-mock>=3.15.1",
 ]
