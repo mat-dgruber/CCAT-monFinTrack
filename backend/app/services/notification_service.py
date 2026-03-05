@@ -1,6 +1,10 @@
-
-from firebase_admin import messaging
 from typing import List
+
+from app.core.logger import get_logger
+from firebase_admin import messaging
+
+logger = get_logger(__name__)
+
 
 class NotificationService:
     def send_to_token(self, token: str, title: str, body: str, data: dict = None):
@@ -19,10 +23,12 @@ class NotificationService:
             response = messaging.send(message)
             return response
         except Exception as e:
-            print(f"❌ Erro ao enviar push para token {token}: {e}")
+            logger.error("Erro ao enviar push para token %s: %s", token, e)
             return None
 
-    def send_multicast(self, tokens: List[str], title: str, body: str, data: dict = None):
+    def send_multicast(
+        self, tokens: List[str], title: str, body: str, data: dict = None
+    ):
         """
         Envia notificação para múltiplos dispositivos.
         """
@@ -41,11 +47,12 @@ class NotificationService:
             response = messaging.send_multicast(message)
             # Response tem success_count, failure_count, etc.
             if response.failure_count > 0:
-                 print(f"⚠️ {response.failure_count} falhas ao enviar multicast.")
-            
+                logger.warning("%d falhas ao enviar multicast.", response.failure_count)
+
             return response
         except Exception as e:
-            print(f"❌ Erro ao enviar push multicast: {e}")
+            logger.error("Erro ao enviar push multicast: %s", e)
             return None
+
 
 notification_service = NotificationService()

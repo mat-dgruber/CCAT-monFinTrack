@@ -1,8 +1,12 @@
-
 import os
 from pathlib import Path
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from jinja2 import Environment, select_autoescape, FileSystemLoader
+
+from app.core.logger import get_logger
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+logger = get_logger(__name__)
+
 
 # Configurações do Email
 class EmailService:
@@ -25,31 +29,36 @@ class EmailService:
                 MAIL_STARTTLS=self.mail_starttls,
                 MAIL_SSL_TLS=self.mail_ssl_tls,
                 USE_CREDENTIALS=True,
-                VALIDATE_CERTS=True
+                VALIDATE_CERTS=True,
             )
             self.enabled = True
         except Exception as e:
-            print(f"⚠️ EmailService disabled due to missing config: {e}")
+            logger.warning("EmailService disabled due to missing config: %s", e)
             self.conf = None
             self.enabled = False
-        
+
         # Configuração do Template
         template_dir = Path(__file__).parent.parent / "templates"
         self.env = Environment(
             loader=FileSystemLoader(str(template_dir)),
-            autoescape=select_autoescape(['html', 'xml'])
+            autoescape=select_autoescape(["html", "xml"]),
         )
 
-    async def send_email(self, subject: str, recipients: list[str], body: str, subtype: MessageType = MessageType.html):
+    async def send_email(
+        self,
+        subject: str,
+        recipients: list[str],
+        body: str,
+        subtype: MessageType = MessageType.html,
+    ):
         if not self.enabled or not self.conf:
-            print(f"⚠️ Email skipped (service disabled): {subject} -> {recipients}")
+            logger.info(
+                "Email skipped (service disabled): %s -> %s", subject, recipients
+            )
             return
 
         message = MessageSchema(
-            subject=subject,
-            recipients=recipients,
-            body=body,
-            subtype=subtype
+            subject=subject, recipients=recipients, body=body, subtype=subtype
         )
 
         fm = FastMail(self.conf)
@@ -59,20 +68,26 @@ class EmailService:
         template = self.env.get_template(template_name)
         return template.render(context)
 
-    async def send_weekly_report(self, recipient_email: str, recipient_name: str, report_data: dict):
+    async def send_weekly_report(
+        self, recipient_email: str, recipient_name: str, report_data: dict
+    ):
         """
         Envia o relatório semanal para o usuário.
         """
-        html_content = self.render_template("weekly_report.html", {
-            "name": recipient_name,
-            "data": report_data,
-            "logo_url": "https://ccat-monfintrack.web.app/assets/images/logo.png" # Substitua pela URL real
-        })
-        
+        html_content = self.render_template(
+            "weekly_report.html",
+            {
+                "name": recipient_name,
+                "data": report_data,
+                "logo_url": "https://ccat-monfintrack.web.app/assets/images/logo.png",  # Substitua pela URL real
+            },
+        )
+
         await self.send_email(
             subject="📊 Seu Resumo Financeiro Semanal - MonFinTrack",
             recipients=[recipient_email],
-            body=html_content
+            body=html_content,
         )
+
 
 email_service = EmailService()

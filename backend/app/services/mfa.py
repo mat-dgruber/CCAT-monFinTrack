@@ -1,10 +1,15 @@
+import base64
+import io
+import os
+
 import pyotp
 import qrcode
-import io
-import base64
-import os
-from cryptography.fernet import Fernet
 from app.core.database import get_db
+from app.core.logger import get_logger
+from cryptography.fernet import Fernet
+
+logger = get_logger(__name__)
+
 
 class MFAService:
     def __init__(self):
@@ -12,26 +17,28 @@ class MFAService:
         # Ideally, we should enforce this env var.
         key = os.getenv("MFA_ENCRYPTION_KEY")
         if not key:
-             # Warning: using a generated key that won't persist across restarts if not set! 
-             # For a real remediation, we assume the user will set this.
-             # Generating one for temporary usage if missing, but this makes stored secrets unrecoverable after restart.
-             # Better to raise error or use a hardcoded dev key if safe-to-autorun logic warrants it.
-             # Given the prompt, I'll attempt to load or log a warning.
-             # Let's use a fixed dummy key for dev/local so it works without extra setup, BUT warn.
-             # Fernet key must be 32 url-safe base64-encoded bytes.
-             key = Fernet.generate_key() 
-             print("WARNING: MFA_ENCRYPTION_KEY not set. Using temporary key. Secrets will be lost on restart.")
-        
+            # Warning: using a generated key that won't persist across restarts if not set!
+            # For a real remediation, we assume the user will set this.
+            # Generating one for temporary usage if missing, but this makes stored secrets unrecoverable after restart.
+            # Better to raise error or use a hardcoded dev key if safe-to-autorun logic warrants it.
+            # Given the prompt, I'll attempt to load or log a warning.
+            # Let's use a fixed dummy key for dev/local so it works without extra setup, BUT warn.
+            # Fernet key must be 32 url-safe base64-encoded bytes.
+            key = Fernet.generate_key()
+            logger.warning(
+                "MFA_ENCRYPTION_KEY not set. Using temporary key. Secrets will be lost on restart."
+            )
+
         try:
             self.cipher = Fernet(key)
         except Exception as e:
             # Fallback if key format is invalid
-            print(f"Invalid MFA_ENCRYPTION_KEY: {e}. Generating new one.")
+            logger.error("Invalid MFA_ENCRYPTION_KEY: %s. Generating new one.", e)
             self.cipher = Fernet(Fernet.generate_key())
 
     def _get_collection(self):
         db = get_db()
-        return db.collection('users')
+        return db.collection("users")
 
     def generate_secret(self) -> str:
         """Gera um segredo aleatório base32."""
@@ -51,12 +58,12 @@ class MFAService:
         qr.make(fit=True)
 
         img = qr.make_image(fill_color="black", back_color="white")
-        
+
         # Converter para base64
         buffered = io.BytesIO()
         img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
-        
+
         return f"data:image/png;base64,{img_str}"
 
     def verify_token(self, secret: str, token: str) -> bool:
@@ -72,9 +79,9 @@ class MFAService:
         """Decrypts the MFA secret."""
         try:
             return self.cipher.decrypt(encrypted_secret.encode()).decode()
-        except:
-             # Fallback for plain text secrets (legacy support during migration)
-             return encrypted_secret
+        except Exception:
+            # Fallback for plain text secrets (legacy support during migration)
+            return encrypted_secret
 
     def enable_mfa(self, user_id: str, secret: str, token: str) -> bool:
         """
@@ -82,19 +89,17 @@ class MFAService:
         """
         if self.verify_token(secret, token):
             encrypted_secret = self._encrypt_secret(secret)
-            self._get_collection().document(user_id).set({
-                "mfa_secret": encrypted_secret,
-                "mfa_enabled": True
-            }, merge=True)
+            self._get_collection().document(user_id).set(
+                {"mfa_secret": encrypted_secret, "mfa_enabled": True}, merge=True
+            )
             return True
         return False
 
     def disable_mfa(self, user_id: str):
         """Desativa o MFA removendo o segredo."""
-        self._get_collection().document(user_id).set({
-            "mfa_secret": None,
-            "mfa_enabled": False
-        }, merge=True)
+        self._get_collection().document(user_id).set(
+            {"mfa_secret": None, "mfa_enabled": False}, merge=True
+        )
 
     def check_mfa_status(self, user_id: str) -> bool:
         """Verifica se o MFA está ativado."""
@@ -114,5 +119,5 @@ class MFAService:
                 return self._decrypt_secret(encrypted_secret)
         return None
 
-mfa_service = MFAService()
 
+mfa_service = MFAService()

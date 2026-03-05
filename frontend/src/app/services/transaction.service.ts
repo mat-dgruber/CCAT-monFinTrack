@@ -50,4 +50,12 @@ export class TransactionService {
       `${this.apiUrl}/upcoming?limit=${limit}`,
     );
   }
+
+  getPendingTithes(): Observable<Transaction[]> {
+    return this.http.get<Transaction[]>(`${this.apiUrl}/tithes/pending`);
+  }
+
+  payAllTithes(): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/tithes/pay-all`, {});
+  }
 }

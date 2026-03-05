@@ -1,7 +1,22 @@
-import { Component, EventEmitter, Output, inject, signal, OnInit, computed, DestroyRef } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Output,
+  inject,
+  signal,
+  OnInit,
+  computed,
+  DestroyRef,
+} from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
@@ -15,7 +30,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
-import { SelectItemGroup, SelectItem, ConfirmationService, MessageService } from 'primeng/api';
+import {
+  SelectItemGroup,
+  SelectItem,
+  ConfirmationService,
+  MessageService,
+} from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
@@ -24,7 +44,13 @@ import { RefreshService } from '../../services/refresh.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
 import { AIService } from '../../services/ai.service';
 import { AttachmentService } from '../../services/attachment.service';
-import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
 import { HttpClient } from '@angular/common/http';
 
@@ -53,7 +79,7 @@ import { environment } from '../../../environments/environment';
     TextareaModule,
     TooltipModule,
     TagModule,
-    AccountTypePipe
+    AccountTypePipe,
   ],
   templateUrl: './transaction-form.html',
   styleUrl: './transaction-form.scss',
@@ -84,29 +110,29 @@ export class TransactionForm implements OnInit {
   offeringType = signal<'percentage' | 'value'>('value');
 
   netAmount = computed(() => {
-      const amount = this.form.get('amount')?.value || 0;
-      let tithe = 0;
-      let offering = 0;
+    const amount = this.form.get('amount')?.value || 0;
+    let tithe = 0;
+    let offering = 0;
 
-      if (this.titheEnabled()) {
-          const tVal = this.form.get('tithe_value')?.value || 0;
-          if (this.titheType() === 'percentage') {
-              tithe = (amount * tVal) / 100;
-          } else {
-              tithe = tVal;
-          }
+    if (this.titheEnabled()) {
+      const tVal = this.form.get('tithe_value')?.value || 0;
+      if (this.titheType() === 'percentage') {
+        tithe = (amount * tVal) / 100;
+      } else {
+        tithe = tVal;
       }
+    }
 
-      if (this.offeringEnabled()) {
-          const oVal = this.form.get('offering_value')?.value || 0;
-          if (this.offeringType() === 'percentage') {
-              offering = (amount * oVal) / 100;
-          } else {
-              offering = oVal;
-          }
+    if (this.offeringEnabled()) {
+      const oVal = this.form.get('offering_value')?.value || 0;
+      if (this.offeringType() === 'percentage') {
+        offering = (amount * oVal) / 100;
+      } else {
+        offering = oVal;
       }
+    }
 
-      return Math.max(0, amount - tithe - offering);
+    return Math.max(0, amount - tithe - offering);
   });
 
   titheTooltip = computed(() => {
@@ -117,17 +143,18 @@ export class TransactionForm implements OnInit {
     let offering = 0;
 
     if (this.titheEnabled()) {
-        const tVal = this.form.get('tithe_value')?.value || 0;
-        tithe = this.titheType() === 'percentage' ? (amount * tVal) / 100 : tVal;
+      const tVal = this.form.get('tithe_value')?.value || 0;
+      tithe = this.titheType() === 'percentage' ? (amount * tVal) / 100 : tVal;
     }
 
     if (this.offeringEnabled()) {
-        const oVal = this.form.get('offering_value')?.value || 0;
-        offering = this.offeringType() === 'percentage' ? (amount * oVal) / 100 : oVal;
+      const oVal = this.form.get('offering_value')?.value || 0;
+      offering =
+        this.offeringType() === 'percentage' ? (amount * oVal) / 100 : oVal;
     }
 
     const total = tithe + offering;
-    return `Dízimo: ${tithe.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} \nOferta: ${offering.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} \nTotal Deduções: ${total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+    return `Dízimo: ${tithe.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} \nOferta: ${offering.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} \nTotal Deduções: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
   });
 
   categories = signal<Category[]>([]);
@@ -141,42 +168,45 @@ export class TransactionForm implements OnInit {
   currentType = signal<'expense' | 'income' | 'transfer'>('expense');
 
   filteredCategories = computed<SelectItemGroup[]>(() => {
-      let type = this.currentType();
-      if (type === 'transfer') type = 'expense'; // Transfers use expense categories
-      const all = this.categories();
-      const roots = all.filter(c => c.type === type);
+    let type = this.currentType();
+    if (type === 'transfer') type = 'expense'; // Transfers use expense categories
+    const all = this.categories();
+    const roots = all.filter((c) => c.type === type);
 
-      return roots.map(root => {
-          const items = [root, ...(root.subcategories || [])];
+    return roots.map((root) => {
+      const items = [root, ...(root.subcategories || [])];
 
-          return {
-              label: root.name,
-              value: root.id,
-              items: items.map(c => ({
-                  label: c.name,
-                  value: c,
-                  icon: c.icon,
-                  color: c.color
-              } as SelectItem))
-          };
-      });
+      return {
+        label: root.name,
+        value: root.id,
+        items: items.map(
+          (c) =>
+            ({
+              label: c.name,
+              value: c,
+              icon: c.icon,
+              color: c.color,
+            }) as SelectItem,
+        ),
+      };
+    });
   });
 
   typeOptions = [
     { label: 'Despesas', value: 'expense' },
-    { label: 'Receitas', value: 'income' }
+    { label: 'Receitas', value: 'income' },
   ];
 
   modeOptions = [
     { label: 'Única', value: 'single' },
     { label: 'Parcelada', value: 'installments' },
-    { label: 'Recorrente', value: 'recurrence' }
+    { label: 'Recorrente', value: 'recurrence' },
   ];
 
   periodicityOptions = [
     { label: 'Mensal', value: 'monthly' },
     { label: 'Semanal', value: 'weekly' },
-    { label: 'Anual', value: 'yearly' }
+    { label: 'Anual', value: 'yearly' },
   ];
 
   paymentOptions = [
@@ -185,7 +215,7 @@ export class TransactionForm implements OnInit {
     { label: 'Pix', value: 'pix' },
     { label: 'Dinheiro', value: 'cash' },
     { label: 'Transferência', value: 'bank_transfer' },
-    { label: 'Boleto', value: 'bank_slip' }
+    { label: 'Boleto', value: 'bank_slip' },
   ];
 
   form: FormGroup = this.fb.group({
@@ -213,114 +243,144 @@ export class TransactionForm implements OnInit {
     offering_value: [null],
 
     // Attachments
-    attachments: [[]]
+    attachments: [[]],
   });
 
   availableCreditCards = signal<any[]>([]);
 
   constructor() {
-    this.form.get('type')?.valueChanges.subscribe(val => {
-        if (val) {
-            this.currentType.set(val);
-            // Only clear category if we are interacting (not during initial patch if it matches)
-            // But getting context is hard. Simplest is to check if the current category type mismatches.
-            const currentCat = this.form.get('category')?.value;
-            if (currentCat && currentCat.type !== val) {
-                 this.form.patchValue({ category: null });
-            }
+    this.form.get('type')?.valueChanges.subscribe((val) => {
+      if (val) {
+        this.currentType.set(val);
+        // Only clear category if we are interacting (not during initial patch if it matches)
+        // But getting context is hard. Simplest is to check if the current category type mismatches.
+        const currentCat = this.form.get('category')?.value;
+        if (currentCat && currentCat.type !== val) {
+          this.form.patchValue({ category: null });
         }
+      }
     });
 
     // Listen to Account Changes to load cards
     this.form.get('account')?.valueChanges.subscribe((acc: Account | null) => {
-        if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
-            this.availableCreditCards.set(acc.credit_cards);
-        } else {
-            this.availableCreditCards.set([]);
-            this.form.patchValue({ credit_card_id: null });
-        }
+      if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
+        this.availableCreditCards.set(acc.credit_cards);
+      } else {
+        this.availableCreditCards.set([]);
+        this.form.patchValue({ credit_card_id: null });
+      }
     });
 
     // AI Classification logic
-    this.form.get('title')?.valueChanges.pipe(
+    this.form
+      .get('title')
+      ?.valueChanges.pipe(
         takeUntilDestroyed(),
         debounceTime(1500),
         distinctUntilChanged(),
-        filter(val => val && val.length > 2), // At least 3 chars
+        filter((val) => val && val.length > 2), // At least 3 chars
         tap(() => console.log('AI Checking...')),
-        switchMap(val => this.aiService.classifyTransaction(val))
-    ).subscribe({
+        switchMap((val) => this.aiService.classifyTransaction(val)),
+      )
+      .subscribe({
         next: (res) => {
-            if (res.category_id) {
-                // Check if current category is empty or system wants to suggest
-                // We only override if category is null to avoid annoying user overwrites
-                const currentCat = this.form.get('category')?.value;
-                if (!currentCat) {
-                     const cat = this.categories().find(c => c.id === res.category_id);
-                     if (cat) {
-                         this.form.patchValue({ category: cat });
-                         this.messageService.add({ severity: 'info', summary: '✨ AI Magic', detail: `Categoria sugerida: ${cat.name}`, life: 3000 });
-                     }
-                }
+          if (res.category_id) {
+            // Check if current category is empty or system wants to suggest
+            // We only override if category is null to avoid annoying user overwrites
+            const currentCat = this.form.get('category')?.value;
+            if (!currentCat) {
+              const cat = this.categories().find(
+                (c) => c.id === res.category_id,
+              );
+              if (cat) {
+                this.form.patchValue({ category: cat });
+                this.messageService.add({
+                  severity: 'info',
+                  summary: '✨ AI Magic',
+                  detail: `Categoria sugerida: ${cat.name}`,
+                  life: 3000,
+                });
+              }
             }
+          }
         },
-        error: (err) => console.error('AI Error', err)
-    });
-
+        error: (err) => console.error('AI Error', err),
+      });
   }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-        if (this.preferences()?.subscription_tier !== 'premium') {
-             this.messageService.add({severity: 'warn', summary: 'Upgrade Necessário', detail: 'Leitura de comprovante é exclusiva Premium.'});
-             event.target.value = ''; // Reset input
-             return;
-        }
-
-        this.isScanning.set(true);
-        this.messageService.add({ severity: 'info', summary: 'Processando...', detail: 'Lendo comprovante com IA...', life: 3000 });
-
-        this.aiService.scanReceipt(file).subscribe({
-            next: (data) => {
-                const patch: any = {};
-                if (data.title) patch.title = data.title;
-                if (data.amount) patch.amount = data.amount;
-                if (data.date) patch.date = new Date(data.date);
-                if (data.description) patch.description = data.description;
-                if (data.payment_method) patch.payment_method = data.payment_method;
-
-                // Try to match category
-                if (data.category_id) {
-                    const cat = this.categories().find(c => c.id === data.category_id);
-                    if (cat) patch.category = cat;
-                }
-
-                // Suggest Account/Card if returned
-                if (data.account_id) {
-                     const acc = this.accounts().find(a => a.id === data.account_id);
-                     if (acc) patch.account = acc;
-                }
-
-                // Attachments
-                if (data.attachment_url) {
-                    const baseUrl = environment.apiUrl.replace('/api', '');
-                    const fullUrl = data.attachment_url.startsWith('http') ? data.attachment_url : `${baseUrl}${data.attachment_url}`;
-
-                    const current = this.form.get('attachments')?.value || [];
-                    patch.attachments = [...current, fullUrl];
-                }
-
-                this.form.patchValue(patch);
-                this.messageService.add({ severity: 'success', summary: 'Dados Extraídos!', detail: 'Verifique os campos preenchidos.' });
-                this.isScanning.set(false);
-            },
-            error: (err) => {
-                console.error('Scan Error', err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao ler comprovante.' });
-                this.isScanning.set(false);
-            }
+      if (this.preferences()?.subscription_tier !== 'premium') {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Upgrade Necessário',
+          detail: 'Leitura de comprovante é exclusiva Premium.',
         });
+        event.target.value = ''; // Reset input
+        return;
+      }
+
+      this.isScanning.set(true);
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Processando...',
+        detail: 'Lendo comprovante com IA...',
+        life: 3000,
+      });
+
+      this.aiService.scanReceipt(file).subscribe({
+        next: (data) => {
+          const patch: any = {};
+          if (data.title) patch.title = data.title;
+          if (data.amount) patch.amount = data.amount;
+          if (data.date) patch.date = new Date(data.date);
+          if (data.description) patch.description = data.description;
+          if (data.payment_method) patch.payment_method = data.payment_method;
+
+          // Try to match category
+          if (data.category_id) {
+            const cat = this.categories().find(
+              (c) => c.id === data.category_id,
+            );
+            if (cat) patch.category = cat;
+          }
+
+          // Suggest Account/Card if returned
+          if (data.account_id) {
+            const acc = this.accounts().find((a) => a.id === data.account_id);
+            if (acc) patch.account = acc;
+          }
+
+          // Attachments
+          if (data.attachment_url) {
+            const baseUrl = environment.apiUrl.replace('/api', '');
+            const fullUrl = data.attachment_url.startsWith('http')
+              ? data.attachment_url
+              : `${baseUrl}${data.attachment_url}`;
+
+            const current = this.form.get('attachments')?.value || [];
+            patch.attachments = [...current, fullUrl];
+          }
+
+          this.form.patchValue(patch);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Dados Extraídos!',
+            detail: 'Verifique os campos preenchidos.',
+          });
+          this.isScanning.set(false);
+        },
+        error: (err) => {
+          console.error('Scan Error', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Falha ao ler comprovante.',
+          });
+          this.isScanning.set(false);
+        },
+      });
     }
   }
 
@@ -328,75 +388,106 @@ export class TransactionForm implements OnInit {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (this.preferences()?.subscription_tier !== 'pro' && this.preferences()?.subscription_tier !== 'premium') {
-         this.messageService.add({severity: 'warn', summary: 'Upgrade Necessário', detail: 'Recurso Pro/Premium'});
-         return;
+    if (
+      this.preferences()?.subscription_tier !== 'pro' &&
+      this.preferences()?.subscription_tier !== 'premium'
+    ) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Upgrade Necessário',
+        detail: 'Recurso Pro/Premium',
+      });
+      return;
     }
 
     this.isUploading.set(true);
 
     this.attachmentService.uploadFile(file).subscribe({
-        next: (res) => {
-            // Resolve URL (if relative)
-            const baseUrl = environment.apiUrl.replace('/api', '');
-            const fullUrl = res.url.startsWith('http') ? res.url : `${baseUrl}${res.url}`;
+      next: (res) => {
+        // Resolve URL (if relative)
+        const baseUrl = environment.apiUrl.replace('/api', '');
+        const fullUrl = res.url.startsWith('http')
+          ? res.url
+          : `${baseUrl}${res.url}`;
 
-            const current = this.form.get('attachments')?.value || [];
-            this.form.patchValue({ attachments: [...current, fullUrl] });
+        const current = this.form.get('attachments')?.value || [];
+        this.form.patchValue({ attachments: [...current, fullUrl] });
 
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Arquivo anexado.' });
-            this.isUploading.set(false);
-        },
-        error: (err) => {
-            console.error('Upload Error', err);
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha no upload' });
-            this.isUploading.set(false);
-        }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Arquivo anexado.',
+        });
+        this.isUploading.set(false);
+      },
+      error: (err) => {
+        console.error('Upload Error', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Falha no upload',
+        });
+        this.isUploading.set(false);
+      },
     });
 
     event.target.value = ''; // Reset
   }
 
   scanAttachment(url: string) {
-       let relativeUrl = url;
-       try {
-           const urlObj = new URL(url);
-           relativeUrl = urlObj.pathname;
-       } catch (e) {
-           // already relative or invalid
-       }
+    let relativeUrl = url;
+    try {
+      const urlObj = new URL(url);
+      relativeUrl = urlObj.pathname;
+    } catch (e) {
+      // already relative or invalid
+    }
 
-       this.isScanning.set(true);
-       this.messageService.add({ severity: 'info', summary: 'IA', detail: 'Analisando anexo...' });
+    this.isScanning.set(true);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'IA',
+      detail: 'Analisando anexo...',
+    });
 
-       this.aiService.scanReceiptFromUrl(relativeUrl).subscribe({
-            next: (data) => {
-                 const patch: any = {};
-                 if (data.title) patch.title = data.title;
-                 if (data.amount) patch.amount = data.amount;
-                 if (data.date) patch.date = new Date(data.date);
-                 if (data.description) patch.description = data.description;
-                 if (data.payment_method) patch.payment_method = data.payment_method;
+    this.aiService.scanReceiptFromUrl(relativeUrl).subscribe({
+      next: (data) => {
+        const patch: any = {};
+        if (data.title) patch.title = data.title;
+        if (data.amount) patch.amount = data.amount;
+        if (data.date) patch.date = new Date(data.date);
+        if (data.description) patch.description = data.description;
+        if (data.payment_method) patch.payment_method = data.payment_method;
 
-                 if (data.category_id) {
-                     const cat = this.categories().find(c => c.id === data.category_id);
-                     if (cat) patch.category = cat;
-                 }
-                 this.form.patchValue(patch);
-                 this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Dados extraídos do anexo!' });
-                 this.isScanning.set(false);
-            },
-            error: (err) => {
-                 console.error('Scan Error', err);
-                 this.messageService.add({ severity: 'warn', summary: 'IA', detail: 'Não foi possível ler o comprovante.' });
-                 this.isScanning.set(false);
-            }
-       });
+        if (data.category_id) {
+          const cat = this.categories().find((c) => c.id === data.category_id);
+          if (cat) patch.category = cat;
+        }
+        this.form.patchValue(patch);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'IA',
+          detail: 'Dados extraídos do anexo!',
+        });
+        this.isScanning.set(false);
+      },
+      error: (err) => {
+        console.error('Scan Error', err);
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'IA',
+          detail: 'Não foi possível ler o comprovante.',
+        });
+        this.isScanning.set(false);
+      },
+    });
   }
 
   removeAttachment(url: string) {
-      const current = this.form.get('attachments')?.value || [];
-      this.form.patchValue({ attachments: current.filter((u: string) => u !== url) });
+    const current = this.form.get('attachments')?.value || [];
+    this.form.patchValue({
+      attachments: current.filter((u: string) => u !== url),
+    });
   }
 
   ngOnInit() {
@@ -405,11 +496,15 @@ export class TransactionForm implements OnInit {
   }
 
   loadCategories() {
-    this.categoryService.getCategories().subscribe(data => this.categories.set(data));
+    this.categoryService
+      .getCategories()
+      .subscribe((data) => this.categories.set(data));
   }
 
   loadAccounts() {
-    this.accountService.getAccounts().subscribe(data => this.accounts.set(data));
+    this.accountService
+      .getAccounts()
+      .subscribe((data) => this.accounts.set(data));
   }
 
   showDialog() {
@@ -417,47 +512,53 @@ export class TransactionForm implements OnInit {
     this.currentType.set('expense');
 
     this.form.reset({
-        type: 'expense',
-        date: new Date(),
-        mode: 'single',
-        total_installments: 2,
-        recurrence_periodicity: 'monthly',
-        recurrence_auto_pay: false,
-        recurrence_create_first: true,
-        is_paid: true,
-        payment_date: new Date()
+      type: 'expense',
+      date: new Date(),
+      mode: 'single',
+      total_installments: 2,
+      recurrence_periodicity: 'monthly',
+      recurrence_auto_pay: false,
+      recurrence_create_first: true,
+      is_paid: true,
+      payment_date: new Date(),
     });
 
     // Apply Defaults
     const prefs = this.preferences();
     if (prefs?.enable_tithes_offerings) {
-        if (prefs.auto_apply_tithe) {
-             this.titheEnabled.set(true);
-             this.form.patchValue({ tithe_value: prefs.default_tithe_percentage ?? 10 });
-             this.titheType.set('percentage'); // Default to percentage for tithe usually
-        } else {
-             this.titheEnabled.set(false);
-             this.form.patchValue({ tithe_value: prefs.default_tithe_percentage ?? 10 });
-        }
-        this.titheReturned.set(false);
-
-        this.offeringEnabled.set(false);
-        if (prefs.default_offering_percentage) {
-            this.form.patchValue({ offering_value: prefs.default_offering_percentage });
-        } else {
-            this.form.patchValue({ offering_value: null });
-        }
-
-        if (prefs.auto_apply_offering) {
-             this.offeringEnabled.set(true);
-             this.offeringType.set('percentage'); // Default
-        } else {
-            this.form.patchValue({ offering_value: null });
-        }
-    } else {
+      if (prefs.auto_apply_tithe) {
+        this.titheEnabled.set(true);
+        this.form.patchValue({
+          tithe_value: prefs.default_tithe_percentage ?? 10,
+        });
+        this.titheType.set('percentage'); // Default to percentage for tithe usually
+      } else {
         this.titheEnabled.set(false);
-        this.offeringEnabled.set(false);
-        this.titheReturned.set(false);
+        this.form.patchValue({
+          tithe_value: prefs.default_tithe_percentage ?? 10,
+        });
+      }
+      this.titheReturned.set(false);
+
+      this.offeringEnabled.set(false);
+      if (prefs.default_offering_percentage) {
+        this.form.patchValue({
+          offering_value: prefs.default_offering_percentage,
+        });
+      } else {
+        this.form.patchValue({ offering_value: null });
+      }
+
+      if (prefs.auto_apply_offering) {
+        this.offeringEnabled.set(true);
+        this.offeringType.set('percentage'); // Default
+      } else {
+        this.form.patchValue({ offering_value: null });
+      }
+    } else {
+      this.titheEnabled.set(false);
+      this.offeringEnabled.set(false);
+      this.titheReturned.set(false);
     }
 
     this.visible.set(true);
@@ -472,63 +573,69 @@ export class TransactionForm implements OnInit {
     if (transaction.installment_group_id) mode = 'installments';
     if (transaction.recurrence_id) mode = 'recurrence';
 
-        // Helper to find matching object reference
-        const foundCategory = this.categories().find(c => c.id === transaction.category.id) || transaction.category;
-        const foundAccount = this.accounts().find(a => a.id === transaction.account.id) || transaction.account;
+    // Helper to find matching object reference
+    const foundCategory =
+      this.categories().find((c) => c.id === transaction.category.id) ||
+      transaction.category;
+    const foundAccount =
+      this.accounts().find((a) => a.id === transaction.account.id) ||
+      transaction.account;
 
-        this.form.patchValue({
-            title: transaction.title,
-            description: transaction.description,
+    this.form.patchValue({
+      title: transaction.title,
+      description: transaction.description,
 
-            // Use GROSS amount if available (meaning we saved as NET previously)
-            amount: transaction.gross_amount || transaction.amount,
-            date: new Date(transaction.date),
-            category: foundCategory,
-            account: foundAccount,
-            // Patch type with emitEvent: false to prevent clearing category
-            // But we can't easily do partial patch with options.
-            // Better: We handled the clearing logic in constructor to be smarter.
-            type: transaction.type,
-            payment_method: transaction.payment_method,
-            mode: mode,
-            total_installments: transaction.total_installments || 2,
-            recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
-            is_paid: transaction.status === 'paid',
+      // Use GROSS amount if available (meaning we saved as NET previously)
+      amount: transaction.gross_amount || transaction.amount,
+      date: new Date(transaction.date),
+      category: foundCategory,
+      account: foundAccount,
+      // Patch type with emitEvent: false to prevent clearing category
+      // But we can't easily do partial patch with options.
+      // Better: We handled the clearing logic in constructor to be smarter.
+      type: transaction.type,
+      payment_method: transaction.payment_method,
+      mode: mode,
+      total_installments: transaction.total_installments || 2,
+      recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
+      is_paid: transaction.status === 'paid',
 
+      // Tithes
+      tithe_value:
+        transaction.tithe_percentage ||
+        transaction.tithe_amount ||
+        (this.preferences()?.default_tithe_percentage ?? 10),
+      offering_value:
+        transaction.offering_percentage || transaction.offering_amount || null,
 
-
-            // Tithes
-            tithe_value: transaction.tithe_percentage || transaction.tithe_amount || (this.preferences()?.default_tithe_percentage ?? 10),
-            offering_value: transaction.offering_percentage || transaction.offering_amount || null,
-
-            credit_card_id: transaction.credit_card_id || null,
-            attachments: transaction.attachments || []
-        });
+      credit_card_id: transaction.credit_card_id || null,
+      attachments: transaction.attachments || [],
+    });
 
     if (transaction.tithe_percentage) {
-        this.titheEnabled.set(true);
-        this.titheType.set('percentage');
+      this.titheEnabled.set(true);
+      this.titheType.set('percentage');
     } else if (transaction.tithe_amount) {
-        this.titheEnabled.set(true);
-        this.titheType.set('value');
+      this.titheEnabled.set(true);
+      this.titheType.set('value');
     } else {
-        this.titheEnabled.set(false);
+      this.titheEnabled.set(false);
     }
 
     if (transaction.tithe_status === 'PAID') {
-        this.titheReturned.set(true);
+      this.titheReturned.set(true);
     } else {
-        this.titheReturned.set(false);
+      this.titheReturned.set(false);
     }
 
     if (transaction.offering_percentage) {
-        this.offeringEnabled.set(true);
-        this.offeringType.set('percentage');
+      this.offeringEnabled.set(true);
+      this.offeringType.set('percentage');
     } else if (transaction.offering_amount) {
-        this.offeringEnabled.set(true);
-        this.offeringType.set('value');
+      this.offeringEnabled.set(true);
+      this.offeringType.set('value');
     } else {
-        this.offeringEnabled.set(false);
+      this.offeringEnabled.set(false);
     }
 
     this.visible.set(true);
@@ -543,7 +650,7 @@ export class TransactionForm implements OnInit {
         category_id: formValue.category.id,
         account_id: formValue.account.id,
         status: formValue.is_paid ? 'paid' : 'pending',
-        payment_date: formValue.is_paid ? formValue.date : null // Reuse date as payment_date
+        payment_date: formValue.is_paid ? formValue.date : null, // Reuse date as payment_date
       };
 
       // Clean up payload
@@ -554,113 +661,143 @@ export class TransactionForm implements OnInit {
       // 'recurrence_periodicity' is valid if mode was recurrence, handled below
 
       // Handle Net vs Gross Amount Logic for Income with Tithes
-      if (formValue.type === 'income' && this.preferences()?.enable_tithes_offerings) {
-           const currentAmount = formValue.amount;
-           // Always save gross amount so we don't lose the original value on edits
-           payload.gross_amount = currentAmount;
+      if (
+        formValue.type === 'income' &&
+        this.preferences()?.enable_tithes_offerings
+      ) {
+        const currentAmount = formValue.amount;
+        // Always save gross amount so we don't lose the original value on edits
+        payload.gross_amount = currentAmount;
 
-           // If Tithe Returned is checked, we want to debit the Net Amount from balance
-           // So we save the main 'amount' as the Net Amount.
-           if (this.titheEnabled() && this.titheReturned()) {
-               payload.amount = this.netAmount();
-           } else {
-               // Otherwise, save the full amount
-               payload.amount = currentAmount;
-           }
+        // If Tithe Returned is checked, we want to debit the Net Amount from balance
+        // So we save the main 'amount' as the Net Amount.
+        if (this.titheEnabled() && this.titheReturned()) {
+          payload.amount = this.netAmount();
+        } else {
+          // Otherwise, save the full amount
+          payload.amount = currentAmount;
+        }
       } else {
-           // Clear gross amount if not applicable
-           payload.gross_amount = null;
+        // Clear all tithe/offering fields for non-income transactions
+        payload.gross_amount = null;
+        payload.tithe_amount = null;
+        payload.tithe_percentage = null;
+        payload.tithe_status = null;
+        payload.offering_amount = null;
+        payload.offering_percentage = null;
+        payload.net_amount = null;
       }
 
       if (formValue.mode === 'recurrence') {
-          payload.is_recurrence = true;
+        payload.is_recurrence = true;
       } else {
-          payload.is_recurrence = false;
-          payload.recurrence_periodicity = null;
+        payload.is_recurrence = false;
+        payload.recurrence_periodicity = null;
       }
 
       if (formValue.mode !== 'installments') {
-          payload.total_installments = null;
+        payload.total_installments = null;
       }
 
       // Add Tithes & Offerings Data if Income
-      if (formValue.type === 'income' && this.preferences()?.enable_tithes_offerings) {
-          const amount = formValue.amount;
+      if (
+        formValue.type === 'income' &&
+        this.preferences()?.enable_tithes_offerings
+      ) {
+        const amount = formValue.amount;
 
-          if (this.titheEnabled()) {
-              const tVal = formValue.tithe_value;
-              if (this.titheType() === 'percentage') {
-                  payload.tithe_percentage = tVal;
-                  payload.tithe_amount = (amount * tVal) / 100;
-              } else {
-                  payload.tithe_amount = tVal;
-                  payload.tithe_percentage = null;
-              }
-
-              // Status Logic
-              payload.tithe_status = this.titheReturned() ? 'PAID' : 'PENDING';
+        if (this.titheEnabled()) {
+          const tVal = formValue.tithe_value;
+          if (this.titheType() === 'percentage') {
+            payload.tithe_percentage = tVal;
+            payload.tithe_amount = (amount * tVal) / 100;
           } else {
-              payload.tithe_amount = null;
-              payload.tithe_percentage = null;
-              payload.tithe_status = 'NONE';
+            payload.tithe_amount = tVal;
+            payload.tithe_percentage = null;
           }
 
-          if (this.offeringEnabled()) {
-              const oVal = formValue.offering_value;
-              if (this.offeringType() === 'percentage') {
-                  payload.offering_percentage = oVal;
-                  payload.offering_amount = (amount * oVal) / 100;
-              } else {
-                  payload.offering_amount = oVal;
-                  payload.offering_percentage = null;
-              }
-          } else {
-              payload.offering_amount = null;
-              payload.offering_percentage = null;
-          }
+          // Status Logic
+          payload.tithe_status = this.titheReturned() ? 'PAID' : 'PENDING';
+        } else {
+          payload.tithe_amount = null;
+          payload.tithe_percentage = null;
+          payload.tithe_status = 'NONE';
+        }
 
-          payload.net_amount = this.netAmount();
+        if (this.offeringEnabled()) {
+          const oVal = formValue.offering_value;
+          if (this.offeringType() === 'percentage') {
+            payload.offering_percentage = oVal;
+            payload.offering_amount = (amount * oVal) / 100;
+          } else {
+            payload.offering_amount = oVal;
+            payload.offering_percentage = null;
+          }
+        } else {
+          payload.offering_amount = null;
+          payload.offering_percentage = null;
+        }
+
+        payload.net_amount = this.netAmount();
       }
 
       const onSave = () => {
-          this.visible.set(false);
-          this.form.reset();
-          this.save.emit();
-          this.refreshService.triggerRefresh();
+        this.visible.set(false);
+        this.form.reset();
+        this.save.emit();
+        this.refreshService.triggerRefresh();
       };
 
       if (this.editingId()) {
-        this.transactionService.updateTransaction(this.editingId()!, payload).subscribe({
+        this.transactionService
+          .updateTransaction(this.editingId()!, payload)
+          .subscribe({
             next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação atualizada.' });
-                onSave();
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Sucesso',
+                detail: 'Transação atualizada.',
+              });
+              onSave();
             },
             error: (err) => {
-                console.error('Erro ao atualizar', err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao atualizar transação.' });
-            }
-        });
+              console.error('Erro ao atualizar', err);
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Erro',
+                detail: 'Erro ao atualizar transação.',
+              });
+            },
+          });
       } else {
         this.transactionService.createTransaction(payload).subscribe({
-            next: (res: any) => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação criada.' });
+          next: (res: any) => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Transação criada.',
+            });
 
-                // Check for Anomaly Warning
-                if (Array.isArray(res) && res.length > 0 && res[0].warning) {
-                    this.messageService.add({
-                        severity: 'warn',
-                        summary: 'Gasto Atípico',
-                        detail: res[0].warning,
-                        life: 10000
-                    });
-                }
-
-                onSave();
-            },
-            error: (err) => {
-                console.error('Erro ao criar', err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao criar transação.' });
+            // Check for Anomaly Warning
+            if (Array.isArray(res) && res.length > 0 && res[0].warning) {
+              this.messageService.add({
+                severity: 'warn',
+                summary: 'Gasto Atípico',
+                detail: res[0].warning,
+                life: 10000,
+              });
             }
+
+            onSave();
+          },
+          error: (err) => {
+            console.error('Erro ao criar', err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Erro ao criar transação.',
+            });
+          },
         });
       }
     }
@@ -677,20 +814,30 @@ export class TransactionForm implements OnInit {
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         if (this.editingId()) {
-          this.transactionService.deleteTransaction(this.editingId()!).subscribe({
-            next: () => {
-              this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação excluída.' });
-              this.visible.set(false);
-              this.form.reset();
-              this.save.emit();
-              this.refreshService.triggerRefresh();
-            },
-            error: () => {
-              this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao excluir transação.' });
-            }
-          });
+          this.transactionService
+            .deleteTransaction(this.editingId()!)
+            .subscribe({
+              next: () => {
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Sucesso',
+                  detail: 'Transação excluída.',
+                });
+                this.visible.set(false);
+                this.form.reset();
+                this.save.emit();
+                this.refreshService.triggerRefresh();
+              },
+              error: () => {
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Erro',
+                  detail: 'Erro ao excluir transação.',
+                });
+              },
+            });
         }
-      }
+      },
     });
   }
 }

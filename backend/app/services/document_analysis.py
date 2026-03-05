@@ -1,8 +1,12 @@
-import google.generativeai as genai
-import os
 import json
-from typing import Dict, Any, Optional
+import os
+from typing import Any, Dict, Optional
+
+import google.generativeai as genai
+from app.core.logger import get_logger
 from app.services.user_preference import get_preferences
+
+logger = get_logger(__name__)
 
 # Reuse environment variables
 GENAI_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -11,25 +15,28 @@ AI_MODEL_NAME = os.getenv("GOOGLE_AI_MODEL", "gemini-2.0-flash-lite")
 if GENAI_API_KEY:
     genai.configure(api_key=GENAI_API_KEY)
 
+
 class DocumentAnalysisService:
     @staticmethod
-    def analyze_debt_document(user_id: str, file_bytes: bytes, mime_type: str) -> Dict[str, Any]:
+    def analyze_debt_document(
+        user_id: str, file_bytes: bytes, mime_type: str
+    ) -> Dict[str, Any]:
         """
         Analyzes a debt contract/statement (PDF or Image) and extracts structured data.
         Restricted to PREMIUM users (checked by caller or here).
         """
         # (Optional) Double check tier here if not done in API
         pref = get_preferences(user_id)
-        if pref.subscription_tier != 'premium':
-             # Return error that frontend can parse
-             return {"error": "Recurso disponível apenas para usuários Premium."}
+        if pref.subscription_tier != "premium":
+            # Return error that frontend can parse
+            return {"error": "Recurso disponível apenas para usuários Premium."}
 
         if not GENAI_API_KEY:
-             return {"error": "Serviço de IA indisponível no momento."}
+            return {"error": "Serviço de IA indisponível no momento."}
 
         try:
             model = genai.GenerativeModel(AI_MODEL_NAME)
-            
+
             prompt = """
             Role: Expert Financial Document Analyzer.
             Task: Extract structured debt information from this document (Loan Contract, Credit Card Statement, etc.).
@@ -56,24 +63,21 @@ class DocumentAnalysisService:
             - 'debt_type' MUST be one of the allowed values above.
             - Return PURE JSON.
             """
-            
+
             # Create content part
-            document_part = {
-                "mime_type": mime_type,
-                "data": file_bytes
-            }
-            
+            document_part = {"mime_type": mime_type, "data": file_bytes}
+
             response = model.generate_content([prompt, document_part])
             text = response.text.strip()
-            
+
             # Clean Markdown
             if text.startswith("```"):
                 text = (text.split("```")[1]).strip()
                 if text.startswith("json"):
                     text = text[4:].strip()
-            
+
             return json.loads(text)
-            
+
         except Exception as e:
-            print(f"❌ Error analyzing document: {e}")
+            logger.error("Error analyzing document: %s", e)
             return {"error": f"Falha ao analisar documento: {str(e)}"}

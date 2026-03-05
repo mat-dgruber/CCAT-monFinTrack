@@ -17,7 +17,10 @@ Armazena preferências e perfil do usuário.
 - `profile_image_url` (String, URL)
 - `subscription_tier` (String): "free", "pro", "premium"
 - `enable_tithes_offerings` (Boolean): Ativa módulo de dízimos
-- `default_tithe_percentage` (Float)
+- `default_tithe_percentage` (Float): Percentual padrão de dízimo
+- `default_offering_percentage` (Float): Percentual padrão de oferta
+- `auto_apply_tithe` (Boolean): Aplicar dízimo automaticamente em receitas
+- `auto_apply_offering` (Boolean): Aplicar oferta automaticamente em receitas
 - `privacy_share_data` (Boolean)
 - **Stripe Integration:**
   - `stripe_customer_id` (String): ID do cliente no Stripe
@@ -80,8 +83,15 @@ O coração do sistema. Cada entrada ou saída financeira.
   - `installment_group_id` (String): ID que agrupa parcelas de uma mesma compra.
   - `installment_number` (Int)
   - `total_installments` (Int)
-- **Módulo Religioso (Opcional):**
-  - `tithe_amount`, `offering_amount`, `tithe_status`
+- **Módulo Religioso (Opcional, apenas `type=income`):**
+  - `tithe_amount` (Float): Valor absoluto do dízimo calculado
+  - `tithe_percentage` (Float): Percentual do dízimo (ex: 10)
+  - `offering_amount` (Float): Valor absoluto da oferta
+  - `offering_percentage` (Float): Percentual da oferta
+  - `tithe_status` (Enum): `NONE`, `PENDING`, `PAID`
+  - `net_amount` (Float): Valor líquido (amount - tithe - offering)
+  - `gross_amount` (Float): Valor bruto original
+  - ⚠️ **Regra:** Campos de dízimo são **nulos** para `type=expense` e `type=transfer`
 - **Anexos:**
   - `attachments` (Array de Strings): URLs do Firebase Storage.
 

@@ -1,0 +1,142 @@
+@if (loading()) {
+  <!-- Skeleton Loading -->
+  <div
+    class="bg-surface-card rounded-2xl p-5 shadow-sm border border-surface-border"
+  >
+    <div class="flex items-center gap-3 mb-4">
+      <p-skeleton width="1.5rem" height="1.5rem" shape="circle"></p-skeleton>
+      <p-skeleton width="40%" height="1.2rem"></p-skeleton>
+    </div>
+    <div class="grid grid-cols-3 gap-4">
+      <p-skeleton width="100%" height="3rem"></p-skeleton>
+      <p-skeleton width="100%" height="3rem"></p-skeleton>
+      <p-skeleton width="100%" height="3rem"></p-skeleton>
+    </div>
+  </div>
+} @else if (pendingCount() > 0) {
+  <div
+    class="bg-surface-card rounded-2xl shadow-sm border border-surface-border overflow-hidden"
+  >
+    <!-- Header -->
+    <div class="p-5 border-b border-surface-border bg-surface-ground/30">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center"
+          >
+            <i
+              class="pi pi-heart text-amber-600 dark:text-amber-400 text-lg"
+            ></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-gray-800 dark:text-white m-0 text-base">
+              Dízimos Pendentes
+            </h3>
+            <span class="text-xs text-secondary"
+              >{{ pendingCount() }} receita(s) aguardando</span
+            >
+          </div>
+        </div>
+        <p-button
+          label="Pagar Todos"
+          icon="pi pi-check-circle"
+          size="small"
+          severity="success"
+          [loading]="paying()"
+          (onClick)="confirmPayAll()"
+          styleClass="p-button-outlined"
+        ></p-button>
+      </div>
+    </div>
+
+    <!-- Totals Cards -->
+    <div class="grid grid-cols-3 gap-0 border-b border-surface-border">
+      <!-- Dízimo -->
+      <div class="p-4 text-center border-r border-surface-border">
+        <span
+          class="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1"
+          >Dízimo</span
+        >
+        <span class="text-lg font-bold text-amber-600 dark:text-amber-400">{{
+          formatCurrency(totalTithe())
+        }}</span>
+      </div>
+      <!-- Oferta -->
+      <div class="p-4 text-center border-r border-surface-border">
+        <span
+          class="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1"
+          >Oferta</span
+        >
+        <span class="text-lg font-bold text-blue-600 dark:text-blue-400">{{
+          formatCurrency(totalOffering())
+        }}</span>
+      </div>
+      <!-- Total -->
+      <div class="p-4 text-center bg-primary/5">
+        <span
+          class="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1"
+          >Total</span
+        >
+        <span class="text-lg font-bold text-primary">{{
+          formatCurrency(totalCombined())
+        }}</span>
+      </div>
+    </div>
+
+    <!-- Transaction List (scrollable, compact) -->
+    <div class="max-h-[280px] overflow-y-auto custom-scrollbar">
+      @for (t of pendingTransactions(); track t.id) {
+        <div
+          class="flex items-center justify-between px-5 py-3 border-b border-surface-border last:border-0 hover:bg-surface-ground/40 transition-colors"
+        >
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              [style.backgroundColor]="t.category?.color || '#ccc'"
+              pTooltip="{{ t.category?.name }}"
+              tooltipPosition="top"
+            >
+              <i
+                [class]="
+                  (t.category?.icon || 'pi pi-tag') + ' text-white text-xs'
+                "
+              ></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-color m-0 truncate">
+                {{ t.title || t.description }}
+              </p>
+              <span class="text-xs text-secondary">{{
+                formatDate(t.date)
+              }}</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-end flex-shrink-0 ml-3">
+            <span class="text-sm font-bold text-color">{{
+              formatCurrency(t.amount)
+            }}</span>
+            <div class="flex gap-1 mt-0.5">
+              @if (t.tithe_amount) {
+                <p-tag
+                  value="D: {{ formatCurrency(t.tithe_amount) }}"
+                  severity="warn"
+                  styleClass="text-xs py-0 px-1"
+                ></p-tag>
+              }
+              @if (t.offering_amount) {
+                <p-tag
+                  value="O: {{ formatCurrency(t.offering_amount) }}"
+                  severity="info"
+                  styleClass="text-xs py-0 px-1"
+                ></p-tag>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <p-toast></p-toast>
+  <p-confirmDialog [style]="{ width: '420px' }"></p-confirmDialog>
+}
