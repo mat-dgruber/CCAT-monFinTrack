@@ -573,7 +573,106 @@ h2 {
     border-top: 1px solid var(--surface-border) !important;
     padding: 1.5rem !important;
   }
+
+  /* Confirm Dialog Global Refinements */
+  &:has(.p-confirm-dialog-icon),
+  &:has(.p-confirm-dialog-message),
+  &.p-confirm-dialog {
+    .p-dialog-header {
+      border-bottom: none !important;
+      padding: 2.5rem 2rem 0.5rem 2rem !important;
+      justify-content: center !important;
+
+      .p-dialog-title {
+        font-weight: 800 !important;
+        font-size: 1.5rem !important;
+        text-align: center;
+        width: 100%;
+        color: var(--text-color) !important;
+      }
+      .p-dialog-header-icons {
+        position: absolute;
+        right: 1.25rem;
+        top: 1.25rem;
+      }
+    }
+
+    .p-dialog-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 2rem 2rem 2rem !important;
+
+      .p-confirm-dialog-icon {
+        font-size: 3.5rem !important;
+        margin-bottom: 1.5rem;
+        margin-right: 0 !important;
+        padding: 1.25rem;
+        border-radius: 50%;
+        background: var(--surface-ground);
+
+        &.pi-exclamation-triangle {
+          color: var(--error-color, #ef4444) !important;
+          background: rgba(239, 68, 68, 0.1);
+        }
+        &.pi-check-circle {
+          color: var(--success-color, #22c55e) !important;
+          background: rgba(34, 197, 94, 0.1);
+        }
+        &.pi-info-circle {
+          color: var(--primary-color) !important;
+          background: rgba(var(--primary-color-rgb, 59, 130, 246), 0.1);
+        }
+        &.pi-sparkles {
+          color: var(--accent-color, #f97316) !important;
+          background: var(--accent-bg, rgba(249, 115, 22, 0.1));
+        }
+      }
+
+      .p-confirm-dialog-message {
+        margin-left: 0 !important;
+        font-size: 1.05rem;
+        color: var(--text-color-secondary);
+        line-height: 1.6;
+        max-width: 90%;
+      }
+    }
+
+    .p-dialog-footer {
+      border-top: none !important;
+      padding: 0 2rem 2.5rem 2rem !important;
+      display: flex;
+      gap: 1rem;
+      justify-content: center !important;
+
+      button {
+        flex: 1;
+        justify-content: center;
+        margin: 0 !important;
+        padding: 0.875rem 1.5rem !important;
+        font-size: 1rem !important;
+      }
+
+      /* iOS Style Mobile Buttons */
+      @media (max-width: 640px) {
+        flex-direction: column;
+        gap: 0.75rem;
+
+        button {
+          width: 100%;
+        }
+        .p-button-text {
+          order: 2; /* Put cancel button on bottom */
+        }
+        .p-button:not(.p-button-text) {
+          order: 1; /* Main button on top */
+        }
+      }
+    }
+  }
 }
+
 
 /* Drawer/Sidebar Styles */
 .p-drawer,
