@@ -26,6 +26,19 @@
   --primary-color: #3b82f6;
   --primary-color-text: #ffffff;
   --mask-bg: rgba(0, 0, 0, 0.4);
+  /* Organic Elegance Variables */
+  --border-radius-organic: 1.5rem;
+  --border-radius-pill: 9999px;
+  --shadow-elegant: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+  --shadow-elegant-dark: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
+  /* Professional Smooth Transition */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --font-family: "Inter", sans-serif;
+  --font-family-serif: "Playfair Display", serif;
+  /* Shadow variables */
+  --shadow-card:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .dark-theme,
@@ -37,46 +50,278 @@
   --surface-hover: #334155;
   --text-color: #f8fafc;
   --text-color-secondary: #94a3b8;
+  --text-color-emphasis: #fbbf24; /* Amber-400 for dark mode emphasis */
+  --accent-color: #f97316; /* Orange-500 */
+  --accent-bg: rgba(249, 115, 22, 0.1);
+  --accent-secondary: #facc15; /* Yellow-400 */
+  --nav-active-bg: rgba(94, 234, 212, 0.1); /* Teal-300 10% */
+  --nav-active-text: #5eead4; /* Teal-300 */
   --primary-color: #60a5fa;
   --primary-color-text: #0f172a;
   --mask-bg: rgba(0, 0, 0, 0.6);
 }
 
 .capycro-theme {
-  --surface-ground: #f3e4c9; /* Fundo - Bege Claro */
-  --surface-card: #da9b5b;    /* Cards - Laranja Médio (Capivara) */
-  --surface-overlay: #ffffff;
-  --surface-border: #593e2b;  /* Borda - Marrom Escuro */
-  --surface-hover: #e8ded4;
-  --text-color: #3a3a3a;
-  --text-color-secondary: #593e2b;
-  --primary-color: #5d8a8c;
+  --surface-ground: #f4eee0; /* Bege Pergaminho (mais quente) */
+  --surface-card: #f8f4e8; /* Bege Suave (menos 'branco' puro) */
+  --surface-overlay: #f8f4e8;
+  --surface-border: #e6dccb; /* Borda sutil amendoada */
+  --surface-hover: #ece5d5;
+
+  --text-color: #3e3a35; /* Grafite Orgânico */
+  --text-color-secondary: #7a6b5d; /* Marrom Acinzentado */
+  --text-color-emphasis: #593e2b; /* Marrom Escuro (Contorno) - Destaques */
+
+  --accent-color: #d8704c; /* Laranja Queimado - Links/Ícones ativos */
+  --accent-bg: rgba(216, 112, 76, 0.08); /* Fundo sutil do accent */
+  --accent-secondary: #f0a040; /* Laranja Dourado - Badges/Highlights */
+
+  /* Navegação semântica */
+  --nav-active-bg: rgba(93, 138, 140, 0.1); /* Azul-Petróleo 10% */
+  --nav-active-text: #4a6e70; /* Azul-Petróleo escurecido */
+  --nav-hover-bg: #ece5d5; /* Surface hover */
+
+  --shadow-card: 0 10px 30px -10px rgba(89, 62, 43, 0.12); /* Sombra marrom suave */
+
+  --primary-color: #5d8a8c; /* Ação principal - Azul-Petróleo */
   --primary-color-text: #ffffff;
-  --mask-bg: rgba(58, 58, 58, 0.4);
+  --mask-bg: rgba(44, 62, 64, 0.6); /* Overlay Escuro - Tom Escuro (#2c3e40) */
 
   /* PrimeNG 18+ Semantic Override */
   --p-primary-color: #5d8a8c;
-  --p-primary-50: #f0fdf4;
-  --p-primary-100: #dcfce7;
-  --p-primary-200: #bbf7d0;
-  --p-primary-300: #86efac;
-  --p-primary-400: #4ade80;
+  --p-primary-50: #eef4f4; /* very light teal */
+  --p-primary-100: #dde9ea;
+  --p-primary-200: #bbd3d4;
+  --p-primary-300: #99bebf;
+  --p-primary-400: #77a9a9;
   --p-primary-500: #5d8a8c;
-  --p-primary-600: #4a6f71;
-  --p-primary-700: #3a5658;
-  --p-primary-800: #2c3e40;
-  --p-primary-900: #1e292b;
-  --p-primary-950: #0f1516;
+  --p-primary-600: #4a6e70;
+  --p-primary-700: #385354;
+  --p-primary-800: #2c3e40; /* Tom Escuro (Alternativo base doc) */
+  --p-primary-900: #1c292b;
+  --p-primary-950: #0e1516;
 
-  --p-content-background: #f3e4c9; /* Inputs/Componentes - Bege Claro */
-  --p-content-border-color: var(--surface-border);
-  --p-content-color: var(--text-color);
+  --p-content-background: #f8f4e8; /* Baseado no surface-card */
+  --p-content-border-color: #d1c5b0;
+  --p-content-color: #3e3a35;
 
-  /* Cores de destaque e funcionais adicionais */
-  --secondary-color: #d8704c;
-  --highlight-color: #8a9a8b;
-  --success-color: #5a9261;
-  --error-color: #d15c5c;
+  /* Cores funcionais */
+  --secondary-color: #d8704c; /* Laranja Queimado (Faixa) */
+  --highlight-color: #f0a040; /* Laranja Dourado (Croissant) */
+  --success-color: #5a9261; /* Verde Sálvia escurecido (Sucesso) */
+  --warning-color: #e6a700; /* Aviso (Amarelo/Mostarda) */
+  --error-color: #d15c5c; /* Erro (Vermelho suave) */
+
+  /* User avatar accent (substitui blue genérico) */
+  --avatar-bg: rgba(93, 138, 140, 0.15);
+  --avatar-text: #4a6e70;
+}
+
+.high-contrast-theme {
+  --surface-ground: #000000;
+  --surface-card: #111111;
+  --surface-overlay: #1a1a1a;
+  --surface-border: #ffffff;
+  --surface-hover: #222222;
+  --text-color: #ffffff;
+  --text-color-secondary: #ffff00; /* Pure Yellow for secondary text */
+  --text-color-emphasis: #ffff00; /* Pure Yellow */
+  --accent-color: #00ffff; /* Pure Cyan */
+  --accent-bg: rgba(0, 255, 255, 0.2);
+  --accent-secondary: #ff00ff; /* Magenta */
+  --nav-active-bg: #ffff00; /* Yellow Background */
+  --nav-active-text: #000000; /* Black Text on Yellow */
+  --nav-hover-bg: #333333;
+  --primary-color: #ffff00; /* Force pure yellow for primary visibility */
+  --primary-color-text: #000000;
+  --mask-bg: rgba(0, 0, 0, 0.85);
+
+  /* PrimeNG Semantic Override */
+  --p-primary-color: #ffff00;
+  --p-primary-50: #fffde7;
+  --p-primary-100: #fff9c4;
+  --p-primary-200: #fff59d;
+  --p-primary-300: #fff176;
+  --p-primary-400: #ffee58;
+  --p-primary-500: #ffff00;
+  --p-primary-600: #ffff00;
+  --p-primary-700: #ffff00;
+  --p-primary-800: #ffff00;
+  --p-primary-900: #ffff00;
+  --p-primary-950: #ffff00;
+
+  --p-content-background: #000000;
+  --p-content-border-color: #ffffff;
+  --p-content-color: #ffffff;
+
+  /* Override organic shadows for flat, high-visibility borders */
+  --shadow-elegant: none;
+  --shadow-elegant-dark: none;
+
+  /* Functional colors - high visibility */
+  --secondary-color: #00bfff; /* Deep Sky Blue */
+  --success-color: #00ff00; /* Pure Green */
+  --error-color: #ff0000; /* Pure Red */
+}
+
+/* High Contrast Theme Overrides */
+.high-contrast-theme {
+  /* Sidebar/Navigation Specific Fixes */
+  nav,
+  .p-drawer,
+  .p-sidebar {
+    .text-secondary,
+    .text-color,
+    i.pi,
+    span,
+    button:not(.p-button-danger) {
+      color: #ffff00 !important;
+    }
+
+    a:not(.bg-nav-active),
+    button:not(.bg-nav-active):not(.p-button-danger) {
+      &:hover {
+        background: #333333 !important;
+        outline: 2px solid #ffff00 !important;
+      }
+    }
+
+    /* Active State */
+    .bg-nav-active {
+      background: #ffff00 !important;
+      color: #000000 !important;
+      i,
+      span {
+        color: #000000 !important;
+      }
+    }
+
+    /* Borders in Sidebar */
+    .border-surface-border,
+    .border-l-2 {
+      border-color: #ffff00 !important;
+    }
+
+    /* PRO Badges in HC */
+    .bg-gradient-to-r {
+      background: #ffff00 !important;
+      color: #000000 !important;
+      border: 1px solid #000000 !important;
+    }
+  }
+
+  /* Logout button specifically */
+  .text-red-600,
+  .p-button-danger {
+    color: #ff0000 !important;
+    font-weight: 900 !important;
+    border: 2px solid #ff0000 !important;
+
+    &:hover {
+      background: #ff0000 !important;
+      color: #000000 !important;
+    }
+  }
+
+  .p-card,
+  .p-dialog,
+  .p-dialog-content,
+  .p-drawer,
+  .p-sidebar,
+  .p-popover {
+    box-shadow: none !important;
+    border: 2px solid #ffffff !important;
+
+    /* Ensure sidebar background is pure black */
+    background: #000000 !important;
+  }
+
+  .p-button {
+    border: 2px solid var(--primary-color) !important;
+    font-weight: 700 !important;
+
+    &:hover:not(:disabled) {
+      transform: none;
+      box-shadow: 0 0 0 3px var(--primary-color) !important;
+    }
+  }
+
+  .p-inputtext,
+  .p-select,
+  .p-dropdown {
+    border: 2px solid #ffffff !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  *:focus-visible {
+    outline: 3px solid var(--primary-color) !important;
+    outline-offset: 3px !important;
+  }
+
+  /* Links */
+  a {
+    color: var(--primary-color) !important;
+    text-decoration: underline !important;
+  }
+
+  /* Tags & Badges */
+  .p-tag {
+    border: 1px solid currentColor !important;
+  }
+
+  /* Table */
+  .p-datatable .p-datatable-thead > tr > th {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+  }
+
+  .p-datatable .p-datatable-tbody > tr {
+    background: #111111 !important;
+    color: #ffffff !important;
+
+    > td {
+      border: 1px solid #ffffff !important;
+    }
+
+    &:hover {
+      background: #222222 !important;
+    }
+  }
+
+  /* Select/Dropdown in HC */
+  .p-select-overlay,
+  .p-dropdown-panel {
+    background: #111111 !important;
+    border: 2px solid #ffffff !important;
+
+    .p-select-option,
+    .p-dropdown-item {
+      color: #ffffff !important;
+
+      &:hover {
+        background: #333333 !important;
+      }
+
+      &.p-select-option-selected,
+      &.p-dropdown-item-selected {
+        background: var(--primary-color) !important;
+        color: #000000 !important;
+      }
+    }
+  }
+
+  /* Toggle Switch */
+  .p-toggleswitch .p-toggleswitch-slider {
+    border: 2px solid #ffffff !important;
+  }
+
+  /* Progress Bar */
+  .p-progressbar {
+    border: 1px solid #ffffff !important;
+    background: #222222 !important;
+  }
 }
 
 html,
@@ -85,6 +330,105 @@ body {
   background-color: var(--surface-ground);
   color: var(--text-color);
   font-family: var(--font-family);
+  transition:
+    background-color 0.5s ease,
+    color 0.5s ease;
+  /* Fallback subtle grain/gradient for elegance can be added here if desired */
+}
+
+h1,
+h2 {
+  font-family: var(--font-family-serif) !important;
+  letter-spacing: -0.02em;
+}
+
+/* 4.5 Organic Elegance Utilities & Overrides */
+.organic-shape {
+  border-radius: var(--border-radius-organic) !important;
+}
+.pill-shape {
+  border-radius: var(--border-radius-pill) !important;
+}
+.elegant-shadow {
+  box-shadow: var(--shadow-elegant) !important;
+}
+.dark-theme .elegant-shadow,
+.dark .elegant-shadow {
+  box-shadow: var(--shadow-elegant-dark) !important;
+}
+
+/* 4.6 Standardized Page Header */
+.page-header {
+  @apply flex flex-col md:flex-row justify-between items-center md:items-end gap-4 mb-8;
+}
+
+.page-title-group {
+  @apply text-center md:text-left;
+}
+
+.page-title {
+  @apply text-3xl font-bold text-emphasis m-0;
+  font-family: var(--font-family-serif) !important;
+}
+
+.page-description {
+  @apply text-secondary text-sm mt-1;
+}
+
+.page-actions {
+  @apply flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0 justify-center md:justify-end;
+}
+
+/* Base PrimeNG Organic Geometry Overrides */
+.p-card,
+.p-dialog,
+.p-drawer,
+.p-sidebar,
+.p-popover {
+  border-radius: var(--border-radius-organic) !important;
+  box-shadow: var(--shadow-elegant) !important;
+  transition: var(--transition-smooth);
+  overflow: hidden !important; /* Fix sharp corners from header/footer peaking out */
+}
+
+/* Ensure content areas within these components can still scroll */
+.p-dialog-content,
+.p-drawer-content,
+.p-sidebar-content {
+  overflow-y: auto !important;
+}
+
+.dark-theme .p-card,
+.dark .p-card,
+.dark-theme .p-dialog,
+.dark .p-dialog,
+.dark-theme .p-popover,
+.dark .p-popover {
+  box-shadow: var(--shadow-elegant-dark) !important;
+}
+
+.p-button {
+  border-radius: var(--border-radius-pill);
+  transition: var(--transition-smooth) !important;
+}
+.p-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.p-inputtext,
+.p-select,
+.p-dropdown {
+  border-radius: var(--border-radius-pill);
+  transition: var(--transition-smooth) !important;
+}
+
+/* Elegant Focus Rings for Accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary-color) !important;
+  outline-offset: 4px !important;
+  border-radius: inherit;
+  transition: outline-offset 0.2s ease;
 }
 
 /* 5. Global PrimeNG Overrides */
@@ -94,13 +438,15 @@ body {
 .p-dropdown-panel {
   background: var(--surface-overlay) !important;
   border: 1px solid var(--surface-border) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
 
   .p-select-option,
   .p-dropdown-item {
     color: var(--text-color) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
       0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
     color: var(--text-color) !important;
 
@@ -199,424 +545,492 @@ body {
   }
 }
 
-  /* Dialog Styles */
-  .p-dialog {
-    background: var(--surface-card) !important;
-    border: 1px solid var(--surface-border) !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-      0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-    color: var(--text-color) !important;
+/* Dialog Styles */
+.p-dialog {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  color: var(--text-color) !important;
 
-    .p-dialog-header {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      border-bottom: 1px solid var(--surface-border) !important;
-      padding: 1.5rem !important;
-    }
-
-    .p-dialog-content {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      padding: 0 1.5rem 1.5rem 1.5rem !important;
-    }
-
-    .p-dialog-footer {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      border-top: 1px solid var(--surface-border) !important;
-      padding: 1.5rem !important;
-    }
-  }
-
-  /* Drawer/Sidebar Styles */
-  .p-drawer,
-  .p-sidebar {
-    background: var(--surface-card) !important;
-    border-right: 1px solid var(--surface-border) !important;
-    color: var(--text-color) !important;
-
-    .p-drawer-header,
-    .p-sidebar-header {
-      color: var(--text-color) !important;
-      padding: 1rem !important;
-    }
-
-    .p-drawer-content,
-    .p-sidebar-content {
-      color: var(--text-color) !important;
-    }
-  }
-
-  /* Card Styles */
-  .p-card {
+  .p-dialog-header {
     background: var(--surface-card) !important;
     color: var(--text-color) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
-
-    // Dark mode specific styles mimicking dark:bg-slate-800 dark:border-slate-800
-    // Slate-800 is typically #1e293b
-    .dark-theme &,
-    .dark & {
-      background: #1e293b !important;
-      border-color: #1e293b !important;
-    }
-
-    .p-card-title {
-      color: var(--text-color) !important;
-      font-weight: 700 !important;
-    }
-
-    .p-card-subtitle {
-      color: var(--text-color-secondary) !important;
-    }
-
-    .p-card-content {
-      color: var(--text-color) !important;
-    }
+    border-bottom: 1px solid var(--surface-border) !important;
+    padding: 1.5rem !important;
   }
 
-  /* Tabs Styles */
-  .p-tabs {
-    .p-tablist {
-      background: transparent !important;
+  .p-dialog-content {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    padding: 0 1.5rem 1.5rem 1.5rem !important;
+  }
+
+  .p-dialog-footer {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    border-top: 1px solid var(--surface-border) !important;
+    padding: 1.5rem !important;
+  }
+}
+
+/* Drawer/Sidebar Styles */
+.p-drawer,
+.p-sidebar {
+  background: var(--surface-card) !important;
+  border-right: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+
+  .p-drawer-header,
+  .p-sidebar-header {
+    color: var(--text-color) !important;
+    padding: 1rem !important;
+  }
+
+  .p-drawer-content,
+  .p-sidebar-content {
+    color: var(--text-color) !important;
+  }
+}
+
+/* Card Styles */
+.p-card {
+  background: var(--surface-card) !important;
+  color: var(--text-color) !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+
+  // Dark mode specific styles mimicking dark:bg-slate-800 dark:border-slate-800
+  // Slate-800 is typically #1e293b
+  .dark-theme &,
+  .dark & {
+    background: #1e293b !important;
+    border-color: #1e293b !important;
+  }
+
+  .p-card-title {
+    color: var(--text-color) !important;
+    font-weight: 700 !important;
+  }
+
+  .p-card-subtitle {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .p-card-content {
+    color: var(--text-color) !important;
+  }
+}
+
+/* Tabs Styles */
+.p-tabs {
+  .p-tablist {
+    background: transparent !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .p-tab {
+    background: transparent !important;
+    color: var(--text-color-secondary) !important;
+    border-color: transparent !important;
+    transition: var(--transition-smooth) !important;
+
+    &:hover {
       border-color: var(--surface-border) !important;
-    }
-
-    .p-tab {
-      background: transparent !important;
-      color: var(--text-color-secondary) !important;
-      border-color: transparent !important;
-
-      &:hover {
-        border-color: var(--surface-border) !important;
-        color: var(--text-color) !important;
-      }
-
-      &.p-tab-active {
-        color: var(--primary-color) !important;
-        border-color: var(--primary-color) !important;
-      }
-    }
-
-    .p-tabpanels {
-      background: transparent !important;
       color: var(--text-color) !important;
-      padding: 1rem 0 !important;
+    }
+
+    &.p-tab-active {
+      color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
     }
   }
 
-  /* 6. Additional PrimeNG Component Overrides for Dark Mode */
+  .p-tabpanels {
+    background: transparent !important;
+    color: var(--text-color) !important;
+    padding: 1rem 0 !important;
+  }
+}
 
-  /* Input Text Styles */
-  .p-inputtext {
+/* 6. Additional PrimeNG Component Overrides for Dark Mode */
+
+/* Input Text Styles */
+.p-inputtext {
+  background: var(--surface-card) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--surface-border) !important;
+
+  &:enabled:hover {
+    border-color: var(--primary-color) !important;
+  }
+
+  &:enabled:focus {
+    border-color: #15803d !important;
+    /* Green-700 */
+    box-shadow: 0 0 0 1px #15803d !important;
+  }
+}
+
+/* Select/Dropdown Trigger */
+.p-select,
+.p-dropdown {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+
+  .p-select-label,
+  .p-dropdown-label {
+    color: var(--text-color) !important;
+  }
+
+  .p-select-dropdown,
+  .p-dropdown-trigger {
+    color: var(--text-color-secondary) !important;
+  }
+
+  &:not(.p-disabled):hover {
+    border-color: var(--primary-color) !important;
+  }
+}
+
+/* Table Styles */
+.p-datatable {
+  .p-datatable-header {
     background: var(--surface-card) !important;
     color: var(--text-color) !important;
     border: 1px solid var(--surface-border) !important;
+    border-bottom: 0 none !important;
+  }
 
-    &:enabled:hover {
-      border-color: var(--primary-color) !important;
+  .p-datatable-thead > tr > th {
+    background: var(--surface-ground) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--surface-border) !important;
+  }
+
+  .p-datatable-tbody > tr {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+
+    > td {
+      border: 1px solid var(--surface-border) !important;
     }
 
-    &:enabled:focus {
-      border-color: #15803d !important;
-      /* Green-700 */
-      box-shadow: 0 0 0 1px #15803d !important;
+    &:hover {
+      background: var(--surface-hover) !important;
     }
   }
 
-  /* Select/Dropdown Trigger */
-  .p-select,
-  .p-dropdown {
+  .p-paginator {
     background: var(--surface-card) !important;
+    color: var(--text-color) !important;
     border: 1px solid var(--surface-border) !important;
+    border-top: 0 none !important;
 
-    .p-select-label,
-    .p-dropdown-label {
-      color: var(--text-color) !important;
-    }
-
-    .p-select-dropdown,
-    .p-dropdown-trigger {
+    .p-paginator-current {
       color: var(--text-color-secondary) !important;
     }
 
-    &:not(.p-disabled):hover {
-      border-color: var(--primary-color) !important;
+    .p-paginator-first,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-last,
+    .p-paginator-pages .p-paginator-page {
+      color: var(--text-color) !important;
+
+      &:not(.p-disabled):not(.p-paginator-page-selected):hover {
+        background: var(--surface-hover) !important;
+      }
+
+      &.p-paginator-page-selected {
+        background: #dcfce7 !important;
+        color: #15803d !important;
+      }
     }
   }
+}
 
-  /* Table Styles */
-  .p-datatable {
-    .p-datatable-header {
+.dark-theme
+  .p-datatable
+  .p-paginator
+  .p-paginator-pages
+  .p-paginator-page.p-paginator-page-selected,
+.dark
+  .p-datatable
+  .p-paginator
+  .p-paginator-pages
+  .p-paginator-page.p-paginator-page-selected {
+  background: rgba(21, 128, 61, 0.2) !important;
+  color: #86efac !important;
+}
+
+/* Stronger Overrides for Dark Mode */
+.dark-theme,
+.dark {
+  /* Table Header */
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* Table Body */
+  .p-datatable .p-datatable-tbody > tr {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    border-color: var(--surface-border) !important;
+  }
+
+  /* Select/Dropdown Panel Background Force */
+  .p-select-overlay,
+  .p-dropdown-panel {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-select-list,
+    .p-dropdown-items {
       background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      border: 1px solid var(--surface-border) !important;
-      border-bottom: 0 none !important;
     }
 
-    .p-datatable-thead > tr > th {
-      background: var(--surface-ground) !important;
+    .p-select-option,
+    .p-dropdown-item {
       color: var(--text-color) !important;
-      border: 1px solid var(--surface-border) !important;
-    }
-
-    .p-datatable-tbody > tr {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-
-      > td {
-        border: 1px solid var(--surface-border) !important;
-      }
 
       &:hover {
         background: var(--surface-hover) !important;
       }
-    }
 
-    .p-paginator {
+      &.p-select-option-selected,
+      &.p-dropdown-item-selected {
+        background: rgba(59, 130, 246, 0.16) !important;
+        color: var(--primary-color) !important;
+      }
+    }
+  }
+
+  /* Popover Styles */
+  .p-popover {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-popover-content {
       background: var(--surface-card) !important;
       color: var(--text-color) !important;
-      border: 1px solid var(--surface-border) !important;
-      border-top: 0 none !important;
+    }
 
-      .p-paginator-current {
+    /* Arrow (Top) */
+    &.p-popover-top:before {
+      border-top-color: var(--surface-border) !important;
+    }
+
+    &.p-popover-top:after {
+      border-top-color: var(--surface-card) !important;
+    }
+
+    /* Arrow (Bottom) - Default */
+    &:before {
+      border-bottom-color: var(--surface-border) !important;
+    }
+
+    &:after {
+      border-bottom-color: var(--surface-card) !important;
+    }
+
+    /* Arrow (Left) */
+    &.p-popover-left:before {
+      border-left-color: var(--surface-border) !important;
+    }
+
+    &.p-popover-left:after {
+      border-left-color: var(--surface-card) !important;
+    }
+
+    /* Arrow (Right) */
+    &.p-popover-right:before {
+      border-right-color: var(--surface-border) !important;
+    }
+
+    &.p-popover-right:after {
+      border-right-color: var(--surface-card) !important;
+    }
+  }
+}
+.nav-link {
+  transition: var(--transition-smooth) !important;
+  &:hover {
+    background: var(--nav-hover-bg) !important;
+  }
+  &.active {
+    background: var(--nav-active-bg) !important;
+    color: var(--nav-active-text) !important;
+  }
+}
+
+.collapsible-nav {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease-in-out !important;
+
+  &.is-open {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+/* Stronger Overrides for Capycro Theme */
+.capycro-theme {
+  /* Card Background - Specific for Capycro if distinct from generic surface-card */
+  .p-card {
+    background: var(--surface-card) !important;
+    border: 1px solid var(--surface-border) !important; /* Capycro needs explicit border to contrast with off-white bg */
+  }
+
+  /* Table Header */
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(
+      --surface-ground
+    ) !important; /* Use off-white ground for headers to distinguish from white body */
+    color: var(--text-color) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* Table Body */
+  .p-datatable .p-datatable-tbody > tr {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    border-color: var(--surface-border) !important;
+
+    &:hover {
+      background: var(--surface-hover) !important;
+    }
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    border-color: var(--surface-border) !important;
+  }
+
+  /* Select/Dropdown Panel Background Force */
+  .p-select-overlay,
+  .p-dropdown-panel {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-select-list,
+    .p-dropdown-items {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-select-option,
+    .p-dropdown-item {
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+
+      &.p-select-option-selected,
+      &.p-dropdown-item-selected {
+        background: rgba(
+          93,
+          138,
+          140,
+          0.16
+        ) !important; /* Capycro Blue Low Opacity */
+        color: var(--primary-color) !important;
+      }
+    }
+  }
+
+  /* Force Primary Button Color (Override Aura Green) */
+  .p-button {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color-text) !important;
+
+    &:hover {
+      background: #4a6f71 !important; /* Darker Petrol */
+      border-color: #4a6f71 !important;
+    }
+
+    &.p-button-outlined {
+      background: transparent !important;
+      color: var(--primary-color) !important;
+      border-color: var(
+        --surface-border
+      ) !important; /* Beige border for outlines */
+
+      &:hover {
+        background: rgba(93, 138, 140, 0.04) !important;
+        border-color: var(--primary-color) !important;
+      }
+
+      &.p-button-secondary {
         color: var(--text-color-secondary) !important;
       }
 
-      .p-paginator-first,
-      .p-paginator-prev,
-      .p-paginator-next,
-      .p-paginator-last,
-      .p-paginator-pages .p-paginator-page {
-        color: var(--text-color) !important;
-
-        &:not(.p-disabled):not(.p-paginator-page-selected):hover {
-          background: var(--surface-hover) !important;
-        }
-
-        &.p-paginator-page-selected {
-          background: #dcfce7 !important;
-          color: #15803d !important;
-        }
-      }
-    }
-  }
-
-  .dark-theme
-    .p-datatable
-    .p-paginator
-    .p-paginator-pages
-    .p-paginator-page.p-paginator-page-selected,
-  .dark
-    .p-datatable
-    .p-paginator
-    .p-paginator-pages
-    .p-paginator-page.p-paginator-page-selected {
-    background: rgba(21, 128, 61, 0.2) !important;
-    color: #86efac !important;
-  }
-
-  /* Stronger Overrides for Dark Mode */
-  .dark-theme,
-  .dark {
-    /* Table Header */
-    .p-datatable .p-datatable-thead > tr > th {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      border-color: var(--surface-border) !important;
-    }
-
-    /* Table Body */
-    .p-datatable .p-datatable-tbody > tr {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      border-color: var(--surface-border) !important;
-    }
-
-    .p-datatable .p-datatable-tbody > tr > td {
-      border-color: var(--surface-border) !important;
-    }
-
-    /* Select/Dropdown Panel Background Force */
-    .p-select-overlay,
-    .p-dropdown-panel {
-      background: var(--surface-card) !important;
-      border-color: var(--surface-border) !important;
-
-      .p-select-list,
-      .p-dropdown-items {
-        background: var(--surface-card) !important;
-      }
-
-      .p-select-option,
-      .p-dropdown-item {
-        color: var(--text-color) !important;
+      &.p-button-danger {
+        color: var(--error-color) !important;
+        border-color: var(--error-color) !important;
 
         &:hover {
-          background: var(--surface-hover) !important;
-        }
-
-        &.p-select-option-selected,
-        &.p-dropdown-item-selected {
-          background: rgba(59, 130, 246, 0.16) !important;
-          color: var(--primary-color) !important;
+          background: rgba(209, 92, 92, 0.04) !important;
         }
       }
     }
 
-    /* Popover Styles */
-    .p-popover {
-      background: var(--surface-card) !important;
-      border-color: var(--surface-border) !important;
-      color: var(--text-color) !important;
-
-      .p-popover-content {
-        background: var(--surface-card) !important;
-        color: var(--text-color) !important;
-      }
-
-      /* Arrow (Top) */
-      &.p-popover-top:before {
-        border-top-color: var(--surface-border) !important;
-      }
-
-      &.p-popover-top:after {
-        border-top-color: var(--surface-card) !important;
-      }
-
-      /* Arrow (Bottom) - Default */
-      &:before {
-        border-bottom-color: var(--surface-border) !important;
-      }
-
-      &:after {
-        border-bottom-color: var(--surface-card) !important;
-      }
-
-      /* Arrow (Left) */
-      &.p-popover-left:before {
-        border-left-color: var(--surface-border) !important;
-      }
-
-      &.p-popover-left:after {
-        border-left-color: var(--surface-card) !important;
-      }
-
-      /* Arrow (Right) */
-      &.p-popover-right:before {
-        border-right-color: var(--surface-border) !important;
-      }
-
-      &.p-popover-right:after {
-        border-right-color: var(--surface-card) !important;
-      }
-    }
-  }
-
-  /* Stronger Overrides for Capycro Theme */
-  .capycro-theme {
-      /* Card Background - Specific for Capycro if distinct from generic surface-card */
-     .p-card {
-        background: var(--surface-card) !important;
-        border: 1px solid var(--surface-border) !important; /* Capycro needs explicit border to contrast with off-white bg */
-     }
-
-    /* Table Header */
-    .p-datatable .p-datatable-thead > tr > th {
-      background: var(--surface-ground) !important; /* Use off-white ground for headers to distinguish from white body */
-      color: var(--text-color) !important;
-      border-color: var(--surface-border) !important;
-    }
-
-    /* Table Body */
-    .p-datatable .p-datatable-tbody > tr {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
-      border-color: var(--surface-border) !important;
+    &.p-button-text {
+      background: transparent !important;
+      color: var(--primary-color) !important;
+      border-color: transparent !important;
 
       &:hover {
-          background: var(--surface-hover) !important;
+        background: rgba(93, 138, 140, 0.04) !important;
       }
     }
+  }
 
-    .p-datatable .p-datatable-tbody > tr > td {
-      border-color: var(--surface-border) !important;
-    }
+  /* SelectButton Specifics for Capycro - Targeted for PrimeNG 18+ items */
+  .p-selectbutton {
+    background: #f3e4c9 !important; /* Bege de fundo do container */
+    padding: 2px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--surface-border) !important;
 
-    /* Select/Dropdown Panel Background Force */
-    .p-select-overlay,
-    .p-dropdown-panel {
-      background: var(--surface-card) !important;
-      border-color: var(--surface-border) !important;
+    .p-selectbutton-option {
+      background: transparent !important;
+      color: #593e2b !important; /* Marrom Escuro */
+      border: none !important;
+      border-radius: 8px !important;
+      margin: 1px !important;
+      transition: var(--transition-smooth) !important;
 
-      .p-select-list,
-      .p-dropdown-items {
-        background: var(--surface-card) !important;
-        color: var(--text-color) !important;
+      &.p-selectbutton-option-selected {
+        background: var(--primary-color) !important; /* Azul-Petróleo */
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
       }
 
-      .p-select-option,
-      .p-dropdown-item {
-        color: var(--text-color) !important;
-
-        &:hover {
-          background: var(--surface-hover) !important;
-        }
-
-        &.p-select-option-selected,
-        &.p-dropdown-item-selected {
-          background: rgba(93, 138, 140, 0.16) !important; /* Capycro Blue Low Opacity */
-          color: var(--primary-color) !important;
-        }
-      }
-    }
-
-    /* Force Primary Button Color (Override Aura Green) */
-    .p-button {
-      background: var(--primary-color) !important;
-      border-color: var(--primary-color) !important;
-      color: var(--primary-color-text) !important;
-
-      &:hover {
-        background: #4a6f71 !important; /* Darker Petrol */
-        border-color: #4a6f71 !important;
+      &:not(.p-selectbutton-option-selected):hover {
+        background: rgba(0, 0, 0, 0.04) !important;
       }
 
-      &.p-button-outlined {
-        background: transparent !important;
-        color: var(--primary-color) !important;
-        border-color: var(--surface-border) !important; /* Beige border for outlines */
-
-        &:hover {
-            background: rgba(93, 138, 140, 0.04) !important;
-            border-color: var(--primary-color) !important;
-        }
-
-        &.p-button-secondary {
-            color: var(--text-color-secondary) !important;
-        }
-
-        &.p-button-danger {
-            color: var(--error-color) !important;
-            border-color: var(--error-color) !important;
-
-            &:hover {
-                 background: rgba(209, 92, 92, 0.04) !important;
-            }
-        }
-      }
-
-      &.p-button-text {
-          background: transparent !important;
-          color: var(--primary-color) !important;
-          border-color: transparent !important;
-
-          &:hover {
-              background: rgba(93, 138, 140, 0.04) !important;
-          }
+      /* Focus state */
+      &.p-focus {
+        box-shadow: 0 0 0 2px rgba(93, 138, 140, 0.2) !important;
       }
     }
+  }
 
   /* Sidebar/Drawer Color */
   .pwa-title-bar {
@@ -641,11 +1055,104 @@ body {
   @media (display-mode: window-controls-overlay) {
     .pwa-title-bar {
       display: flex !important;
-      /* Use env variables to avoid overlapping window controls */
-      padding-right: env(titlebar-area-width, 0);
-      left: env(titlebar-area-x, 0);
-      width: env(titlebar-area-width, 100%);
-      height: env(titlebar-area-height, 33px);
     }
+  }
+}
+
+/* 11. PrimeNG Animation Refinements */
+.p-drawer-mask {
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(
+    2px
+  ) !important; /* Reduced for better mobile performance */
+
+  &.p-drawer-mask-enter {
+    opacity: 0;
+  }
+  &.p-drawer-mask-enter-active {
+    opacity: 1;
+  }
+}
+
+.p-dialog-mask {
+  transition:
+    background-color 0.5s ease,
+    backdrop-filter 0.5s ease !important;
+  background-color: var(--mask-bg) !important;
+  backdrop-filter: blur(4px);
+}
+
+.p-dialog {
+  &-enter-active {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+  &-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+}
+
+.p-drawer {
+  /* Reset standard transitions to allow keyframe control */
+  transition: none !important;
+  box-shadow: 10px 0 50px rgba(0, 0, 0, 0.2) !important;
+
+  &-enter-active {
+    animation: drawer-slide-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+
+    /* Layered entrance for inner content */
+    .flex-col {
+      animation: drawer-content-fade 0.5s ease-out 0.2s both;
+    }
+  }
+
+  &-leave-active {
+    animation: drawer-slide-out 0.4s cubic-bezier(0.32, 0, 0.67, 0) forwards !important;
+  }
+}
+
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes drawer-content-fade {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Smooth Chart Initial Load */
+p-chart {
+  display: block;
+  animation: chartFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes chartFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
