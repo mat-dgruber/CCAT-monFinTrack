@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirme seu e-mail - MonFinTrack</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4eee0; /* Superfície Fundo */
+            margin: 0;
+            padding: 0;
+            color: #3e3a35; /* Grafite Orgânico */
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #f8f4e8; /* Superfície Card */
+            border-radius: 1.5rem; /* Formato Orgânico */
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12); /* Sombra Elegante */
+        }
+        .header {
+            background-color: #f8f4e8;
+            padding: 30px 20px 10px 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .content {
+            padding: 20px 40px 30px 40px;
+            text-align: center;
+        }
+        h2 {
+            color: #3e3a35;
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-family: 'Playfair Display', serif;
+        }
+        p {
+            color: #7a6b5d; /* Texto Secundário */
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #5d8a8c; /* Azul-Petróleo (Ação Primária) */
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 9999px; /* Pill Shape */
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(93, 138, 140, 0.3); /* Sombra do Botão */
+        }
+        .footer {
+            background-color: #ece5d5; /* Hover/Detalhe */
+            color: #7a6b5d;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+        }
+        .footer a {
+            color: #d8704c; /* Laranja Queimado */
+            text-decoration: none;
+        }
+        /* Garantindo link do botão fique branco no email clients */
+        a.button {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo">
+        </div>
+        <div class="content">
+            <h2>Olá, {{ name }}</h2>
+            <p>Clique neste link para verificar seu endereço de e-mail.</p>
+            
+            <a href="{{ action_url }}" class="button">Verificar meu e-mail</a>
+            
+            <p style="font-size: 14px; margin-top: 10px;">Se você não solicitou a verificação deste endereço, ignore este e-mail.</p>
+            
+            <p style="margin-top: 25px;">Obrigado,<br><strong>Equipe do app {{ app_name | default("MonFinTrack") }}</strong></p>
+        </div>
+        <div class="footer">
+            <p>Enviado por: <strong>Equipe monFinTrack da CapyCro. AvecTech</strong></p>
+            <p>De: noreply@monfintrack.com.br</p>
+            <p>&copy; 2026 MonFinTrack. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

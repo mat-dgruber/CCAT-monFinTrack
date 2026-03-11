@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação em duas etapas ativada - MonFinTrack</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4eee0;
+            margin: 0;
+            padding: 0;
+            color: #3e3a35;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #f8f4e8;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12);
+        }
+        .header {
+            background-color: #f8f4e8;
+            padding: 30px 20px 10px 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .content {
+            padding: 20px 40px 30px 40px;
+            text-align: center;
+        }
+        h2 {
+            color: #3e3a35;
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-family: 'Playfair Display', serif;
+        }
+        p {
+            color: #7a6b5d;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .highlight-box {
+            background-color: rgba(93, 138, 140, 0.1); /* Verde/Azul Escuro (Sucesso) */
+            border-left: 4px solid #5d8a8c;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: #4a6e70;
+            font-size: 15px;
+            text-align: left;
+            border-radius: 0 8px 8px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #d15c5c; /* Vermelho suave (Ação de remover 2FA) */
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(209, 92, 92, 0.3);
+        }
+        .footer {
+            background-color: #ece5d5;
+            color: #7a6b5d;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+        }
+        a.button {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo">
+        </div>
+        <div class="content">
+            <h2>Você adicionou a verificação em duas etapas</h2>
+            
+            <p>Olá, {{ name }}</p>
+            
+            <div class="highlight-box">
+                Sua conta no app <strong>{{ app_name | default("MonFinTrack") }}</strong> foi atualizada com <strong>{{ second_factor }}</strong> para a verificação em duas etapas.
+            </div>
+            
+            <p style="margin-top: 25px; margin-bottom: 10px;">Se você não adicionou essa verificação em duas etapas, clique no link abaixo para removê-la urgente.</p>
+            
+            <a href="{{ action_url }}" class="button">Remover Verificação</a>
+            
+            <p style="margin-top: 25px;">Obrigado,<br><strong>Equipe do app {{ app_name | default("MonFinTrack") }}</strong></p>
+            
+        </div>
+        <div class="footer">
+            <p>Enviado por: <strong>Equipe monFinTrack da CapyCro. AvecTech</strong></p>
+            <p>De: noreply@monfintrack.com.br</p>
+            <p>&copy; 2026 MonFinTrack - Proteção e Transparência Financeira.</p>
+        </div>
+    </div>
+</body>
+</html>
