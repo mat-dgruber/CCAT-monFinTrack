@@ -17,53 +17,54 @@ import { SubscriptionService } from '../../services/subscription.service';
 import { CalculatorComponent } from '../shared/calculator/calculator.component';
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ToastModule,
-    ConfirmDialogModule,
-    RouterModule,
-    ButtonModule,
-    ButtonModule,
-    DrawerModule,
-    CalculatorComponent
-  ],
-  templateUrl: './home.html',
+ selector: 'app-home',
+ standalone: true,
+ imports: [
+ CommonModule,
+ ToastModule,
+ ConfirmDialogModule,
+ RouterModule,
+ ButtonModule,
+ ButtonModule,
+ DrawerModule,
+ CalculatorComponent
+ ],
+ templateUrl: './home.html',
 })
 export class Home {
-  authService = inject(AuthService);
-  userPreferenceService = inject(UserPreferenceService);
-  pwaService = inject(PwaService);
-  subscriptionService = inject(SubscriptionService);
+ authService = inject(AuthService);
+ userPreferenceService = inject(UserPreferenceService);
+ pwaService = inject(PwaService);
+ subscriptionService = inject(SubscriptionService);
 
-  sidebarVisible = signal(false);
-  calculatorVisible = signal(false);
-  moreMenuVisible = signal(false);
+ sidebarVisible = signal(false);
+ calculatorVisible = signal(false);
+ moreMenuVisible = signal(false);
+ currentYear = new Date().getFullYear();
 
-  firstName = computed(() => {
-    const user = this.authService.currentUser();
-    return user?.displayName?.split(' ')[0] || 'Usuário';
-  });
+ firstName = computed(() => {
+ const user = this.authService.currentUser();
+ return user?.displayName?.split(' ')[0] || 'Usuário';
+ });
 
-  logout() {
-    this.authService.logout();
-  }
+ logout() {
+ this.authService.logout();
+ }
 
-  toggleSidebar() {
-    this.sidebarVisible.update(v => !v);
-  }
+ toggleSidebar() {
+ this.sidebarVisible.update(v => !v);
+ }
 
-  closeSidebar() {
-    this.sidebarVisible.set(false);
-  }
+ closeSidebar() {
+ this.sidebarVisible.set(false);
+ }
 
-  toggleCalculator() {
-    this.calculatorVisible.update(v => !v);
-    this.closeSidebar();
-  }
+ toggleCalculator() {
+ this.calculatorVisible.update(v => !v);
+ this.closeSidebar();
+ }
 
-  toggleMoreMenu() {
-    this.moreMenuVisible.update(v => !v);
-  }
+ toggleMoreMenu() {
+ this.moreMenuVisible.update(v => !v);
+ }
 }
