@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, effect, Input, input } from '@angular/core';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -8,7 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 import { BudgetService } from '../../services/budget.service';
 import { CategoryService } from '../../services/category.service';
@@ -35,7 +36,7 @@ export class BudgetManager implements OnInit {
  private categoryService = inject(CategoryService);
  private refreshService = inject(RefreshService);
  private filterService = inject(FilterService);
- private confirmationService = inject(ConfirmationService);
+ private confirmationService = inject(CustomConfirmService);
  private messageService = inject(MessageService);
  private fb = inject(FormBuilder);
  private currencyPipe = inject(CurrencyPipe);

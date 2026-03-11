@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { BudgetManager } from './budget-manager';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 describe('BudgetManager', () => {
  let component: BudgetManager;
@@ -11,7 +12,7 @@ describe('BudgetManager', () => {
  beforeEach(async () => {
  await TestBed.configureTestingModule({
  imports: [BudgetManager, HttpClientTestingModule, NoopAnimationsModule],
- providers: [ConfirmationService, MessageService]
+ providers: [CustomConfirmService, MessageService]
  })
  .compileComponents();
 

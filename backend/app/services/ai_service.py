@@ -4,12 +4,11 @@ import os
 import random
 import time
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 
 import google.generativeai as genai
 from app.core.database import get_db
 from app.core.logger import get_logger
-from app.schemas.category import Category
 from app.services import account as account_service
 from app.services import category as category_service
 from app.services import transaction as transaction_service
@@ -269,10 +268,7 @@ def chat_finance(
         # 4. Action JSON Handling
         def process_json_action(action_data):
             try:
-                if (
-                    action_data.get("type") == "action"
-                    and action_data.get("action") == "create_transaction"
-                ):
+                if action_data.get("type") == "create_transaction":
                     from app.schemas.transaction import TransactionCreate
 
                     t_data = action_data["data"]
@@ -316,12 +312,18 @@ def chat_finance(
                     title_val = (
                         t_data.get("title")
                         or t_data.get("description")
-                        or "Transaction"
+                        or "Transação AI"
                     )
+                    if len(title_val) < 3:
+                        title_val = f"{title_val} IA"
+
+                    # Fix: Handle amount parsing with possible comma
+                    amount_str = str(t_data["amount"]).replace(",", ".")
+                    amount_val = float(amount_str)
 
                     new_tx = TransactionCreate(
                         title=title_val,
-                        amount=float(t_data["amount"]),
+                        amount=amount_val,
                         type=t_data.get("type", "expense"),
                         category_id=cat_id,
                         account_id=acc_id,
@@ -332,7 +334,7 @@ def chat_finance(
                     created = transaction_service.create_transaction(new_tx, user_id)
                     return f"✅ Criado: {created.title} (R$ {created.amount})."
             except Exception as e:
-                pass
+                logger.error("Error creating AI transaction: %s", e, exc_info=True)
             return None
 
         if action_data:
@@ -641,3 +643,51 @@ def generate_debt_advice(
     except Exception as e:
         logger.error("Debt Advice Error: %s", e)
         return "Erro ao analisar dívidas."
+
+
+def analyze_cost_of_living(user_id: str, data: dict, tier: str = "premium") -> str:
+    """
+    Analisa os dados de custo de vida e fornece insights sobre anomalias e projeções.
+    """
+    if not GENAI_API_KEY:
+        return "IA indisponível."
+
+    try:
+        # 1. Preparar Contexto
+        # Extrair dados básicos para o prompt
+        range_info = data.get("range", {})
+        realized = data.get("realized", {})
+        committed = data.get("committed", {})
+        categories = data.get("categories", [])
+
+        cat_str = "|".join([f"{c['name']}: {c['value']}" for c in categories[:10]])
+
+        ctx = (
+            f"Range: {range_info.get('months_count')} months. "
+            f"Avg Realized: R${realized.get('average_total', 0):.0f}. "
+            f"Committed: R${committed.get('total', 0):.0f}. "
+            f"Top Cats: [{cat_str}]"
+        )
+
+        # 2. Prompt
+        model_name = get_model_for_tier(tier)
+        model = genai.GenerativeModel(model_name)
+
+        prompt = f"""
+        Data: {ctx}
+        Role: Amigo e Mentor Financeiro (Papo reto, simples e popular).
+        Task: Analisar o Custo de Vida (PT-BR).
+        Passos:
+        1. Avalie se a média de gastos está saudável ou se o bicho vai pegar.
+        2. Aponte onde o dinheiro está fugindo (gastos desnecessários).
+        3. Dê uma dica prática e "pé no chão" para baixar o custo mensal.
+        4. Fale de forma simples sobre o futuro e o que está fora do comum.
+        Estilo: Markdown. Linguagem super acessível, direta, como se estivesse explicando para um amigo no café. Evite termos técnicos complicados. Máximo 3 parágrafos curtos.
+        """
+
+        response = _call_with_retry(model, prompt)
+        return response.text
+
+    except Exception as e:
+        logger.error("Cost of Living Analysis Error: %s", e)
+        return "Erro ao analisar custo de vida."

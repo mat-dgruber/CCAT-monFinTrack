@@ -2,7 +2,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 
@@ -22,7 +22,7 @@ import { CalculatorComponent } from '../shared/calculator/calculator.component';
  imports: [
  CommonModule,
  ToastModule,
- ConfirmDialogModule,
+ 
  RouterModule,
  ButtonModule,
  ButtonModule,

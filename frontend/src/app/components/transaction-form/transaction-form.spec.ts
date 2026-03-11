@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 import { TransactionForm } from './transaction-form';
 
@@ -11,7 +12,7 @@ describe('TransactionForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TransactionForm, HttpClientTestingModule],
-      providers: [ConfirmationService, MessageService],
+      providers: [CustomConfirmService, MessageService],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TransactionForm);

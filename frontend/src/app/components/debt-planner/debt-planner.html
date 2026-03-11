@@ -915,11 +915,7 @@
  }
 
  <!-- Confirm Dialog -->
- <p-confirmDialog
- [style]="{ width: '450px' }"
- rejectButtonStyleClass="p-button-text p-button-secondary"
- acceptButtonStyleClass="p-button-danger"
- ></p-confirmDialog>
+ 
 
  <!-- DEBT FORM DIALOG -->
  <p-dialog
@@ -1276,12 +1272,11 @@
  @if (!adviceLoading() && adviceResult()) {
  <div class="line-height-3 text-lg">
  <!-- Simple Pre-wrap for now. In a real app, use MarkdownPipe -->
- <div
- class="p-4 surface-ground border-round surface-border border-1"
- style="white-space: pre-wrap; font-family: sans-serif"
- >
- {{ adviceResult() }}
- </div>
+  <div
+  class="p-4 surface-ground border-round surface-border border-1 prose dark:prose-invert max-w-none text-justify"
+  >
+  <markdown [data]="adviceResult()"></markdown>
+  </div>
 
  <div class="mt-4 flex justify-end">
  <p-button

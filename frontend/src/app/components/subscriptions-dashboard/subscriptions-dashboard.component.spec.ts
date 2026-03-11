@@ -1,17 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { SubscriptionsDashboardComponent } from './subscriptions-dashboard.component';
 import { RecurrenceService } from '../../services/recurrence.service';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { AccountService } from '../../services/account.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import {
   Recurrence,
   RecurrencePeriodicity,
 } from '../../models/recurrence.model';
 import { DatePickerModule } from 'primeng/datepicker';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -21,7 +22,7 @@ describe('SubscriptionsDashboardComponent', () => {
   let component: SubscriptionsDashboardComponent;
   let fixture: ComponentFixture<SubscriptionsDashboardComponent>;
   let recurrenceServiceSpy: jasmine.SpyObj<RecurrenceService>;
-  let confirmationServiceSpy: jasmine.SpyObj<ConfirmationService>;
+  let confirmationServiceSpy: jasmine.SpyObj<CustomConfirmService>;
   let transactionServiceSpy: jasmine.SpyObj<TransactionService>;
 
   beforeEach(async () => {
@@ -36,7 +37,7 @@ describe('SubscriptionsDashboardComponent', () => {
     ]);
     const catSpy = jasmine.createSpyObj('CategoryService', ['getCategories']);
     const accSpy = jasmine.createSpyObj('AccountService', ['getAccounts']);
-    const confirmSpy = jasmine.createSpyObj('ConfirmationService', ['confirm']);
+    const confirmSpy = jasmine.createSpyObj('CustomConfirmService', ['confirm']);
     const msgSpy = jasmine.createSpyObj('MessageService', ['add']);
     const aiSpy = jasmine.createSpyObj('AIService', [
       'getSubscriptionSuggestions',
@@ -54,7 +55,7 @@ describe('SubscriptionsDashboardComponent', () => {
       imports: [
         SubscriptionsDashboardComponent,
         DatePickerModule,
-        ConfirmDialogModule,
+        
         NoopAnimationsModule,
       ],
       providers: [
@@ -62,7 +63,7 @@ describe('SubscriptionsDashboardComponent', () => {
         { provide: TransactionService, useValue: txSpy },
         { provide: CategoryService, useValue: catSpy },
         { provide: AccountService, useValue: accSpy },
-        { provide: ConfirmationService, useValue: confirmSpy },
+        { provide: CustomConfirmService, useValue: confirmSpy },
         { provide: MessageService, useValue: msgSpy },
         { provide: AIService, useValue: aiSpy },
         { provide: SubscriptionService, useValue: subSpy },
@@ -79,8 +80,8 @@ describe('SubscriptionsDashboardComponent', () => {
       RecurrenceService,
     ) as jasmine.SpyObj<RecurrenceService>;
     confirmationServiceSpy = TestBed.inject(
-      ConfirmationService,
-    ) as jasmine.SpyObj<ConfirmationService>;
+      CustomConfirmService,
+    ) as jasmine.SpyObj<CustomConfirmService>;
     transactionServiceSpy = TestBed.inject(
       TransactionService,
     ) as jasmine.SpyObj<TransactionService>;

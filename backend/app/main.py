@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from app.api.routes import router as api_router
 from app.core.database import get_db

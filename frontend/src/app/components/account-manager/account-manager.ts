@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, effect, computed } from '@angular/core';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -8,7 +9,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select'; // Novo Dropdown (v18+)
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
@@ -52,7 +53,7 @@ export class AccountManager implements OnInit {
  private accountService = inject(AccountService);
  private subscriptionService = inject(SubscriptionService);
  private refreshService = inject(RefreshService);
- private confirmationService = inject(ConfirmationService);
+ private confirmationService = inject(CustomConfirmService);
  private messageService = inject(MessageService);
  private fb = inject(FormBuilder);
  private transactionService = inject(TransactionService);

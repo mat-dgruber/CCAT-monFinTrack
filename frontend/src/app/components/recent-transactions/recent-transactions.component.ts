@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, ViewChild, effect, Input } from '@angular/core';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TransactionService } from '../../services/transaction.service';
@@ -6,7 +7,7 @@ import { RefreshService } from '../../services/refresh.service';
 import { Transaction } from '../../models/transaction.model';
 import { TransactionForm } from '../transaction-form/transaction-form';
 import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 import { SkeletonModule } from 'primeng/skeleton';
 
@@ -28,7 +29,7 @@ export class RecentTransactionsComponent implements OnInit {
 
   private transactionService = inject(TransactionService);
   private refreshService = inject(RefreshService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmationService = inject(CustomConfirmService);
   private messageService = inject(MessageService);
 
   transactions = signal<Transaction[]>([]);

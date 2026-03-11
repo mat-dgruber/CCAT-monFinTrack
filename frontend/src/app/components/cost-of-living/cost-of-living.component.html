@@ -261,10 +261,11 @@
  </div>
 
  <div class="p-5">
- <div
- class="prose dark:prose-invert max-w-none text-sm leading-relaxed text-color text-justify"
- [innerHTML]="formattedAnalysis()"
- ></div>
+  <div
+  class="prose dark:prose-invert max-w-none text-sm leading-relaxed text-color text-justify"
+  >
+  <markdown [data]="aiAnalysis()"></markdown>
+  </div>
  </div>
  </div>
  </div>

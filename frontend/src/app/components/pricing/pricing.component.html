@@ -29,7 +29,7 @@
       <button
         class="px-8 py-3 rounded-full text-base font-bold transition-all duration-300 relative z-10 focus:outline-none flex items-center gap-2"
         [class.bg-primary-500]="!isAnnual()"
-        [class.text-white]="!isAnnual()"
+        [class.text-slate-900]="!isAnnual()"
         [class.shadow-lg]="!isAnnual()"
         [class.shadow-primary-500/30]="!isAnnual()"
         [class.text-secondary]="isAnnual()"
@@ -44,7 +44,7 @@
       <button
         class="px-8 py-3 rounded-full text-base font-bold transition-all duration-300 relative z-10 flex items-center gap-2 focus:outline-none"
         [class.bg-primary-500]="isAnnual()"
-        [class.text-white]="isAnnual()"
+        [class.text-slate-900]="isAnnual()"
         [class.shadow-lg]="isAnnual()"
         [class.shadow-primary-500/30]="isAnnual()"
         [class.text-secondary]="!isAnnual()"
@@ -109,6 +109,13 @@
           [disabled]="true"
           class="w-full p-button-outlined p-button-secondary rounded-xl font-bold py-3"
           *ngIf="currentTier() === 'free'"
+        ></button>
+        <button
+          pButton
+          label="Voltar para o Gratuito"
+          class="w-full p-button-outlined p-button-danger rounded-xl font-bold py-3"
+          *ngIf="currentTier() !== 'free'"
+          (click)="manageSubscription()"
         ></button>
       </div>
     </div>

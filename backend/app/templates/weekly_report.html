@@ -6,135 +6,218 @@
     <title>Resumo Semanal MonFinTrack</title>
     <style>
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4eee0;
+            font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #faf8f5;
             margin: 0;
-            padding: 0;
-            color: #3e3a35;
+            padding: 40px 20px;
+            color: #2D2A26;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #faf8f5;
+            padding-bottom: 40px;
         }
         .container {
             max-width: 600px;
-            margin: 30px auto;
-            background-color: #f8f4e8;
-            border-radius: 1.5rem;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12);
+            box-shadow: 0 12px 40px rgba(89, 62, 43, 0.06);
+            border: 1px solid #f0ebe1;
         }
         .header {
-            background-color: #5d8a8c; /* Azul Petróleo */
-            color: white;
-            padding: 30px 20px;
+            background-color: #faf8f5;
+            padding: 40px 40px 10px 40px;
             text-align: center;
+        }
+        .logo {
+            max-width: 160px;
+            height: auto;
+            margin-bottom: 16px;
         }
         .header h1 {
+            color: #2D2A26;
             margin: 0;
             font-size: 26px;
-            font-family: 'Playfair Display', serif;
+            font-family: 'Playfair Display', Georgia, serif;
+            letter-spacing: -0.5px;
         }
         .content {
-            padding: 20px 40px 30px 40px;
+            padding: 10px 40px 40px 40px;
+        }
+        .content p {
+            color: #6B6359;
+            font-size: 16px;
+            line-height: 1.6;
         }
         .card {
-            background: rgba(93, 138, 140, 0.1); /* Fundo suave azul-petróleo */
-            border: 1px solid #e6dccb;
-            border-radius: 1rem;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: #ffffff;
+            border: 1px solid #ede7dc;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(89, 62, 43, 0.03);
+            text-align: center;
         }
         .card h3 {
-            color: #4a6e70;
+            color: #8a8176;
             margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-        .highlight {
-            font-size: 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             font-weight: 600;
-            color: #593e2b;
+        }
+        .stats-grid {
+            width: 100%;
+        }
+        .stat-item {
+            margin-bottom: 16px;
+        }
+        .stat-label {
+            color: #6B6359;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2D2A26;
         }
         .expense {
-            color: #d15c5c; /* Vermelho suave */
+            color: #D8704C; /* Soft Burnt Orange */
         }
         .income {
-            color: #5a9261; /* Verde Sálvia escurecido */
+            color: #4A6E70; /* Deep Teal */
         }
-        .footer {
-            background-color: #ece5d5;
-            color: #7a6b5d;
-            text-align: center;
-            padding: 20px;
-            font-size: 13px;
-            border-bottom-left-radius: 1.5rem;
-            border-bottom-right-radius: 1.5rem;
+        .list-card {
+            background: #faf8f5;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .list-card h3 {
+            color: #2D2A26;
+            font-family: 'Playfair Display', Georgia, serif;
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .alert-card {
+            background-color: #fdf5f2;
+            border-left: 4px solid #D8704C;
+            border-radius: 12px 16px 16px 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+        .alert-card h3 {
+            color: #D8704C;
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
         }
         .button {
             display: inline-block;
-            background-color: #d8704c; /* Laranja Queimado */
+            background-color: #2D2A26;
             color: #ffffff !important;
-            padding: 14px 28px;
+            padding: 16px 36px;
             text-decoration: none;
-            border-radius: 9999px; /* Pill Shape */
-            margin-top: 20px;
+            border-radius: 9999px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(216, 112, 76, 0.3);
+            font-size: 16px;
+            margin-top: 16px;
+            box-shadow: 0 8px 20px rgba(45, 42, 38, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         ul {
             padding-left: 20px;
             margin: 0;
-            color: #7a6b5d;
+            color: #6B6359;
+            line-height: 1.6;
         }
         li {
             margin-bottom: 8px;
         }
+        .footer {
+            background-color: #f5f1e8;
+            color: #8a8176;
+            text-align: center;
+            padding: 24px 40px;
+            font-size: 13px;
+            line-height: 1.5;
+            border-top: 1px solid #ede7dc;
+        }
+        a.button {
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <!-- Caso queira a logo aqui também -->
-            <img src="{{ logo_url }}" alt="MonFinTrack Logo" style="max-width: 150px; margin-bottom: 15px;">
-            <h1>Resumo Semanal</h1>
-        </div>
-        <div class="content">
-            <p style="font-size: 16px; margin-bottom: 20px;">Olá, <strong style="color: #4a6e70;">{{ name }}</strong>!</p>
-            <p style="color: #7a6b5d; margin-bottom: 25px;">Aqui está o resumo das suas finanças nesta semana:</p>
-
-            <div class="card">
-                <h3>💰 Balanço da Semana</h3>
-                <p>Receitas: <span class="highlight income">R$ {{ data.income_total }}</span></p>
-                <p>Despesas: <span class="highlight expense">R$ {{ data.expense_total }}</span></p>
-                <p>Saldo: <span class="highlight">R$ {{ data.balance }}</span></p>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo" width="160" style="width: 160px; max-width: 100%; height: auto; border: 0; margin-bottom: 16px;">
+                <h1>Resumo Semanal</h1>
             </div>
+            <div class="content">
+                <p style="font-size: 18px; color: #2D2A26;">Olá, <strong>{{ name }}</strong>!</p>
+                <p>O seu resumo financeiro da semana já está pronto. Aqui estão os principais detalhes para ajudar você a manter suas finanças sob controle.</p>
 
-            {% if data.top_expenses %}
-            <div class="card">
-                <h3>📉 Maiores Gastos</h3>
-                <ul>
-                    {% for expense in data.top_expenses %}
-                    <li>{{ expense.description }}: R$ {{ expense.amount }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
+                <div class="card">
+                    <h3>Balanço da Semana</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Receitas</span>
+                            <span class="stat-value income">R$ {{ data.income_total }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Despesas</span>
+                            <span class="stat-value expense">R$ {{ data.expense_total }}</span>
+                        </div>
+                        <div class="stat-item" style="margin-bottom: 0; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ede7dc;">
+                            <span class="stat-label">Saldo Final</span>
+                            <span class="stat-value">R$ {{ data.balance }}</span>
+                        </div>
+                    </div>
+                </div>
 
-            {% if data.alerts %}
-            <div class="card" style="border-left: 4px solid #f0a040; background-color: rgba(216, 112, 76, 0.05);">
-                <h3 style="color: #d8704c;">⚠️ Alertas</h3>
-                <ul>
-                    {% for alert in data.alerts %}
-                    <li>{{ alert }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
+                {% if data.top_expenses %}
+                <div class="list-card">
+                    <h3>📉 Maiores Gastos</h3>
+                    <ul>
+                        {% for expense in data.top_expenses %}
+                        <li><strong>{{ expense.description }}</strong>: <span style="color: #6B6359;">R$ {{ expense.amount }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
 
-            <div style="text-align: center;">
-                <a href="https://monfintrack.com.br/dashboard" class="button">Ver Detalhes no App</a>
+                {% if data.alerts %}
+                <div class="alert-card">
+                    <h3>⚠️ Alertas Importantes</h3>
+                    <ul style="color: #8c4c32; padding-left: 16px;">
+                        {% for alert in data.alerts %}
+                        <li>{{ alert }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div style="text-align: center; padding-top: 16px;">
+                    <a href="https://monfintrack.com.br/dashboard" class="button">Abrir MonFinTrack</a>
+                </div>
             </div>
-        </div>
-        <div class="footer">
-            <p>Enviado automaticamente por <strong>Equipe monFinTrack da CapyCro. AvecTech</strong></p>
-            <p>Se você não deseja receber estes emails, ajuste suas preferências no app.</p>
+            <div class="footer">
+                <p style="margin-bottom: 8px;">Enviado automaticamente por <strong>CapyCro. AvecTech</strong></p>
+                <p style="margin-bottom: 8px;">Se você não quiser mais receber este resumo, ajuste suas preferências no aplicativo.</p>
+                <p style="margin-bottom: 0; font-size: 12px;">&copy; 2026 MonFinTrack. Todos os direitos reservados.</p>
+            </div>
         </div>
     </div>
 </body>

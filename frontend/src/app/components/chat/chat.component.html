@@ -1,24 +1,35 @@
 <div class="chat-widget" [class.expanded]="expanded()">
- <!-- Header (Always Visible when expanded, or button when collapsed) -->
- <div class="chat-header" (click)="toggleChat()">
- <div class="header-content">
- <i class="pi pi-sparkles"></i>
- <span *ngIf="expanded()">Assistente Financeiro</span>
-  <span *ngIf="!expanded()" class="collapsed-label hidden md:inline-block ml-2">Chat IA</span>
+ <!-- Header (Visible when expanded) -->
+ <div class="chat-header" *ngIf="expanded()" (click)="toggleChat()">
+   <div class="header-content">
+     <div class="chat-icon-bg">
+       <i class="pi pi-sparkles"></i>
+     </div>
+     <span>Assistente Financeiro</span>
+   </div>
+   <div class="header-actions">
+     <i
+       class="pi pi-fire mr-3 cursor-pointer transition-colors duration-300 roast-icon"
+       [class.active]="isRoastMode()"
+       pTooltip="Modo Roast 🔥"
+       tooltipPosition="bottom"
+       (click)="toggleRoastMode(); $event.stopPropagation()"
+     >
+     </i>
+     <div class="close-btn">
+       <i class="pi pi-times"></i>
+     </div>
+   </div>
  </div>
- <div class="header-actions" *ngIf="expanded()">
- <i
- class="pi pi-fire mr-3 cursor-pointer transition-colors duration-300"
- [class.text-orange-500]="isRoastMode()"
- [class.text-gray-400]="!isRoastMode()"
- pTooltip="Modo Roast 🔥"
- tooltipPosition="bottom"
- (click)="toggleRoastMode(); $event.stopPropagation()"
- >
- </i>
- <i class="pi pi-minus"></i>
- </div>
- </div>
+
+ <!-- FAB Button (Visible when collapsed) -->
+ <button 
+   *ngIf="!expanded()" 
+   class="fab-trigger" 
+   (click)="toggleChat()"
+   aria-label="Abrir Assistente Financeiro">
+   <i class="pi pi-sparkles"></i>
+ </button>
 
  <!-- Body (Visible only when expanded) -->
  <div class="chat-body" *ngIf="expanded()">
@@ -51,8 +62,12 @@
  </div>
  </div>
 
- <div *ngIf="loading()" class="message ai loading">
- <i class="pi pi-spin pi-spinner"></i> Digitando...
+ <div *ngIf="loading()" class="message ai loading-message">
+   <div class="typing-indicator">
+     <span></span>
+     <span></span>
+     <span></span>
+   </div>
  </div>
 
  <div *ngIf="messages().length === 0" class="empty-state">
@@ -62,22 +77,25 @@
  </div>
 
  <div class="chat-input-area">
- <input
- type="text"
- pInputText
- class="chat-input"
- placeholder="Pergunte algo..."
- [(ngModel)]="currentMessage"
- (keydown.enter)="sendMessage()"
- [disabled]="loading()"
- />
- <button
- pButton
- icon="pi pi-send"
- class="p-button-rounded p-button-text"
- (click)="sendMessage()"
- [disabled]="!currentMessage || loading()"
- ></button>
+   <div class="input-wrapper">
+     <input
+       type="text"
+       pInputText
+       class="chat-input"
+       placeholder="Pergunte algo..."
+       [(ngModel)]="currentMessage"
+       (keydown.enter)="sendMessage()"
+       [disabled]="loading()"
+     />
+     <button
+       class="send-btn"
+       (click)="sendMessage()"
+       [disabled]="!currentMessage || loading()"
+       aria-label="Enviar mensagem"
+     >
+       <i class="pi pi-send"></i>
+     </button>
+   </div>
  </div>
  } @else {
  <div

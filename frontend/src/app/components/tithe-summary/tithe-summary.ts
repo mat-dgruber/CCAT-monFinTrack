@@ -1,3 +1,4 @@
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import {
   Component,
   OnInit,
@@ -11,8 +12,8 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+
+import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction } from '../../models/transaction.model';
@@ -27,16 +28,15 @@ import { RefreshService } from '../../services/refresh.service';
     TooltipModule,
     TagModule,
     SkeletonModule,
-    ConfirmDialogModule,
     ToastModule,
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [MessageService],
   templateUrl: './tithe-summary.html',
   styleUrl: './tithe-summary.scss',
 })
 export class TitheSummaryComponent implements OnInit {
   private transactionService = inject(TransactionService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmationService = inject(CustomConfirmService);
   private messageService = inject(MessageService);
   private refreshService = inject(RefreshService);
 

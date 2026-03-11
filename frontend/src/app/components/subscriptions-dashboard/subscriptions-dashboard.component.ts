@@ -1,3 +1,4 @@
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import {
   Component,
   OnInit,
@@ -24,7 +25,7 @@ import { TagModule } from 'primeng/tag';
 import { TabsModule } from 'primeng/tabs';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { DatePickerModule } from 'primeng/datepicker';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
@@ -34,7 +35,7 @@ import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 import { RecurrenceService } from '../../services/recurrence.service';
 import { TransactionService } from '../../services/transaction.service';
@@ -64,7 +65,7 @@ import { SubscriptionService } from '../../services/subscription.service';
     TagModule,
     TabsModule,
     ProgressBarModule,
-    ConfirmDialogModule,
+    
     DatePickerModule,
     ToastModule,
     TooltipModule,
@@ -90,7 +91,7 @@ export class SubscriptionsDashboardComponent implements OnInit {
   private transactionService = inject(TransactionService);
   private categoryService = inject(CategoryService);
   private accountService = inject(AccountService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmationService = inject(CustomConfirmService);
   private messageService = inject(MessageService);
   private aiService = inject(AIService); // Inject AI Service
   subscriptionService = inject(SubscriptionService);

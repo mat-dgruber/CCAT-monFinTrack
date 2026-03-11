@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core'; // Force rebuild
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -17,7 +18,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
@@ -25,7 +26,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
@@ -45,7 +46,7 @@ import { PwaService } from '../../services/pwa.service';
     InputNumberModule,
     ToggleSwitchModule,
     ToastModule,
-    ConfirmDialogModule,
+    
     SelectModule,
     DatePickerModule,
     TagModule,
@@ -65,7 +66,7 @@ export class Settings {
   // themeService = inject(ThemeService); // Removed in favor of UserPreferenceService
   router = inject(Router);
   messageService = inject(MessageService);
-  confirmationService = inject(ConfirmationService);
+  confirmationService = inject(CustomConfirmService);
 
   preferenceService = inject(UserPreferenceService);
   mfaService = inject(MFAService);

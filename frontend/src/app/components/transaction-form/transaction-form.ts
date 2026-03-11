@@ -1,3 +1,4 @@
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import {
   Component,
   EventEmitter,
@@ -30,12 +31,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
-import {
-  SelectItemGroup,
-  SelectItem,
-  ConfirmationService,
-  MessageService,
-} from 'primeng/api';
+import { SelectItemGroup, SelectItem, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
@@ -90,7 +86,7 @@ export class TransactionForm implements OnInit {
   private transactionService = inject(TransactionService);
   private accountService = inject(AccountService);
   private refreshService = inject(RefreshService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmationService = inject(CustomConfirmService);
   private messageService = inject(MessageService);
 
   private preferenceService = inject(UserPreferenceService);

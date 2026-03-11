@@ -1,6 +1,12 @@
-<router-outlet></router-outlet>
-@if (authService.currentUser()) {
-  <app-chat></app-chat>
+@if (!authService.isAuthResolved()) {
+  <div class="fixed inset-0 flex items-center justify-center bg-[var(--surface-ground)] z-50">
+    <i class="pi pi-spin pi-spinner text-primary" style="font-size: 3rem"></i>
+  </div>
 } @else {
-  <app-login></app-login>
+  <router-outlet></router-outlet>
+  @if (authService.currentUser()) {
+    <app-chat></app-chat>
+  }
 }
+
+<app-custom-confirm-dialog></app-custom-confirm-dialog>

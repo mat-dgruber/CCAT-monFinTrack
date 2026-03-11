@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { Dashboard } from './dashboard';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { DashboardService } from '../../services/dashboard.service';
 import { AccountService } from '../../services/account.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
@@ -48,7 +49,7 @@ describe('Dashboard', () => {
  useValue: { snapshot: { queryParams: {} }, queryParams: of({}) },
  },
  provideMarkdown(),
- ConfirmationService,
+ CustomConfirmService,
  MessageService,
  ],
  }).compileComponents();

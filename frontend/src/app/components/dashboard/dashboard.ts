@@ -1,3 +1,4 @@
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import {
  Component,
  OnInit,
@@ -21,8 +22,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog'; // Import Dialog
-import { ConfirmDialogModule } from 'primeng/confirmdialog'; // Import ConfirmDialog
-import { ConfirmationService } from 'primeng/api'; // Import ConfirmationService
+ // Import ConfirmDialog
+ // Import CustomConfirmService
 import { MarkdownModule } from 'ngx-markdown'; // Import Markdown Module if used
 import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and RouterModule
 import { SkeletonModule } from 'primeng/skeleton'; // Import SkeletonModule
@@ -67,13 +68,12 @@ import { TitheSummaryComponent } from '../tithe-summary/tithe-summary';
  TitheSummaryComponent,
  SkeletonModule,
  DialogModule,
- ConfirmDialogModule,
  MarkdownModule,
  ButtonModule,
  RouterModule,
  ToastModule, // Add ToastModule
  ],
- providers: [ConfirmationService, MessageService], // Add MessageService
+ providers: [MessageService], // Add MessageService
  templateUrl: './dashboard.html',
  styleUrl: './dashboard.scss',
 })
@@ -84,7 +84,7 @@ export class Dashboard implements OnInit {
  private analysisService = inject(AnalysisService);
  private accountService = inject(AccountService);
  private aiService = inject(AIService);
- private confirmationService = inject(ConfirmationService);
+ private confirmationService = inject(CustomConfirmService);
  subscriptionService = inject(SubscriptionService);
  private preferenceService = inject(UserPreferenceService);
  private route = inject(ActivatedRoute); // Inject ActivatedRoute

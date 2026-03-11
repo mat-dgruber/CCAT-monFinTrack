@@ -6,96 +6,108 @@
     <title>Confirme seu e-mail - MonFinTrack</title>
     <style>
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4eee0; /* Superfície Fundo */
+            font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #faf8f5;
             margin: 0;
-            padding: 0;
-            color: #3e3a35; /* Grafite Orgânico */
+            padding: 40px 20px;
+            color: #2D2A26;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #faf8f5;
+            padding-bottom: 40px;
         }
         .container {
             max-width: 600px;
-            margin: 30px auto;
-            background-color: #f8f4e8; /* Superfície Card */
-            border-radius: 1.5rem; /* Formato Orgânico */
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12); /* Sombra Elegante */
+            box-shadow: 0 12px 40px rgba(89, 62, 43, 0.06);
+            border: 1px solid #f0ebe1;
         }
         .header {
-            background-color: #f8f4e8;
-            padding: 30px 20px 10px 20px;
+            padding: 40px 40px 20px 40px;
             text-align: center;
         }
         .logo {
-            max-width: 150px;
+            max-width: 160px;
             height: auto;
         }
         .content {
-            padding: 20px 40px 30px 40px;
+            padding: 10px 40px 40px 40px;
             text-align: center;
         }
         h2 {
-            color: #3e3a35;
-            font-size: 22px;
-            margin-bottom: 15px;
-            font-family: 'Playfair Display', serif;
+            color: #2D2A26;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-family: 'Playfair Display', Georgia, serif;
+            letter-spacing: -0.5px;
         }
         p {
-            color: #7a6b5d; /* Texto Secundário */
+            color: #6B6359;
             font-size: 16px;
             line-height: 1.6;
-            margin-bottom: 25px;
+            margin-top: 0;
+            margin-bottom: 24px;
         }
         .button {
             display: inline-block;
-            background-color: #5d8a8c; /* Azul-Petróleo (Ação Primária) */
+            background-color: #5d8a8c;
             color: #ffffff !important;
-            padding: 14px 28px;
+            padding: 16px 36px;
             text-decoration: none;
-            border-radius: 9999px; /* Pill Shape */
+            border-radius: 9999px;
             font-weight: 600;
             font-size: 16px;
-            margin-top: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(93, 138, 140, 0.3); /* Sombra do Botão */
+            margin-top: 8px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 20px rgba(93, 138, 140, 0.25);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
         .footer {
-            background-color: #ece5d5; /* Hover/Detalhe */
-            color: #7a6b5d;
+            background-color: #f5f1e8;
+            color: #8a8176;
             text-align: center;
-            padding: 20px;
+            padding: 24px 40px;
             font-size: 13px;
-            border-bottom-left-radius: 1.5rem;
-            border-bottom-right-radius: 1.5rem;
+            line-height: 1.5;
+            border-top: 1px solid #ede7dc;
         }
-        .footer a {
-            color: #d8704c; /* Laranja Queimado */
-            text-decoration: none;
+        .footer strong {
+            color: #6B6359;
         }
-        /* Garantindo link do botão fique branco no email clients */
         a.button {
             color: #ffffff;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo">
-        </div>
-        <div class="content">
-            <h2>Olá, {{ name }}</h2>
-            <p>Clique neste link para verificar seu endereço de e-mail.</p>
-            
-            <a href="{{ action_url }}" class="button">Verificar meu e-mail</a>
-            
-            <p style="font-size: 14px; margin-top: 10px;">Se você não solicitou a verificação deste endereço, ignore este e-mail.</p>
-            
-            <p style="margin-top: 25px;">Obrigado,<br><strong>Equipe do app {{ app_name | default("MonFinTrack") }}</strong></p>
-        </div>
-        <div class="footer">
-            <p>Enviado por: <strong>Equipe monFinTrack da CapyCro. AvecTech</strong></p>
-            <p>De: noreply@monfintrack.com.br</p>
-            <p>&copy; 2026 MonFinTrack. Todos os direitos reservados.</p>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo" width="160" style="width: 160px; max-width: 100%; height: auto; border: 0;">
+            </div>
+            <div class="content">
+                <h2>Seja bem-vindo(a)!</h2>
+                <p>Olá, <strong>{{ name }}</strong>!</p>
+                <p>Estamos muito felizes em ter você conosco no <strong>{{ app_name | default("MonFinTrack") }}</strong>. Para garantir a segurança da sua conta, por favor, confirme seu endereço de e-mail clicando no botão abaixo.</p>
+                
+                <a href="{{ action_url }}" class="button">Verificar meu e-mail</a>
+                
+                <p style="font-size: 14px; margin-top: 10px; color: #8a8176;">Se você não se cadastrou em nosso aplicativo recentemente, pode simplesmente ignorar este e-mail.</p>
+                
+                <p style="margin-top: 25px; margin-bottom: 0;">Com carinho,<br><strong style="color: #2D2A26;">Equipe {{ app_name | default("MonFinTrack") }}</strong></p>
+            </div>
+            <div class="footer">
+                <p style="margin-bottom: 8px;">Enviado por <strong>CapyCro. AvecTech</strong></p>
+                <p style="margin-bottom: 8px; font-size: 12px;">De: noreply@monfintrack.com.br</p>
+                <p style="margin-bottom: 0; font-size: 12px;">&copy; 2026 MonFinTrack. Todos os direitos reservados.</p>
+            </div>
         </div>
     </div>
 </body>

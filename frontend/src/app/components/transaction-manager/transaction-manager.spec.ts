@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { TransactionManager } from './transaction-manager';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { AccountService } from '../../services/account.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { Transaction } from '../../models/transaction.model';
@@ -101,7 +102,7 @@ describe('TransactionManager', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParams: {} }, queryParams: of({}) },
         },
-        ConfirmationService,
+        CustomConfirmService,
         MessageService,
       ],
     }).compileComponents();
@@ -164,8 +165,8 @@ describe('TransactionManager', () => {
   it('should delete transaction', () => {
     const t = mockTransactions[0];
 
-    // Mock ConfirmationService
-    // Since we provided ConfirmationService, we can modify how it works?
+    // Mock CustomConfirmService
+    // Since we provided CustomConfirmService, we can modify how it works?
     // Actually we injected the real service? No, we provided it in providers array, so it is the real one or a mock if we provided one.
     // In TestBed specific providers usually override.
     // Ideally we spy on confirmationService.confirm
@@ -177,7 +178,7 @@ describe('TransactionManager', () => {
     // For now, let's skip complex interaction test or assume it's covered by manual testing.
     // Or we can mock the private service by casting.
 
-    const confirmationService = TestBed.inject(ConfirmationService);
+    const confirmationService = TestBed.inject(CustomConfirmService);
     spyOn(confirmationService, 'confirm').and.callFake((config: any) => {
       config.accept();
       return this as any; // return type fix

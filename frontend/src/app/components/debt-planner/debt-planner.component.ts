@@ -1,7 +1,9 @@
 import { Component, OnInit, signal, inject, computed, effect } from '@angular/core';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MarkdownModule } from 'ngx-markdown';
+import { MessageService } from 'primeng/api';
 
 // PrimeNG
 import { TabsModule } from 'primeng/tabs';
@@ -16,7 +18,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 import { DividerModule } from 'primeng/divider';
 import { SkeletonModule } from 'primeng/skeleton';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -50,23 +52,24 @@ import { SeasonalIncome, SeasonalIncomeCreate } from '../../models/seasonal-inco
  FileUploadModule,
  ProgressSpinnerModule,
  TooltipModule,
- ConfirmDialogModule,
+ 
  DividerModule,
  SkeletonModule,
  CheckboxModule,
  AccordionModule,
  AccordionModule,
  DatePickerModule,
- TagModule
+ TagModule,
+ MarkdownModule
  ],
- providers: [MessageService, ConfirmationService],
+ providers: [MessageService],
  templateUrl: './debt-planner.html',
  styleUrl: './debt-planner.scss'
 })
 export class DebtPlannerComponent implements OnInit {
  private debtService = inject(DebtService);
  private messageService = inject(MessageService);
- private confirmationService = inject(ConfirmationService);
+ private confirmationService = inject(CustomConfirmService);
  private resourceService = inject(ResourceService);
  private fb = inject(FormBuilder);
  public subscriptionService = inject(SubscriptionService);

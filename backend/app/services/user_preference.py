@@ -1,4 +1,5 @@
 import os
+from firebase_admin import storage
 from fastapi import UploadFile
 from app.core.database import get_db
 from app.schemas.user_preference import UserPreference, UserPreferenceCreate
@@ -40,32 +41,41 @@ def update_preferences(user_id: str, data: UserPreferenceCreate) -> UserPreferen
     update_data["updated_at"] = datetime.now()
     update_data["user_id"] = user_id
 
-    # Merge with existing to ensure we don't lose fields if partial update (though Pydantic handles this via exclude_unset usually, but here we are explicit)
-    # Actually, for a full update or partial, we merge.
-    
     doc_ref.set(update_data, merge=True)
     
     # Fetch full updated doc to return
     return UserPreference(**doc_ref.get().to_dict())
 
-from firebase_admin import storage
-
 def save_profile_image(user_id: str, file: UploadFile) -> str:
-    # Get the storage bucket
-    bucket = storage.bucket()
-    
-    # Define file path in bucket
+    # Check if we should use local storage (handy for dev without Firebase Storage config)
+    use_local = os.getenv("USE_LOCAL_STORAGE", "false").lower() == "true" or os.getenv("ENV", "development") == "development"
+
     extension = os.path.splitext(file.filename)[1]
-    blob_name = f"profile_images/{user_id}{extension}"
-    blob = bucket.blob(blob_name)
-    
-    # Upload the file
-    blob.upload_from_file(file.file, content_type=file.content_type)
-    
-    # Make it public (or generate signed URL)
-    blob.make_public()
-    
-    return blob.public_url
+    filename = f"{user_id}{extension}"
+    if use_local:
+        # Save to app/static/profile_images
+        static_dir = "app/static/profile_images"
+        os.makedirs(static_dir, exist_ok=True)
+        file_path = os.path.join(static_dir, filename)
+
+        with open(file_path, "wb") as buffer:
+            buffer.write(file.file.read())
+
+        # Return the relative path that the frontend can join with baseUrl
+        return f"/static/profile_images/{filename}"
+    else:
+        # Get the storage bucket
+        bucket = storage.bucket()
+        # Define file path in bucket
+        blob_name = f"profile_images/{filename}"
+        blob = bucket.blob(blob_name)
+        # Upload the file
+        blob.upload_from_file(file.file, content_type=file.content_type)
+
+        # Make it public
+        blob.make_public()
+
+        return blob.public_url
 
 def reset_account(user_id: str):
     """

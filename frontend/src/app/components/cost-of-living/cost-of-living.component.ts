@@ -10,6 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { MarkdownModule } from 'ngx-markdown';
 
 import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly } from '../../services/analysis.service';
 import { AIService } from '../../services/ai.service';
@@ -39,7 +40,8 @@ interface Message {
  TooltipModule,
  CurrencyPipe,
  DecimalPipe,
- SkeletonModule
+ SkeletonModule,
+ MarkdownModule
  ],
  templateUrl: './cost-of-living.component.html',
  styleUrl: './cost-of-living.component.scss'
@@ -75,16 +77,6 @@ export class CostOfLivingComponent implements OnInit {
  subscriptionService = inject(SubscriptionService);
  canAccess = computed(() => this.subscriptionService.canAccess('cost_of_living'));
  canUseAi = computed(() => this.subscriptionService.canAccess('ai_advisor'));
-
- // Markdown parsing (simple for now, just preserving newlines)
- formattedAnalysis = computed(() => {
- const raw = this.aiAnalysis();
- if (!raw) return '';
- // Simple format: * -> <li>, ** -> <b>
- let html = raw.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
- html = html.replace(/\n/g, '<br>');
- return html;
- });
 
  private router = inject(Router);
 

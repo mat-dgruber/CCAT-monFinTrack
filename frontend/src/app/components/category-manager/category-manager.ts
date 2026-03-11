@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -8,11 +9,11 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { SelectModule } from 'primeng/select';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
@@ -33,14 +34,13 @@ import { ICON_LIST } from '../../shared/icons';
  SelectButtonModule,
  TableModule,
  SkeletonModule,
- ConfirmDialogModule
  ],
  templateUrl: './category-manager.html',
  styleUrl: './category-manager.scss'
 })
 export class CategoryManager implements OnInit {
  private categoryService = inject(CategoryService);
- private confirmationService = inject(ConfirmationService);
+ private confirmationService = inject(CustomConfirmService);
  private messageService = inject(MessageService);
  private fb = inject(FormBuilder);
 

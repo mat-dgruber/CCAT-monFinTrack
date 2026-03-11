@@ -14,6 +14,7 @@ class EmailService:
         self.mail_username = os.getenv("MAIL_USERNAME")
         self.mail_password = os.getenv("MAIL_PASSWORD")
         self.mail_from = os.getenv("MAIL_FROM", self.mail_username)
+        self.mail_from_name = os.getenv("MAIL_FROM_NAME", "MonFinTrack")
         self.mail_port = int(os.getenv("MAIL_PORT", 587))
         self.mail_server = os.getenv("MAIL_SERVER", "smtp.gmail.com")
         self.mail_ssl_tls = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
@@ -24,6 +25,7 @@ class EmailService:
                 MAIL_USERNAME=self.mail_username,
                 MAIL_PASSWORD=self.mail_password,
                 MAIL_FROM=self.mail_from,
+                MAIL_FROM_NAME=self.mail_from_name,
                 MAIL_PORT=self.mail_port,
                 MAIL_SERVER=self.mail_server,
                 MAIL_STARTTLS=self.mail_starttls,
@@ -79,7 +81,7 @@ class EmailService:
             {
                 "name": recipient_name,
                 "data": report_data,
-                "logo_url": "https://monfintrack.com.br/assets/images/logo.png",  # Substitua pela URL real
+                "logo_url": "https://monfintrack.com.br/assets/logo-ccat.png",
             },
         )
 

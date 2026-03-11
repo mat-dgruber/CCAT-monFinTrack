@@ -38,6 +38,10 @@ class StripeService:
 
     def create_checkout_session(self, user_id: str, plan: str, success_url: str, cancel_url: str):
         try:
+            if not stripe.api_key:
+                logger.error("❌ STRIPE_SECRET_KEY is MISSING! Payment will fail.")
+                raise HTTPException(status_code=500, detail="Stripe configuration error")
+
             # Get user to check for existing customer_id
             user_ref = self.db.collection("users").document(user_id)
             user_doc = user_ref.get()
@@ -51,16 +55,23 @@ class StripeService:
             if stripe_customer_id:
                 customer_kwargs["customer"] = stripe_customer_id
             else:
-                 customer = stripe.Customer.create(metadata={"user_id": user_id})
-                 stripe_customer_id = customer.id
-                 user_ref.set({"stripe_customer_id": stripe_customer_id}, merge=True)
-                 customer_kwargs["customer"] = stripe_customer_id
+                 try:
+                    customer = stripe.Customer.create(metadata={"user_id": user_id})
+                    stripe_customer_id = customer.id
+                    user_ref.set({"stripe_customer_id": stripe_customer_id}, merge=True)
+                    customer_kwargs["customer"] = stripe_customer_id
+                 except Exception as exc:
+                     logger.error(f"❌ Stripe Customer creation failed for user {user_id}: {exc}")
+                     raise HTTPException(status_code=500, detail=f"Failed to create Stripe customer: {str(exc)}") from exc
+
+            price_id = self._get_price_id(plan)
+            logger.info(f"Creating checkout session for user={user_id}, plan={plan}, price={price_id}")
 
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=[
                     {
-                        "price": self._get_price_id(plan),
+                        "price": price_id,
                         "quantity": 1,
                     }
                 ],
@@ -78,9 +89,11 @@ class StripeService:
                 **customer_kwargs
             )
             return {"sessionId": checkout_session["id"], "url": checkout_session["url"]}
+        except HTTPException:
+            raise
         except Exception as e:
-            logger.error(f"Error creating checkout session: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.error(f"❌ Unhandled error in create_checkout_session: {e}")
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
     def create_portal_session(self, user_id: str, return_url: str):
         try:
@@ -99,12 +112,13 @@ class StripeService:
                 customer=stripe_customer_id,
                 return_url=return_url,
             )
+            logger.info(f"Created portal session for customer {stripe_customer_id}")
             return {"url": portal_session["url"]}
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Error creating portal session: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.error(f"❌ Error creating portal session for user {user_id}: {e}")
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
     async def handle_webhook(self, payload: bytes, sig_header: str):
         try:
@@ -113,10 +127,10 @@ class StripeService:
             )
         except ValueError as e:
             # Invalid payload
-            raise HTTPException(status_code=400, detail="Invalid payload")
+            raise HTTPException(status_code=400, detail="Invalid payload") from e
         except stripe.error.SignatureVerificationError as e:
             # Invalid signature
-            raise HTTPException(status_code=400, detail="Invalid signature")
+            raise HTTPException(status_code=400, detail="Invalid signature") from e
 
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
@@ -150,8 +164,8 @@ class StripeService:
             try:
                 subscription = stripe.Subscription.retrieve(subscription_id)
                 await self._handle_subscription_updated(subscription)
-            except Exception as e:
-                logger.error(f"Failed to retrieve subscription {subscription_id} after checkout: {e}")
+            except Exception:
+                logger.error(f"Failed to retrieve subscription {subscription_id} after checkout")
 
     async def _handle_subscription_updated(self, subscription):
         customer_id = subscription.get("customer")
