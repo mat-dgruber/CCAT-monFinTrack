@@ -78,7 +78,7 @@ def test_filters():
     budgets = budget_service.list_budgets_with_progress(user_id, month=month, year=year)
     print(f"Budgets with progress for {month}/{year}: {len(budgets)}")
     for b in budgets:
-        print(f"  - {b['category'].name}: Limit {b['limit']}, Spent {b['spent']}, % {b['percentage']:.1f}")
+        print(f"  - {b['category'].name}: Limit {b['amount']}, Spent {b['spent']}, % {b['percentage']:.1f}")
 
 if __name__ == "__main__":
     test_filters()

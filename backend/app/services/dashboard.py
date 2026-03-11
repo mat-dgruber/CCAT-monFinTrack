@@ -1,4 +1,3 @@
-import calendar
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -7,6 +6,7 @@ from app.core.date_utils import get_month_range
 from app.schemas.dashboard import CategoryTotal, DashboardSummary, MonthlyEvolution
 from app.services import budget as budget_service
 from app.services import category as category_service
+from app.services import transaction as transaction_service
 
 
 def get_dashboard_data(
@@ -44,7 +44,6 @@ def get_dashboard_data(
         current_start, current_end = get_month_range(now.month, now.year)
         ref_date = now
 
-    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
 
     # DETERMINE O RANGE TOTAL NECESSÁRIO (Mês Atual + 6 Meses de Evolução)
     # Start: O menor entre (current_start) e (6 meses atrás)
@@ -67,7 +66,6 @@ def get_dashboard_data(
     # Ensure optimized query
     # Using transaction_service to leverage the logic we just fixed
     # list_transactions returns Pydantic models. We convert to dicts to maintain compatibility with below logic.
-    from app.services import transaction as transaction_service
 
     pydantic_txs = transaction_service.list_transactions(
         user_id=user_id,
