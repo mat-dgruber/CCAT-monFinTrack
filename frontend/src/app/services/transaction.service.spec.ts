@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { TransactionService } from './transaction.service';
 import { Transaction } from '../models/transaction.model';
 import { environment } from '../../environments/environment';
@@ -12,7 +15,7 @@ describe('TransactionService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [TransactionService]
+      providers: [TransactionService],
     });
     service = TestBed.inject(TransactionService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -27,14 +30,20 @@ describe('TransactionService', () => {
   });
 
   it('should get transactions with query params', () => {
-    const dummyTransactions: Transaction[] = [{ id: 't1', title: 'Test' } as Transaction];
+    const dummyTransactions: Transaction[] = [
+      { id: 't1', title: 'Test' } as Transaction,
+    ];
 
-    service.getTransactions(1, 2023, 10, '2023-01-01', '2023-01-31').subscribe(trans => {
-      expect(trans).toEqual(dummyTransactions);
-    });
+    service
+      .getTransactions(1, 2023, 10, '2023-01-01', '2023-01-31')
+      .subscribe((trans) => {
+        expect(trans).toEqual(dummyTransactions);
+      });
 
     // Order of params depends on implementation construction
-    const req = httpMock.expectOne(req => req.url === apiUrl && req.params.has('month'));
+    const req = httpMock.expectOne(
+      (req) => req.url === apiUrl && req.params.has('month'),
+    );
     expect(req.request.method).toBe('GET');
     expect(req.request.params.get('month')).toBe('1');
     expect(req.request.params.get('year')).toBe('2023');
@@ -49,7 +58,7 @@ describe('TransactionService', () => {
     const newTrans: Transaction = { title: 'New' } as Transaction;
     const responseTrans: Transaction = { ...newTrans, id: '123' };
 
-    service.createTransaction(newTrans).subscribe(trans => {
+    service.createTransaction(newTrans).subscribe((trans) => {
       expect(trans).toEqual(responseTrans as any);
     });
 
@@ -64,7 +73,7 @@ describe('TransactionService', () => {
     const updateData: Partial<Transaction> = { title: 'Updated' };
     const responseTrans = { id, title: 'Updated' } as Transaction;
 
-    service.updateTransaction(id, updateData).subscribe(trans => {
+    service.updateTransaction(id, updateData).subscribe((trans) => {
       expect(trans).toEqual(responseTrans);
     });
 
@@ -85,15 +94,17 @@ describe('TransactionService', () => {
   });
 
   it('should get upcoming transactions', () => {
-      const dummyTransactions: Transaction[] = [{ id: 't1', title: 'Upcoming' } as Transaction];
-      const limit = 5;
+    const dummyTransactions: Transaction[] = [
+      { id: 't1', title: 'Upcoming' } as Transaction,
+    ];
+    const limit = 5;
 
-      service.getUpcomingTransactions(limit).subscribe(trans => {
-          expect(trans).toEqual(dummyTransactions);
-      });
+    service.getUpcomingTransactions(limit).subscribe((trans) => {
+      expect(trans).toEqual(dummyTransactions);
+    });
 
-      const req = httpMock.expectOne(`${apiUrl}/upcoming?limit=${limit}`);
-      expect(req.request.method).toBe('GET');
-      req.flush(dummyTransactions);
+    const req = httpMock.expectOne(`${apiUrl}/upcoming?limit=${limit}`);
+    expect(req.request.method).toBe('GET');
+    req.flush(dummyTransactions);
   });
 });

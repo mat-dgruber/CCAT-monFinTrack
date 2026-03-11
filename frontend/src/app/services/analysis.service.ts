@@ -34,18 +34,24 @@ export interface Anomaly {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AnalysisService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/analysis`;
 
-  getMonthlyAverages(startDate?: string, endDate?: string): Observable<MonthlyAverageResponse> {
+  getMonthlyAverages(
+    startDate?: string,
+    endDate?: string,
+  ): Observable<MonthlyAverageResponse> {
     let params = new HttpParams();
     if (startDate) params = params.set('start_date', startDate);
     if (endDate) params = params.set('end_date', endDate);
-    
-    return this.http.get<MonthlyAverageResponse>(`${this.apiUrl}/monthly-averages`, { params });
+
+    return this.http.get<MonthlyAverageResponse>(
+      `${this.apiUrl}/monthly-averages`,
+      { params },
+    );
   }
 
   getInflationRate(): Observable<InflationResponse> {

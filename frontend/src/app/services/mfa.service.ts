@@ -4,38 +4,38 @@ import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 
 export interface MFASetupResponse {
-     secret: string;
-     qr_code: string;
+  secret: string;
+  qr_code: string;
 }
 
 export interface MFAStatusResponse {
-     enabled: boolean;
+  enabled: boolean;
 }
 
 @Injectable({
-     providedIn: 'root'
+  providedIn: 'root',
 })
 export class MFAService {
-     private http = inject(HttpClient);
-     private apiUrl = `${environment.apiUrl}/mfa`;
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/mfa`;
 
-     setupMFA(): Observable<MFASetupResponse> {
-          return this.http.post<MFASetupResponse>(`${this.apiUrl}/setup`, {});
-     }
+  setupMFA(): Observable<MFASetupResponse> {
+    return this.http.post<MFASetupResponse>(`${this.apiUrl}/setup`, {});
+  }
 
-     enableMFA(secret: string, token: string): Observable<any> {
-          return this.http.post(`${this.apiUrl}/enable`, { secret, token });
-     }
+  enableMFA(secret: string, token: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/enable`, { secret, token });
+  }
 
-     disableMFA(): Observable<any> {
-          return this.http.post(`${this.apiUrl}/disable`, {});
-     }
+  disableMFA(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/disable`, {});
+  }
 
-     checkMFAStatus(): Observable<MFAStatusResponse> {
-          return this.http.get<MFAStatusResponse>(`${this.apiUrl}/status`);
-     }
+  checkMFAStatus(): Observable<MFAStatusResponse> {
+    return this.http.get<MFAStatusResponse>(`${this.apiUrl}/status`);
+  }
 
-     verifyLogin(token: string): Observable<any> {
-          return this.http.post(`${this.apiUrl}/verify`, { token });
-     }
+  verifyLogin(token: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/verify`, { token });
+  }
 }

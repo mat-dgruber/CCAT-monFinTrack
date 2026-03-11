@@ -5,7 +5,7 @@ import { first } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PwaService {
   private updates = inject(SwUpdate);
@@ -25,7 +25,9 @@ export class PwaService {
     if (!this.updates.isEnabled) return;
 
     // Allow the app to stabilize first, before starting polling for updates with `interval()`.
-    const appIsStable$ = this.appRef.isStable.pipe(first(isStable => isStable === true));
+    const appIsStable$ = this.appRef.isStable.pipe(
+      first((isStable) => isStable === true),
+    );
     const everySixHours$ = interval(6 * 60 * 60 * 1000);
     const everySixHoursOnceAppIsStable$ = concat(appIsStable$, everySixHours$);
 
@@ -33,35 +35,34 @@ export class PwaService {
       try {
         const updateFound = await this.updates.checkForUpdate();
         if (updateFound) {
-             this.showUpdateNotification();
+          this.showUpdateNotification();
         }
       } catch (err) {
         console.error('Failed to check for updates:', err);
       }
     });
 
-    this.updates.versionUpdates.subscribe(evt => {
-        if (evt.type === 'VERSION_READY') {
-            this.showUpdateNotification();
-        }
+    this.updates.versionUpdates.subscribe((evt) => {
+      if (evt.type === 'VERSION_READY') {
+        this.showUpdateNotification();
+      }
     });
   }
 
   private showUpdateNotification() {
-      this.messageService.add({
-          severity: 'info',
-          summary: 'Nova versão disponível',
-          detail: 'Atualize para ver as novidades!',
-          key: 'pwa-update',
-          sticky: true,
-          data: {
-              action: () => {
-                  this.updates.activateUpdate().then(() => document.location.reload());
-              }
-          }
-      });
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Nova versão disponível',
+      detail: 'Atualize para ver as novidades!',
+      key: 'pwa-update',
+      sticky: true,
+      data: {
+        action: () => {
+          this.updates.activateUpdate().then(() => document.location.reload());
+        },
+      },
+    });
   }
-
 
   // --- Badging API ---
   async setAppBadge(count: number) {
@@ -121,6 +122,6 @@ export class PwaService {
   }
 
   get isInstallable(): boolean {
-      return !!this.deferredPrompt();
+    return !!this.deferredPrompt();
   }
 }

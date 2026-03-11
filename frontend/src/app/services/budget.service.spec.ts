@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { BudgetService } from './budget.service';
 import { Budget } from '../models/budget.model';
 import { environment } from '../../environments/environment';
@@ -12,7 +15,7 @@ describe('BudgetService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [BudgetService]
+      providers: [BudgetService],
     });
     service = TestBed.inject(BudgetService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -28,10 +31,16 @@ describe('BudgetService', () => {
 
   it('should retrieve budgets with progress', () => {
     const dummyBudgets: Budget[] = [
-      { id: '1', amount: 100, spent: 50, percentage: 50, category_id: 'c1' } as Budget
+      {
+        id: '1',
+        amount: 100,
+        spent: 50,
+        percentage: 50,
+        category_id: 'c1',
+      } as Budget,
     ];
 
-    service.getBudgets(1, 2023).subscribe(budgets => {
+    service.getBudgets(1, 2023).subscribe((budgets) => {
       expect(budgets.length).toBe(1);
       expect(budgets).toEqual(dummyBudgets);
     });
@@ -45,7 +54,7 @@ describe('BudgetService', () => {
     const newBudget: Budget = { category_id: 'c1', amount: 500 } as Budget;
     const responseBudget: Budget = { ...newBudget, id: '123' };
 
-    service.createBudget(newBudget).subscribe(budget => {
+    service.createBudget(newBudget).subscribe((budget) => {
       expect(budget).toEqual(responseBudget);
     });
 
@@ -59,7 +68,7 @@ describe('BudgetService', () => {
     const budgetId = '123';
     const updateData: Budget = { id: budgetId, amount: 600 } as Budget;
 
-    service.updateBudget(budgetId, updateData).subscribe(budget => {
+    service.updateBudget(budgetId, updateData).subscribe((budget) => {
       expect(budget).toEqual(updateData);
     });
 
@@ -72,7 +81,7 @@ describe('BudgetService', () => {
   it('should delete a budget', () => {
     const budgetId = '123';
 
-    service.deleteBudget(budgetId).subscribe(res => {
+    service.deleteBudget(budgetId).subscribe((res) => {
       expect(res).toBeNull(); // Void return usually maps to null in observable result if empty body?
     });
 

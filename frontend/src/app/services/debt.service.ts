@@ -5,7 +5,7 @@ import { Debt, PaymentPlan, AmortizationSystem } from '../models/debt.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DebtService {
   private apiUrl = `${environment.apiUrl}/debts`;
@@ -28,7 +28,10 @@ export class DebtService {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
-  generatePlan(strategy: 'snowball' | 'avalanche', monthlyBudget: number): Observable<PaymentPlan> {
+  generatePlan(
+    strategy: 'snowball' | 'avalanche',
+    monthlyBudget: number,
+  ): Observable<PaymentPlan> {
     const params = new HttpParams()
       .set('strategy', strategy)
       .set('monthly_budget', monthlyBudget.toString());
@@ -46,7 +49,7 @@ export class DebtService {
     entryValue: number,
     rate: number,
     months: number,
-    system: AmortizationSystem
+    system: AmortizationSystem,
   ): Observable<any> {
     const params = new HttpParams()
       .set('property_value', propertyValue.toString())
@@ -65,7 +68,10 @@ export class DebtService {
   }
 
   getAdvice(monthlySurplus: number): Observable<any> {
-    const params = new HttpParams().set('monthly_surplus', monthlySurplus.toString());
+    const params = new HttpParams().set(
+      'monthly_surplus',
+      monthlySurplus.toString(),
+    );
     return this.http.post(`${this.apiUrl}/advice`, {}, { params });
   }
 
@@ -75,14 +81,17 @@ export class DebtService {
     parcelValue: number,
     monthlyRate: number,
     dueDate: string, // YYYY-MM-DD
-    paymentDate?: string // YYYY-MM-DD
+    paymentDate?: string, // YYYY-MM-DD
   ): Observable<any> {
     const payload = {
-        parcel_value: parcelValue,
-        monthly_interest_rate: monthlyRate,
-        due_date: dueDate,
-        payment_date: paymentDate
+      parcel_value: parcelValue,
+      monthly_interest_rate: monthlyRate,
+      due_date: dueDate,
+      payment_date: paymentDate,
     };
-    return this.http.post(`${environment.apiUrl}/calculator/present-value`, payload);
+    return this.http.post(
+      `${environment.apiUrl}/calculator/present-value`,
+      payload,
+    );
   }
 }

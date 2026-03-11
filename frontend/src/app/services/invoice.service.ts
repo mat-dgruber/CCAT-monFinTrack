@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { InvoiceSummary, PayInvoicePayload } from '../models/invoice.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InvoiceService {
   private http = inject(HttpClient);

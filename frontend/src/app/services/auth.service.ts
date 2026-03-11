@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 import { FirebaseWrapperService } from './firebase-wrapper.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private firebaseWrapper = inject(FirebaseWrapperService);
@@ -55,20 +55,26 @@ export class AuthService {
 
   // 1. Cria a conta
   async register(email: string, pass: string, name: string) {
-    const credential = await this.firebaseWrapper.createUserWithEmailAndPassword(email, pass);
+    const credential =
+      await this.firebaseWrapper.createUserWithEmailAndPassword(email, pass);
 
     if (credential.user) {
-      await this.firebaseWrapper.updateProfile(credential.user, { displayName: name });
+      await this.firebaseWrapper.updateProfile(credential.user, {
+        displayName: name,
+      });
 
       // CONFIGURAÇÃO DO LINK MÁGICO
       const actionCodeSettings = {
         // Para onde o usuário vai após clicar? (Mude para seu domínio real em produção)
         url: `${environment.appUrl}/verify-email`,
-        handleCodeInApp: true
+        handleCodeInApp: true,
       };
 
       // Passamos as configurações aqui
-      await this.firebaseWrapper.sendEmailVerification(credential.user, actionCodeSettings);
+      await this.firebaseWrapper.sendEmailVerification(
+        credential.user,
+        actionCodeSettings,
+      );
 
       await this.firebaseWrapper.signOut();
     }
@@ -76,7 +82,10 @@ export class AuthService {
   }
 
   async login(email: string, pass: string) {
-    const credential = await this.firebaseWrapper.signInWithEmailAndPassword(email, pass);
+    const credential = await this.firebaseWrapper.signInWithEmailAndPassword(
+      email,
+      pass,
+    );
 
     // 5. Verificação de Segurança no Login
     return credential;
@@ -106,7 +115,7 @@ export class AuthService {
 
     return await this.firebaseWrapper.updateProfile(user, {
       displayName: displayName || user.displayName || undefined,
-      photoURL: photoURL || user.photoURL || undefined
+      photoURL: photoURL || user.photoURL || undefined,
     });
   }
 
@@ -116,15 +125,18 @@ export class AuthService {
 
     const actionCodeSettings = {
       url: `${environment.appUrl}/verify-email`,
-      handleCodeInApp: true
+      handleCodeInApp: true,
     };
-    return await this.firebaseWrapper.sendEmailVerification(user, actionCodeSettings);
+    return await this.firebaseWrapper.sendEmailVerification(
+      user,
+      actionCodeSettings,
+    );
   }
 
   private initializeUser() {
     this.http.post(`${environment.apiUrl}/users/setup`, {}).subscribe({
       next: () => console.log('User setup completed'),
-      error: (err) => console.error('Error setting up user', err)
+      error: (err) => console.error('Error setting up user', err),
     });
   }
 }

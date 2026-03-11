@@ -9,7 +9,6 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class AccountService {
-
   private http = inject(HttpClient);
 
   private apiUrl = `${environment.apiUrl}/accounts`;
@@ -21,12 +20,12 @@ export class AccountService {
   createAccount(account: Account): Observable<Account> {
     return this.http.post<Account>(this.apiUrl, account);
   }
-  
+
   updateAccount(id: string, account: Account): Observable<Account> {
     return this.http.put<Account>(`${this.apiUrl}/${id}`, account);
-}
+  }
 
   deleteAccount(id: string): Observable<void> {
-   return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

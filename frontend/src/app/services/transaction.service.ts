@@ -37,12 +37,17 @@ export class TransactionService {
   updateTransaction(
     id: string,
     transaction: Partial<Transaction>,
+    scope: string = 'single',
   ): Observable<Transaction> {
-    return this.http.put<Transaction>(`${this.apiUrl}/${id}`, transaction);
+    const params = new HttpParams().set('scope', scope);
+    return this.http.put<Transaction>(`${this.apiUrl}/${id}`, transaction, {
+      params,
+    });
   }
 
-  deleteTransaction(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deleteTransaction(id: string, scope: string = 'all'): Observable<void> {
+    const params = new HttpParams().set('scope', scope);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { params });
   }
 
   getUpcomingTransactions(limit: number = 10): Observable<Transaction[]> {

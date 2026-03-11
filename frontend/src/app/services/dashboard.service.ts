@@ -25,19 +25,21 @@ export interface DashboardSummary {
   evolution: MonthlyEvolution[];
 }
 
-
 import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DashboardService {
-
   private http = inject(HttpClient);
 
   private apiUrl = `${environment.apiUrl}/dashboard`;
 
-  getSummary(month: number, year: number, filters?: any): Observable<DashboardSummary> {
+  getSummary(
+    month: number,
+    year: number,
+    filters?: any,
+  ): Observable<DashboardSummary> {
     let params = new HttpParams()
       .set('month', month.toString())
       .set('year', year.toString());
@@ -54,14 +56,19 @@ export class DashboardService {
         });
       }
       if (filters.dateRange && filters.dateRange[0]) {
-        params = params.append('start_date', new Date(filters.dateRange[0]).toISOString());
+        params = params.append(
+          'start_date',
+          new Date(filters.dateRange[0]).toISOString(),
+        );
         if (filters.dateRange[1]) {
-          params = params.append('end_date', new Date(filters.dateRange[1]).toISOString());
+          params = params.append(
+            'end_date',
+            new Date(filters.dateRange[1]).toISOString(),
+          );
         }
       }
     }
 
     return this.http.get<DashboardSummary>(this.apiUrl, { params });
   }
-
 }

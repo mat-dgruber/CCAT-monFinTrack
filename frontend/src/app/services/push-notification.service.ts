@@ -1,25 +1,44 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+  isSupported,
+} from 'firebase/messaging';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PushNotificationService {
-  private messaging;
+  private messaging: any = null;
   private backendUrl = `${environment.apiUrl}/users/fcm-token`;
 
-  constructor(private http: HttpClient, private authService: AuthService) {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {
     // Inicializar Firebase (garantir que environment tenha config)
     const app = initializeApp(environment.firebaseConfig);
-    this.messaging = getMessaging(app);
+    isSupported().then((supported) => {
+      if (supported) {
+        this.messaging = getMessaging(app);
+      } else {
+        console.warn('⚠️ Firebase Messaging não é suportado neste navegador.');
+      }
+    });
   }
 
   async requestPermission() {
+    if (!this.messaging) {
+      console.warn(
+        '⚠️ Tentativa de solicitar permissão FCM, mas o navegador não suporta.',
+      );
+      return;
+    }
     try {
       console.log('🔔 Solicitando permissão para notificações...');
       const permission = await Notification.requestPermission();
@@ -27,7 +46,7 @@ export class PushNotificationService {
       if (permission === 'granted') {
         console.log('✅ Permissão concedida.');
         const token = await getToken(this.messaging, {
-          vapidKey: environment.firebaseVapidKey // Necessário configurar no environment
+          vapidKey: environment.firebaseVapidKey, // Necessário configurar no environment
         });
 
         if (token) {
@@ -47,11 +66,12 @@ export class PushNotificationService {
   private sendTokenToBackend(token: string) {
     this.http.post(this.backendUrl, { token }).subscribe({
       next: () => console.log('💾 Token salvo no backend.'),
-      error: (err) => console.error('❌ Erro ao salvar token:', err)
+      error: (err) => console.error('❌ Erro ao salvar token:', err),
     });
   }
 
   listen() {
+    if (!this.messaging) return;
     onMessage(this.messaging, (payload) => {
       console.log('📨 Mensagem recebida no foreground:', payload);
       // Aqui você pode mostrar um Toast (PrimeNG) ou Snack bar customizado

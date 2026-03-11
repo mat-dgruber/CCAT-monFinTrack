@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FilterService {
   // Data atual selecionada (começa hoje)
@@ -23,9 +23,12 @@ export class FilterService {
     prev.setMonth(prev.getMonth() - 1);
     this.currentDate.set(prev);
   }
-  
+
   // Formata para exibir na tela (ex: "Novembro 2025")
   get displayDate(): string {
-      return this.currentDate().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return this.currentDate().toLocaleDateString('pt-BR', {
+      month: 'long',
+      year: 'numeric',
+    });
   }
 }

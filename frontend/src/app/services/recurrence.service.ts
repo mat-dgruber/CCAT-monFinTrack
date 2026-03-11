@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { Recurrence } from '../models/recurrence.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RecurrenceService {
   private http = inject(HttpClient);
@@ -23,9 +23,15 @@ export class RecurrenceService {
     return this.http.post<Recurrence>(this.apiUrl, recurrence);
   }
 
-  updateRecurrence(id: string, recurrence: Partial<Recurrence>, scope: 'all' | 'future' = 'all'): Observable<Recurrence> {
+  updateRecurrence(
+    id: string,
+    recurrence: Partial<Recurrence>,
+    scope: 'all' | 'future' = 'all',
+  ): Observable<Recurrence> {
     let params = new HttpParams().set('scope', scope);
-    return this.http.put<Recurrence>(`${this.apiUrl}/${id}`, recurrence, { params });
+    return this.http.put<Recurrence>(`${this.apiUrl}/${id}`, recurrence, {
+      params,
+    });
   }
 
   cancelRecurrence(id: string): Observable<Recurrence> {
@@ -37,6 +43,8 @@ export class RecurrenceService {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateString = `${year}-${month}-${day}`;
-    return this.http.post<Recurrence>(`${this.apiUrl}/${id}/skip`, { date: dateString });
+    return this.http.post<Recurrence>(`${this.apiUrl}/${id}/skip`, {
+      date: dateString,
+    });
   }
 }

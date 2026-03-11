@@ -6,24 +6,24 @@ export enum DebtType {
   CONSIGNED_CREDIT = 'consigned_credit',
   VEHICLE_FINANCING = 'vehicle_financing',
   REAL_ESTATE_FINANCING = 'real_estate_financing',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum InterestPeriod {
   MONTHLY = 'monthly',
-  YEARLY = 'yearly'
+  YEARLY = 'yearly',
 }
 
 export enum AmortizationSystem {
   SAC = 'sac',
   PRICE = 'price',
-  NONE = 'none'
+  NONE = 'none',
 }
 
 export enum DebtStatus {
   ON_TIME = 'on_time',
   OVERDUE = 'overdue',
-  NEGOTIATION = 'negotiation'
+  NEGOTIATION = 'negotiation',
 }
 
 export enum CardBrand {
@@ -32,7 +32,7 @@ export enum CardBrand {
   AMEX = 'amex',
   ELO = 'elo',
   HIPERCARD = 'hipercard',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum IndexerType {
@@ -41,7 +41,7 @@ export enum IndexerType {
   POUPANCA = 'poupanca',
   CDI = 'cdi',
   IGPM = 'igpm',
-  NONE = 'none'
+  NONE = 'none',
 }
 
 export interface Debt {
@@ -112,4 +112,7 @@ export interface PaymentPlan {
   payoff_date: string;
   steps: PaymentStep[];
   debt_summaries: DebtPayoffSummary[];
+  has_default_warning?: boolean;
+  has_negative_amortization_warning?: boolean;
+  warnings?: string[];
 }

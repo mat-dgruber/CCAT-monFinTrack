@@ -5,7 +5,7 @@ import { Budget } from '../models/budget.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BudgetService {
   private http = inject(HttpClient);
@@ -13,7 +13,9 @@ export class BudgetService {
 
   // GET (Lista com progresso calculado)
   getBudgets(month: number, year: number): Observable<Budget[]> {
-    return this.http.get<Budget[]>(`${this.apiUrl}?month=${month}&year=${year}`);
+    return this.http.get<Budget[]>(
+      `${this.apiUrl}?month=${month}&year=${year}`,
+    );
   }
 
   // POST (Criar Meta)
@@ -22,8 +24,8 @@ export class BudgetService {
   }
 
   updateBudget(id: string, budget: Budget): Observable<Budget> {
-     return this.http.put<Budget>(`${this.apiUrl}/${id}`, budget);
-   }
+    return this.http.put<Budget>(`${this.apiUrl}/${id}`, budget);
+  }
 
   // DELETE
   deleteBudget(id: string): Observable<void> {
