@@ -35,8 +35,9 @@ import { TransactionService } from '../../services/transaction.service';
     TooltipModule,
   ],
   template: `
-    <div class="p-6" #dashboardGrid>
-      <div class="page-header">
+    <div class="p-4 md:p-8 min-h-screen bg-surface-ground/20" #dashboardGrid>
+      <!-- Standard Header Section -->
+      <div class="page-header mb-8">
         <div class="page-title-group">
           <h1 class="page-title">Gráficos Avançados</h1>
           <p class="page-description">
@@ -45,168 +46,184 @@ import { TransactionService } from '../../services/transaction.service';
           </p>
         </div>
         <div class="page-actions w-full md:w-auto">
-          <p-button (onClick)="addChart()">
+          <p-button
+            (onClick)="addChart()"
+            styleClass="bg-primary hover:bg-primary-dark text-white border-none shadow-lg shadow-primary/20 transition-all duration-300 transform hover:scale-105 active:scale-95 rounded-xl px-6 py-3"
+          >
             <ng-template pTemplate="content">
-              <i class="pi pi-plus mr-2"></i>
-              <span class="hidden md:inline">Adicionar Gráfico</span>
-              <span class="md:hidden">Novo</span>
+              <i class="pi pi-plus mr-2 font-bold"></i>
+              <span class="font-bold tracking-wide">Adicionar Gráfico</span>
             </ng-template>
           </p-button>
         </div>
       </div>
 
-      <!-- Global Toolbar -->
+      <!-- Glassmorphic Global Toolbar -->
       <div
-        class="mb-6 rounded-xl shadow-sm bg-surface-card p-4 flex flex-col xl:flex-row xl:items-end justify-between gap-4 border border-surface-border"
+        class="mb-8 relative overflow-hidden rounded-3xl border border-white/20 dark:border-surface-border/50 bg-white/60 dark:bg-surface-card/60 backdrop-blur-xl shadow-xl shadow-surface-900/5 p-1"
       >
-        <!-- Left Side (Filters) -->
-        <div class="flex flex-col md:flex-row gap-4 md:items-end w-full xl:w-auto">
-          <div class="flex items-center h-full sm:mb-1">
-            <span class="font-semibold text-secondary whitespace-nowrap">Filtros Globais:</span>
+        <div
+          class="p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6"
+        >
+          <!-- Left Side: Controls -->
+          <div
+            class="flex flex-col lg:flex-row gap-6 lg:items-center w-full xl:w-auto"
+          >
+            <div class="flex items-center gap-2 shrink-0">
+              <div
+                class="w-8 h-8 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-surface-600"
+              >
+                <i class="pi pi-filter"></i>
+              </div>
+              <span
+                class="font-bold text-surface-900 tracking-tight uppercase text-xs"
+                >Filtros Globais</span
+              >
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full xl:w-auto">
+              <!-- Período -->
+              <div class="flex flex-col gap-1.5 min-w-[140px]">
+                <label
+                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
+                  >Período</label
+                >
+                <p-select
+                  [options]="datePresets"
+                  [(ngModel)]="globalDatePreset"
+                  optionLabel="label"
+                  optionValue="value"
+                  size="small"
+                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  appendTo="body"
+                  panelStyleClass="premium-dropdown-panel"
+                >
+                </p-select>
+              </div>
+
+              <!-- Tipo de Gráfico -->
+              <div class="flex flex-col gap-1.5 min-w-[140px]">
+                <label
+                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
+                  >Gráfico</label
+                >
+                <p-select
+                  [options]="chartTypes"
+                  [(ngModel)]="globalType"
+                  optionLabel="label"
+                  optionValue="value"
+                  size="small"
+                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  appendTo="body"
+                  panelStyleClass="premium-dropdown-panel"
+                >
+                  <ng-template pTemplate="item" let-item>
+                    <div class="flex items-center justify-between w-full gap-2">
+                      <span class="text-sm font-medium">{{ item.label }}</span>
+                      <span
+                        *ngIf="
+                          item.pro &&
+                          !subscriptionService.canAccess('monthly_report')
+                        "
+                        class="text-[9px] uppercase font-black text-white bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 rounded-full shadow-sm"
+                        >Pro</span
+                      >
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <!-- Filtro de Valores -->
+              <div class="flex flex-col gap-1.5 min-w-[140px]">
+                <label
+                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
+                  >Valores</label
+                >
+                <p-select
+                  [options]="valueFilterOptions"
+                  [(ngModel)]="globalValueFilter"
+                  optionLabel="label"
+                  optionValue="value"
+                  size="small"
+                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  appendTo="body"
+                  panelStyleClass="premium-dropdown-panel"
+                >
+                </p-select>
+              </div>
+
+              <!-- Agrupamento -->
+              <div class="flex flex-col gap-1.5 min-w-[140px]">
+                <label
+                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
+                  >Agrupamento</label
+                >
+                <p-select
+                  [options]="groupingOptions"
+                  [(ngModel)]="globalGroupBy"
+                  optionLabel="label"
+                  optionValue="value"
+                  size="small"
+                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  appendTo="body"
+                  panelStyleClass="premium-dropdown-panel"
+                >
+                </p-select>
+              </div>
+            </div>
+
+            <p-button
+              label="Atualizar Dashboard"
+              icon="pi pi-sync"
+              size="small"
+              (onClick)="applyGlobalFilters()"
+              styleClass="w-full lg:w-auto px-6 py-2.5 bg-surface-900 dark:bg-surface-50 text-white dark:text-surface-900 rounded-xl font-bold text-sm transition-all hover:shadow-lg hover:-translate-y-0.5"
+            >
+            </p-button>
           </div>
 
-          <div class="flex flex-wrap gap-3 w-full md:w-auto shrink-0">
-            <!-- Período -->
-            <div class="flex flex-col gap-1 flex-1 sm:flex-none min-w-[130px]">
-              <label class="text-xs font-medium text-secondary">Período</label>
-              <p-select
-                [options]="datePresets"
-                [(ngModel)]="globalDatePreset"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Data"
-                size="small"
-                styleClass="w-full"
-                appendTo="body"
-                panelStyleClass=" "
-              >
-              </p-select>
-            </div>
+          <!-- Right Side: Export & Pro -->
+          <div
+            class="flex flex-row items-center gap-3 w-full xl:w-auto xl:border-l xl:border-surface-200 xl:dark:border-surface-700 xl:pl-6"
+          >
+            <p-button
+              label="Exportar"
+              icon="pi pi-download"
+              size="small"
+              severity="secondary"
+              (onClick)="exportAllCSV()"
+              [disabled]="!subscriptionService.canAccess('monthly_report')"
+              [pTooltip]="
+                !subscriptionService.canAccess('monthly_report')
+                  ? 'Exclusivo para membros PRO'
+                  : ''
+              "
+              styleClass="flex-1 xl:flex-none px-5 py-2.5 rounded-xl font-bold border-surface-200 transition-all hover:bg-surface-100"
+            >
+            </p-button>
 
-            <!-- Gráfico -->
-            <div class="flex flex-col gap-1 flex-1 sm:flex-none min-w-[130px]">
-              <label class="text-xs font-medium text-secondary">Gráfico</label>
-              <p-select
-                [options]="chartTypes"
-                [(ngModel)]="globalType"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Tipo"
-                size="small"
-                styleClass="w-full"
-                appendTo="body"
-                panelStyleClass=" "
-              >
-                <ng-template pTemplate="selectedItem" let-selectedOption>
-                  <div class="flex items-center gap-2">
-                    <span>{{ selectedOption.label }}</span>
-                  </div>
-                </ng-template>
-                <ng-template pTemplate="item" let-item>
-                  <div class="flex items-center justify-between w-full gap-2">
-                    <span>{{ item.label }}</span>
-                    <span
-                      *ngIf="
-                        item.pro &&
-                        !subscriptionService.canAccess('monthly_report')
-                      "
-                      class="text-[10px] uppercase font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 rounded-full"
-                      >Pro</span
-                    >
-                  </div>
-                </ng-template>
-              </p-select>
-            </div>
-
-            <!-- Valores -->
-            <div class="flex flex-col gap-1 flex-1 sm:flex-none min-w-[130px]">
-              <label class="text-xs font-medium text-secondary">Valores</label>
-              <p-select
-                [options]="valueFilterOptions"
-                [(ngModel)]="globalValueFilter"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Filtrar Valor"
-                size="small"
-                styleClass="w-full"
-                appendTo="body"
-                panelStyleClass=" "
-              >
-              </p-select>
-            </div>
-
-            <!-- Agrupamento -->
-            <div class="flex flex-col gap-1 flex-1 sm:flex-none min-w-[130px]">
-              <label class="text-xs font-medium text-secondary">Agrupamento</label>
-              <p-select
-                [options]="groupingOptions"
-                [(ngModel)]="globalGroupBy"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Agrupar"
-                size="small"
-                styleClass="w-full"
-                appendTo="body"
-                panelStyleClass=" "
-              >
-              </p-select>
-            </div>
+            <p-button
+              *ngIf="!subscriptionService.canAccess('monthly_report')"
+              label="Desbloquear PRO"
+              icon="pi pi-sparkles"
+              size="small"
+              (onClick)="navigateToPricing()"
+              styleClass="flex-1 xl:flex-none px-5 py-2.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white border-none rounded-xl font-bold shadow-md shadow-orange-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5"
+            >
+            </p-button>
           </div>
-
-          <p-button
-            label="Aplicar a Todos"
-            icon="pi pi-check"
-            size="small"
-            (onClick)="applyGlobalFilters()"
-            [outlined]="true"
-            styleClass="w-full md:w-auto px-4"
-          >
-          </p-button>
-        </div>
-
-        <!-- Right Side (Exports) -->
-        <div class="flex flex-wrap gap-2 w-full xl:w-auto justify-end">
-          <p-button
-            label="Exportar CSV"
-            icon="pi pi-file-excel"
-            size="small"
-            severity="secondary"
-            (onClick)="exportAllCSV()"
-            [disabled]="!subscriptionService.canAccess('monthly_report')"
-            [pTooltip]="
-              !subscriptionService.canAccess('monthly_report')
-                ? 'Disponível no plano PRO'
-                : ''
-            "
-            styleClass="w-full sm:w-auto px-4"
-          >
-          </p-button>
-          <p-button
-            *ngIf="!subscriptionService.canAccess('monthly_report')"
-            label="Desbloquear Pro"
-            icon="pi pi-lock-open"
-            size="small"
-            (onClick)="navigateToPricing()"
-            styleClass="w-full sm:w-auto px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none"
-          >
-          </p-button>
         </div>
       </div>
 
-      <!-- Grid Layout -->
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 auto-rows-min"
-      >
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
         @for (widget of widgets(); track widget.id; let i = $index) {
           <div
-            class="transition-all duration-300 ease-in-out"
+            class="group/widget transition-all duration-500"
             [ngClass]="{
               'md:col-span-1': !widget.colSpan || widget.colSpan === 1,
               'md:col-span-2': widget.colSpan === 2,
-              'h-[500px]': true,
-              'opacity-50': draggedIndex === i,
-              'border-2 border-dashed border-blue-400 rounded-lg':
-                draggedIndex === i,
+              'opacity-40 scale-95': draggedIndex === i,
             }"
             [draggable]="draggedIndex === i || hoveredIndex === i"
             (dragstart)="onDragStart(i)"
@@ -214,37 +231,58 @@ import { TransactionService } from '../../services/transaction.service';
             (drop)="onDrop(i)"
             (dragend)="onDragEnd()"
           >
-            <div class="h-full relative group">
-              <!-- Drag Handle Overlay (Visible on Hover) -->
+            <div class="h-[520px] relative">
+              <!-- Animated Drag Handle -->
               <div
-                class="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded-b-md cursor-move z-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                title="Arrastar para reordenar"
+                class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-surface-900 dark:bg-surface-50 rounded-full shadow-lg cursor-grab active:cursor-grabbing z-50 opacity-0 group-hover/widget:opacity-100 -translate-y-2 group-hover/widget:translate-y-0 transition-all duration-300 flex items-center gap-2"
+                title="Arraste para organizar"
                 (mouseenter)="hoveredIndex = i"
                 (mouseleave)="hoveredIndex = null"
               >
-                <i class="pi pi-bars text-[10px] text-secondary"></i>
+                <i class="pi pi-grip-vertical text-[10px] text-surface-400"></i>
+                <span
+                  class="text-[9px] font-black uppercase tracking-widest text-surface-400"
+                  >Organizar</span
+                >
               </div>
 
-              <app-chart-widget
-                [widgetConfig]="widget"
-                [removeCallback]="removeWidget.bind(this)"
-                (toggleSize)="toggleSize($event)"
+              <div
+                class="h-full rounded-[2rem] overflow-hidden shadow-2xl shadow-surface-900/10 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-card transition-transform duration-300 group-hover/widget:-translate-y-1"
               >
-              </app-chart-widget>
+                <app-chart-widget
+                  [widgetConfig]="widget"
+                  [removeCallback]="removeWidget.bind(this)"
+                  (toggleSize)="toggleSize($event)"
+                >
+                </app-chart-widget>
+              </div>
             </div>
           </div>
         }
       </div>
 
+      <!-- Empty State -->
       @if (widgets().length === 0) {
         <div
-          class="text-center py-20 bg-surface-hover rounded-lg border-2 border-dashed border-surface-border"
+          class="flex flex-col items-center justify-center p-20 bg-white/40 dark:bg-surface-card/40 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-surface-300 dark:border-surface-700 animate-in fade-in zoom-in duration-500"
         >
-          <p class="text-secondary mb-4">Nenhum gráfico configurado.</p>
+          <div
+            class="w-20 h-20 bg-surface-100 dark:bg-surface-800 rounded-3xl flex items-center justify-center mb-6 text-surface-400"
+          >
+            <i class="pi pi-chart-bar text-4xl"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-surface-900 mb-2">
+            Sua análise começa aqui
+          </h2>
+          <p class="text-surface-600 mb-8 max-w-sm text-center">
+            Nenhum gráfico disponível. Comece adicionando um novo widget para
+            visualizar seus dados.
+          </p>
           <p-button
-            label="Criar seu primeiro gráfico"
+            label="Criar meu primeiro gráfico"
+            icon="pi pi-plus"
             (onClick)="addChart()"
-            severity="secondary"
+            styleClass="bg-primary text-white border-none rounded-xl px-8 py-3 font-bold shadow-lg shadow-primary/20"
           ></p-button>
         </div>
       }
