@@ -1,4 +1,11 @@
 {
+  "name": "ccat-monfintrack",
+  "version": "1.0.0",
+  "scripts": {
+    "deploy:backend": "gcloud builds submit --config backend/cloudbuild.yaml backend/",
+    "deploy:frontend": "cd frontend && npm install --legacy-peer-deps && npm run build && cd .. && firebase deploy --only hosting",
+    "deploy": "npm run deploy:backend && npm run deploy:frontend"
+  },
   "dependencies": {
     "@primeng/themes": "^20.3.0",
     "primeicons": "^7.0.0",
