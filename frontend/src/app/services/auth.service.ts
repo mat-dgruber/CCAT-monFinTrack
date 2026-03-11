@@ -25,8 +25,8 @@ export class AuthService {
       // SÓ aceita o usuário se o email estiver verificado!
       if (user && user.emailVerified) {
         this.currentUser.set(user);
-        this.initializeUser(); // Garante categorias padrão
         this.authStateSubject.next(user);
+        this.initializeUser(); // Garante categorias padrão agora COM token
       } else {
         this.currentUser.set(null);
         this.authStateSubject.next(null);

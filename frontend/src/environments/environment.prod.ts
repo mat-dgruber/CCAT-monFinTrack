@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   apiUrl: '/api',
-  appUrl: 'https://ccat-monfintrack.web.app',
+  appUrl: 'https://monfintrack.com.br',
   firebaseConfig: {
     apiKey: "AIzaSyCMmJapjjZLp0h3TyI7v3r2z9FSD-pxfeQ",
     authDomain: "ccat-monfintrack.firebaseapp.com",

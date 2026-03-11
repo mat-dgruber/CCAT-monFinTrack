@@ -79,7 +79,7 @@ class EmailService:
             {
                 "name": recipient_name,
                 "data": report_data,
-                "logo_url": "https://ccat-monfintrack.web.app/assets/images/logo.png",  # Substitua pela URL real
+                "logo_url": "https://monfintrack.com.br/assets/images/logo.png",  # Substitua pela URL real
             },
         )
 
