@@ -1,345 +1,342 @@
 <div class="p-6 max-w-6xl mx-auto">
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-    <div>
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Gerenciar Categorias</h2>
-      <p class="text-gray-500 dark:text-gray-400">Crie e organize suas categorias de receitas e despesas.</p>
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Categorias</h1>
+      <p class="page-description">Crie e organize suas categorias de receitas e despesas.</p>
     </div>
-    <p-button label="Nova Categoria" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    <div class="page-actions w-full md:w-auto">
+      <p-button label="Nova Categoria" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    </div>
   </div>
 
-  <!-- Table (Desktop) -->
-  <div
-    class="hidden md:block card bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-    @if (loading()) {
-      <div class="p-6 space-y-6">
-        <!-- Header Mock -->
-        <div class="flex justify-between items-center px-4">
-             <p-skeleton width="8rem" height="1.5rem"></p-skeleton>
-             <p-skeleton width="6rem" height="1.5rem"></p-skeleton>
-             <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
-        </div>
-        <!-- Rows -->
-         @for (i of [1,2,3,4,5]; track i) {
-           <div class="flex items-center justify-between px-4">
-              <!-- Name & Icon -->
-              <div class="flex items-center gap-4 w-1/3">
-                 <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
-                 <p-skeleton width="60%" height="1.25rem"></p-skeleton>
-              </div>
-              <!-- Type -->
-              <div class="w-1/6">
-                 <p-skeleton width="6rem" height="1.75rem" borderRadius="1rem"></p-skeleton>
-              </div>
-              <!-- Actions -->
-              <div class="flex gap-2">
-                 <p-skeleton shape="circle" size="2rem"></p-skeleton>
-                 <p-skeleton shape="circle" size="2rem"></p-skeleton>
-              </div>
-           </div>
-         }
-      </div>
-    } @else {
-    <p-table [value]="tableData()" sortField="parent.name" sortMode="single" dataKey="id" rowGroupMode="subheader"
-      groupRowsBy="parent.id" [tableStyle]="{ 'min-width': '60rem' }" styleClass="p-datatable-sm">
-      <ng-template pTemplate="header">
-        <tr>
-          <th class="bg-white dark:bg-slate-800 text-gray-800 dark:text-white">Nome</th>
-          <th class="bg-white dark:bg-slate-800 text-gray-800 dark:text-white">Tipo</th>
-          <th class="bg-white dark:bg-slate-800 text-gray-800 dark:text-white">Ações</th>
-        </tr>
-      </ng-template>
+ <!-- Table (Desktop) -->
+ <div
+ class="hidden md:block card bg-surface-card rounded-xl shadow-sm border border-surface-border overflow-hidden">
+ @if (loading()) {
+ <div class="p-6 space-y-6">
+ <!-- Header Mock -->
+ <div class="flex justify-between items-center px-4">
+ <p-skeleton width="8rem" height="1.5rem"></p-skeleton>
+ <p-skeleton width="6rem" height="1.5rem"></p-skeleton>
+ <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
+ </div>
+ <!-- Rows -->
+ @for (i of [1,2,3,4,5]; track i) {
+ <div class="flex items-center justify-between px-4">
+ <!-- Name & Icon -->
+ <div class="flex items-center gap-4 w-1/3">
+ <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+ <p-skeleton width="60%" height="1.25rem"></p-skeleton>
+ </div>
+ <!-- Type -->
+ <div class="w-1/6">
+ <p-skeleton width="6rem" height="1.75rem" borderRadius="1rem"></p-skeleton>
+ </div>
+ <!-- Actions -->
+ <div class="flex gap-2">
+ <p-skeleton shape="circle" size="2rem"></p-skeleton>
+ <p-skeleton shape="circle" size="2rem"></p-skeleton>
+ </div>
+ </div>
+ }
+ </div>
+ } @else {
+ <p-table [value]="tableData()" sortField="parent.name" sortMode="single" dataKey="id" rowGroupMode="subheader"
+ groupRowsBy="parent.id" [tableStyle]="{ 'min-width': '60rem' }" styleClass="p-datatable-sm">
+ <ng-template pTemplate="header">
+ <tr>
+ <th class="bg-surface-card text-color">Nome</th>
+ <th class="bg-surface-card text-color">Tipo</th>
+ <th class="bg-surface-card text-color">Ações</th>
+ </tr>
+ </ng-template>
 
-      <ng-template pTemplate="groupheader" let-row>
-        <tr pRowGroupHeader
-          class="bg-gray-50 dark:bg-slate-900 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
-          <td>
-            <div class="flex items-center gap-3 font-bold text-gray-800 dark:text-white py-2">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm"
-                [style.backgroundColor]="row.parent.color + '20'" [style.color]="row.parent.color">
-                <i [class]="row.parent.icon"></i>
-              </div>
-              <span class="text-lg">{{ row.parent.name }}</span>
-            </div>
-          </td>
-          <td>
-             <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border inline-block"
-                  [class.bg-red-50]="row.parent.type === 'expense'" [class.text-red-600]="row.parent.type === 'expense'"
-                  [class.border-red-100]="row.parent.type === 'expense'"
-                  [class.dark:bg-red-900]="row.parent.type === 'expense'"
-                  [class.dark:text-red-100]="row.parent.type === 'expense'"
-                  [class.dark:border-red-800]="row.parent.type === 'expense'"
-                  [class.bg-green-50]="row.parent.type === 'income'"
-                  [class.text-green-600]="row.parent.type === 'income'"
-                  [class.border-green-100]="row.parent.type === 'income'"
-                  [class.dark:bg-green-900]="row.parent.type === 'income'"
-                  [class.dark:text-green-100]="row.parent.type === 'income'"
-                  [class.dark:border-green-800]="row.parent.type === 'income'">
-                  {{ row.parent.type === "expense" ? "Despesa" : "Receita" }}
-             </span>
-          </td>
-          <td>
-              <div class="flex gap-2 items-center">
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
-                  (onClick)="editCategory(row.parent)"></p-button>
-                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                  (onClick)="deleteCategory($event, row.parent.id)"></p-button>
-              </div>
-          </td>
-        </tr>
-      </ng-template>
+ <ng-template pTemplate="groupheader" let-row>
+ <tr pRowGroupHeader
+ class="bg-surface-ground hover:bg-surface-hover dark:hover:bg-slate-800 transition-colors">
+ <td>
+ <div class="flex items-center gap-3 font-bold text-color py-2">
+ <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm"
+ [style.backgroundColor]="row.parent.color + '20'" [style.color]="row.parent.color">
+ <i [class]="row.parent.icon"></i>
+ </div>
+ <span class="text-lg">{{ row.parent.name }}</span>
+ </div>
+ </td>
+ <td>
+ <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border inline-block"
+ [class.bg-red-50]="row.parent.type === 'expense'" [class.text-red-600]="row.parent.type === 'expense'"
+ [class.border-red-100]="row.parent.type === 'expense'"
+ [class.dark:bg-red-900]="row.parent.type === 'expense'"
+ [class.dark:text-red-100]="row.parent.type === 'expense'"
+ [class.dark:border-red-800]="row.parent.type === 'expense'"
+ [class.bg-green-50]="row.parent.type === 'income'"
+ [class.text-green-600]="row.parent.type === 'income'"
+ [class.border-green-100]="row.parent.type === 'income'"
+ [class.dark:bg-green-900]="row.parent.type === 'income'"
+ [class.dark:text-green-100]="row.parent.type === 'income'"
+ [class.dark:border-green-800]="row.parent.type === 'income'">
+ {{ row.parent.type === "expense" ? "Despesa" : "Receita" }}
+ </span>
+ </td>
+ <td>
+ <div class="flex gap-2 items-center">
+ <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+ (onClick)="editCategory(row.parent)"></p-button>
+ <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+ (onClick)="deleteCategory($event, row.parent.id)"></p-button>
+ </div>
+ </td>
+ </tr>
+ </ng-template>
 
-      <ng-template pTemplate="body" let-row>
-        @if (!row.isPlaceholder) {
-        <tr
-          class="bg-white dark:bg-slate-800 hover:bg-gray-50/50 dark:hover:bg-slate-700/50 transition-colors text-gray-800 dark:text-gray-200">
-          <td class="p-0 relative bg-white dark:bg-slate-800">
-            <div class="flex items-center h-full pl-8">
-              <!-- Visual Connector -->
-              <div
-                class="absolute left-8 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600">
-              </div>
-              <div
-                class="absolute left-8 top-1/2 w-6 h-px bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600">
-              </div>
+ <ng-template pTemplate="body" let-row>
+ @if (!row.isPlaceholder) {
+ <tr
+ class="bg-surface-card hover:bg-surface-hover transition-colors text-color">
+ <td class="p-0 relative bg-surface-card">
+ <div class="flex items-center h-full pl-8">
+ <!-- Visual Connector -->
+ <div
+ class="absolute left-8 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600">
+ </div>
+ <div
+ class="absolute left-8 top-1/2 w-6 h-px bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600">
+ </div>
 
-              <div class="flex items-center gap-3 ml-10 py-3">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                  [style.backgroundColor]="row.color + '15'" [style.color]="row.color">
-                  <i [class]="row.icon"></i>
-                </div>
-                <span class="text-gray-600 dark:text-gray-300 font-medium">{{ row.name }}</span>
-              </div>
-            </div>
-          </td>
-          <td>
-            <!-- Type inherited -->
-          </td>
-          <td>
-            <div class="flex gap-2">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" severity="secondary"
-                (onClick)="editCategory(row)"></p-button>
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger"
-                (onClick)="deleteCategory($event, row.id)"></p-button>
-            </div>
-          </td>
-        </tr>
-        }
-      </ng-template>
+ <div class="flex items-center gap-3 ml-10 py-3">
+ <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+ [style.backgroundColor]="row.color + '15'" [style.color]="row.color">
+ <i [class]="row.icon"></i>
+ </div>
+ <span class="text-secondary font-medium">{{ row.name }}</span>
+ </div>
+ </div>
+ </td>
+ <td>
+ <!-- Type inherited -->
+ </td>
+ <td>
+ <div class="flex gap-2">
+ <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" severity="secondary"
+ (onClick)="editCategory(row)"></p-button>
+ <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger"
+ (onClick)="deleteCategory($event, row.id)"></p-button>
+ </div>
+ </td>
+ </tr>
+ }
+ </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="3" class="text-center p-8">
-            <div class="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-              <i class="pi pi-tags text-4xl opacity-50"></i>
-              <p class="text-lg font-medium">Nenhuma categoria encontrada</p>
-              <p class="text-sm">Clique em "Nova Categoria" para começar.</p>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-    }
-  </div>
+ <ng-template pTemplate="emptymessage">
+ <tr>
+ <td colspan="3" class="text-center p-8">
+ <div class="flex flex-col items-center gap-3 text-secondary">
+ <i class="pi pi-tags text-4xl opacity-50"></i>
+ <p class="text-lg font-medium">Nenhuma categoria encontrada</p>
+ <p class="text-sm">Clique em "Nova Categoria" para começar.</p>
+ </div>
+ </td>
+ </tr>
+ </ng-template>
+ </p-table>
+ }
+ </div>
 
-  <!-- Mobile List -->
-  <div class="md:hidden flex flex-col gap-3">
-    @if (loading()) {
-      <div class="flex flex-col gap-3">
-         @for (i of [1,2,3]; track i) {
-             <p-skeleton height="5rem" styleClass="rounded-xl"></p-skeleton>
-         }
-      </div>
-    } @else {
-      @for (cat of categories(); track cat.id) {
-        <!-- Parent Category Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-            <!-- Parent Content -->
-            <div class="p-3 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                     [style.backgroundColor]="cat.color + '20'"
-                     [style.color]="cat.color">
-                    <i [class]="cat.icon"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-bold text-gray-900 dark:text-gray-100">{{ cat.name }}</div>
-                     <span class="text-xs uppercase font-bold tracking-wide px-2 py-0.5 rounded inline-block mt-1"
-                      [class]="cat.type === 'expense' ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-200' : 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-200'">
-                      {{ cat.type === 'expense' ? 'Despesa' : 'Receita' }}
-                     </span>
-                </div>
-                <!-- Parent Actions -->
-                <div class="flex gap-1">
-                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="editCategory(cat)"></p-button>
-                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="deleteCategory($event, cat.id!)"></p-button>
-                </div>
-            </div>
+ <!-- Mobile List -->
+ <div class="md:hidden flex flex-col gap-3">
+ @if (loading()) {
+ <div class="flex flex-col gap-3">
+ @for (i of [1,2,3]; track i) {
+ <p-skeleton height="5rem" styleClass="rounded-xl"></p-skeleton>
+ }
+ </div>
+ } @else {
+ @for (cat of categories(); track cat.id) {
+ <!-- Parent Category Card -->
+ <div class="bg-surface-card rounded-xl border border-surface-border shadow-sm overflow-hidden">
+ <!-- Parent Content -->
+ <div class="p-3 flex items-center gap-3">
+ <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+ [style.backgroundColor]="cat.color + '20'"
+ [style.color]="cat.color">
+ <i [class]="cat.icon"></i>
+ </div>
+ <div class="flex-1 min-w-0">
+ <div class="font-bold text-color">{{ cat.name }}</div>
+ <span class="text-xs uppercase font-bold tracking-wide px-2 py-0.5 rounded inline-block mt-1"
+ [class]="cat.type === 'expense' ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-200' : 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-200'">
+ {{ cat.type === 'expense' ? 'Despesa' : 'Receita' }}
+ </span>
+ </div>
+ <!-- Parent Actions -->
+ <div class="flex gap-1">
+ <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="editCategory(cat)"></p-button>
+ <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="deleteCategory($event, cat.id!)"></p-button>
+ </div>
+ </div>
 
-            <!-- Subcategories -->
-            @if (cat.subcategories && cat.subcategories.length > 0) {
-                <div class="bg-gray-50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-gray-700 p-2 flex flex-col gap-2">
-                    @for (sub of cat.subcategories; track sub.id) {
-                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
-                             <!-- Visual connector -->
-                             <div class="w-6 flex justify-center text-gray-400">
-                                 <i class="pi pi-level-up rotate-90 text-xs"></i>
-                             </div>
+ <!-- Subcategories -->
+ @if (cat.subcategories && cat.subcategories.length > 0) {
+ <div class="bg-surface-ground/50 border-t border-surface-border p-2 flex flex-col gap-2">
+ @for (sub of cat.subcategories; track sub.id) {
+ <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-card transition-colors">
+ <!-- Visual connector -->
+ <div class="w-6 flex justify-center text-gray-400">
+ <i class="pi pi-level-up rotate-90 text-xs"></i>
+ </div>
 
-                             <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                                  [style.backgroundColor]="sub.color + '15'"
-                                  [style.color]="sub.color">
-                                 <i [class]="sub.icon"></i>
-                             </div>
+ <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+ [style.backgroundColor]="sub.color + '15'"
+ [style.color]="sub.color">
+ <i [class]="sub.icon"></i>
+ </div>
 
-                             <div class="flex-1 font-medium text-sm text-gray-700 dark:text-gray-300">
-                                 {{ sub.name }}
-                             </div>
+ <div class="flex-1 font-medium text-sm text-color ">
+ {{ sub.name }}
+ </div>
 
-                             <div class="flex gap-1">
-                                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="editCategory(sub)"></p-button>
-                                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" (onClick)="deleteCategory($event, sub.id!)"></p-button>
-                             </div>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-      }
-    }
+ <div class="flex gap-1">
+ <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="editCategory(sub)"></p-button>
+ <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" (onClick)="deleteCategory($event, sub.id!)"></p-button>
+ </div>
+ </div>
+ }
+ </div>
+ }
+ </div>
+ }
+ }
 
-    @if (!loading() && categories().length === 0) {
-      <div class="flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-gray-700">
-          <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-slate-700 flex items-center justify-center mb-4">
-              <i class="pi pi-tags text-2xl text-gray-400 dark:text-gray-500"></i>
-          </div>
-          <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Sem categorias</h3>
-          <p class="text-gray-500 dark:text-gray-400 mb-6">Você ainda não criou nenhuma categoria.</p>
-          <p-button label="Nova Categoria" icon="pi pi-plus" (onClick)="openNew()"></p-button>
-      </div>
-    }
-  </div>
+ @if (!loading() && categories().length === 0) {
+ <div class="flex flex-col items-center justify-center p-8 text-center bg-surface-card rounded-xl border border-surface-border">
+ <div class="w-16 h-16 rounded-full bg-surface-ground flex items-center justify-center mb-4">
+ <i class="pi pi-tags text-2xl text-secondary"></i>
+ </div>
+ <h3 class="text-lg font-bold text-color mb-2">Sem categorias</h3>
+ <p class="text-secondary mb-6">Você ainda não criou nenhuma categoria.</p>
+ <p-button label="Nova Categoria" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+ </div>
+ }
+ </div>
 </div>
 
 <p-dialog [header]="editingId() ? 'Editar Categoria' : 'Nova Categoria'" [modal]="true" [(visible)]="visible"
-  [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
-    <div class="flex justify-center mb-2">
-      <div class="grid grid-cols-2 gap-4 mb-2">
-        <div (click)="form.get('type')?.setValue('expense')"
-          class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
-          [class.border-red-500]="form.get('type')?.value === 'expense'"
-          [class.bg-red-50]="form.get('type')?.value === 'expense'"
-          [class.text-red-600]="form.get('type')?.value === 'expense'"
-          [class.ring-2]="form.get('type')?.value === 'expense'"
-          [class.ring-red-200]="form.get('type')?.value === 'expense'"
-          [class.dark:bg-red-900]="form.get('type')?.value === 'expense'"
-          [class.dark:text-red-100]="form.get('type')?.value === 'expense'"
-          [class.dark:border-red-700]="form.get('type')?.value === 'expense'"
-          [class.dark:ring-red-900]="form.get('type')?.value === 'expense'"
-          [class.border-gray-200]="form.get('type')?.value !== 'expense'"
-          [class.bg-white]="form.get('type')?.value !== 'expense'"
-          [class.text-gray-500]="form.get('type')?.value !== 'expense'"
-          [class.hover:bg-gray-50]="form.get('type')?.value !== 'expense'"
-          [class.dark:border-gray-700]="form.get('type')?.value !== 'expense'"
-          [class.dark:bg-slate-800]="form.get('type')?.value !== 'expense'"
-          [class.dark:text-gray-400]="form.get('type')?.value !== 'expense'"
-          [class.dark:hover:bg-slate-700]="form.get('type')?.value !== 'expense'">
-          <i class="pi pi-minus-circle text-2xl"></i>
-          <span class="font-bold text-sm uppercase tracking-wide">Despesa</span>
-        </div>
+ [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
+ <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
+ <div class="flex justify-center mb-2">
+ <div class="grid grid-cols-2 gap-4 mb-2">
+ <div (click)="form.get('type')?.setValue('expense')"
+ class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
+ [class.border-red-500]="form.get('type')?.value === 'expense'"
+ [class.bg-red-50]="form.get('type')?.value === 'expense'"
+ [class.text-red-600]="form.get('type')?.value === 'expense'"
+ [class.ring-2]="form.get('type')?.value === 'expense'"
+ [class.ring-red-200]="form.get('type')?.value === 'expense'"
+ [class.dark:bg-red-900]="form.get('type')?.value === 'expense'"
+ [class.dark:text-red-100]="form.get('type')?.value === 'expense'"
+ [class.dark:border-red-700]="form.get('type')?.value === 'expense'"
+ [class.dark:ring-red-900]="form.get('type')?.value === 'expense'"
+ [class.border-surface-border]="form.get('type')?.value !== 'expense'"
+ [class.bg-surface-card]="form.get('type')?.value !== 'expense'"
+ [class.text-secondary]="form.get('type')?.value !== 'expense'"
+ [class.hover:bg-surface-ground]="form.get('type')?.value !== 'expense'"
 
-        <div (click)="form.get('type')?.setValue('income')"
-          class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
-          [class.border-green-500]="form.get('type')?.value === 'income'"
-          [class.bg-green-50]="form.get('type')?.value === 'income'"
-          [class.text-green-600]="form.get('type')?.value === 'income'"
-          [class.ring-2]="form.get('type')?.value === 'income'"
-          [class.ring-green-200]="form.get('type')?.value === 'income'"
-          [class.dark:bg-green-900]="form.get('type')?.value === 'income'"
-          [class.dark:text-green-100]="form.get('type')?.value === 'income'"
-          [class.dark:border-green-700]="form.get('type')?.value === 'income'"
-          [class.dark:ring-green-900]="form.get('type')?.value === 'income'"
-          [class.border-gray-200]="form.get('type')?.value !== 'income'"
-          [class.bg-white]="form.get('type')?.value !== 'income'"
-          [class.text-gray-500]="form.get('type')?.value !== 'income'"
-          [class.hover:bg-gray-50]="form.get('type')?.value !== 'income'"
-          [class.dark:border-gray-700]="form.get('type')?.value !== 'income'"
-          [class.dark:bg-slate-800]="form.get('type')?.value !== 'income'"
-          [class.dark:text-gray-400]="form.get('type')?.value !== 'income'"
-          [class.dark:hover:bg-slate-700]="form.get('type')?.value !== 'income'">
-          <i class="pi pi-plus-circle text-2xl"></i>
-          <span class="font-bold text-sm uppercase tracking-wide">Receita</span>
-        </div>
-      </div>
-    </div>
+ [class.dark:hover:bg-slate-700]="form.get('type')?.value !== 'expense'">
+ <i class="pi pi-minus-circle text-2xl"></i>
+ <span class="font-bold text-sm uppercase tracking-wide">Despesa</span>
+ </div>
 
-    <div class="flex flex-col gap-2">
-      <label class="font-semibold text-gray-700 dark:text-gray-300">Nome</label>
-      <input pInputText formControlName="name" class="w-full" placeholder="Ex: Alimentação" />
-    </div>
+ <div (click)="form.get('type')?.setValue('income')"
+ class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
+ [class.border-green-500]="form.get('type')?.value === 'income'"
+ [class.bg-green-50]="form.get('type')?.value === 'income'"
+ [class.text-green-600]="form.get('type')?.value === 'income'"
+ [class.ring-2]="form.get('type')?.value === 'income'"
+ [class.ring-green-200]="form.get('type')?.value === 'income'"
+ [class.dark:bg-green-900]="form.get('type')?.value === 'income'"
+ [class.dark:text-green-100]="form.get('type')?.value === 'income'"
+ [class.dark:border-green-700]="form.get('type')?.value === 'income'"
+ [class.dark:ring-green-900]="form.get('type')?.value === 'income'"
+ [class.border-surface-border]="form.get('type')?.value !== 'income'"
+ [class.bg-surface-card]="form.get('type')?.value !== 'income'"
+ [class.text-secondary]="form.get('type')?.value !== 'income'"
+ [class.hover:bg-surface-ground]="form.get('type')?.value !== 'income'"
 
-    <!-- Parent Category Selector -->
-    <div class="flex flex-col gap-2">
-      <label class="font-semibold text-gray-700 dark:text-gray-300">Categoria Pai (Opcional)</label>
-      <p-select [options]="getParentOptions()" formControlName="parent_id" optionLabel="name" optionValue="id"
-        placeholder="Nenhuma (Raiz)" [showClear]="true" styleClass="w-full" appendTo="body"
-        panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
-        <ng-template pTemplate="item" let-item>
-          <div class="flex items-center gap-2">
-            <i [class]="item.icon" [style.color]="item.color"></i>
-            <span>{{ item.name }}</span>
-          </div>
-        </ng-template>
-      </p-select>
-    </div>
+ [class.dark:hover:bg-slate-700]="form.get('type')?.value !== 'income'">
+ <i class="pi pi-plus-circle text-2xl"></i>
+ <span class="font-bold text-sm uppercase tracking-wide">Receita</span>
+ </div>
+ </div>
+ </div>
 
-    <div class="flex gap-4 items-end">
-      <div class="flex-1 flex flex-col gap-2">
-        <label class="font-semibold text-gray-700 dark:text-gray-300">Ícone</label>
-        <p-select [options]="icons" formControlName="icon" optionLabel="label" optionValue="value"
-          [style]="{ width: '100%' }" appendTo="body" placeholder="Selecione..."
-          panelStyleClass="dark:bg-slate-800 dark:border-gray-700">
-          <ng-template pTemplate="item" let-i>
-            <div class="flex items-center gap-2">
-              <i [class]="i.value" class="text-lg"></i>
-              <span>{{ i.label }}</span>
-            </div>
-          </ng-template>
+ <div class="flex flex-col gap-2">
+ <label class="font-semibold text-color ">Nome</label>
+ <input pInputText formControlName="name" class="w-full" placeholder="Ex: Alimentação" />
+ </div>
 
-          <ng-template pTemplate="selectedItem" let-i>
-            @if (i) {
-            <div class="flex items-center gap-2">
-              <i [class]="i.value"></i>
-              <span>{{ i.label }}</span>
-            </div>
-            }
-          </ng-template>
-        </p-select>
-      </div>
+ <!-- Parent Category Selector -->
+ <div class="flex flex-col gap-2">
+ <label class="font-semibold text-color ">Categoria Pai (Opcional)</label>
+ <p-select [options]="getParentOptions()" formControlName="parent_id" optionLabel="name" optionValue="id"
+ placeholder="Nenhuma (Raiz)" [showClear]="true" styleClass="w-full" appendTo="body"
+ panelStyleClass=" ">
+ <ng-template pTemplate="item" let-item>
+ <div class="flex items-center gap-2">
+ <i [class]="item.icon" [style.color]="item.color"></i>
+ <span>{{ item.name }}</span>
+ </div>
+ </ng-template>
+ </p-select>
+ </div>
 
-      <div class="flex flex-col gap-2 items-center">
-        <label class="font-semibold text-gray-700 dark:text-gray-300">Cor</label>
-        <p-colorPicker formControlName="color" appendTo="body"></p-colorPicker>
-      </div>
-    </div>
+ <div class="flex gap-4 items-end">
+ <div class="flex-1 flex flex-col gap-2">
+ <label class="font-semibold text-color ">Ícone</label>
+ <p-select [options]="icons" formControlName="icon" optionLabel="label" optionValue="value"
+ [style]="{ width: '100%' }" appendTo="body" placeholder="Selecione..."
+ panelStyleClass=" ">
+ <ng-template pTemplate="item" let-i>
+ <div class="flex items-center gap-2">
+ <i [class]="i.value" class="text-lg"></i>
+ <span>{{ i.label }}</span>
+ </div>
+ </ng-template>
 
-    <div class="flex justify-between mt-4">
-      <!-- Delete Button (Only if Editing) -->
-      @if (editingId()) {
-      <p-button label="Excluir" severity="danger" [text]="true" icon="pi pi-trash"
-        (onClick)="deleteCategory($event, editingId()!); visible.set(false)"></p-button>
-      } @else {
-      <div></div>
-      <!-- Spacer -->
-      }
+ <ng-template pTemplate="selectedItem" let-i>
+ @if (i) {
+ <div class="flex items-center gap-2">
+ <i [class]="i.value"></i>
+ <span>{{ i.label }}</span>
+ </div>
+ }
+ </ng-template>
+ </p-select>
+ </div>
 
-      <p-button label="Salvar" type="submit" [disabled]="form.invalid"></p-button>
-    </div>
-  </form>
+ <div class="flex flex-col gap-2 items-center">
+ <label class="font-semibold text-color ">Cor</label>
+ <p-colorPicker formControlName="color" appendTo="body"></p-colorPicker>
+ </div>
+ </div>
+
+ <div class="flex justify-between mt-4">
+ <!-- Delete Button (Only if Editing) -->
+ @if (editingId()) {
+ <p-button label="Excluir" severity="danger" [text]="true" icon="pi pi-trash"
+ (onClick)="deleteCategory($event, editingId()!); visible.set(false)"></p-button>
+ } @else {
+ <div></div>
+ <!-- Spacer -->
+ }
+
+ <p-button label="Salvar" type="submit" [disabled]="form.invalid"></p-button>
+ </div>
+ </form>
 </p-dialog>
 
 <p-confirmDialog [style]="{width: '450px'}"
-                 rejectLabel="Cancelar"
-                 acceptLabel="Excluir"
-                 acceptButtonStyleClass="p-button-danger">
+ rejectLabel="Cancelar"
+ acceptLabel="Excluir"
+ acceptButtonStyleClass="p-button-danger">
 </p-confirmDialog>

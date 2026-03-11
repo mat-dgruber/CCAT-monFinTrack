@@ -5,22 +5,22 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 describe('AccountManager', () => {
-  let component: AccountManager;
-  let fixture: ComponentFixture<AccountManager>;
+ let component: AccountManager;
+ let fixture: ComponentFixture<AccountManager>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [AccountManager, HttpClientTestingModule, NoopAnimationsModule],
-      providers: [ConfirmationService, MessageService]
-    })
-      .compileComponents();
+ beforeEach(async () => {
+ await TestBed.configureTestingModule({
+ imports: [AccountManager, HttpClientTestingModule, NoopAnimationsModule],
+ providers: [ConfirmationService, MessageService]
+ })
+ .compileComponents();
 
-    fixture = TestBed.createComponent(AccountManager);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+ fixture = TestBed.createComponent(AccountManager);
+ component = fixture.componentInstance;
+ fixture.detectChanges();
+ });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+ it('should create', () => {
+ expect(component).toBeTruthy();
+ });
 });

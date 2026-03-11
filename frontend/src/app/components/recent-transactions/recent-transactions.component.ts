@@ -13,17 +13,18 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
-  selector: 'app-recent-transactions',
-  standalone: true,
-  imports: [CommonModule, ButtonModule, TransactionForm, PaymentFormatPipe, SkeletonModule, TooltipModule],
-  templateUrl: './recent-transactions.component.html',
-  styles: []
+ selector: 'app-recent-transactions',
+ standalone: true,
+ imports: [CommonModule, ButtonModule, TransactionForm, PaymentFormatPipe, SkeletonModule, TooltipModule],
+ templateUrl: './recent-transactions.component.html',
+ styles: []
 })
 export class RecentTransactionsComponent implements OnInit {
-  @ViewChild(TransactionForm) transactionForm!: TransactionForm;
-  
+ @ViewChild(TransactionForm) transactionForm!: TransactionForm;
+
   @Input() limit: number = 7;
   @Input() compact: boolean = false;
+  @Input() hideFuture: boolean = false;
 
   private transactionService = inject(TransactionService);
   private refreshService = inject(RefreshService);
@@ -48,10 +49,26 @@ export class RecentTransactionsComponent implements OnInit {
   loadRecentTransactions() {
     this.loading.set(true);
     // Fetch last transactions
-    this.transactionService.getTransactions(undefined, undefined, this.limit).subscribe({
+    this.transactionService.getTransactions(undefined, undefined, this.limit + 10).subscribe({
       next: (data) => {
-        this.transactions.set(data);
-        this.groupTransactionsByDate(data);
+        let filteredData = data;
+
+        if (this.hideFuture) {
+          const now = new Date();
+          now.setHours(23, 59, 59, 999);
+
+          filteredData = data.filter(t => {
+            if (!t.date) return false;
+            const tDate = new Date(t.date);
+            return tDate <= now;
+          });
+        }
+
+        // Apply limit after filtering to ensure we show the expected number of items
+        const limitedData = filteredData.slice(0, this.limit);
+
+        this.transactions.set(limitedData);
+        this.groupTransactionsByDate(limitedData);
         this.loading.set(false);
       },
       error: (err) => {
@@ -61,79 +78,79 @@ export class RecentTransactionsComponent implements OnInit {
     });
   }
 
-  groupTransactionsByDate(transactions: Transaction[]) {
-    const groups: { [key: string]: Transaction[] } = {};
+ groupTransactionsByDate(transactions: Transaction[]) {
+ const groups: { [key: string]: Transaction[] } = {};
 
-    transactions.forEach(t => {
-      if (!t.date) return;
-      // Convert Firestore timestamp or string to Date object if needed
-      // Assuming t.date is handled correctly by the service/model, but let's be safe
-      const dateObj = new Date(t.date);
-      const dateKey = this.formatDate(dateObj);
+ transactions.forEach(t => {
+ if (!t.date) return;
+ // Convert Firestore timestamp or string to Date object if needed
+ // Assuming t.date is handled correctly by the service/model, but let's be safe
+ const dateObj = new Date(t.date);
+ const dateKey = this.formatDate(dateObj);
 
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(t);
-    });
+ if (!groups[dateKey]) {
+ groups[dateKey] = [];
+ }
+ groups[dateKey].push(t);
+ });
 
-    const result = Object.keys(groups).map(date => ({
-      date,
-      transactions: groups[date]
-    }));
+ const result = Object.keys(groups).map(date => ({
+ date,
+ transactions: groups[date]
+ }));
 
-    this.groupedTransactions.set(result);
-  }
+ this.groupedTransactions.set(result);
+ }
 
-  formatDate(date: Date): string {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+ formatDate(date: Date): string {
+ const today = new Date();
+ const yesterday = new Date(today);
+ yesterday.setDate(yesterday.getDate() - 1);
 
-    if (this.isSameDay(date, today)) {
-      return 'Hoje';
-    } else if (this.isSameDay(date, yesterday)) {
-      return 'Ontem';
-    } else {
-      return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(date);
-    }
-  }
+ if (this.isSameDay(date, today)) {
+ return 'Hoje';
+ } else if (this.isSameDay(date, yesterday)) {
+ return 'Ontem';
+ } else {
+ return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(date);
+ }
+ }
 
-  isSameDay(d1: Date, d2: Date): boolean {
-    return d1.getDate() === d2.getDate() &&
-      d1.getMonth() === d2.getMonth() &&
-      d1.getFullYear() === d2.getFullYear();
-  }
+ isSameDay(d1: Date, d2: Date): boolean {
+ return d1.getDate() === d2.getDate() &&
+ d1.getMonth() === d2.getMonth() &&
+ d1.getFullYear() === d2.getFullYear();
+ }
 
-  editTransaction(event: Event, transaction: Transaction) {
-    event.stopPropagation();
-    this.transactionForm.editTransaction(event, transaction);
-  }
+ editTransaction(event: Event, transaction: Transaction) {
+ event.stopPropagation();
+ this.transactionForm.editTransaction(event, transaction);
+ }
 
-  openNewTransaction() {
-    this.transactionForm.showDialog();
-  }
+ openNewTransaction() {
+ this.transactionForm.showDialog();
+ }
 
-  deleteTransaction(event: Event, transaction: Transaction) {
-    event.stopPropagation(); // Prevent row click
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: `Tem certeza que deseja excluir esta transação?`,
-      header: 'Confirmar Exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sim',
-      rejectLabel: 'Não',
-      accept: () => {
-        this.transactionService.deleteTransaction(transaction.id).subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação excluída.' });
-            this.refreshService.triggerRefresh();
-          },
-          error: () => {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao excluir transação.' });
-          }
-        });
-      }
-    });
-  }
+ deleteTransaction(event: Event, transaction: Transaction) {
+ event.stopPropagation(); // Prevent row click
+ this.confirmationService.confirm({
+ target: event.target as EventTarget,
+ message: `Tem certeza que deseja excluir esta transação?`,
+ header: 'Confirmar Exclusão',
+ icon: 'pi pi-exclamation-triangle',
+ acceptLabel: 'Sim',
+ rejectLabel: 'Não',
+ accept: () => {
+ this.transactionService.deleteTransaction(transaction.id).subscribe({
+ next: () => {
+ this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Transação excluída.' });
+ this.refreshService.triggerRefresh();
+ },
+ error: () => {
+ this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao excluir transação.' });
+ }
+ });
+ }
+ });
+ }
 }

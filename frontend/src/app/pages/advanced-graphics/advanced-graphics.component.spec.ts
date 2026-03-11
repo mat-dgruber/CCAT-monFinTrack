@@ -11,16 +11,21 @@ describe('AdvancedGraphicsComponent', () => {
   let transactionServiceSpy: jasmine.SpyObj<TransactionService>;
 
   beforeEach(async () => {
-    transactionServiceSpy = jasmine.createSpyObj('TransactionService', ['getTransactions']);
+    transactionServiceSpy = jasmine.createSpyObj('TransactionService', [
+      'getTransactions',
+    ]);
     transactionServiceSpy.getTransactions.and.returnValue(of([])); // Return empty array by default
 
     await TestBed.configureTestingModule({
-      imports: [AdvancedGraphicsComponent, NoopAnimationsModule, HttpClientTestingModule],
+      imports: [
+        AdvancedGraphicsComponent,
+        NoopAnimationsModule,
+        HttpClientTestingModule,
+      ],
       providers: [
-          { provide: TransactionService, useValue: transactionServiceSpy }
-      ]
-    })
-    .compileComponents();
+        { provide: TransactionService, useValue: transactionServiceSpy },
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AdvancedGraphicsComponent);
     component = fixture.componentInstance;
@@ -46,6 +51,8 @@ describe('AdvancedGraphicsComponent', () => {
     const idToRemove = component.widgets()[0].id;
     component.removeWidget(idToRemove);
     expect(component.widgets().length).toBe(initialCount - 1);
-    expect(component.widgets().find(w => w.id === idToRemove)).toBeUndefined();
+    expect(
+      component.widgets().find((w) => w.id === idToRemove),
+    ).toBeUndefined();
   });
 });

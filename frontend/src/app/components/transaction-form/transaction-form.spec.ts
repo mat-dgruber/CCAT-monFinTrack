@@ -11,9 +11,8 @@ describe('TransactionForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TransactionForm, HttpClientTestingModule],
-      providers: [ConfirmationService, MessageService]
-    })
-      .compileComponents();
+      providers: [ConfirmationService, MessageService],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TransactionForm);
     component = fixture.componentInstance;

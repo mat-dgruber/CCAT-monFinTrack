@@ -1,125 +1,142 @@
 <div class="mb-8">
 
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-    <div>
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Orçamentos</h2>
-        <p class="text-gray-500 dark:text-gray-400">Defina limites e acompanhe seus gastos.</p>
+  @if (!isWidget()) {
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Orçamentos</h1>
+      <p class="page-description">Defina limites mensais por categoria e controle seus gastos.</p>
     </div>
-    <p-button label="Novo Orçamento" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    <div class="page-actions w-full md:w-auto">
+      <p-button label="Novo Orçamento" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+    </div>
+  </div>
+  }
+
+  <div class="grid gap-4" [ngClass]="isWidget() ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'">
+ @if (loading()) {
+ @for(i of [1,2,3]; track i) {
+ <div class="bg-surface-card p-5 rounded-xl border border-surface-border shadow-sm">
+ <div class="flex items-center gap-3 mb-4">
+ <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+ <p-skeleton width="150px" height="1.5rem"></p-skeleton>
+ </div>
+ <div class="flex justify-between mb-2">
+ <p-skeleton width="80px"></p-skeleton>
+ <p-skeleton width="80px"></p-skeleton>
+ </div>
+ <div class="pt-1">
+ <p-skeleton height="1rem" styleClass="mb-4"></p-skeleton>
+ <div class="flex justify-end">
+ <p-skeleton width="40px"></p-skeleton>
+ </div>
+ </div>
+ </div>
+ }
+ } @else {
+ @for (b of budgets(); track b.id) {
+  <div
+  [class.over-budget-card]="b.percentage! > 100"
+  [class.p-4]="isWidget()"
+  class="bg-surface-card p-5 rounded-xl border border-surface-border shadow-sm hover:shadow-md transition-all relative group overflow-hidden">
+
+  <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+  <button (click)="editBudget($event, b)"
+  class="w-7 h-7 rounded-full bg-surface-ground text-accent hover:bg-accent-bg flex items-center justify-center transition-colors cursor-pointer shadow-sm">
+  <i class="pi pi-pencil text-xs"></i>
+  </button>
+  <button (click)="deleteBudget($event, b.id!)"
+  class="w-7 h-7 rounded-full bg-surface-ground dark:bg-gray-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm">
+  <i class="pi pi-trash text-xs"></i>
+  </button>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    @if (loading()) {
-    @for(i of [1,2,3]; track i) {
-    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div class="flex items-center gap-3 mb-4">
-        <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
-        <p-skeleton width="150px" height="1.5rem"></p-skeleton>
-      </div>
-      <div class="flex justify-between mb-2">
-        <p-skeleton width="80px"></p-skeleton>
-        <p-skeleton width="80px"></p-skeleton>
-      </div>
-      <div class="pt-1">
-        <p-skeleton height="1rem" styleClass="mb-4"></p-skeleton>
-        <div class="flex justify-end">
-          <p-skeleton width="40px"></p-skeleton>
-        </div>
-      </div>
-    </div>
-    }
-    } @else {
-    @for (b of budgets(); track b.id) {
-    <div
-      class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all relative group">
-      <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-        <button (click)="editBudget($event, b)"
-          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
-          label="Editar">
-          <i class="pi pi-pencil text-sm"></i>
-        </button>
-        <button (click)="deleteBudget($event, b.id!)"
-          class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
-          label="Excluir">
-          <i class="pi pi-trash text-sm"></i>
-        </button>
-      </div>
-
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-gray-100 dark:bg-gray-700"
-          [style.backgroundColor]="b.category?.color + '20'" [style.color]="b.category?.color">
-          <i [class]="b.category?.icon"></i>
-        </div>
-        <div class="font-bold text-lg text-gray-700 dark:text-gray-200">
-          {{ b.category?.name }}
-        </div>
-      </div>
-
-      <div class="flex justify-between text-sm mb-2">
-        <span class="text-gray-500 dark:text-gray-400">Gasto:
-          <strong [class.text-red-500]="b.is_over_budget" [class.dark:text-red-400]="b.is_over_budget"
-            class="text-gray-900 dark:text-white">{{
-            b.spent | currency : "BRL"
-            }}</strong></span>
-        <span class="text-gray-500 dark:text-gray-400">Meta: <strong class="text-gray-900 dark:text-white">{{ b.amount |
-            currency : "BRL" }}</strong></span>
-      </div>
-
-      <div class="relative pt-1">
-        <div class="overflow-hidden h-4 mb-4 text-xs flex rounded bg-gray-100 dark:bg-gray-700">
-          <div [style.width.%]="b.percentage" [style.backgroundColor]="getProgressColor(b.percentage || 0)"
-            class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500">
-          </div>
-        </div>
-        <div class="text-right text-xs font-bold" [style.color]="getProgressColor(b.percentage || 0)">
-          {{ b.percentage | number : "1.0-0" }}%
-        </div>
-      </div>
-    </div>
-    } @if (budgets().length === 0) {
-    <div
-      class="col-span-full text-center py-10 text-gray-400 dark:text-gray-500 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-      <i class="pi pi-bullseye text-4xl mb-2 opacity-50"></i>
-      <p>Nenhuma meta definida. Que tal criar uma?</p>
-    </div>
-    }
-    }
+  <div class="flex items-center gap-3" [class.mb-4]="!isWidget()" [class.mb-3]="isWidget()">
+  <div class="rounded-full flex items-center justify-center bg-surface-hover dark:bg-gray-700"
+  [class.w-10]="!isWidget()" [class.h-10]="!isWidget()" [class.text-lg]="!isWidget()"
+  [class.w-8]="isWidget()" [class.h-8]="isWidget()" [class.text-base]="isWidget()"
+  [style.backgroundColor]="b.category?.color + '20'" [style.color]="b.category?.color">
+  <i [class]="b.category?.icon"></i>
   </div>
+  <div class="font-bold text-color truncate" [class.text-lg]="!isWidget()" [class.text-base]="isWidget()">
+  {{ b.category?.name }}
+  </div>
+  </div>
+
+  <div class="flex flex-wrap justify-between items-end text-sm mb-2 gap-1">
+  <div class="flex flex-col min-w-0">
+    <span class="text-[10px] text-secondary uppercase tracking-wider font-medium">Gasto</span>
+    <strong [class.text-red-500]="b.is_over_budget" [class.dark:text-red-400]="b.is_over_budget" class="text-color text-base truncate">
+      {{ b.spent | currency : "BRL" }}
+    </strong>
+  </div>
+  <div class="flex flex-col items-end shrink-0">
+    <span class="text-[10px] text-secondary uppercase tracking-wider font-medium">Meta</span>
+    <strong class="text-color opacity-70 font-medium text-sm">
+      {{ b.amount | currency : "BRL" }}
+    </strong>
+  </div>
+  </div>
+
+  <div class="relative pt-1">
+  <div class="overflow-hidden h-2.5 mb-1 text-xs flex rounded bg-surface-hover dark:bg-gray-700">
+  <div [style.width.%]="b.percentage! > 100 ? 100 : b.percentage"
+  [class.over-budget-progress]="b.percentage! > 100"
+  [style.backgroundColor]="getProgressColor(b.percentage || 0)"
+  class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500">
+  </div>
+  </div>
+  <div class="flex justify-between items-center">
+    <span class="text-[10px] text-secondary font-medium uppercase">{{ b.percentage! > 100 ? 'Limite Excedido' : 'Uso do Orçamento' }}</span>
+    <div class="text-xs font-bold" [style.color]="getProgressColor(b.percentage || 0)">
+    {{ b.percentage | number : "1.0-0" }}%
+    </div>
+  </div>
+  </div>
+  </div>
+ } @if (budgets().length === 0) {
+ <div
+ class="col-span-full text-center py-10 text-secondary bg-surface-card rounded-xl border border-dashed border-surface-border">
+ <i class="pi pi-bullseye text-4xl mb-2 opacity-50"></i>
+ <p>Nenhuma meta definida. Que tal criar uma?</p>
+ </div>
+ }
+ }
+ </div>
 </div>
 
 <p-dialog [header]="editingId() ? 'Editar Meta' : 'Nova Meta'" [modal]="true" [(visible)]="visible"
-  [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
-    <div class="flex flex-col gap-2">
-      <label class="font-semibold text-gray-700 dark:text-gray-300">Categoria</label>
-      <p-select [options]="categories()" formControlName="category" optionLabel="name" placeholder="Selecione..."
-        [style]="{ width: '100%' }" appendTo="body">
-        <ng-template pTemplate="item" let-cat>
-          <div class="flex items-center gap-2">
-            <i [class]="cat.icon" [style.color]="cat.color"></i>
-            <span>{{ cat.name }}</span>
-          </div>
-        </ng-template>
-        <ng-template pTemplate="selectedItem" let-cat>
-          @if (cat) {
-          <div class="flex items-center gap-2">
-            <i [class]="cat.icon" [style.color]="cat.color"></i>
-            <span>{{ cat.name }}</span>
-          </div>
-          }
-        </ng-template>
-      </p-select>
-    </div>
+ [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
+ <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
+ <div class="flex flex-col gap-2">
+ <label class="font-semibold text-color ">Categoria</label>
+ <p-select [options]="categories()" formControlName="category" optionLabel="name" placeholder="Selecione..."
+ [style]="{ width: '100%' }" appendTo="body">
+ <ng-template pTemplate="item" let-cat>
+ <div class="flex items-center gap-2">
+ <i [class]="cat.icon" [style.color]="cat.color"></i>
+ <span>{{ cat.name }}</span>
+ </div>
+ </ng-template>
+ <ng-template pTemplate="selectedItem" let-cat>
+ @if (cat) {
+ <div class="flex items-center gap-2">
+ <i [class]="cat.icon" [style.color]="cat.color"></i>
+ <span>{{ cat.name }}</span>
+ </div>
+ }
+ </ng-template>
+ </p-select>
+ </div>
 
-    <div class="flex flex-col gap-2">
-      <label class="font-semibold text-gray-700 dark:text-gray-300">Limite Mensal (R$)</label>
-      <p-inputNumber formControlName="amount" mode="currency" currency="BRL" locale="pt-BR" [style]="{ width: '100%' }"
-        inputStyleClass="w-full">
-      </p-inputNumber>
-    </div>
+ <div class="flex flex-col gap-2">
+ <label class="font-semibold text-color ">Limite Mensal (R$)</label>
+ <p-inputNumber formControlName="amount" mode="currency" currency="BRL" locale="pt-BR" [style]="{ width: '100%' }"
+ inputStyleClass="w-full">
+ </p-inputNumber>
+ </div>
 
-    <div class="flex justify-end mt-4">
-      <p-button label="Salvar Meta" type="submit" [disabled]="form.invalid"></p-button>
-    </div>
-  </form>
+ <div class="flex justify-end mt-4">
+ <p-button label="Salvar Meta" type="submit" [disabled]="form.invalid"></p-button>
+ </div>
+ </form>
 </p-dialog>

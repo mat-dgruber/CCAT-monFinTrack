@@ -160,8 +160,37 @@ export class TransactionForm implements OnInit {
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
   editingId = signal<string | null>(null);
+  editingTransaction = signal<Transaction | null>(null);
   isUploading = signal(false);
   isScanning = signal(false);
+
+  // Interest simulation signals
+  totalWithInterest = computed(() => {
+    const amount = this.form.get('amount')?.value || 0;
+    const installments = this.form.get('total_installments')?.value || 1;
+    const rate = this.form.get('interest_rate')?.value || 0;
+
+    if (rate === 0) return amount * installments;
+
+    // Price Table Formula: PMT = PV * (i * (1 + i)^n) / ((1 + i)^n - 1)
+    const i = rate / 100;
+    const n = installments;
+    const pmt = (amount * (i * Math.pow(1 + i, n))) / (Math.pow(1 + i, n) - 1);
+    return pmt * n;
+  });
+
+  installmentPreview = computed(() => {
+    const amount = this.form.get('amount')?.value || 0;
+    const installments = this.form.get('total_installments')?.value || 1;
+    const rate = this.form.get('interest_rate')?.value || 0;
+
+    if (rate === 0) return amount;
+
+    const i = rate / 100;
+    const n = installments;
+    const pmt = (amount * (i * Math.pow(1 + i, n))) / (Math.pow(1 + i, n) - 1);
+    return pmt;
+  });
 
   @Output() save = new EventEmitter<void>();
 
@@ -169,7 +198,7 @@ export class TransactionForm implements OnInit {
 
   filteredCategories = computed<SelectItemGroup[]>(() => {
     let type = this.currentType();
-    if (type === 'transfer') type = 'expense'; // Transfers use expense categories
+    if (type === 'transfer') type = 'expense';
     const all = this.categories();
     const roots = all.filter((c) => c.type === type);
 
@@ -203,6 +232,13 @@ export class TransactionForm implements OnInit {
     { label: 'Recorrente', value: 'recurrence' },
   ];
 
+  visibleModeOptions = computed(() => {
+    if (this.currentType() === 'income') {
+      return this.modeOptions.filter((opt) => opt.value !== 'installments');
+    }
+    return this.modeOptions;
+  });
+
   periodicityOptions = [
     { label: 'Mensal', value: 'monthly' },
     { label: 'Semanal', value: 'weekly' },
@@ -227,22 +263,17 @@ export class TransactionForm implements OnInit {
     account: [null, Validators.required],
     type: ['expense', Validators.required],
     payment_method: [null, Validators.required],
-    credit_card_id: [null], // Novo campo
-
+    credit_card_id: [null],
     mode: ['single'],
     total_installments: [2],
+    interest_rate: [0],
     recurrence_periodicity: ['monthly'],
     recurrence_auto_pay: [false],
     recurrence_create_first: [true],
-
     is_paid: [true],
     payment_date: [new Date()],
-
-    // Tithes & Offerings
-    tithe_value: [10], // Default 10%
+    tithe_value: [10],
     offering_value: [null],
-
-    // Attachments
     attachments: [[]],
   });
 
@@ -252,16 +283,18 @@ export class TransactionForm implements OnInit {
     this.form.get('type')?.valueChanges.subscribe((val) => {
       if (val) {
         this.currentType.set(val);
-        // Only clear category if we are interacting (not during initial patch if it matches)
-        // But getting context is hard. Simplest is to check if the current category type mismatches.
         const currentCat = this.form.get('category')?.value;
         if (currentCat && currentCat.type !== val) {
           this.form.patchValue({ category: null });
         }
+
+        // Reset mode to 'single' if income is selected
+        if (val === 'income') {
+          this.form.patchValue({ mode: 'single' });
+        }
       }
     });
 
-    // Listen to Account Changes to load cards
     this.form.get('account')?.valueChanges.subscribe((acc: Account | null) => {
       if (acc && acc.credit_cards && acc.credit_cards.length > 0) {
         this.availableCreditCards.set(acc.credit_cards);
@@ -271,22 +304,19 @@ export class TransactionForm implements OnInit {
       }
     });
 
-    // AI Classification logic
     this.form
       .get('title')
       ?.valueChanges.pipe(
         takeUntilDestroyed(),
         debounceTime(1500),
         distinctUntilChanged(),
-        filter((val) => val && val.length > 2), // At least 3 chars
+        filter((val) => val && val.length > 2),
         tap(() => console.log('AI Checking...')),
         switchMap((val) => this.aiService.classifyTransaction(val)),
       )
       .subscribe({
         next: (res) => {
           if (res.category_id) {
-            // Check if current category is empty or system wants to suggest
-            // We only override if category is null to avoid annoying user overwrites
             const currentCat = this.form.get('category')?.value;
             if (!currentCat) {
               const cat = this.categories().find(
@@ -317,7 +347,7 @@ export class TransactionForm implements OnInit {
           summary: 'Upgrade Necessário',
           detail: 'Leitura de comprovante é exclusiva Premium.',
         });
-        event.target.value = ''; // Reset input
+        event.target.value = '';
         return;
       }
 
@@ -338,7 +368,6 @@ export class TransactionForm implements OnInit {
           if (data.description) patch.description = data.description;
           if (data.payment_method) patch.payment_method = data.payment_method;
 
-          // Try to match category
           if (data.category_id) {
             const cat = this.categories().find(
               (c) => c.id === data.category_id,
@@ -346,13 +375,11 @@ export class TransactionForm implements OnInit {
             if (cat) patch.category = cat;
           }
 
-          // Suggest Account/Card if returned
           if (data.account_id) {
             const acc = this.accounts().find((a) => a.id === data.account_id);
             if (acc) patch.account = acc;
           }
 
-          // Attachments
           if (data.attachment_url) {
             const baseUrl = environment.apiUrl.replace('/api', '');
             const fullUrl = data.attachment_url.startsWith('http')
@@ -404,7 +431,6 @@ export class TransactionForm implements OnInit {
 
     this.attachmentService.uploadFile(file).subscribe({
       next: (res) => {
-        // Resolve URL (if relative)
         const baseUrl = environment.apiUrl.replace('/api', '');
         const fullUrl = res.url.startsWith('http')
           ? res.url
@@ -431,7 +457,7 @@ export class TransactionForm implements OnInit {
       },
     });
 
-    event.target.value = ''; // Reset
+    event.target.value = '';
   }
 
   scanAttachment(url: string) {
@@ -439,9 +465,7 @@ export class TransactionForm implements OnInit {
     try {
       const urlObj = new URL(url);
       relativeUrl = urlObj.pathname;
-    } catch (e) {
-      // already relative or invalid
-    }
+    } catch (e) {}
 
     this.isScanning.set(true);
     this.messageService.add({
@@ -509,6 +533,7 @@ export class TransactionForm implements OnInit {
 
   showDialog() {
     this.editingId.set(null);
+    this.editingTransaction.set(null);
     this.currentType.set('expense');
 
     this.form.reset({
@@ -516,6 +541,7 @@ export class TransactionForm implements OnInit {
       date: new Date(),
       mode: 'single',
       total_installments: 2,
+      interest_rate: 0,
       recurrence_periodicity: 'monthly',
       recurrence_auto_pay: false,
       recurrence_create_first: true,
@@ -523,7 +549,6 @@ export class TransactionForm implements OnInit {
       payment_date: new Date(),
     });
 
-    // Apply Defaults
     const prefs = this.preferences();
     if (prefs?.enable_tithes_offerings) {
       if (prefs.auto_apply_tithe) {
@@ -531,7 +556,7 @@ export class TransactionForm implements OnInit {
         this.form.patchValue({
           tithe_value: prefs.default_tithe_percentage ?? 10,
         });
-        this.titheType.set('percentage'); // Default to percentage for tithe usually
+        this.titheType.set('percentage');
       } else {
         this.titheEnabled.set(false);
         this.form.patchValue({
@@ -551,7 +576,7 @@ export class TransactionForm implements OnInit {
 
       if (prefs.auto_apply_offering) {
         this.offeringEnabled.set(true);
-        this.offeringType.set('percentage'); // Default
+        this.offeringType.set('percentage');
       } else {
         this.form.patchValue({ offering_value: null });
       }
@@ -567,13 +592,13 @@ export class TransactionForm implements OnInit {
   editTransaction(event: Event, transaction: Transaction) {
     event.stopPropagation();
     this.editingId.set(transaction.id);
+    this.editingTransaction.set(transaction);
     this.currentType.set(transaction.type);
 
     let mode = 'single';
     if (transaction.installment_group_id) mode = 'installments';
     if (transaction.recurrence_id) mode = 'recurrence';
 
-    // Helper to find matching object reference
     const foundCategory =
       this.categories().find((c) => c.id === transaction.category.id) ||
       transaction.category;
@@ -584,30 +609,23 @@ export class TransactionForm implements OnInit {
     this.form.patchValue({
       title: transaction.title,
       description: transaction.description,
-
-      // Use GROSS amount if available (meaning we saved as NET previously)
       amount: transaction.gross_amount || transaction.amount,
       date: new Date(transaction.date),
       category: foundCategory,
       account: foundAccount,
-      // Patch type with emitEvent: false to prevent clearing category
-      // But we can't easily do partial patch with options.
-      // Better: We handled the clearing logic in constructor to be smarter.
       type: transaction.type,
       payment_method: transaction.payment_method,
       mode: mode,
       total_installments: transaction.total_installments || 2,
+      interest_rate: 0,
       recurrence_periodicity: transaction.recurrence_periodicity || 'monthly',
       is_paid: transaction.status === 'paid',
-
-      // Tithes
       tithe_value:
         transaction.tithe_percentage ||
         transaction.tithe_amount ||
         (this.preferences()?.default_tithe_percentage ?? 10),
       offering_value:
         transaction.offering_percentage || transaction.offering_amount || null,
-
       credit_card_id: transaction.credit_card_id || null,
       attachments: transaction.attachments || [],
     });
@@ -622,11 +640,7 @@ export class TransactionForm implements OnInit {
       this.titheEnabled.set(false);
     }
 
-    if (transaction.tithe_status === 'PAID') {
-      this.titheReturned.set(true);
-    } else {
-      this.titheReturned.set(false);
-    }
+    this.titheReturned.set(transaction.tithe_status === 'PAID');
 
     if (transaction.offering_percentage) {
       this.offeringEnabled.set(true);
@@ -650,35 +664,25 @@ export class TransactionForm implements OnInit {
         category_id: formValue.category.id,
         account_id: formValue.account.id,
         status: formValue.is_paid ? 'paid' : 'pending',
-        payment_date: formValue.is_paid ? formValue.date : null, // Reuse date as payment_date
+        payment_date: formValue.is_paid ? formValue.date : null,
       };
 
-      // Clean up payload
       delete payload.category;
       delete payload.account;
       delete payload.is_paid;
-      delete payload.mode; // 'mode' is internal UI state
-      // 'recurrence_periodicity' is valid if mode was recurrence, handled below
+      delete payload.mode;
 
-      // Handle Net vs Gross Amount Logic for Income with Tithes
       if (
         formValue.type === 'income' &&
         this.preferences()?.enable_tithes_offerings
       ) {
-        const currentAmount = formValue.amount;
-        // Always save gross amount so we don't lose the original value on edits
-        payload.gross_amount = currentAmount;
-
-        // If Tithe Returned is checked, we want to debit the Net Amount from balance
-        // So we save the main 'amount' as the Net Amount.
+        payload.gross_amount = formValue.amount;
         if (this.titheEnabled() && this.titheReturned()) {
           payload.amount = this.netAmount();
         } else {
-          // Otherwise, save the full amount
-          payload.amount = currentAmount;
+          payload.amount = formValue.amount;
         }
       } else {
-        // Clear all tithe/offering fields for non-income transactions
         payload.gross_amount = null;
         payload.tithe_amount = null;
         payload.tithe_percentage = null;
@@ -699,13 +703,11 @@ export class TransactionForm implements OnInit {
         payload.total_installments = null;
       }
 
-      // Add Tithes & Offerings Data if Income
       if (
         formValue.type === 'income' &&
         this.preferences()?.enable_tithes_offerings
       ) {
         const amount = formValue.amount;
-
         if (this.titheEnabled()) {
           const tVal = formValue.tithe_value;
           if (this.titheType() === 'percentage') {
@@ -715,8 +717,6 @@ export class TransactionForm implements OnInit {
             payload.tithe_amount = tVal;
             payload.tithe_percentage = null;
           }
-
-          // Status Logic
           payload.tithe_status = this.titheReturned() ? 'PAID' : 'PENDING';
         } else {
           payload.tithe_amount = null;
@@ -737,38 +737,27 @@ export class TransactionForm implements OnInit {
           payload.offering_amount = null;
           payload.offering_percentage = null;
         }
-
         payload.net_amount = this.netAmount();
       }
 
-      const onSave = () => {
-        this.visible.set(false);
-        this.form.reset();
-        this.save.emit();
-        this.refreshService.triggerRefresh();
-      };
-
       if (this.editingId()) {
-        this.transactionService
-          .updateTransaction(this.editingId()!, payload)
-          .subscribe({
-            next: () => {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Sucesso',
-                detail: 'Transação atualizada.',
-              });
-              onSave();
-            },
-            error: (err) => {
-              console.error('Erro ao atualizar', err);
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Erro',
-                detail: 'Erro ao atualizar transação.',
-              });
-            },
+        const t = this.editingTransaction();
+        if (t?.installment_group_id) {
+          this.confirmationService.confirm({
+            message:
+              'Deseja aplicar estas alterações apenas a esta parcela ou a todas as futuras?',
+            header: 'Atualizar Parcelamento',
+            icon: 'pi pi-info-circle',
+            acceptLabel: 'Todas as Futuras',
+            rejectLabel: 'Apenas Esta',
+            acceptButtonStyleClass: 'p-button-primary',
+            rejectButtonStyleClass: 'p-button-outlined p-button-secondary',
+            accept: () => this.saveEdit(payload, 'future'),
+            reject: () => this.saveEdit(payload, 'single'),
           });
+        } else {
+          this.saveEdit(payload, 'single');
+        }
       } else {
         this.transactionService.createTransaction(payload).subscribe({
           next: (res: any) => {
@@ -777,8 +766,6 @@ export class TransactionForm implements OnInit {
               summary: 'Sucesso',
               detail: 'Transação criada.',
             });
-
-            // Check for Anomaly Warning
             if (Array.isArray(res) && res.length > 0 && res[0].warning) {
               this.messageService.add({
                 severity: 'warn',
@@ -787,8 +774,7 @@ export class TransactionForm implements OnInit {
                 life: 10000,
               });
             }
-
-            onSave();
+            this.onSave();
           },
           error: (err) => {
             console.error('Erro ao criar', err);
@@ -803,6 +789,36 @@ export class TransactionForm implements OnInit {
     }
   }
 
+  saveEdit(payload: any, scope: string) {
+    this.transactionService
+      .updateTransaction(this.editingId()!, payload, scope)
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Transação atualizada.',
+          });
+          this.onSave();
+        },
+        error: (err) => {
+          console.error('Erro ao atualizar', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Erro ao atualizar transação.',
+          });
+        },
+      });
+  }
+
+  onSave() {
+    this.visible.set(false);
+    this.form.reset();
+    this.save.emit();
+    this.refreshService.triggerRefresh();
+  }
+
   confirmDelete() {
     this.confirmationService.confirm({
       message: 'Tem certeza que deseja excluir esta transação?',
@@ -814,30 +830,46 @@ export class TransactionForm implements OnInit {
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
         if (this.editingId()) {
-          this.transactionService
-            .deleteTransaction(this.editingId()!)
-            .subscribe({
-              next: () => {
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Sucesso',
-                  detail: 'Transação excluída.',
-                });
-                this.visible.set(false);
-                this.form.reset();
-                this.save.emit();
-                this.refreshService.triggerRefresh();
-              },
-              error: () => {
-                this.messageService.add({
-                  severity: 'error',
-                  summary: 'Erro',
-                  detail: 'Erro ao excluir transação.',
-                });
-              },
+          const t = this.editingTransaction();
+          if (t?.installment_group_id) {
+            this.confirmationService.confirm({
+              message: 'Como deseja excluir este parcelamento?',
+              header: 'Excluir Parcelamento',
+              icon: 'pi pi-trash',
+              acceptLabel: 'Todo o Grupo',
+              rejectLabel: 'Apenas Futuras',
+              acceptButtonStyleClass: 'p-button-danger',
+              rejectButtonStyleClass: 'p-button-warning',
+              accept: () => this.executeDelete('all'),
+              reject: () => this.executeDelete('future'),
             });
+          } else {
+            this.executeDelete('single');
+          }
         }
       },
     });
+  }
+
+  executeDelete(scope: string) {
+    this.transactionService
+      .deleteTransaction(this.editingId()!, scope)
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Transação excluída.',
+          });
+          this.onSave();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Erro ao excluir transação.',
+          });
+        },
+      });
   }
 }

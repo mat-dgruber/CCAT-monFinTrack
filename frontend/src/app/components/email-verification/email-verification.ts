@@ -12,48 +12,48 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
-  selector: 'app-email-verification',
-  standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, ProgressSpinnerModule, RouterModule, SkeletonModule],
-  templateUrl: './email-verification.html'
+ selector: 'app-email-verification',
+ standalone: true,
+ imports: [CommonModule, CardModule, ButtonModule, ProgressSpinnerModule, RouterModule, SkeletonModule],
+ templateUrl: './email-verification.html'
 })
 export class EmailVerification implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
+ private route = inject(ActivatedRoute);
+ private router = inject(Router);
 
-  // Status da validação
-  status = signal<'loading' | 'success' | 'error'>('loading');
-  errorMessage = signal('');
+ // Status da validação
+ status = signal<'loading' | 'success' | 'error'>('loading');
+ errorMessage = signal('');
 
-  ngOnInit() {
-    // Captura o código da URL (enviado pelo email)
-    const actionCode = this.route.snapshot.queryParams['oobCode'];
+ ngOnInit() {
+ // Captura o código da URL (enviado pelo email)
+ const actionCode = this.route.snapshot.queryParams['oobCode'];
 
-    if (!actionCode) {
-      this.status.set('error');
-      this.errorMessage.set('Código de verificação inválido ou ausente.');
-      return;
-    }
+ if (!actionCode) {
+ this.status.set('error');
+ this.errorMessage.set('Código de verificação inválido ou ausente.');
+ return;
+ }
 
-    this.verifyCode(actionCode);
-  }
+ this.verifyCode(actionCode);
+ }
 
-  async verifyCode(code: string) {
-    const app = initializeApp(environment.firebaseConfig);
-    const auth = getAuth(app);
+ async verifyCode(code: string) {
+ const app = initializeApp(environment.firebaseConfig);
+ const auth = getAuth(app);
 
-    try {
-      // Chama o Firebase para confirmar que o código é real
-      await applyActionCode(auth, code);
-      this.status.set('success');
-    } catch (error: any) {
-      console.error(error);
-      this.status.set('error');
-      this.errorMessage.set('O link expirou ou já foi utilizado.');
-    }
-  }
+ try {
+ // Chama o Firebase para confirmar que o código é real
+ await applyActionCode(auth, code);
+ this.status.set('success');
+ } catch (error: any) {
+ console.error(error);
+ this.status.set('error');
+ this.errorMessage.set('O link expirou ou já foi utilizado.');
+ }
+ }
 
-  goToLogin() {
-    this.router.navigate(['/']);
-  }
+ goToLogin() {
+ this.router.navigate(['/']);
+ }
 }

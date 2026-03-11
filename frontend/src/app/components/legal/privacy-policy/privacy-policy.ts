@@ -4,16 +4,16 @@ import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-privacy-policy',
-  templateUrl: './privacy-policy.html',
-  styleUrls: ['./privacy-policy.scss'],
-  standalone: true,
-  imports: [CommonModule, ButtonModule, RouterModule],
+ selector: 'app-privacy-policy',
+ templateUrl: './privacy-policy.html',
+ styleUrls: ['./privacy-policy.scss'],
+ standalone: true,
+ imports: [CommonModule, ButtonModule, RouterModule],
 })
 export class PrivacyPolicy {
-  constructor(private location: Location) { }
+ constructor(private location: Location) { }
 
-  goBack(): void {
-    this.location.back();
-  }
+ goBack(): void {
+ this.location.back();
+ }
 }

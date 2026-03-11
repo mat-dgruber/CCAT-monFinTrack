@@ -1,8 +1,18 @@
-import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID, isDevMode } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {
+  ApplicationConfig,
+  provideZoneChangeDetection,
+  LOCALE_ID,
+  isDevMode,
+} from '@angular/core';
+import { provideRouter, TitleStrategy } from '@angular/router';
+import { CustomTitleStrategy } from './strategies/custom-title-strategy';
 // Mantemos o Async para performance no Angular 20
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import {
+  provideHttpClient,
+  withFetch,
+  withInterceptors,
+} from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 
@@ -14,7 +24,6 @@ import Aura from '@primeng/themes/aura';
 import { ConfirmationService, MessageService } from 'primeng/api'; // <--- Importe aqui
 import { provideMarkdown } from 'ngx-markdown';
 
-
 import { routes } from './app.routes';
 
 import { jwtInterceptor } from './interceptors/jwt.interceptor';
@@ -24,19 +33,17 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    { provide: TitleStrategy, useClass: CustomTitleStrategy },
     provideAnimations(),
-    provideHttpClient(
-      withFetch(),
-      withInterceptors([jwtInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([jwtInterceptor])),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
-
 
     providePrimeNG({
       theme: {
         preset: Aura,
         options: {
-          darkModeSelector: '.dark'
-        }
+          darkModeSelector: '.dark',
+        },
       },
       translation: {
         accept: 'Sim',
@@ -64,8 +71,8 @@ export const appConfig: ApplicationConfig = {
         dateIs: 'Data é',
         dateIsNot: 'Data não é',
         dateBefore: 'Data é antes',
-        dateAfter: 'Data é depois'
-      }
+        dateAfter: 'Data é depois',
+      },
     }),
 
     ConfirmationService,
@@ -73,7 +80,7 @@ export const appConfig: ApplicationConfig = {
     provideMarkdown(), // Enable Markdown
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
-    })
-  ]
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
+  ],
 };

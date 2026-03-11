@@ -1,4 +1,13 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, signal, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+  signal,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -6,19 +15,19 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './calculator.component.html',
-  styleUrls: ['./calculator.component.scss']
+  styleUrls: ['./calculator.component.scss'],
 })
 export class CalculatorComponent implements AfterViewInit, OnDestroy {
   @ViewChild('calculatorWindow') calculatorWindow!: ElementRef;
   @ViewChild('dragHandle') dragHandle!: ElementRef;
-  
+
   @Output() close = new EventEmitter<void>();
 
   display = signal('0');
   currentInput = '';
   previousInput = '';
   operator: string | null = null;
-  
+
   // Dragging state
   private isDragging = false;
   private initialX = 0;
@@ -45,7 +54,7 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
   appendNumber(num: string) {
     if (this.currentInput.length > 10) return; // Limit length
     if (num === '.' && this.currentInput.includes('.')) return;
-    
+
     // If we just finished a calculation and type a number, start fresh
     if (!this.operator && this.previousInput && !this.currentInput) {
       this.previousInput = '';
@@ -102,7 +111,7 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
         calculation = prev * current;
         break;
       case '/':
-        if (current === 0) return; 
+        if (current === 0) return;
         calculation = prev / current;
         break;
       default:
@@ -114,57 +123,60 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
     this.previousInput = '';
     this.display.set(this.currentInput);
   }
-  
+
   // Explicit % button handler if we want single-operand % (like converting 50 to 0.5)
-  // Or current logic handles it as an operator or modifier. 
+  // Or current logic handles it as an operator or modifier.
   // Let's implement a specific method for the '%' button to match user expectation:
   // Usually % applies to the current number immediately based on context.
-  
+
   handlePercentage() {
     if (!this.currentInput) return;
-    
+
     const current = parseFloat(this.currentInput);
-    
+
     if (this.previousInput && this.operator) {
-        // We are in the middle of an expression: 100 + 10...
-        // 10 becomes 10% of 100 (which is 10)
-        const prev = parseFloat(this.previousInput);
-        const percentVal = (prev * current) / 100;
-        this.currentInput = percentVal.toString();
-        this.display.set(this.currentInput);
+      // We are in the middle of an expression: 100 + 10...
+      // 10 becomes 10% of 100 (which is 10)
+      const prev = parseFloat(this.previousInput);
+      const percentVal = (prev * current) / 100;
+      this.currentInput = percentVal.toString();
+      this.display.set(this.currentInput);
     } else {
-        // Just a number: 50 % -> 0.5
-        this.currentInput = (current / 100).toString();
-        this.display.set(this.currentInput);
+      // Just a number: 50 % -> 0.5
+      this.currentInput = (current / 100).toString();
+      this.display.set(this.currentInput);
     }
   }
 
-
   // --- Drag Logic (Vanilla JS) ---
-  
+
   private initDrag() {
     this.dragStartListener = this.dragStart.bind(this);
     this.dragEndListener = this.dragEnd.bind(this);
     this.dragListener = this.drag.bind(this);
 
     const handle = this.dragHandle.nativeElement;
-    
+
     // Mouse events
     handle.addEventListener('mousedown', this.dragStartListener);
     document.addEventListener('mouseup', this.dragEndListener);
     document.addEventListener('mousemove', this.dragListener);
-    
+
     // Touch events (for mobile consideration, though requested as 'sidebar' on desktop mostly)
-    handle.addEventListener('touchstart', this.dragStartListener, {passive: false});
+    handle.addEventListener('touchstart', this.dragStartListener, {
+      passive: false,
+    });
     document.addEventListener('touchend', this.dragEndListener);
-    document.addEventListener('touchmove', this.dragListener, {passive: false});
+    document.addEventListener('touchmove', this.dragListener, {
+      passive: false,
+    });
   }
 
   private removeDragListeners() {
     const handle = this.dragHandle?.nativeElement;
     if (handle) {
-        handle.removeEventListener('mousedown', this.dragStartListener);
-        handle.removeEventListener('touchstart', this.dragStartListener);
+      handle.removeEventListener('mousedown', this.dragStartListener);
+      handle.removeEventListener('touchstart', this.dragStartListener);
     }
     document.removeEventListener('mouseup', this.dragEndListener);
     document.removeEventListener('mousemove', this.dragListener);
@@ -181,7 +193,10 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
       this.initialY = e.clientY - this.yOffset;
     }
 
-    if (e.target === this.dragHandle.nativeElement || this.dragHandle.nativeElement.contains(e.target)) {
+    if (
+      e.target === this.dragHandle.nativeElement ||
+      this.dragHandle.nativeElement.contains(e.target)
+    ) {
       this.isDragging = true;
     }
   }
@@ -195,7 +210,7 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
   private drag(e: any) {
     if (this.isDragging) {
       e.preventDefault();
-      
+
       if (e.type === 'touchmove') {
         this.currentX = e.touches[0].clientX - this.initialX;
         this.currentY = e.touches[0].clientY - this.initialY;
@@ -207,7 +222,11 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
       this.xOffset = this.currentX;
       this.yOffset = this.currentY;
 
-      this.setTranslate(this.currentX, this.currentY, this.calculatorWindow.nativeElement);
+      this.setTranslate(
+        this.currentX,
+        this.currentY,
+        this.calculatorWindow.nativeElement,
+      );
     }
   }
 

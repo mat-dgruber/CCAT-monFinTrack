@@ -4,16 +4,16 @@ import { ButtonModule } from 'primeng/button';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-terms',
-  templateUrl: './terms.html',
-  styleUrls: ['./terms.scss'],
-  standalone: true,
-  imports: [CommonModule, ButtonModule, RouterModule],
+ selector: 'app-terms',
+ templateUrl: './terms.html',
+ styleUrls: ['./terms.scss'],
+ standalone: true,
+ imports: [CommonModule, ButtonModule, RouterModule],
 })
 export class Terms {
-  constructor(private location: Location) { }
+ constructor(private location: Location) { }
 
-  goBack(): void {
-    this.location.back();
-  }
+ goBack(): void {
+ this.location.back();
+ }
 }

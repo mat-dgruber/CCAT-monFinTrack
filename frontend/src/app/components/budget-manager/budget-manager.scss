@@ -1,0 +1,45 @@
+.text-secondary {
+  @apply opacity-70;
+}
+
+.over-budget-card {
+  border-color: #ef4444 !important;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.over-budget-progress {
+  animation: progress-pulse 1.5s infinite alternate;
+}
+
+@keyframes progress-pulse {
+  from { opacity: 1; filter: brightness(1); }
+  to { opacity: 0.8; filter: brightness(1.2); }
+}
+
+// Melhorias de tipografia e espaçamento para o Dashboard
+:host ::ng-deep {
+  .page-header {
+    @apply mb-6;
+    
+    .page-title {
+      @apply text-2xl font-bold tracking-tight text-color;
+    }
+    
+    .page-description {
+      @apply text-secondary text-sm mt-1;
+    }
+  }
+}
+// Efeito de hover suave nos cards
+.bg-surface-card {
+  &:hover {
+    @apply border-accent;
+    transform: translateY(-2px);
+  }
+}

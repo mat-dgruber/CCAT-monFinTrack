@@ -56,9 +56,9 @@ import { PwaService } from '../../services/pwa.service';
     TooltipModule,
     RouterModule,
     ProgressBarModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
   ],
-  providers: [MessageService]
+  providers: [MessageService],
 })
 export class Settings {
   auth = inject(AuthService);
@@ -80,9 +80,10 @@ export class Settings {
 
   // Computed signal for profile image
   profileImageUrl = computed(() => {
-    return this.preferenceService.getProfileImageUrl(this.preferences?.profile_image_url);
+    return this.preferenceService.getProfileImageUrl(
+      this.preferences?.profile_image_url,
+    );
   });
-
 
   displayName = signal('');
   email = signal('');
@@ -102,17 +103,20 @@ export class Settings {
   privacyShared = signal(true);
 
   // Appearance
-  selectedTheme = signal<'light' | 'dark' | 'system' | 'capycro'>('system');
+  selectedTheme = signal<
+    'light' | 'dark' | 'system' | 'capycro' | 'high-contrast'
+  >('system');
   themeOptions = [
     { label: 'Claro', value: 'light' },
     { label: 'Escuro', value: 'dark' },
-    // { label: 'CapyCro', value: 'capycro' },
-    { label: 'Sistema', value: 'system' }
+    { label: 'CapyCro', value: 'capycro' },
+    { label: 'Alto Contraste', value: 'high-contrast' },
+    { label: 'Sistema', value: 'system' },
   ];
 
-// ...
+  // ...
 
-    // Tithes & Offerings
+  // Tithes & Offerings
   tithesEnabled = signal(false);
   defaultTithePct = signal(10);
   defaultOfferingPct = signal(5);
@@ -125,9 +129,9 @@ export class Settings {
   // Subscription (Test Mode)
   selectedTier = signal<'free' | 'pro' | 'premium'>('free');
   tierOptions = [
-      { label: 'Free (Grátis)', value: 'free' },
-      { label: 'Pro (Intermediário)', value: 'pro' },
-      { label: 'Premium (Completo)', value: 'premium' }
+    { label: 'Free (Grátis)', value: 'free' },
+    { label: 'Pro (Intermediário)', value: 'pro' },
+    { label: 'Premium (Completo)', value: 'premium' },
   ];
 
   constructor() {
@@ -141,7 +145,7 @@ export class Settings {
     // Sync local state with service
     // this.selectedTheme.set(this.themeService.darkMode() ? 'dark' : 'light'); // Removed
 
-    this.preferenceService.preferences$.subscribe(prefs => {
+    this.preferenceService.preferences$.subscribe((prefs) => {
       this.preferences = prefs;
       if (prefs) {
         this.selectedTheme.set(prefs.theme);
@@ -168,35 +172,39 @@ export class Settings {
   }
 
   loadAiLimits() {
-      this.aiService.getLimits().subscribe({
-          next: (res) => this.aiLimits.set(res),
-          error: () => console.error('Failed to load AI limits')
-      });
+    this.aiService.getLimits().subscribe({
+      next: (res) => this.aiLimits.set(res),
+      error: () => console.error('Failed to load AI limits'),
+    });
   }
 
   onTithesChange() {
     if (this.preferences) {
-        this.preferenceService.updatePreferences({
-            enable_tithes_offerings: this.tithesEnabled()
-        }).subscribe();
+      this.preferenceService
+        .updatePreferences({
+          enable_tithes_offerings: this.tithesEnabled(),
+        })
+        .subscribe();
     }
   }
 
   onTitheSettingsChange() {
-      if (this.preferences) {
-          this.preferenceService.updatePreferences({
-              default_tithe_percentage: this.defaultTithePct(),
-              default_offering_percentage: this.defaultOfferingPct(),
-              auto_apply_tithe: this.autoApplyTithe(),
-              auto_apply_offering: this.autoApplyOffering()
-          }).subscribe();
-      }
+    if (this.preferences) {
+      this.preferenceService
+        .updatePreferences({
+          default_tithe_percentage: this.defaultTithePct(),
+          default_offering_percentage: this.defaultOfferingPct(),
+          auto_apply_tithe: this.autoApplyTithe(),
+          auto_apply_offering: this.autoApplyOffering(),
+        })
+        .subscribe();
+    }
   }
 
   checkMfaStatus() {
     this.mfaService.checkMFAStatus().subscribe({
       next: (res) => this.mfaEnabled.set(res.enabled),
-      error: () => this.mfaEnabled.set(false)
+      error: () => this.mfaEnabled.set(false),
     });
   }
 
@@ -208,17 +216,32 @@ export class Settings {
         this.showMfaSetupDialog.set(true);
       },
       error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao iniciar setup MFA' });
-      }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Falha ao iniciar setup MFA',
+        });
+      },
     });
   }
 
   copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      this.messageService.add({ severity: 'success', summary: 'Copiado', detail: 'Código copiado para a área de transferência!' });
-    }, () => {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao copiar código.' });
-    });
+    navigator.clipboard.writeText(text).then(
+      () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Copiado',
+          detail: 'Código copiado para a área de transferência!',
+        });
+      },
+      () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Falha ao copiar código.',
+        });
+      },
+    );
   }
 
   confirmEnableMFA() {
@@ -229,17 +252,26 @@ export class Settings {
         this.mfaEnabled.set(true);
         this.showMfaSetupDialog.set(false);
         this.mfaToken.set('');
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'MFA ativado com sucesso!' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'MFA ativado com sucesso!',
+        });
       },
       error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Código inválido' });
-      }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Código inválido',
+        });
+      },
     });
   }
 
   disableMFA() {
     this.confirmationService.confirm({
-      message: 'Tem certeza que deseja desativar o MFA? Sua conta ficará menos segura.',
+      message:
+        'Tem certeza que deseja desativar o MFA? Sua conta ficará menos segura.',
       header: 'Confirmar Ação',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Desativar',
@@ -250,13 +282,21 @@ export class Settings {
         this.mfaService.disableMFA().subscribe({
           next: () => {
             this.mfaEnabled.set(false);
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'MFA desativado' });
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'MFA desativado',
+            });
           },
           error: () => {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao desativar MFA' });
-          }
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Falha ao desativar MFA',
+            });
+          },
         });
-      }
+      },
     });
   }
 
@@ -277,43 +317,72 @@ export class Settings {
         }
       }
 
-      this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso' });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Perfil atualizado com sucesso',
+      });
     } catch (error) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar perfil' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Falha ao atualizar perfil',
+      });
     }
   }
 
   onPrivacyChange() {
-      if (this.preferences) {
-          this.preferenceService.updatePreferences({
-              privacy_share_data: this.privacyShared()
-          }).subscribe({
-              next: () => this.messageService.add({severity: 'info', summary: 'Privacidade', detail: 'Preferências de dados atualizadas.'})
-          });
-      }
+    if (this.preferences) {
+      this.preferenceService
+        .updatePreferences({
+          privacy_share_data: this.privacyShared(),
+        })
+        .subscribe({
+          next: () =>
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Privacidade',
+              detail: 'Preferências de dados atualizadas.',
+            }),
+        });
+    }
   }
 
   onEmailDigestChange() {
-      if (this.selectedTier() === 'free') {
-          // Revert toggle if user tries to enable on Free tier
-          setTimeout(() => this.emailDigestEnabled.set(false), 50);
-          this.messageService.add({ severity: 'warn', summary: 'Recurso Pro', detail: 'O resumo por email é exclusivo para assinantes.' });
-          return;
-      }
+    if (this.selectedTier() === 'free') {
+      // Revert toggle if user tries to enable on Free tier
+      setTimeout(() => this.emailDigestEnabled.set(false), 50);
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Recurso Pro',
+        detail: 'O resumo por email é exclusivo para assinantes.',
+      });
+      return;
+    }
 
-      if (this.preferences) {
-          this.preferenceService.updatePreferences({
-              email_digest_enabled: this.emailDigestEnabled()
-          }).subscribe();
-      }
+    if (this.preferences) {
+      this.preferenceService
+        .updatePreferences({
+          email_digest_enabled: this.emailDigestEnabled(),
+        })
+        .subscribe();
+    }
   }
 
   async verifyEmail() {
     try {
       await this.auth.sendVerificationEmail();
-      this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Email de verificação enviado' });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Enviado',
+        detail: 'Email de verificação enviado',
+      });
     } catch (error) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar email de verificação' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Falha ao enviar email de verificação',
+      });
     }
   }
 
@@ -321,9 +390,17 @@ export class Settings {
     if (this.email()) {
       try {
         await this.auth.resetPassword(this.email());
-        this.messageService.add({ severity: 'success', summary: 'Enviado', detail: 'Email de redefinição de senha enviado' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Enviado',
+          detail: 'Email de redefinição de senha enviado',
+        });
       } catch (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar email de redefinição' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Falha ao enviar email de redefinição',
+        });
       }
     }
   }
@@ -336,9 +413,9 @@ export class Settings {
       // Optimistically update local state if needed, but the service subscription should handle it
       this.preferenceService.updatePreferences({ theme: newTheme }).subscribe();
     } else {
-        // If no preferences loaded yet, try to set it anyway (e.g. guest or initial load issue)
-        // This handles cases where user changes theme before preferences fetch completes
-         // But strictly speaking we should have preferences.
+      // If no preferences loaded yet, try to set it anyway (e.g. guest or initial load issue)
+      // This handles cases where user changes theme before preferences fetch completes
+      // But strictly speaking we should have preferences.
     }
 
     // The service's tap/next will trigger applyTheme, so we don't need manual DOM manipulation here anymore.
@@ -346,11 +423,17 @@ export class Settings {
 
   onTierChange(event: any) {
     if (this.preferences) {
-        this.preferenceService.updatePreferences({
-            subscription_tier: event.value
-        }).subscribe(() => {
-            this.messageService.add({severity: 'success', summary: 'Tier Atualizado', detail: `Agora você é ${event.value.toUpperCase()}!`});
-            this.loadAiLimits();
+      this.preferenceService
+        .updatePreferences({
+          subscription_tier: event.value,
+        })
+        .subscribe(() => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Tier Atualizado',
+            detail: `Agora você é ${event.value.toUpperCase()}!`,
+          });
+          this.loadAiLimits();
         });
     }
   }
@@ -358,13 +441,19 @@ export class Settings {
   onLanguageChange(event: any) {
     if (this.preferences) {
       this.preferences.language = event.value;
-      this.preferenceService.updatePreferences({ language: event.value }).subscribe();
+      this.preferenceService
+        .updatePreferences({ language: event.value })
+        .subscribe();
     }
   }
 
   onNotificationChange(event: any) {
     if (this.preferences) {
-      this.preferenceService.updatePreferences({ notifications_enabled: this.preferences.notifications_enabled }).subscribe();
+      this.preferenceService
+        .updatePreferences({
+          notifications_enabled: this.preferences.notifications_enabled,
+        })
+        .subscribe();
     }
   }
 
@@ -373,11 +462,19 @@ export class Settings {
     if (file) {
       this.preferenceService.uploadAvatar(file).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Avatar atualizado!' });
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: 'Avatar atualizado!',
+          });
         },
         error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao enviar avatar.' });
-        }
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Falha ao enviar avatar.',
+          });
+        },
       });
     }
   }
@@ -390,7 +487,8 @@ export class Settings {
 
   confirmDelete() {
     this.confirmationService.confirm({
-      message: 'Tem certeza que deseja excluir sua conta permanentemente? Esta ação não pode ser desfeita.',
+      message:
+        'Tem certeza que deseja excluir sua conta permanentemente? Esta ação não pode ser desfeita.',
       header: 'Confirmar Exclusão',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Excluir Conta',
@@ -400,18 +498,27 @@ export class Settings {
       accept: async () => {
         try {
           await this.auth.deleteAccount();
-          this.messageService.add({ severity: 'success', summary: 'Confirmado', detail: 'Conta excluída' });
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Confirmado',
+            detail: 'Conta excluída',
+          });
           this.router.navigate(['/login']);
         } catch (error) {
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao excluir conta' });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Falha ao excluir conta',
+          });
         }
-      }
+      },
     });
   }
 
   onResetAccount() {
     this.confirmationService.confirm({
-      message: 'Tem certeza que deseja LIMPAR todos os dados da sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas.',
+      message:
+        'Tem certeza que deseja LIMPAR todos os dados da sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas.',
       header: 'Confirmar Limpeza',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Limpar Tudo',
@@ -421,15 +528,23 @@ export class Settings {
       accept: () => {
         this.preferenceService.resetAccount().subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Dados da conta limpos com sucesso' });
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Dados da conta limpos com sucesso',
+            });
             // Optional: Reload or redirect
             window.location.reload();
           },
           error: () => {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao limpar dados da conta' });
-          }
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Falha ao limpar dados da conta',
+            });
+          },
         });
-      }
+      },
     });
   }
 
@@ -441,7 +556,11 @@ export class Settings {
     this.wakeLockEnabled.set(!this.wakeLockEnabled());
     if (this.wakeLockEnabled()) {
       this.pwaService.requestWakeLock();
-      this.messageService.add({ severity: 'info', summary: 'Tela ativa', detail: 'O modo "Manter tela ligada" foi ativado.' });
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Tela ativa',
+        detail: 'O modo "Manter tela ligada" foi ativado.',
+      });
     } else {
       this.pwaService.releaseWakeLock();
     }

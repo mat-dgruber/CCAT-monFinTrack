@@ -1,7 +1,11 @@
 <div class="max-w-[1600px] mx-auto p-4 lg:p-6">
-  <!-- Header -->
-  <div class="flex items-center gap-4 mb-8">
-    <h1 class="text-3xl font-bold text-color m-0">Configurações</h1>
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Configurações</h1>
+      <p class="page-description">
+        Personalize sua experiência: perfil, notificações e preferências.
+      </p>
+    </div>
   </div>
 
   <!-- Organic Grid Layout -->
@@ -12,7 +16,7 @@
     <div
       class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
     >
-      <h2 class="text-xl font-semibold text-color mb-6">Meu Perfil</h2>
+      <h2 class="text-xl font-semibold text-emphasis mb-6">Meu Perfil</h2>
 
       <div class="flex flex-col gap-6">
         <!-- Profile Picture -->
@@ -589,7 +593,7 @@
       Escaneie o QR Code abaixo com seu aplicativo autenticador.
     </p>
 
-    <div class="bg-white p-2 rounded-lg border border-gray-200">
+    <div class="bg-surface-card p-2 rounded-lg border border-surface-border">
       <img [src]="qrCodeUrl()" alt="QR Code" class="w-48 h-48" />
     </div>
 

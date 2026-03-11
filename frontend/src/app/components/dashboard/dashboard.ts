@@ -1,10 +1,10 @@
 import {
-  Component,
-  OnInit,
-  inject,
-  signal,
-  effect,
-  DestroyRef,
+ Component,
+ OnInit,
+ inject,
+ signal,
+ effect,
+ DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -31,8 +31,8 @@ import { ToastModule } from 'primeng/toast'; // Import ToastModule
 
 // Services
 import {
-  DashboardService,
-  DashboardSummary,
+ DashboardService,
+ DashboardSummary,
 } from '../../services/dashboard.service';
 import { RefreshService } from '../../services/refresh.service';
 import { FilterService } from '../../services/filter.service';
@@ -51,294 +51,294 @@ import { RecentTransactionsComponent } from '../recent-transactions/recent-trans
 import { TitheSummaryComponent } from '../tithe-summary/tithe-summary';
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    ChartModule,
-    CardModule,
-    MonthSelector,
-    AccountManager,
-    BudgetManager,
-    InvoiceDashboard,
-    RecentTransactionsComponent,
-    TitheSummaryComponent,
-    SkeletonModule,
-    DialogModule,
-    ConfirmDialogModule,
-    MarkdownModule,
-    ButtonModule,
-    RouterModule,
-    ToastModule, // Add ToastModule
-  ],
-  providers: [ConfirmationService, MessageService], // Add MessageService
-  templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss',
+ selector: 'app-dashboard',
+ standalone: true,
+ imports: [
+ CommonModule,
+ ReactiveFormsModule,
+ FormsModule,
+ ChartModule,
+ CardModule,
+ MonthSelector,
+ AccountManager,
+ BudgetManager,
+ InvoiceDashboard,
+ RecentTransactionsComponent,
+ TitheSummaryComponent,
+ SkeletonModule,
+ DialogModule,
+ ConfirmDialogModule,
+ MarkdownModule,
+ ButtonModule,
+ RouterModule,
+ ToastModule, // Add ToastModule
+ ],
+ providers: [ConfirmationService, MessageService], // Add MessageService
+ templateUrl: './dashboard.html',
+ styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
-  private dashboardService = inject(DashboardService);
-  private refreshService = inject(RefreshService);
-  private filterService = inject(FilterService);
-  private analysisService = inject(AnalysisService);
-  private accountService = inject(AccountService);
-  private aiService = inject(AIService);
-  private confirmationService = inject(ConfirmationService);
-  subscriptionService = inject(SubscriptionService);
-  private preferenceService = inject(UserPreferenceService);
-  private route = inject(ActivatedRoute); // Inject ActivatedRoute
-  private router = inject(Router); // Inject Router
-  private messageService = inject(MessageService); // Inject MessageService
+ private dashboardService = inject(DashboardService);
+ private refreshService = inject(RefreshService);
+ private filterService = inject(FilterService);
+ private analysisService = inject(AnalysisService);
+ private accountService = inject(AccountService);
+ private aiService = inject(AIService);
+ private confirmationService = inject(ConfirmationService);
+ subscriptionService = inject(SubscriptionService);
+ private preferenceService = inject(UserPreferenceService);
+ private route = inject(ActivatedRoute); // Inject ActivatedRoute
+ private router = inject(Router); // Inject Router
+ private messageService = inject(MessageService); // Inject MessageService
 
-  summary = signal<DashboardSummary | null>(null);
-  costOfLiving = signal<number | null>(null);
-  loading = signal(true);
-  tithesEnabled = signal(false);
+ summary = signal<DashboardSummary | null>(null);
+ costOfLiving = signal<number | null>(null);
+ loading = signal(true);
+ tithesEnabled = signal(false);
 
-  // AI Report
-  showReportDialog = false;
-  reportLoading = false;
-  reportContent = '';
+ // AI Report
+ showReportDialog = false;
+ reportLoading = false;
+ reportContent = '';
 
-  // Filters
-  accounts = signal<Account[]>([]);
+ // Filters
+ accounts = signal<Account[]>([]);
 
-  constructor() {
-    effect(() => {
-      const m = this.filterService.month();
-      const y = this.filterService.year();
-      this.refreshService.refreshSignal();
-      this.loadDashboard(m, y);
-    });
+ constructor() {
+ effect(() => {
+ const m = this.filterService.month();
+ const y = this.filterService.year();
+ this.refreshService.refreshSignal();
+ this.loadDashboard(m, y);
+ });
 
-    // Subscribe to preferences to check if tithes feature is enabled
-    const destroyRef = inject(DestroyRef);
-    this.preferenceService.preferences$
-      .pipe(takeUntilDestroyed(destroyRef))
-      .subscribe((prefs) => {
-        this.tithesEnabled.set(!!prefs?.enable_tithes_offerings);
-      });
-  }
+ // Subscribe to preferences to check if tithes feature is enabled
+ const destroyRef = inject(DestroyRef);
+ this.preferenceService.preferences$
+ .pipe(takeUntilDestroyed(destroyRef))
+ .subscribe((prefs) => {
+ this.tithesEnabled.set(!!prefs?.enable_tithes_offerings);
+ });
+ }
 
-  ngOnInit() {
-    this.initChartOptions();
-    this.loadAccounts();
-    this.checkPaymentStatus();
-  }
+ ngOnInit() {
+ this.initChartOptions();
+ this.loadAccounts();
+ this.checkPaymentStatus();
+ }
 
-  checkPaymentStatus() {
-    this.route.queryParams.subscribe((params) => {
-      if (params['payment'] === 'success') {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Pagamento Confirmado!',
-          detail: 'Obrigado por assinar. Seu plano foi atualizado.',
-        });
-        // Clear param
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { payment: null },
-          queryParamsHandling: 'merge',
-        });
-        // Force refresh specific logic if needed? subscription service is reactive to user prefs update.
-        // Assuming backend webhook already fired? Race condition possible.
-      } else if (params['payment'] === 'canceled') {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Cancelado',
-          detail: 'O processo de pagamento foi cancelado.',
-        });
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { payment: null },
-          queryParamsHandling: 'merge',
-        });
-      }
-    });
-  }
-  // Chart
-  chartData: any;
-  chartOptions: any;
-  chartType = 'doughnut';
+ checkPaymentStatus() {
+ this.route.queryParams.subscribe((params) => {
+ if (params['payment'] === 'success') {
+ this.messageService.add({
+ severity: 'success',
+ summary: 'Pagamento Confirmado!',
+ detail: 'Obrigado por assinar. Seu plano foi atualizado.',
+ });
+ // Clear param
+ this.router.navigate([], {
+ relativeTo: this.route,
+ queryParams: { payment: null },
+ queryParamsHandling: 'merge',
+ });
+ // Force refresh specific logic if needed? subscription service is reactive to user prefs update.
+ // Assuming backend webhook already fired? Race condition possible.
+ } else if (params['payment'] === 'canceled') {
+ this.messageService.add({
+ severity: 'info',
+ summary: 'Cancelado',
+ detail: 'O processo de pagamento foi cancelado.',
+ });
+ this.router.navigate([], {
+ relativeTo: this.route,
+ queryParams: { payment: null },
+ queryParamsHandling: 'merge',
+ });
+ }
+ });
+ }
+ // Chart
+ chartData: any;
+ chartOptions: any;
+ chartType = 'doughnut';
 
-  // Evolution Chart
-  evolutionChartData: any;
-  evolutionChartOptions: any;
+ // Evolution Chart
+ evolutionChartData: any;
+ evolutionChartOptions: any;
 
-  loadAccounts() {
-    this.accountService
-      .getAccounts()
-      .subscribe((data) => this.accounts.set(data));
-  }
+ loadAccounts() {
+ this.accountService
+ .getAccounts()
+ .subscribe((data) => this.accounts.set(data));
+ }
 
-  generateReport() {
-    this.confirmationService.confirm({
-      message:
-        'Deseja gerar o relatório mensal com nosso Assistente IA? (Isso pode levar alguns segundos)',
-      header: 'Confirmar Geração',
-      icon: 'pi pi-sparkles',
-      acceptLabel: 'Gerar Relatório',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-outlined p-button-success',
-      rejectButtonStyleClass: 'p-button-text',
-      accept: () => {
-        this.showReportDialog = true;
-        this.reportLoading = true;
-        this.reportContent = '';
+ generateReport() {
+ this.confirmationService.confirm({
+ message:
+ 'Deseja gerar o relatório mensal com nosso Assistente IA? (Isso pode levar alguns segundos)',
+ header: 'Confirmar Geração',
+ icon: 'pi pi-sparkles',
+ acceptLabel: 'Gerar Relatório',
+ rejectLabel: 'Cancelar',
+ acceptButtonStyleClass: 'p-button-outlined p-button-success',
+ rejectButtonStyleClass: 'p-button-text',
+ accept: () => {
+ this.showReportDialog = true;
+ this.reportLoading = true;
+ this.reportContent = '';
 
-        // Use current month/year from filter
-        const m = this.filterService.month();
-        const y = this.filterService.year();
+ // Use current month/year from filter
+ const m = this.filterService.month();
+ const y = this.filterService.year();
 
-        this.aiService.generateMonthlyReport(m, y).subscribe({
-          next: (res) => {
-            this.reportContent = res.content;
-            this.reportLoading = false;
-          },
-          error: (err) => {
-            console.error('Error generating report', err);
-            this.reportContent =
-              'Desculpe, não consegui gerar o relatório agora. Tente mais tarde!';
-            this.reportLoading = false;
-          },
-        });
-      },
-    });
-  }
+ this.aiService.generateMonthlyReport(m, y).subscribe({
+ next: (res) => {
+ this.reportContent = res.content;
+ this.reportLoading = false;
+ },
+ error: (err) => {
+ console.error('Error generating report', err);
+ this.reportContent =
+ 'Desculpe, não consegui gerar o relatório agora. Tente mais tarde!';
+ this.reportLoading = false;
+ },
+ });
+ },
+ });
+ }
 
-  loadDashboard(m: number, y: number) {
-    this.loading.set(true);
-    this.dashboardService.getSummary(m, y).subscribe({
-      next: (data) => {
-        this.summary.set(data);
-        this.setupChart(data);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading dashboard', err);
-        this.loading.set(false);
-      },
-    });
+ loadDashboard(m: number, y: number) {
+ this.loading.set(true);
+ this.dashboardService.getSummary(m, y).subscribe({
+ next: (data) => {
+ this.summary.set(data);
+ this.setupChart(data);
+ this.loading.set(false);
+ },
+ error: (err) => {
+ console.error('Error loading dashboard', err);
+ this.loading.set(false);
+ },
+ });
 
-    if (this.subscriptionService.canAccess('cost_of_living')) {
-      this.analysisService.getMonthlyAverages().subscribe({
-        next: (data) => {
-          if (data && data.realized) {
-            this.costOfLiving.set(data.realized.average_total);
-          }
-        },
-        error: (err) => console.error('Error fetching cost of living', err),
-      });
-    }
-  }
+ if (this.subscriptionService.canAccess('cost_of_living')) {
+ this.analysisService.getMonthlyAverages().subscribe({
+ next: (data) => {
+ if (data && data.realized) {
+ this.costOfLiving.set(data.realized.average_total);
+ }
+ },
+ error: (err) => console.error('Error fetching cost of living', err),
+ });
+ }
+ }
 
-  setupChart(data: DashboardSummary) {
-    // 1. Doughnut Chart (Categories)
-    this.chartData = {
-      labels: data.expenses_by_category.map((c) => c.category_name),
-      datasets: [
-        {
-          label: 'Despesas por Categoria',
-          data: data.expenses_by_category.map((c) => c.total),
-          backgroundColor: data.expenses_by_category.map((c) => c.color),
-          borderWidth: 0,
-          hoverBackgroundColor: data.expenses_by_category.map((c) => c.color),
-        },
-      ],
-    };
+ setupChart(data: DashboardSummary) {
+ // 1. Doughnut Chart (Categories)
+ this.chartData = {
+ labels: data.expenses_by_category.map((c) => c.category_name),
+ datasets: [
+ {
+ label: 'Despesas por Categoria',
+ data: data.expenses_by_category.map((c) => c.total),
+ backgroundColor: data.expenses_by_category.map((c) => c.color),
+ borderWidth: 0,
+ hoverBackgroundColor: data.expenses_by_category.map((c) => c.color),
+ },
+ ],
+ };
 
-    // 2. Bar Chart (Evolution)
-    if (data.evolution) {
-      this.evolutionChartData = {
-        labels: data.evolution.map((e) => e.month),
-        datasets: [
-          {
-            label: 'Receitas',
-            data: data.evolution.map((e) => e.income),
-            backgroundColor: '#22c55e', // Green
-            borderColor: '#22c55e',
-            borderWidth: 1,
-          },
-          {
-            label: 'Despesas',
-            data: data.evolution.map((e) => e.expense),
-            backgroundColor: '#ef4444', // Red
-            borderColor: '#ef4444',
-            borderWidth: 1,
-          },
-        ],
-      };
-    }
+ // 2. Bar Chart (Evolution)
+ if (data.evolution) {
+ this.evolutionChartData = {
+ labels: data.evolution.map((e) => e.month),
+ datasets: [
+ {
+ label: 'Receitas',
+ data: data.evolution.map((e) => e.income),
+ backgroundColor: '#22c55e', // Green
+ borderColor: '#22c55e',
+ borderWidth: 1,
+ },
+ {
+ label: 'Despesas',
+ data: data.evolution.map((e) => e.expense),
+ backgroundColor: '#ef4444', // Red
+ borderColor: '#ef4444',
+ borderWidth: 1,
+ },
+ ],
+ };
+ }
 
-    this.initChartOptions(); // Reset options
-  }
+ this.initChartOptions(); // Reset options
+ }
 
-  initChartOptions() {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--text-color');
-    const textColorSecondary = documentStyle.getPropertyValue(
-      '--text-color-secondary',
-    );
-    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+ initChartOptions() {
+ const documentStyle = getComputedStyle(document.documentElement);
+ const textColor = documentStyle.getPropertyValue('--text-color');
+ const textColorSecondary = documentStyle.getPropertyValue(
+ '--text-color-secondary',
+ );
+ const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
 
-    // Options for Doughnut
-    this.chartOptions = {
-      cutout: '60%',
-      plugins: {
-        legend: {
-          display: true, // Display legend for doughnut
-          labels: {
-            usePointStyle: true,
-            color: textColor,
-          },
-        },
-      },
-      maintainAspectRatio: false,
-      responsive: true,
-    };
+ // Options for Doughnut
+ this.chartOptions = {
+ cutout: '60%',
+ plugins: {
+ legend: {
+ display: true, // Display legend for doughnut
+ labels: {
+ usePointStyle: true,
+ color: textColor,
+ },
+ },
+ },
+ maintainAspectRatio: false,
+ responsive: true,
+ };
 
-    // Options for Evolution Bar Chart
-    this.evolutionChartOptions = {
-      maintainAspectRatio: false,
-      responsive: true,
-      plugins: {
-        legend: {
-          labels: {
-            usePointStyle: true,
-            color: textColor,
-          },
-        },
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: textColorSecondary,
-          },
-          grid: {
-            color: surfaceBorder,
-            drawBorder: false,
-          },
-        },
-        y: {
-          ticks: {
-            color: textColorSecondary,
-            callback: function (value: any) {
-              return 'R$ ' + value;
-            },
-          },
-          grid: {
-            color: surfaceBorder,
-            drawBorder: false,
-          },
-        },
-      },
-    };
-  }
+ // Options for Evolution Bar Chart
+ this.evolutionChartOptions = {
+ maintainAspectRatio: false,
+ responsive: true,
+ plugins: {
+ legend: {
+ labels: {
+ usePointStyle: true,
+ color: textColor,
+ },
+ },
+ },
+ scales: {
+ x: {
+ ticks: {
+ color: textColorSecondary,
+ },
+ grid: {
+ color: surfaceBorder,
+ drawBorder: false,
+ },
+ },
+ y: {
+ ticks: {
+ color: textColorSecondary,
+ callback: function (value: any) {
+ return 'R$ ' + value;
+ },
+ },
+ grid: {
+ color: surfaceBorder,
+ drawBorder: false,
+ },
+ },
+ },
+ };
+ }
 
-  getProgressColor(percentage: number): string {
-    if (percentage >= 100) return '#ef4444'; // Red (Estourou)
-    if (percentage >= 80) return '#f59e0b'; // Amber (Alerta)
-    return '#22c55e'; // Green (Ok)
-  }
+ getProgressColor(percentage: number): string {
+ if (percentage >= 100) return '#ef4444'; // Red (Estourou)
+ if (percentage >= 80) return '#f59e0b'; // Amber (Alerta)
+ return '#22c55e'; // Green (Ok)
+ }
 }

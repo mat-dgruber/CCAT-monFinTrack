@@ -8,20 +8,20 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   return authService.authState$.pipe(
     take(1), // Pega o estado atual (espera se ainda não emitiu)
-    switchMap(user => {
+    switchMap((user) => {
       if (user) {
         return from(user.getIdToken()).pipe(
-          switchMap(token => {
+          switchMap((token) => {
             const clonedReq = req.clone({
               setHeaders: {
-                Authorization: `Bearer ${token}`
-              }
+                Authorization: `Bearer ${token}`,
+              },
             });
             return next(clonedReq);
-          })
+          }),
         );
       }
       return next(req);
-    })
+    }),
   );
 };
