@@ -2,7 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { User, UserCredential } from 'firebase/auth';
-import { from, switchMap, ReplaySubject } from 'rxjs';
+import { from, switchMap, ReplaySubject, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FirebaseWrapperService } from './firebase-wrapper.service';
 
@@ -15,6 +15,7 @@ export class AuthService {
   private http = inject(HttpClient);
 
   currentUser = signal<User | null>(null);
+  isAuthResolved = signal<boolean>(false);
 
   // Use ReplaySubject(1) to hold the latest auth state and emit immediately to new subscribers
   private authStateSubject = new ReplaySubject<User | null>(1);
@@ -31,6 +32,7 @@ export class AuthService {
         this.currentUser.set(null);
         this.authStateSubject.next(null);
       }
+      this.isAuthResolved.set(true);
     });
 
     // Verifica a sessão periodicamente se houver duração configurada
@@ -63,17 +65,11 @@ export class AuthService {
         displayName: name,
       });
 
-      // CONFIGURAÇÃO DO LINK MÁGICO
-      const actionCodeSettings = {
-        // Para onde o usuário vai após clicar? (Mude para seu domínio real em produção)
-        url: `${environment.appUrl}/verify-email`,
-        handleCodeInApp: true,
-      };
-
-      // Passamos as configurações aqui
-      await this.firebaseWrapper.sendEmailVerification(
-        credential.user,
-        actionCodeSettings,
+      // Chamada ao backend para enviar e-mail personalizado
+      await firstValueFrom(
+        this.http.post(`${environment.apiUrl}/auth/verify-email`, {
+          email: credential.user.email,
+        }),
       );
 
       await this.firebaseWrapper.signOut();
@@ -98,7 +94,9 @@ export class AuthService {
   }
 
   async resetPassword(email: string) {
-    return await this.firebaseWrapper.sendPasswordResetEmail(email);
+    return await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/auth/reset-password`, { email }),
+    );
   }
 
   async deleteAccount() {
@@ -123,19 +121,21 @@ export class AuthService {
     const user = this.firebaseWrapper.getAuth().currentUser;
     if (!user) throw new Error('No user logged in');
 
-    const actionCodeSettings = {
-      url: `${environment.appUrl}/verify-email`,
-      handleCodeInApp: true,
-    };
-    return await this.firebaseWrapper.sendEmailVerification(
-      user,
-      actionCodeSettings,
+    return await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/auth/verify-email`, {
+        email: user.email,
+      }),
     );
   }
 
   private initializeUser() {
+    // Esse POST garante que o registro no DB exista (categorias padrão, etc)
     this.http.post(`${environment.apiUrl}/users/setup`, {}).subscribe({
-      next: () => console.log('User setup completed'),
+      next: () => {
+        console.log('User setup completed');
+        // NOTA: O UserPreferenceService já está ouvindo o authState$
+        // e fará o fetchPreferences() automaticamente.
+      },
       error: (err) => console.error('Error setting up user', err),
     });
   }

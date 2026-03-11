@@ -1,3 +1,4 @@
+import { CustomConfirmService } from '../../services/custom-confirm.service';
 import {
   Component,
   OnInit,
@@ -19,17 +20,13 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import {
-  ConfirmationService,
-  MessageService,
-  FilterMatchMode,
-} from 'primeng/api';
+import { MessageService, FilterMatchMode } from 'primeng/api';
 import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+
 import { InputNumberModule } from 'primeng/inputnumber';
 
 // Services
@@ -72,9 +69,9 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     IconFieldModule,
     InputIconModule,
     SkeletonModule,
-    ConfirmDialogModule,
+    
     InputNumberModule,
-    ConfirmDialogModule,
+    
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss',
@@ -85,7 +82,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
   private transactionService = inject(TransactionService);
   private categoryService = inject(CategoryService);
   private accountService = inject(AccountService);
-  private confirmationService = inject(ConfirmationService);
+  private confirmationService = inject(CustomConfirmService);
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
   private userPreferenceService = inject(UserPreferenceService);

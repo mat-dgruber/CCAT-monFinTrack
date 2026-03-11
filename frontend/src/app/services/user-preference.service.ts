@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, tap, catchError } from 'rxjs';
 import {
@@ -6,11 +6,13 @@ import {
   UserPreferenceCreate,
 } from '../models/user-preference.model';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserPreferenceService {
+  private authService = inject(AuthService);
   private apiUrl = `${environment.apiUrl}/preferences`;
   private preferencesSubject = new BehaviorSubject<UserPreference | null>(null);
   preferences$ = this.preferencesSubject.asObservable();
@@ -47,8 +49,23 @@ export class UserPreferenceService {
       }
     }
 
-    // 2. Fetch from API (Background update)
-    this.fetchPreferences().subscribe();
+    // 2. React to Authentication Changes
+    this.authService.authState$.subscribe((user: any) => {
+      if (user) {
+        // User is logged in, fetch fresh preferences
+        this.fetchPreferences().subscribe();
+      } else {
+        // User logged out, clear preferences to avoid stale data
+        this.clearPreferences();
+      }
+    });
+  }
+
+  private clearPreferences() {
+    this.preferencesSubject.next(null);
+    localStorage.removeItem(this.STORAGE_KEY);
+    // Reset to system/light theme on logout
+    this.applyTheme('system');
   }
 
   fetchPreferences(): Observable<UserPreference> {
@@ -119,9 +136,13 @@ export class UserPreferenceService {
 
     // Construct absolute URL from environment.apiUrl
     // environment.apiUrl is like 'http://localhost:8000/api'
-    // We need 'http://localhost:8000' + path (which is like '/static/...')
     const baseUrl = environment.apiUrl.replace('/api', '');
-    return `${baseUrl}${path}`;
+
+    // Ensure path starts with / for joining and baseUrl doesn't end with /
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    return `${cleanBaseUrl}${cleanPath}`;
   }
 
   private updateLocalState(prefs: UserPreference) {
