@@ -1,8 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal
 
 class CheckoutSessionCreate(BaseModel):
-    plan: str = Field(..., description="Plan ID ('pro_monthly', 'pro_yearly', 'premium_monthly', 'premium_yearly')")
+    plan: Literal["pro_monthly", "pro_yearly", "premium_monthly", "premium_yearly"] = Field(
+        ..., description="Plan ID"
+    )
     success_url: str
     cancel_url: str
 

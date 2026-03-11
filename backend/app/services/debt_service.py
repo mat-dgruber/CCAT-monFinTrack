@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 
@@ -26,7 +26,7 @@ def create_debt(user_id: str, debt_in: DebtCreate) -> Debt:
     db = get_db()
     data = debt_in.model_dump()
     data['user_id'] = user_id
-    data['created_at'] = datetime.now().isoformat()
+    data['created_at'] = datetime.now(timezone.utc).isoformat()
     
     update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
     return Debt(id=doc_ref.id, **data)
@@ -138,7 +138,7 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
                 # Assuming stored as ISO string YYYY-MM-DD based on API
                  try:
                      d['date_obj'] = date.fromisoformat(d['receive_date'])
-                 except:
+                 except (ValueError, TypeError):
                      continue
             res.append(d)
         return res
@@ -149,6 +149,11 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
     current_date = date.today()
     steps = []
     total_interest_global = 0.0
+    
+    # Validation state
+    has_default_warning = False
+    has_negative_amortization_warning = False
+    warnings = []
     
     # Safety break
     max_months = 360 # 30 years cap
@@ -174,10 +179,6 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
             d['current_payment'] = payment
             total_min_required += payment
             
-        # 2. Determine Budget
-        # If totalmins > budget, we have a problem (underpayment). We assume user pays at least mins.
-        available_for_debts = max(monthly_budget, total_min_required)
-        
         # --- APPLY SEASONAL RESOURCES ---
         monthly_bonus = 0.0
         for res in seasonal_resources:
@@ -188,41 +189,60 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
             match = False
             
             if is_recurrence:
-                # Match Month
                 if r_date.month == current_date_step.month:
                     match = True
             else:
-                # Match exact month/year
                 if r_date.month == current_date_step.month and r_date.year == current_date_step.year:
                     match = True
             
             if match:
                 monthly_bonus += float(res.get('amount', 0))
-        
-        if monthly_bonus > 0:
-             # Add bonus to available budget
-             available_for_debts += monthly_bonus
         # --------------------------------
-
-        extra_cash = available_for_debts - total_min_required
         
+        # 2. Determine Budget & Default Check
+        available_this_month = monthly_budget + monthly_bonus
+        
+        if available_this_month < total_min_required:
+            if not has_default_warning:
+                has_default_warning = True
+                warnings.append(f"Risco de Inadimplência: O orçamento mensal mais bônus (R$ {available_this_month:.2f}) no mês {month_idx} não cobre os pagamentos mínimos exigidos (R$ {total_min_required:.2f}).")
+            
+            # Distribute what we have to the minimums (pro-rata could be better, but let's just pay priority ones or fill until empty)
+            for d in active_debts:
+                if available_this_month <= 0:
+                    d['current_payment'] = 0
+                elif available_this_month >= d['current_payment']:
+                    available_this_month -= d['current_payment']
+                else:
+                    d['current_payment'] = available_this_month
+                    available_this_month = 0
+            
+            extra_cash = 0.0
+        else:
+            extra_cash = available_this_month - total_min_required
+            
+        # Negative Amortization Check
+        for d in active_debts:
+            interest_gen = d['balance'] * d['rate_monthly'] / (1 + d['rate_monthly']) # Backtrack interest added this month
+            if d['current_payment'] < interest_gen and not has_negative_amortization_warning:
+                has_negative_amortization_warning = True
+                warnings.append(f"Amortização Negativa: O pagamento da dívida '{d['name']}' não cobre os juros. A dívida está crescendo em vez de diminuir.")
+
         # 3. Pay Minimums
         for d in active_debts:
             pay_amount = d['current_payment']
             d['balance'] -= pay_amount
             
         # 4. Apply Extra (Snowball/Avalanche)
-        if extra_cash > 0:
-            # Re-check active debts (some might be paid by min payment if balance was low? unlikely logic there but safe to re-filter)
+        if extra_cash > 0.01:
             active_debts = [d for d in sim_debts if d['balance'] > 0.01]
             if active_debts:
-                # Loop to distribute extra if multiple debts get paid off
                 while extra_cash > 0.01 and active_debts:
                     target = get_priority_debt(active_debts)
                     payment = min(target['balance'], extra_cash)
                     target['balance'] -= payment
                     extra_cash -= payment
-                    target['current_payment'] += payment # Track total paid this month to this debt
+                    target['current_payment'] += payment
                     
                     if target['balance'] <= 0.01:
                         target['balance'] = 0
@@ -232,27 +252,19 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
                         active_debts = [d for d in sim_debts if d['balance'] > 0.01]
 
         # 5. Create Steps
-        # For this month, what was paid where?
-        # To avoid 1000s of items, maybe summarize?
-        # Or detailed: "Month 1: Debt A - Paid 100. Debt B - Paid 500."
         for d in sim_debts:
             if d.get('current_payment', 0) > 0:
-                # Flag if this step included bonus
-                step_note = ""
-                if monthly_bonus > 0:
-                     step_note = " (Inclui Recurso Sazonal)"
-                     
                 steps.append(PaymentStep(
                     month_index=month_idx,
                     date=current_date_step.isoformat(),
                     payment_amount=round(d['current_payment'], 2),
-                    interest_paid=0.0, # Approximate
+                    interest_paid=0.0, # Approximate, could be calculated more precisely
                     principal_paid=0.0,
                     remaining_balance=round(d['balance'], 2),
                     debt_id=d['id'],
                     debt_name=d['name']
                 ))
-                d['current_payment'] = 0 # Reset for next loop
+                d['current_payment'] = 0 # Reset
 
     # Summaries
     summaries = []
@@ -263,12 +275,15 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
             debt_name=d['name'],
             total_interest_paid=round(d['interest_paid_total'], 2),
             payoff_months=d['months_to_payoff'] if d['is_paid'] else max_months,
-            payoff_date=d.get('payoff_date_iso', 'Has not paid off check budget')
+            payoff_date=d.get('payoff_date_iso', 'Dívida não foi quitada na simulação')
         ))
         if d['is_paid'] and d.get('payoff_date_iso'):
             dt = date.fromisoformat(d['payoff_date_iso'])
             if dt > final_date:
                 final_date = dt
+                
+    if not all(d['is_paid'] for d in sim_debts):
+        warnings.append("O plano de 30 anos (360 meses) não foi suficiente para quitar todas as dívidas com o orçamento atual.")
 
     return PaymentPlan(
         strategy=strategy,
@@ -276,6 +291,9 @@ def generate_payment_plan(user_id: str, strategy: str, monthly_budget: float) ->
         total_interest_paid=round(total_interest_global, 2),
         total_months=month_idx,
         payoff_date=final_date.isoformat(),
-        steps=steps, # Frontend can group by Month
-        debt_summaries=summaries
+        steps=steps,
+        debt_summaries=summaries,
+        has_default_warning=has_default_warning,
+        has_negative_amortization_warning=has_negative_amortization_warning,
+        warnings=warnings
     )

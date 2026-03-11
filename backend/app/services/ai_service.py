@@ -172,8 +172,8 @@ def chat_finance(
         accounts = account_service.list_accounts(user_id)
         acc_str = ",".join([f"{a.name}:{int(a.balance)}" for a in accounts])
 
-        # B. Transações (Últimas 10)
-        transactions = transaction_service.list_transactions(user_id, limit=10)
+        # B. Transações (Últimas 15 para manter o contexto leve)
+        transactions = transaction_service.list_transactions(user_id, limit=15)
         tx_list = []
         for t in transactions:
             d = t.date.strftime("%d")
@@ -183,11 +183,11 @@ def chat_finance(
             tx_list.append(f"{d},{n},{v},{c}")
         tx_str = "\n".join(tx_list)
 
-        # C. Totais Mês Atual
+        # C. Totais Mês Atual (Limitado a 50 transações recentes para evitar congelamento do BD a cada mensagem)
         now = datetime.now()
         start_month = datetime(now.year, now.month, 1)
         txs_month = transaction_service.list_transactions(
-            user_id, start_date=start_month
+            user_id, start_date=start_month, limit=50
         )
 
         cat_totals = {}
@@ -210,7 +210,7 @@ def chat_finance(
         sys_ctx = f"""
         Ctx:
         Accs:{acc_str}
-        Spent:{int(total_spent)}
+        Spent:{int(total_spent)} (Top 50 txs)
         Top:{json.dumps(top_cats, ensure_ascii=False)}
         LastTx:
         {tx_str}
@@ -223,6 +223,7 @@ def chat_finance(
             {sys_ctx}
             Role:Sarcastic.
             Task:Roast spending. PT-BR.
+            Output as valid JSON: {{"response": "your message here", "action": null}}
             """
         else:
             final_prompt = f"""
@@ -230,23 +231,44 @@ def chat_finance(
             Role:FinAssistant.
             Rules:
             1. PT-BR. Concise.
-            2. If 'graph' needed -> End with JSON: {{ "type": "chart", "data": ... }}
-            3. If 'add tx' needed -> End with JSON: {{ "type": "action", "action": "create_transaction", "data": {{...}} }}
+            2. To add a transaction, populate "action" with action type 'create_transaction' and necessary data.
+            3. Must output ONLY valid object JSON format.
+            Example JSON:
+            {{
+              "response": "Adicionei sua pizza no crédito!",
+              "action": {{
+                "type": "create_transaction",
+                "data": {{"amount": 50, "title": "Pizza", "category": "Alimentação", "account": "Nubank", "type": "expense"}}
+              }}
+            }}
+            If no action is needed, send "action": null.
             """
 
-        response = _call_with_retry(model, final_prompt)
-        text_response = response.text
+        response = _call_with_retry(
+            model,
+            final_prompt,
+        )
+        text_response = response.text.strip()
+        
+        # Limpar markdown ```json se presente
+        if "```json" in text_response:
+            text_response = text_response.replace("```json", "").replace("```", "").strip()
 
-        # 1.b Pre-fetch Categories for resolution
-        categories = category_service.list_categories(user_id)
+        # Parse the JSON response
+        try:
+            ai_data = json.loads(text_response)
+        except json.JSONDecodeError:
+            return response.text # Fallback to raw text if model ignores instructions
+        
+        final_message = ai_data.get("response", "Não entendi.")
+        action_data = ai_data.get("action")
+
+        # 1.b Pre-fetch Categories for resolution se houver ação
+        categories = category_service.list_categories(user_id) if action_data else []
 
         # 4. Action JSON Handling
-        import re
-
-        # Helper to process JSON string
-        def process_json_action(json_str):
+        def process_json_action(action_data):
             try:
-                action_data = json.loads(json_str)
                 if (
                     action_data.get("type") == "action"
                     and action_data.get("action") == "create_transaction"
@@ -313,37 +335,12 @@ def chat_finance(
                 pass
             return None
 
-        # Attempt 1: Json Code Block
-        json_match = re.search(r"```json\s*(\{[\s\S]*?\})\s*```", text_response)
-        if json_match:
-            result = process_json_action(json_match.group(1))
+        if action_data:
+            result = process_json_action(action_data)
             if result:
-                return result
+                return f"{final_message}\n\n{result}"
 
-        # Attempt 2: Valid JSON Object Structure (Loose)
-        # Buscar por algo que comece com { e termine com } e contenha "type": "action"
-        try:
-            # Find start of potential JSON (first '{')
-            start_idx = text_response.find("{")
-            if start_idx != -1:
-                # Try to extract valid JSON from start_idx
-                # Simple heuristic: find matching closing brace or just try parsing substrings?
-                # Better: regex for the specific known structure or simply find the LAST '}'
-                end_idx = text_response.rfind("}")
-                if end_idx != -1 and end_idx > start_idx:
-                    potential_json = text_response[start_idx : end_idx + 1]
-                    # Verify if it looks like our action
-                    if (
-                        '"type": "action"' in potential_json
-                        or '"type":"action"' in potential_json
-                    ):
-                        result = process_json_action(potential_json)
-                        if result:
-                            return result
-        except Exception:
-            pass
-
-        return text_response
+        return final_message
 
     except Exception as e:
         logger.error("Chat Error: %s", e)
@@ -372,21 +369,17 @@ def parse_receipt(
         
         Task: Extract Receipt Data (PT-BR).
         
-        Output Format: TOON (Single Line, Pipe Separated)
-        R[date|amount|title|category_id|payment_method|description]
-        
-        Fields:
-        - date: YYYY-MM-DD
-        - amount: Total Value (Float)
-        - title: Store Name (Ex: Casa Publicadora Brasileira)
-        - category_id: Best Match ID
-        - payment_method: credit_card, debit_card, pix, cash
-        - description: MUST FOLLOW THIS STRUCTURE: 
-          [Full Address]. Items: [Qty x Name (Price) - Discount]. 
-          Example: "Rua ABC, 123, SP. Items: 1x Livro A (R$10) - Desc R$2; 2x Caneta (R$5). Total Desc: R$2."
+        Return ONLY a valid JSON object with EXACTLY these keys:
+        - "date": YYYY-MM-DD (String)
+        - "amount": Total Value (Float)
+        - "title": Store Name (String)
+        - "category_id": Best Match ID from Ctx (String or null)
+        - "payment_method": credit_card, debit_card, pix, cash (String)
+        - "description": MUST FOLLOW THIS STRUCTURE: 
+          [Full Address]. Items: [(Qty)x Name (Price) - Discount]. 
+          Example: "Rua ABC, 123, SP. Items: 1x Livro (R$10); 2x Caneta (R$5)." (String)
 
-        Important: Capture the address from the header or footer. List ALL items found.
-        Return ONLY the TOON line starting with R[.
+        Important: Do not use markdown backticks in the response. Return raw JSON.
         """
 
         response = _call_with_retry(
@@ -394,27 +387,24 @@ def parse_receipt(
         )
         text = response.text.strip()
 
-        # Limpeza de markdown
-        if "```" in text:
-            text = text.replace("```", "").replace("toon", "").strip()
-            if "\n" in text:
-                text = text.split("\n")[0]
+        # Limpeza de markdown caso o modelo ignore a instrução
+        if "```json" in text:
+            text = text.replace("```json", "").replace("```", "").strip()
 
-        if text.startswith("R["):
-            content = text[2:-1]
-            # Usamos o split com limite para evitar que pipes dentro da descrição quebrem o código
-            parts = content.split("|")
-
-            if len(parts) >= 6:
-                return {
-                    "date": parts[0].strip(),
-                    "amount": float(parts[1].strip().replace(",", ".") or 0),
-                    "title": parts[2].strip(),
-                    "category_id": parts[3].strip(),
-                    "payment_method": parts[4].strip(),
-                    "description": parts[5].strip(),
-                    "items": [],  # Mantido para compatibilidade
-                }
+        try:
+            data = json.loads(text)
+            return {
+                "date": data.get("date"),
+                "amount": float(data.get("amount", 0)),
+                "title": data.get("title", "Desconhecido"),
+                "category_id": data.get("category_id"),
+                "payment_method": data.get("payment_method", "credit_card"),
+                "description": data.get("description", ""),
+                "items": [],  # Backward compatibility
+            }
+        except json.JSONDecodeError:
+            logger.warning("AI Parse Failed (Invalid JSON). Response: %s", text)
+            return None
 
         logger.warning("AI Parse Failed. Response: %s", text)
         return None
@@ -445,11 +435,10 @@ def generate_monthly_report(
             user_id, start_date=start_date, end_date=end_date
         )
 
-        # 2. Cache Key (Hash: User+Date+DataHash+Tier)
-        # Se mudar o tier, muda o modelo, então pode querer gerar novo relatório melhor/pior.
-        tx_hash_str = "".join([f"{t.id}{t.amount}" for t in txs])
+        # 2. Cache Key (Hash rápido: User+Date+Length+Sum+Tier)
+        total_amount = sum(t.amount for t in txs)
         full_hash = hashlib.md5(
-            f"{user_id}{month}{year}{tx_hash_str}{tier}".encode()
+            f"{user_id}{month}{year}{len(txs)}{total_amount:.2f}{tier}".encode()
         ).hexdigest()
 
         db = get_db()

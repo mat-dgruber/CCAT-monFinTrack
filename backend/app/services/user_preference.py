@@ -2,7 +2,7 @@ import os
 from fastapi import UploadFile
 from app.core.database import get_db
 from app.schemas.user_preference import UserPreference, UserPreferenceCreate
-from datetime import datetime
+from datetime import datetime, timezone
 
 COLLECTION_NAME = "user_preferences"
 
@@ -17,7 +17,7 @@ def get_preferences(user_id: str) -> UserPreference:
     # Return defaults if not exists
     default_pref = UserPreference(
         user_id=user_id,
-        updated_at=datetime.now(),
+        updated_at=datetime.now(timezone.utc),
         version=1
     )
     # Save default to DB so we have a record
@@ -96,6 +96,6 @@ def reset_account(user_id: str):
     account_service.delete_all_accounts(user_id)
     
     # 6. Reset Preferences (Optional - keeping it simple for now, maybe just update timestamp)
-    update_preferences(user_id, UserPreferenceCreate(updated_at=datetime.now()))
+    update_preferences(user_id, UserPreferenceCreate(updated_at=datetime.now(timezone.utc)))
     
     return {"status": "success", "message": "Account reset successfully"}

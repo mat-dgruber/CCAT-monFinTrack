@@ -179,7 +179,7 @@ def pay_invoice(user_id: str, invoice_data: dict):
     if date_str:
         try:
              payment_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-        except:
+        except (ValueError, TypeError):
              pass
 
     # Tenta achar categoria "Fatura Cartão" oculta

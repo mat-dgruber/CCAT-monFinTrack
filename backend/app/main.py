@@ -4,7 +4,7 @@ from app.api.routes import router as api_router
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.core.logger import get_logger
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded

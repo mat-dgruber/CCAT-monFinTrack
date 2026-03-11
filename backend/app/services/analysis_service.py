@@ -46,7 +46,7 @@ class AnalysisService:
 
             try:
                 stdev = statistics.stdev(amounts)
-            except:
+            except statistics.StatisticsError:
                 stdev = 0
 
             # Limiar: Se desvio for muito pequeno (< 10% da media ou < 5 reais),
@@ -82,7 +82,7 @@ class AnalysisService:
             from app.services import recurrence as recurrence_service
 
             active_recs = recurrence_service.list_recurrences(user_id, active_only=True)
-            active_titles = {rec.title.lower().strip() for rec in active_recs}
+            active_titles = {rec.name.lower().strip() for rec in active_recs}
 
             # 2. Busca transações dos últimos 90 dias
             cutoff = datetime.now() - timedelta(days=90)
@@ -119,7 +119,7 @@ class AnalysisService:
                     avg_price = statistics.mean(amounts)
                     try:
                         stdev = statistics.stdev(amounts)
-                    except:
+                    except statistics.StatisticsError:
                         stdev = 0
 
                     # Consistência de Preço: Variação baixa (CV < 10%)

@@ -100,28 +100,9 @@ def create_new_transaction(
     transaction: TransactionCreate,
     current_user: dict = Depends(get_current_user),
 ):
-    # 1. Create Transaction (Unified)
-    created_txs = transaction_service.create_unified_transaction(
+    return transaction_service.create_unified_transaction(
         transaction, current_user["uid"]
     )
-
-    # 2. Analyze for Anomalies (Zero Cost)
-    # Only analyze the first transaction (if unified, usually the main one)
-    if created_txs and transaction.type == "expense":
-        from app.services.analysis_service import analysis_service
-
-        warning = analysis_service.analyze_transaction(
-            user_id=current_user["uid"],
-            amount=transaction.amount,
-            category_id=transaction.category_id,
-        )
-        if warning:
-            # Inject warning into the response object
-            # Pydantic models are immutable-ish, but since we are returning the object/dict, we can set it.
-            # But created_txs are Transaction objects.
-            created_txs[0].warning = warning
-
-    return created_txs
 
 
 @router.get("/transactions")
@@ -150,8 +131,13 @@ def update_transaction(
     request: Request,
     transaction_id: str,
     transaction: TransactionUpdate,
+    scope: str = "single",
     current_user: dict = Depends(get_current_user),
 ):
+    if scope != "single":
+        return transaction_service.update_installment_group(
+            transaction_id, transaction, current_user["uid"], scope
+        )[0]
     return transaction_service.update_transaction(
         transaction_id, transaction, current_user["uid"]
     )
@@ -169,9 +155,12 @@ def read_upcoming_transactions(
 def delete_transaction(
     request: Request,
     transaction_id: str,
+    scope: str = "all",
     current_user: dict = Depends(get_current_user),
 ):
-    return transaction_service.delete_transaction(transaction_id, current_user["uid"])
+    return transaction_service.delete_transaction(
+        transaction_id, current_user["uid"], scope
+    )
 
 
 # --- DÍZIMOS ---
@@ -338,8 +327,10 @@ def skip_recurrence(
 
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Erro interno ao pular recorrência")
 
 
 from app.api import analysis, mfa_routes

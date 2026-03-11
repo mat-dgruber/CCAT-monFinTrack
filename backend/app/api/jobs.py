@@ -17,19 +17,18 @@ CRON_SECRET = os.getenv("CRON_SECRET", "super-secret-cron-key")
 
 
 @router.post("/weekly-report")
-async def trigger_weekly_report(
-    background_tasks: BackgroundTasks, x_cron_secret: str = Header(None)
-):
+async def trigger_weekly_report(x_cron_secret: str = Header(None)):
     """
     Endpoint chamado pelo Cron Job (GitHub Actions) toda semana.
     """
     if x_cron_secret != CRON_SECRET:
         raise HTTPException(status_code=401, detail="Invalid Cron Secret")
 
-    # Iniciar processamento em background para não travar a request
-    background_tasks.add_task(process_weekly_reports)
+    # Executar imediatamente de forma síncrona para que ambientes Serverless
+    # não pausem a CPU enquanto os envios acontecem em background.
+    await process_weekly_reports()
 
-    return {"message": "Weekly report processing started"}
+    return {"message": "Weekly report processing completed"}
 
 
 async def process_weekly_reports():
@@ -131,8 +130,10 @@ async def process_weekly_reports():
                     )
 
                 count += 1
+                logger.debug("Relatório enviado e push notificado para %s", email)
 
         except Exception as e:
             logger.error("Erro ao processar relatório para %s: %s", email, e)
+            continue  # Garante que o loop não pare por conta do erro neste usuário
 
-    logger.info("Relatórios semanais enviados: %d", count)
+    logger.info("Relatórios semanais enviados com sucesso para %d usuários.", count)

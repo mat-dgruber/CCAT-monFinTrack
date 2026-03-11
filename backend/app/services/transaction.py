@@ -497,7 +497,11 @@ def update_transaction(
     )
 
 
-def delete_transaction(transaction_id: str, user_id: str):
+def delete_transaction(transaction_id: str, user_id: str, scope: str = "all"):
+    """
+    Deleta transação com suporte a escopo para parcelamentos.
+    scope: 'single' = apenas esta parcela, 'future' = esta + futuras, 'all' = todo o grupo.
+    """
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
     doc = doc_ref.get()
@@ -510,7 +514,9 @@ def delete_transaction(transaction_id: str, user_id: str):
     installment_group_id = data.get("installment_group_id")
 
     # Lógica de Exclusão em Grupo (Se for parcelado)
-    if installment_group_id:
+    if installment_group_id and scope != "single":
+        current_installment_number = data.get("installment_number", 1)
+
         # Busca todas as parcelas do grupo
         group_query = (
             db.collection(COLLECTION_NAME)
@@ -522,6 +528,12 @@ def delete_transaction(transaction_id: str, user_id: str):
         deleted_count = 0
         for t in group_query:
             t_data = t.to_dict()
+            t_installment_number = t_data.get("installment_number", 1)
+
+            # Se scope=future, pula parcelas anteriores à atual
+            if scope == "future" and t_installment_number < current_installment_number:
+                continue
+
             t_id = t.id
             t_amount = t_data.get("amount", 0)
             t_type = t_data.get("type")
@@ -553,7 +565,7 @@ def delete_transaction(transaction_id: str, user_id: str):
             "message": f"Deleted {deleted_count} transactions from group",
         }
 
-    # Lógica Simples (Não é parcelado)
+    # Lógica Simples (Não é parcelado OU scope == "single")
     amount = data.get("amount", 0)
     t_type = data.get("type")
     account_id = data.get("account_id")
@@ -577,17 +589,119 @@ def delete_transaction(transaction_id: str, user_id: str):
     return {"status": "success", "message": "Transaction deleted"}
 
 
+def update_installment_group(
+    transaction_id: str, transaction_in: TransactionUpdate, user_id: str, scope: str = "single"
+) -> List[Transaction]:
+    """
+    Atualiza parcelas com suporte a escopo.
+    scope: 'single' = apenas esta, 'future' = esta + futuras, 'all' = todo o grupo.
+    """
+    db = get_db()
+
+    # Primeiro, atualiza a parcela principal
+    updated_main = update_transaction(transaction_id, transaction_in, user_id)
+
+    if scope == "single":
+        return [updated_main]
+
+    main_data = db.collection(COLLECTION_NAME).document(transaction_id).get().to_dict()
+    installment_group_id = main_data.get("installment_group_id")
+
+    if not installment_group_id:
+        return [updated_main]
+
+    current_installment_number = main_data.get("installment_number", 1)
+
+    # Campos seguros para propagar em lote (não propagar data, status, payment_date)
+    safe_fields = {}
+    update_data = transaction_in.model_dump(exclude_unset=True, mode="json")
+    propagatable = ["category_id", "account_id", "payment_method", "title", "credit_card_id", "amount"]
+    for field in propagatable:
+        if field in update_data:
+            safe_fields[field] = update_data[field]
+
+    if not safe_fields:
+        return [updated_main]
+
+    # Busca as outras parcelas do grupo
+    group_query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where("installment_group_id", "==", installment_group_id)
+        .stream()
+    )
+
+    updated_transactions = [updated_main]
+
+    for t in group_query:
+        t_id = t.id
+        if t_id == transaction_id:
+            continue  # Já atualizada acima
+
+        t_data = t.to_dict()
+        t_installment_number = t_data.get("installment_number", 1)
+
+        # Se scope=future, pula parcelas anteriores à atual
+        if scope == "future" and t_installment_number < current_installment_number:
+            continue
+
+        # Monta update específico para esta parcela
+        patch = dict(safe_fields)
+
+        # Se título mudou, preserva o sufixo "(N/Total)"
+        if "title" in patch:
+            total = t_data.get("total_installments", 1)
+            base_title = patch["title"]
+            # Remove sufixo existente se houver
+            if "(" in base_title and "/" in base_title:
+                base_title = base_title.rsplit("(", 1)[0].strip()
+            patch["title"] = f"{base_title} ({t_installment_number}/{total})"
+            patch["description"] = patch["title"]
+
+        # Aplica atualização de saldo se necessário
+        balance_fields = ["amount", "account_id", "credit_card_id"]
+        balance_changed = any(f in patch for f in balance_fields)
+
+        if balance_changed:
+            old_status = t_data.get("status", TransactionStatus.PAID)
+            old_credit_card = t_data.get("credit_card_id")
+
+            # Reverte saldo antigo se pago e sem cartão
+            if old_status == TransactionStatus.PAID and not old_credit_card:
+                _update_account_balance(
+                    db,
+                    t_data.get("account_id"),
+                    t_data.get("amount", 0),
+                    t_data.get("type"),
+                    user_id,
+                    revert=True,
+                    destination_account_id=t_data.get("destination_account_id"),
+                )
+
+            # Aplica novo saldo
+            new_data = {**t_data, **patch}
+            new_credit_card = new_data.get("credit_card_id")
+            if old_status == TransactionStatus.PAID and not new_credit_card:
+                _update_account_balance(
+                    db,
+                    new_data.get("account_id"),
+                    new_data.get("amount", 0),
+                    new_data.get("type"),
+                    user_id,
+                    revert=False,
+                    destination_account_id=new_data.get("destination_account_id"),
+                )
+
+        db.collection(COLLECTION_NAME).document(t_id).update(patch)
+
+    return updated_transactions
+
+
 def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction]:
     db = get_db()
     today = datetime.now(timezone.utc).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
-
-    # Query: user_id == user AND status == pending AND date >= today
-    # Firestore requires composite index for this.
-    # Simpler approach: Query pending transactions, filter by date in python if dataset is small,
-    # OR query by date >= today and filter status.
-    # Given we want "upcoming", date is the most important sort.
 
     query = (
         db.collection(COLLECTION_NAME)
@@ -600,45 +714,48 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
 
     docs = query.stream()
 
+    # Batch preload to avoid N+1 queries
+    all_categories = category_service.list_all_categories_flat(user_id)
+    all_accounts = account_service.list_accounts(user_id)
+
+    cat_map: dict[str, Category] = {c.id: c for c in all_categories}
+    acc_map: dict[str, Account] = {a.id: a for a in all_accounts}
+
+    deleted_category = Category(
+        id="deleted",
+        name="?",
+        icon="pi pi-question",
+        color="#ccc",
+        is_custom=False,
+        type="expense",
+        user_id=user_id,
+    )
+    deleted_account = Account(
+        id="deleted",
+        name="?",
+        type="checking",
+        balance=0,
+        icon="",
+        color="",
+        user_id=user_id,
+    )
+
     transactions = []
     for t in docs:
         data = t.to_dict()
 
         cat_id = data.get("category_id")
-        category = category_service.get_category(cat_id, user_id)
-        if not category:
-            category = Category(
-                id="deleted",
-                name="?",
-                icon="pi pi-question",
-                color="#ccc",
-                is_custom=False,
-                type="expense",
-                user_id=user_id,
-            )
+        category = cat_map.get(cat_id, deleted_category) if cat_id else deleted_category
 
         acc_id = data.get("account_id")
-        account = account_service.get_account(acc_id, user_id)
-        if not account:
-            account = Account(
-                id="deleted",
-                name="?",
-                type="checking",
-                balance=0,
-                icon="",
-                color="",
-                user_id=user_id,
-            )
+        account = acc_map.get(acc_id, deleted_account) if acc_id else deleted_account
 
         if "title" not in data and "description" in data:
             data["title"] = data.pop("description")
             data["description"] = None
 
-        # Helper to get destination account if exists
         dest_acc_id = data.get("destination_account_id")
-        destination_account = None
-        if dest_acc_id:
-            destination_account = account_service.get_account(dest_acc_id, user_id)
+        destination_account = acc_map.get(dest_acc_id) if dest_acc_id else None
 
         # Sanitize boolean fields for Pydantic
         if data.get("is_auto_pay") is None:
@@ -709,7 +826,7 @@ def get_first_transaction_date(user_id: str) -> Optional[datetime]:
     if isinstance(first_date, str):
         try:
             first_date = datetime.fromisoformat(first_date.replace("Z", "+00:00"))
-        except:
+        except (ValueError, TypeError):
             return None
 
     if isinstance(first_date, datetime):

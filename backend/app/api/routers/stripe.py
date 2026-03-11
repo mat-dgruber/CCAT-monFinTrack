@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, Body, Header
+from fastapi import APIRouter, Depends, Request, HTTPException, Header
 from app.services.stripe_service import StripeService
 from app.schemas.stripe import CheckoutSessionCreate, PortalSessionCreate, StripeConfigResponse
 from app.api.routes import get_current_user
@@ -25,8 +25,10 @@ async def create_checkout_session(
             success_url=data.success_url,
             cancel_url=data.cancel_url
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/create-portal-session")
 async def create_portal_session(
@@ -39,13 +41,17 @@ async def create_portal_session(
             user_id=user_id,
             return_url=data.return_url
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
     try:
         payload = await request.body()
         return await stripe_service.handle_webhook(payload, stripe_signature)
+    except HTTPException:
+        raise
     except Exception as e:
          raise HTTPException(status_code=400, detail=str(e))

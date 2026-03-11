@@ -14,11 +14,12 @@ def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
     
     cat = category_service.get_category(budget_in.category_id, user_id)
     
-    # Validate Category Type
-    if cat.type != CategoryType.EXPENSE:
-        raise HTTPException(status_code=400, detail="Budgets can only be created for expense categories")
+    # Validar Duplicidade
+    existing = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).where("category_id", "==", budget_in.category_id).limit(1).get()
+    if existing:
+        raise HTTPException(status_code=400, detail="A budget already exists for this category")
 
-    # Em produção, verificaríamos se a categoria pertence ao user_id aqui também
+    # Validar Tipo de Categoria
 
     data = budget_in.model_dump()
     data['user_id'] = user_id
@@ -67,34 +68,69 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
     budget_docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
     budgets = []
     
-    # 2. Pegar despesas DO USUÁRIO
-    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
-    all_transactions = transactions_query.stream()
-
-    filtered_transactions = []
+    # 2. Pegar despesas DO USUÁRIO filtradas por data
     if month and year:
         start_date, end_date = get_month_range(month, year)
-        for t in all_transactions:
-            t_data = t.to_dict()
-            transaction_date = t_data.get("date")
-            
-            # Ensure transaction_date is datetime
-            if isinstance(transaction_date, str):
-                try:
-                    transaction_date = datetime.fromisoformat(transaction_date.replace('Z', '+00:00'))
-                except ValueError:
-                    pass
-
-            # Verificar se a data é naive e converter se necessário (hack de segurança)
-            if transaction_date and isinstance(transaction_date, datetime) and transaction_date.tzinfo is None:
-                 transaction_date = transaction_date.replace(tzinfo=timezone.utc)
-
-            if t_data.get("type") == "expense" and transaction_date and start_date <= transaction_date <= end_date:
-                filtered_transactions.append(t)
+        transactions_query = (
+            db.collection("transactions")
+            .where("user_id", "==", user_id)
+            .where("type", "==", "expense")
+            .where("date", ">=", start_date)
+            .where("date", "<=", end_date)
+        )
     else:
-        for t in all_transactions:
-            if t.to_dict().get("type") == "expense":
-                filtered_transactions.append(t)
+        transactions_query = (
+            db.collection("transactions")
+            .where("user_id", "==", user_id)
+            .where("type", "==", "expense")
+        )
+
+    try:
+        all_transactions = transactions_query.stream()
+        filtered_transactions = list(all_transactions)
+    except Exception as e:
+        # Fallback for missing index or other query errors
+        # If it's the specific index error (status 400), we fallback to a simpler query
+        # and filter by type manually.
+        from app.core.logger import get_logger
+        logger = get_logger(__name__)
+        logger.warning(f"Optimized budget query failed (likely missing index): {e}. Falling back to memory filtering.")
+
+        # Simple query: just user_id
+        fallback_query = db.collection("transactions").where("user_id", "==", user_id)
+        all_txs_stream = fallback_query.stream()
+
+        filtered_transactions = []
+        for doc in all_txs_stream:
+            t_data = doc.to_dict()
+            t_type = t_data.get("type")
+            t_date = t_data.get("date")
+
+            # Filter by type
+            if t_type != "expense":
+                continue
+
+            # Filter by date if range is provided
+            if month and year:
+                if not t_date:
+                    continue
+                # Normalize t_date
+                if isinstance(t_date, str):
+                    try:
+                        t_date = datetime.fromisoformat(t_date.replace("Z", "+00:00"))
+                    except Exception:
+                        continue
+
+                if t_date.tzinfo is None:
+                    t_date = t_date.replace(tzinfo=timezone.utc)
+
+                if not (start_date <= t_date <= end_date):
+                    continue
+
+            # If we reach here, it's a match. We only need the stream-compatible doc-like objects
+            # but since we are already evaluating, we can just store the data or the doc itself.
+            # To maintain compatibility with the rest of the code that calls doc.to_dict():
+            filtered_transactions.append(doc)
         
     spending_map = {} 
     
@@ -144,7 +180,7 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
             "category": cat_obj, # Pydantic model expects obj, but dict works if schema allows or if we cast.
             "amount": limit,
             "spent": spent,
-            "percentage": min(percentage, 100),
+            "percentage": percentage,
             "is_over_budget": spent > limit
         })
         
@@ -156,8 +192,7 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
     doc = doc_ref.get()
     
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
-        # Retornamos erro ou None, aqui vou levantar erro genérico para simplificar
-        raise Exception("Budget not found or access denied")
+        raise HTTPException(status_code=404, detail="Budget not found or access denied")
     
     cat = category_service.get_category(budget_in.category_id, user_id)
     
@@ -177,7 +212,7 @@ def delete_budget(budget_id: str, user_id: str):
     doc = doc_ref.get()
     
     if not doc.exists or doc.to_dict().get('user_id') != user_id:
-        raise Exception("Budget not found")
+        raise HTTPException(status_code=404, detail="Budget not found")
 
     doc_ref.delete()
     return {"status": "success"}

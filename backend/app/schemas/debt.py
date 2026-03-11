@@ -125,3 +125,6 @@ class PaymentPlan(BaseModel):
     payoff_date: str
     steps: List[PaymentStep]
     debt_summaries: List[DebtPayoffSummary]
+    has_default_warning: bool = False
+    has_negative_amortization_warning: bool = False
+    warnings: List[str] = []

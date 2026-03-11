@@ -3,7 +3,6 @@ import os
 import logging
 from fastapi import HTTPException
 from app.core.database import get_db
-from google.cloud import firestore
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -48,18 +47,14 @@ class StripeService:
                 user_data = user_doc.to_dict()
                 stripe_customer_id = user_data.get("stripe_customer_id")
 
-            # Create Customer if doesn't exist (or let Checkout create it if we don't pass it, 
-            # but better to have it linked)
             customer_kwargs = {}
             if stripe_customer_id:
                 customer_kwargs["customer"] = stripe_customer_id
             else:
-                 # We can let checkout create it, or create it upfront. 
-                 # Letting checkout create it is easier, but we need to capture it in webhook.
-                 # For now, we'll suggest creating a new customer in Checkout if one doesn't exist
-                 # by NOT passing 'customer'.
-                 # Actually, passing 'client_reference_id' is crucial for webhook matching if no customer yet.
-                 pass
+                 customer = stripe.Customer.create(metadata={"user_id": user_id})
+                 stripe_customer_id = customer.id
+                 user_ref.set({"stripe_customer_id": stripe_customer_id}, merge=True)
+                 customer_kwargs["customer"] = stripe_customer_id
 
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
@@ -123,11 +118,10 @@ class StripeService:
             # Invalid signature
             raise HTTPException(status_code=400, detail="Invalid signature")
 
-        # Handle the event
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
             await self._handle_checkout_completed(session)
-        elif event["type"] == "customer.subscription.updated":
+        elif event["type"] in ["customer.subscription.updated", "customer.subscription.created"]:
             subscription = event["data"]["object"]
             await self._handle_subscription_updated(subscription)
         elif event["type"] == "customer.subscription.deleted":
@@ -150,36 +144,59 @@ class StripeService:
             }, merge=True)
             logger.info(f"Linked user {user_id} to customer {customer_id}")
 
+        # Checkout completed means payment was successful.
+        # Retrieve the updated subscription to ensure we capture the 'active' status and update the tier correctly.
+        if subscription_id:
+            try:
+                subscription = stripe.Subscription.retrieve(subscription_id)
+                await self._handle_subscription_updated(subscription)
+            except Exception as e:
+                logger.error(f"Failed to retrieve subscription {subscription_id} after checkout: {e}")
+
     async def _handle_subscription_updated(self, subscription):
         customer_id = subscription.get("customer")
         status = subscription.get("status")
         current_period_end = subscription.get("current_period_end")
-        
-        # Determine tier based on price ID (reverse lookup or metadata)
-        # Assuming we store metadata or infer from price
-        plan_id = subscription["items"]["data"][0]["price"]["id"]
-        tier = self._infer_tier_from_price(plan_id)
-        
+
+        # Safely extract price ID from subscription items
+        try:
+            items_data = subscription.get("items", {}).get("data", [])
+            if not items_data:
+                logger.warning(f"Subscription for customer {customer_id} has no items, defaulting to free")
+                tier = "free"
+            else:
+                plan_id = items_data[0]["price"]["id"]
+                tier = self._infer_tier_from_price(plan_id)
+        except (KeyError, IndexError, TypeError) as e:
+            logger.error(f"Failed to extract price from subscription: {e}")
+            tier = "free"
+
         # Find user by customer_id
-        # NOTE: This requires a query, which needs an index on 'stripe_customer_id'
         users_ref = self.db.collection("users").where("stripe_customer_id", "==", customer_id).limit(1)
         docs = list(users_ref.stream())
-        
+
         if docs:
             user_ref = docs[0].reference
+            user_id = user_ref.id
+            effective_tier = tier if status in ["active", "trialing"] else "free"
             update_data = {
                 "subscription_status": status,
                 "current_period_end": current_period_end,
-                "subscription_tier": tier if status in ["active", "trialing"] else "free" 
+                "subscription_tier": effective_tier,
             }
-            # Only downgrade if canceled/unpaid, otherwise keep tier
-            if status not in ["active", "trialing"]:
-                 update_data["subscription_tier"] = "free"
-            else:
-                 update_data["subscription_tier"] = tier
-
             user_ref.set(update_data, merge=True)
-            logger.info(f"Updated subscription for customer {customer_id} to status {status}")
+
+            # Update user_preferences (consumed by frontend with version-based cache)
+            prefs_ref = self.db.collection("user_preferences").document(user_id)
+            prefs_doc = prefs_ref.get()
+            if prefs_doc.exists:
+                current_version = prefs_doc.to_dict().get("version", 0)
+                prefs_ref.set({
+                    "subscription_tier": effective_tier,
+                    "version": current_version + 1,
+                }, merge=True)
+
+            logger.info(f"Updated subscription for customer {customer_id} to tier={effective_tier} status={status}")
 
     async def _handle_subscription_deleted(self, subscription):
         customer_id = subscription.get("customer")
@@ -188,10 +205,21 @@ class StripeService:
         
         if docs:
             user_ref = docs[0].reference
+            user_id = user_ref.id
             user_ref.set({
                 "subscription_status": "canceled",
                 "subscription_tier": "free"
             }, merge=True)
+
+            prefs_ref = self.db.collection("user_preferences").document(user_id)
+            prefs_doc = prefs_ref.get()
+            if prefs_doc.exists:
+                current_version = prefs_doc.to_dict().get("version", 0)
+                prefs_ref.set({
+                    "subscription_tier": "free",
+                    "version": current_version + 1
+                }, merge=True)
+            
             logger.info(f"Canceled subscription for customer {customer_id}")
 
     def _infer_tier_from_price(self, price_id: str) -> str:

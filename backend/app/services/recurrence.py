@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from app.core.database import get_db
@@ -16,7 +16,7 @@ def create_recurrence(recurrence_in: RecurrenceCreate, user_id: str) -> Recurren
 
     data = recurrence_in.model_dump()
     data["user_id"] = user_id
-    data["created_at"] = datetime.now()
+    data["created_at"] = datetime.now(timezone.utc)
     data["last_processed_at"] = None
     data["cancellation_date"] = None
 
@@ -92,7 +92,7 @@ def update_recurrence(
     # If scope is "future", we cancel the current one and create a new one
     if scope == "future":
         # 1. Cancel current recurrence
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         doc_ref.update({"active": False, "cancellation_date": now.date().isoformat()})
 
         # 2. Create new recurrence with updated data
@@ -163,7 +163,7 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
         raise HTTPException(status_code=404, detail="Recurrence not found")
 
     doc_ref.update(
-        {"active": False, "cancellation_date": datetime.now().date().isoformat()}
+        {"active": False, "cancellation_date": datetime.now(timezone.utc).date().isoformat()}
     )
 
     updated_doc = doc_ref.get()
