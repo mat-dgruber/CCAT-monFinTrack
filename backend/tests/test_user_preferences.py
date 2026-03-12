@@ -5,8 +5,6 @@ Uses isolated mocks to avoid conftest chain pollution.
 
 from unittest.mock import MagicMock, patch
 
-from app.schemas.user_preference import UserPreference
-
 
 def test_get_preferences_default():
     """When no preference doc exists, defaults are returned."""
@@ -100,14 +98,14 @@ def test_update_preferences():
 
 
 def test_upload_avatar():
-    """Avatar upload calls Firebase Storage and returns public URL."""
+    """Avatar upload calls Firebase Storage and returns signed URL."""
     with patch("app.services.user_preference.storage") as mock_storage:
         mock_bucket = MagicMock()
         mock_storage.bucket.return_value = mock_bucket
 
         mock_blob = MagicMock()
-        mock_blob.public_url = (
-            "https://storage.googleapis.com/profile_images/test_user.jpg"
+        mock_blob.generate_signed_url.return_value = (
+            "https://storage.googleapis.com/profile_images/test_user.jpg?signed=true"
         )
         mock_bucket.blob.return_value = mock_blob
 
@@ -120,6 +118,6 @@ def test_upload_avatar():
 
         result = save_profile_image("test_user", mock_file)
 
-        assert "test_user" in result
+        assert "signed=true" in result
         mock_blob.upload_from_file.assert_called_once()
-        mock_blob.make_public.assert_called_once()
+        mock_blob.generate_signed_url.assert_called_once()
