@@ -9,7 +9,7 @@ import { InvoiceSummary, PayInvoicePayload } from '../models/invoice.model';
 })
 export class InvoiceService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/invoices`;
+  private apiUrl = `${environment.apiUrl}/invoices/`;
 
   getInvoices(): Observable<InvoiceSummary[]> {
     return this.http.get<InvoiceSummary[]>(this.apiUrl);

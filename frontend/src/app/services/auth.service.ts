@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { User, UserCredential } from 'firebase/auth';
 import { from, switchMap, ReplaySubject, firstValueFrom } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { environment } from '../../environments/environment';
 import { FirebaseWrapperService } from './firebase-wrapper.service';
 
@@ -16,6 +17,7 @@ export class AuthService {
 
   currentUser = signal<User | null>(null);
   isAuthResolved = signal<boolean>(false);
+  isAuthResolved$ = toObservable(this.isAuthResolved);
 
   // Use ReplaySubject(1) to hold the latest auth state and emit immediately to new subscribers
   private authStateSubject = new ReplaySubject<User | null>(1);
