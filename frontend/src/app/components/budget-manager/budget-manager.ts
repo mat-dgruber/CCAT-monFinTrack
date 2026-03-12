@@ -10,6 +10,8 @@ import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 import { BudgetService } from '../../services/budget.service';
 import { CategoryService } from '../../services/category.service';
@@ -25,7 +27,8 @@ import { SkeletonModule } from 'primeng/skeleton';
  standalone: true,
  imports: [
  CommonModule, ReactiveFormsModule, ProgressBarModule, ButtonModule,
- DialogModule, InputNumberModule, SelectModule, CurrencyPipe, SkeletonModule
+ DialogModule, InputNumberModule, SelectModule, CurrencyPipe, SkeletonModule,
+ IconFieldModule, InputIconModule
  ],
  providers: [CurrencyPipe],
  templateUrl: './budget-manager.html',

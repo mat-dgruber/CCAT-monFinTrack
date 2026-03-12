@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.database import get_db
 from app.core.date_utils import get_month_range
@@ -84,7 +85,7 @@ def get_dashboard_data(
     inv_query = (
         db.collection("categories")
         .where("user_id", "==", user_id)
-        .where("name", "==", "Fatura Cartão")
+        .where(filter=FieldFilter("name", "==", "Fatura Cartão"))
         .limit(1)
         .stream()
     )

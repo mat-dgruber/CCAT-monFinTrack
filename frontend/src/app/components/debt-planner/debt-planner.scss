@@ -1,6 +1,6 @@
 :host {
- display: block;
- font-family: 'Inter', sans-serif;
+  display: block;
+  font-family: "Inter", sans-serif;
 }
 
 /* Base Card Revamp */
@@ -15,94 +15,106 @@
 
 /* Tabs Customization */
 ::ng-deep .p-tabs {
- .p-tablist {
- border-bottom: 1px solid var(--surface-border, rgba(255,255,255,0.08));
- margin-bottom: 1.5rem;
- background: transparent;
- }
+  .p-tablist {
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+    margin-bottom: 1.5rem;
+    background: transparent;
+  }
 
- .p-tab {
- font-weight: 600;
- letter-spacing: 0.5px;
- padding: 1rem 1.5rem;
- border-bottom: 3px solid transparent;
- transition: all 0.2s ease;
- opacity: 0.7;
- color: var(--text-color-secondary);
+  .p-tab {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 1rem 1.5rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+    color: var(--text-color-secondary);
 
- &:hover {
- opacity: 1;
- background: rgba(255,255,255,0.03);
- color: var(--text-color);
- }
+    &:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-color);
+    }
 
- &[aria-selected="true"] {
- opacity: 1;
- color: var(--primary-color, #60a5fa);
- border-bottom-color: var(--primary-color, #60a5fa);
- }
- }
+    &[aria-selected="true"] {
+      opacity: 1;
+      color: var(--primary-color, #60a5fa);
+      border-bottom-color: var(--primary-color, #60a5fa);
+    }
+  }
 }
 
 /* Table Enhancements */
 ::ng-deep .p-datatable {
- .p-datatable-header {
- background: transparent;
- border: none;
- padding: 1rem 0;
- }
+  .p-datatable-header {
+    background: transparent;
+    border: none;
+    padding: 1rem 0;
+  }
 
- .p-datatable-thead > tr > th {
- background: rgba(255,255,255,0.03);
- color: var(--text-color-secondary);
- font-size: 0.85rem;
- text-transform: uppercase;
- letter-spacing: 0.05em;
- border-bottom: 1px solid var(--surface-border);
- padding: 1rem;
- }
+  .p-datatable-thead > tr > th {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--surface-border);
+    padding: 1rem;
+  }
 
- .p-datatable-tbody > tr {
- background: transparent;
- transition: background-color 0.2s;
- border-bottom: 1px solid var(--surface-border);
- color: var(--text-color);
+  .p-datatable-tbody > tr {
+    background: transparent;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid var(--surface-border);
+    color: var(--text-color);
 
- &:hover {
- background: rgba(255,255,255,0.02);
- }
+    &:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
 
- > td {
- padding: 1.25rem 1rem;
- border: none;
- }
- }
+    > td {
+      padding: 1.25rem 1rem;
+      border: none;
+    }
+  }
 }
 
 /* Badge / Pills - Dark Mode Optimized */
 .badge-soft {
- padding: 0.25rem 0.75rem;
- border-radius: 9999px;
- font-size: 0.75rem;
- font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
 
- &.blue { background: rgba(96, 165, 250, 0.15); color: #93c5fd; }
- &.purple { background: rgba(192, 132, 252, 0.15); color: #d8b4fe; }
- &.green { background: rgba(74, 222, 128, 0.15); color: #86efac; }
- &.orange { background: rgba(251, 146, 60, 0.15); color: #fdba74; }
+  &.blue {
+    background: rgba(96, 165, 250, 0.15);
+    color: #93c5fd;
+  }
+  &.purple {
+    background: rgba(192, 132, 252, 0.15);
+    color: #d8b4fe;
+  }
+  &.green {
+    background: rgba(74, 222, 128, 0.15);
+    color: #86efac;
+  }
+  &.orange {
+    background: rgba(251, 146, 60, 0.15);
+    color: #fdba74;
+  }
 }
 
 /* Dialog & Form */
 .p-field {
- margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 label {
- display: block;
- margin-bottom: 0.5rem;
- font-weight: 500;
- color: var(--text-color-secondary);
- font-size: 0.9rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
 }
 
 /* Stats Cards */
@@ -111,11 +123,10 @@ label {
 
 /* Empty State */
 .empty-state {
- text-align: center;
- padding: 4rem 2rem;
- color: var(--text-color-secondary);
- }
-
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-color-secondary);
+}
 
 /* Upload Zone & Scanner Animations */
 .upload-zone {
@@ -131,7 +142,7 @@ label {
     &:hover {
       background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%235d8a8c' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
       transform: translateY(-4px);
-      box-shadow: 0 20px 40px -20px rgba(0,0,0,0.1);
+      box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.1);
     }
   }
 
@@ -143,73 +154,133 @@ label {
 
 /* Scanner Beam Effect */
 @keyframes scan-beam {
- 0% { top: 0%; opacity: 0; }
- 15% { opacity: 1; }
- 85% { opacity: 1; }
- 100% { top: 100%; opacity: 0; }
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
 }
 
 @keyframes scan-line {
- 0% { transform: translateY(-100%); }
- 100% { transform: translateY(400px); }
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(400px);
+  }
 }
 
 .scanner-overlay {
- position: absolute;
- top: 0;
- left: 0;
- right: 0;
- bottom: 0;
- background: linear-gradient(to bottom,
- rgba(var(--accent-rgb), 0) 0%,
- rgba(var(--accent-rgb), 0.1) 50%,
- rgba(var(--accent-rgb), 0) 100%);
- z-index: 10;
- pointer-events: none;
- animation: scan-beam 2s infinite ease-in-out;
- border-bottom: 2px solid var(--accent);
- box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--accent-rgb), 0) 0%,
+    rgba(var(--accent-rgb), 0.1) 50%,
+    rgba(var(--accent-rgb), 0) 100%
+  );
+  z-index: 10;
+  pointer-events: none;
+  animation: scan-beam 2s infinite ease-in-out;
+  border-bottom: 2px solid var(--accent);
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.5);
 }
 
 .scan-container {
- position: relative;
- overflow: hidden;
- border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
 
- &::after {
- content: '';
- position: absolute;
- top: 0;
- left: 0;
- width: 100%;
- height: 4px;
- background: var(--accent);
- box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent);
- animation: scan-line 2s linear infinite;
- z-index: 20;
- }
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--accent);
+    box-shadow:
+      0 0 15px var(--accent),
+      0 0 30px var(--accent);
+    animation: scan-line 2s linear infinite;
+    z-index: 20;
+  }
 }
 
 .processing-pulse {
- animation: pulse-ring 2s infinite;
+  animation: pulse-ring 2s infinite;
 }
 
 @keyframes pulse-ring {
- 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
- 70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
- 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
 }
 
 /* Hide default FileUpload Toolbar and Chrome for Custom Look */
 /* Hide default FileUpload Toolbar/Header and Chrome */
 ::ng-deep .p-fileupload {
- .p-fileupload-buttonbar,
- .p-fileupload-header {
- display: none !important;
- }
- .p-fileupload-content {
- border: none !important;
- padding: 0 !important;
- background: transparent !important;
- }
+  .p-fileupload-buttonbar,
+  .p-fileupload-header {
+    display: none !important;
+  }
+  .p-fileupload-content {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+}
+
+/* Shake Animation for Validation */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.field-error {
+  ::ng-deep .p-inputnumber-input,
+  ::ng-deep input {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }

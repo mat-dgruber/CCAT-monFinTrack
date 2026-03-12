@@ -1,5 +1,6 @@
-import stripe
 import os
+
+import stripe
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,7 +14,7 @@ for event in events.data:
         print(f"Event: {event.type}")
         print(f"Customer: {sub.customer}")
         print(f"Price ID: {price_id}")
-        
+
         # Test infer logic
         prices = {
             "pro_monthly": os.getenv("STRIPE_PRICE_PRO_MONTHLY"),
@@ -25,7 +26,9 @@ for event in events.data:
         tier = "free"
         for plan_name, pid in prices.items():
             if pid == price_id:
-                if "premium" in plan_name: tier = "premium"
-                if "pro" in plan_name: tier = "pro"
+                if "premium" in plan_name:
+                    tier = "premium"
+                if "pro" in plan_name:
+                    tier = "pro"
         print(f"Inferred Tier: {tier}")
         print("-" * 40)

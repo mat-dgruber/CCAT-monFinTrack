@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import List, Optional
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.database import get_db
 from app.core.logger import get_logger
@@ -58,7 +59,7 @@ def list_recurrences(user_id: str, active_only: bool = False) -> List[Recurrence
     query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
 
     if active_only:
-        query = query.where("active", "==", True)
+        query = query.where(filter=FieldFilter("active", "==", True))
 
     docs = query.stream()
     results = []

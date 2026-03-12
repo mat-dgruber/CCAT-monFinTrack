@@ -9,6 +9,8 @@ class DebtType(str, Enum):
     CONSIGNED_CREDIT = "consigned_credit" # Empréstimo Consignado
     VEHICLE_FINANCING = "vehicle_financing" # Financiamento de Veículo
     REAL_ESTATE_FINANCING = "real_estate_financing" # Financiamento Imobiliário (MCMV/SBPE)
+    LOAN = "loan" # Legado
+    FINANCING = "financing" # Legado
     OTHER = "other" # Outros
 
 class InterestPeriod(str, Enum):
@@ -23,6 +25,7 @@ class AmortizationSystem(str, Enum):
 class DebtStatus(str, Enum):
     ON_TIME = "on_time"        # Em dia (Verde)
     OVERDUE = "overdue"        # Em atraso (Vermelho)
+    LATE = "late"              # Legado/Alias para overdue
     NEGOTIATION = "negotiation"# Em negociação (Amarelo)
 
 class CardBrand(str, Enum):

@@ -13,7 +13,8 @@ import { MessageService } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
-
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
@@ -34,6 +35,8 @@ import { ICON_LIST } from '../../shared/icons';
  SelectButtonModule,
  TableModule,
  SkeletonModule,
+ IconFieldModule,
+ InputIconModule,
  ],
  templateUrl: './category-manager.html',
  styleUrl: './category-manager.scss'
@@ -91,8 +94,8 @@ export class CategoryManager implements OnInit {
  icons = ICON_LIST;
 
  typeOptions = [
- { name: 'Despesa', value: 'expense' },
- { name: 'Receita', value: 'income' }
+ { label: 'Despesa', value: 'expense', icon: 'pi pi-minus-circle' },
+ { label: 'Receita', value: 'income', icon: 'pi pi-plus-circle' }
  ];
 
  form = this.fb.group({

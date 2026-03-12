@@ -13,9 +13,14 @@ def get_preferences(user_id: str) -> UserPreference:
     doc = doc_ref.get()
 
     if doc.exists:
-        return UserPreference(**doc.to_dict())
+        try:
+            return UserPreference(**doc.to_dict())
+        except Exception as e:
+            from app.core.logger import get_logger
+            logger = get_logger(__name__)
+            logger.error("Error parsing UserPreference for %s: %s. Using defaults.", user_id, e)
     
-    # Return defaults if not exists
+    # Return defaults if not exists or if error occurs
     default_pref = UserPreference(
         user_id=user_id,
         updated_at=datetime.now(timezone.utc),
@@ -72,10 +77,16 @@ def save_profile_image(user_id: str, file: UploadFile) -> str:
         # Upload the file
         blob.upload_from_file(file.file, content_type=file.content_type)
 
-        # Make it public
-        blob.make_public()
+        # Generate a signed URL with a long expiration (1 year)
+        # This is more robust than make_public() which fails with Uniform Bucket-Level Access
+        from datetime import timedelta
+        url = blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(days=365),
+            method="GET"
+        )
 
-        return blob.public_url
+        return url
 
 def reset_account(user_id: str):
     """

@@ -14,6 +14,8 @@ import { ColorPickerModule } from 'primeng/colorpicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePickerModule } from 'primeng/datepicker';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 // Serviços e Modelos
 import { AccountService } from '../../services/account.service';
@@ -43,7 +45,9 @@ import { ICON_LIST } from '../../shared/icons';
  AccountTypePipe,
  SkeletonModule,
  TooltipModule,
- DatePickerModule
+ DatePickerModule,
+ IconFieldModule,
+ InputIconModule,
  ],
  templateUrl: './account-manager.html',
  styleUrl: './account-manager.scss'
@@ -71,21 +75,21 @@ export class AccountManager implements OnInit {
 
  // Opções de Tipo de Conta
  typeOptions = [
- { label: 'Conta Corrente', value: 'checking' },
- { label: 'Poupança', value: 'savings' },
- { label: 'Cartão de Crédito', value: 'credit_card' },
- { label: 'Carteira / Dinheiro', value: 'cash' },
- { label: 'Investimento', value: 'investment' }
+ { label: 'Conta Corrente', value: 'checking', icon: 'pi pi-building' },
+ { label: 'Poupança', value: 'savings', icon: 'pi pi-percentage' },
+ { label: 'Cartão de Crédito', value: 'credit_card', icon: 'pi pi-credit-card' },
+ { label: 'Carteira / Dinheiro', value: 'cash', icon: 'pi pi-wallet' },
+ { label: 'Investimento', value: 'investment', icon: 'pi pi-chart-line' }
  ];
 
  // Opções de Bandeira
  brandOptions = [
- { label: 'Visa', value: 'visa' },
- { label: 'Mastercard', value: 'mastercard' },
- { label: 'Elo', value: 'elo' },
- { label: 'Amex', value: 'amex' },
- { label: 'Hipercard', value: 'hipercard' },
- { label: 'Outro', value: 'other' }
+ { label: 'Visa', value: 'visa', icon: 'pi pi-credit-card' },
+ { label: 'Mastercard', value: 'mastercard', icon: 'pi pi-credit-card' },
+ { label: 'Elo', value: 'elo', icon: 'pi pi-credit-card' },
+ { label: 'Amex', value: 'amex', icon: 'pi pi-credit-card' },
+ { label: 'Hipercard', value: 'hipercard', icon: 'pi pi-credit-card' },
+ { label: 'Outro', value: 'other', icon: 'pi pi-credit-card' }
  ];
 
  // Formulário Reativo da Conta
@@ -126,8 +130,8 @@ export class AccountManager implements OnInit {
  });
 
  transferMethods = [
- { label: 'Transferência Bancária', value: 'bank_transfer' },
- { label: 'Pix', value: 'pix' }
+ { label: 'Transferência Bancária', value: 'bank_transfer', icon: 'pi pi-building' },
+ { label: 'Pix', value: 'pix', icon: 'pi pi-bolt' }
  ];
 
  // Contas de destino disponíveis (exclui a origem)

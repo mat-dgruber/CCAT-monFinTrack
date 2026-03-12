@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,14 +51,26 @@ app.add_middleware(
 async def add_cors_headers(request: Request, call_next):
     try:
         response = await call_next(request)
+    except HTTPException as http_exc:
+        # Deixe o FastAPI tratar HTTPExceptions (ele vai converter para resposta)
+        # Mas para o middleware continuar, precisamos gerar a resposta aqui
+        # ou deixar o erro propagar e tratar no exception_handler.
+        # No entanto, call_next geralmente não deve ser envolvido em try/except
+        # se quisermos que os handlers de exceção do FastAPI funcionem.
+        # A melhor prática é NÃO ter try/except em volta de call_next se você quer os handlers de erro.
+        raise http_exc
     except Exception as e:
-        # Em caso de crash severo, garanta que o client receba erro legível e headers
-        logger.error("Unhandled Exception: %s", e)
-        response = Response("Internal Server Error", status_code=500)
+        logger.error("Unhandled Exception in Middleware: %s", e, exc_info=True)
+        # Se for um erro real não tratado, retornamos 500
+        from fastapi.responses import JSONResponse
+
+        response = JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error", "error": str(e)},
+        )
 
     origin = request.headers.get("Origin")
     if origin and origin in origins:
-        # Force headers if missing (sometimes 500s strip them)
         if "Access-Control-Allow-Origin" not in response.headers:
             response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
@@ -102,6 +115,10 @@ app.include_router(debt_router, prefix="/api")
 from app.api.resources import router as resources_router
 
 app.include_router(resources_router)
+
+from app.api.indicators import router as indicators_router
+
+app.include_router(indicators_router)
 
 from app.api.jobs import router as jobs_router
 

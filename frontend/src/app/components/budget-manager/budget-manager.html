@@ -105,38 +105,69 @@
 </div>
 
 <p-dialog [header]="editingId() ? 'Editar Meta' : 'Nova Meta'" [modal]="true" [(visible)]="visible"
- [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
- <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
- <div class="flex flex-col gap-2">
- <label class="font-semibold text-color ">Categoria</label>
- <p-select [options]="categories()" formControlName="category" optionLabel="name" placeholder="Selecione..."
- [style]="{ width: '100%' }" appendTo="body">
- <ng-template pTemplate="item" let-cat>
- <div class="flex items-center gap-2">
- <i [class]="cat.icon" [style.color]="cat.color"></i>
- <span>{{ cat.name }}</span>
- </div>
- </ng-template>
- <ng-template pTemplate="selectedItem" let-cat>
- @if (cat) {
- <div class="flex items-center gap-2">
- <i [class]="cat.icon" [style.color]="cat.color"></i>
- <span>{{ cat.name }}</span>
- </div>
- }
- </ng-template>
- </p-select>
- </div>
+ [style]="{ width: '28rem' }" [draggable]="false" [resizable]="false" styleClass="p-fluid custom-budget-dialog">
+ <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-6 pt-4">
+   
+    <!-- Section 1: Category Selection -->
+    <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+      <div class="flex items-center gap-2 mb-2 text-primary font-bold">
+        <i class="pi pi-tag"></i>
+        <span>Alvo do Orçamento</span>
+      </div>
 
- <div class="flex flex-col gap-2">
- <label class="font-semibold text-color ">Limite Mensal (R$)</label>
- <p-inputNumber formControlName="amount" mode="currency" currency="BRL" locale="pt-BR" [style]="{ width: '100%' }"
- inputStyleClass="w-full">
- </p-inputNumber>
- </div>
+      <div class="flex flex-col gap-2">
+        <label for="category" class="font-semibold text-sm">Categoria de Gasto</label>
+        <p-select id="category" [options]="categories()" formControlName="category" optionLabel="name" placeholder="Selecione..." appendTo="body">
+          <ng-template pTemplate="item" let-cat>
+            <div class="flex items-center gap-2">
+              <i [class]="cat.icon" [style.color]="cat.color"></i>
+              <span class="text-sm">{{ cat.name }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="selectedItem" let-cat>
+            @if (cat) {
+              <div class="flex items-center gap-2">
+                <i [class]="cat.icon" [style.color]="cat.color"></i>
+                <span class="font-medium">{{ cat.name }}</span>
+              </div>
+            }
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
 
- <div class="flex justify-end mt-4">
- <p-button label="Salvar Meta" type="submit" [disabled]="form.invalid"></p-button>
- </div>
+    <!-- Section 2: Limit Configuration -->
+    <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+      <div class="flex items-center gap-2 mb-2 text-primary font-bold">
+        <i class="pi pi-bullseye"></i>
+        <span>Definição de Limite</span>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="amount" class="font-semibold text-sm">Limite Mensal Desejado</label>
+        <p-iconField>
+          <p-inputIcon class="pi pi-money-bill" />
+          <p-inputNumber id="amount" formControlName="amount" mode="currency" currency="BRL" locale="pt-BR" inputStyleClass="w-full text-center text-lg font-bold" placeholder="R$ 0,00"></p-inputNumber>
+        </p-iconField>
+        <small class="text-[10px] text-secondary text-center">Você receberá alertas ao atingir 80% e 100% deste valor.</small>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="flex justify-between items-center mt-4 pt-4 border-t border-surface-border">
+      <p-button
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="visible.set(false)"
+      ></p-button>
+      <p-button
+        label="Salvar Meta"
+        type="submit"
+        icon="pi pi-check"
+        [disabled]="form.invalid"
+        styleClass="px-6 shadow-md"
+      ></p-button>
+    </div>
  </form>
 </p-dialog>

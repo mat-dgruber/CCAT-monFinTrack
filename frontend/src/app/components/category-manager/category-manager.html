@@ -221,118 +221,159 @@
  </div>
 </div>
 
-<p-dialog [header]="editingId() ? 'Editar Categoria' : 'Nova Categoria'" [modal]="true" [(visible)]="visible"
- [style]="{ width: '25rem' }" [draggable]="false" [resizable]="false">
- <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 pt-4">
- <div class="flex justify-center mb-2">
- <div class="grid grid-cols-2 gap-4 mb-2">
- <div (click)="form.get('type')?.setValue('expense')"
- class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
- [class.border-red-500]="form.get('type')?.value === 'expense'"
- [class.bg-red-50]="form.get('type')?.value === 'expense'"
- [class.text-red-600]="form.get('type')?.value === 'expense'"
- [class.ring-2]="form.get('type')?.value === 'expense'"
- [class.ring-red-200]="form.get('type')?.value === 'expense'"
- [class.dark:bg-red-900]="form.get('type')?.value === 'expense'"
- [class.dark:text-red-100]="form.get('type')?.value === 'expense'"
- [class.dark:border-red-700]="form.get('type')?.value === 'expense'"
- [class.dark:ring-red-900]="form.get('type')?.value === 'expense'"
- [class.border-surface-border]="form.get('type')?.value !== 'expense'"
- [class.bg-surface-card]="form.get('type')?.value !== 'expense'"
- [class.text-secondary]="form.get('type')?.value !== 'expense'"
- [class.hover:bg-surface-ground]="form.get('type')?.value !== 'expense'"
+<p-dialog
+  [header]="editingId() ? 'Editar Categoria' : 'Nova Categoria'"
+  [modal]="true"
+  [(visible)]="visible"
+  [style]="{ width: '28rem' }"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="p-fluid custom-category-dialog"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-6 pt-4">
+    <!-- Section 1: Type Selection -->
+    <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+      <div class="flex justify-center">
+        <p-selectButton
+          [options]="typeOptions"
+          formControlName="type"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="item" let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-selectButton>
+      </div>
+    </div>
 
- [class.dark:hover:bg-slate-700]="form.get('type')?.value !== 'expense'">
- <i class="pi pi-minus-circle text-2xl"></i>
- <span class="font-bold text-sm uppercase tracking-wide">Despesa</span>
- </div>
+    <!-- Section 2: Basic Identity -->
+    <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+      <div class="flex items-center gap-2 mb-2 text-primary font-bold">
+        <i class="pi pi-tag"></i>
+        <span>Identidade da Categoria</span>
+      </div>
 
- <div (click)="form.get('type')?.setValue('income')"
- class="cursor-pointer rounded-xl border p-3 flex flex-col items-center justify-center gap-2 transition-all duration-200"
- [class.border-green-500]="form.get('type')?.value === 'income'"
- [class.bg-green-50]="form.get('type')?.value === 'income'"
- [class.text-green-600]="form.get('type')?.value === 'income'"
- [class.ring-2]="form.get('type')?.value === 'income'"
- [class.ring-green-200]="form.get('type')?.value === 'income'"
- [class.dark:bg-green-900]="form.get('type')?.value === 'income'"
- [class.dark:text-green-100]="form.get('type')?.value === 'income'"
- [class.dark:border-green-700]="form.get('type')?.value === 'income'"
- [class.dark:ring-green-900]="form.get('type')?.value === 'income'"
- [class.border-surface-border]="form.get('type')?.value !== 'income'"
- [class.bg-surface-card]="form.get('type')?.value !== 'income'"
- [class.text-secondary]="form.get('type')?.value !== 'income'"
- [class.hover:bg-surface-ground]="form.get('type')?.value !== 'income'"
+      <div class="flex flex-col gap-2">
+        <label for="name" class="font-semibold text-sm">Nome</label>
+        <p-iconField>
+          <p-inputIcon class="pi pi-pencil" />
+          <input
+            pInputText
+            id="name"
+            formControlName="name"
+            class="w-full"
+            placeholder="Ex: Alimentação, Lazer..."
+          />
+        </p-iconField>
+      </div>
 
- [class.dark:hover:bg-slate-700]="form.get('type')?.value !== 'income'">
- <i class="pi pi-plus-circle text-2xl"></i>
- <span class="font-bold text-sm uppercase tracking-wide">Receita</span>
- </div>
- </div>
- </div>
+      <!-- Parent Category Selector -->
+      <div class="flex flex-col gap-2">
+        <label for="parent_id" class="font-semibold text-sm">Categoria Pai (Opcional)</label>
+        <p-select
+          id="parent_id"
+          [options]="getParentOptions()"
+          formControlName="parent_id"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Nenhuma (Raiz)"
+          [showClear]="true"
+          styleClass="w-full"
+          appendTo="body"
+        >
+          <ng-template pTemplate="item" let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon" [style.color]="item.color"></i>
+              <span class="text-sm">{{ item.name }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
 
- <div class="flex flex-col gap-2">
- <label class="font-semibold text-color ">Nome</label>
- <input pInputText formControlName="name" class="w-full" placeholder="Ex: Alimentação" />
- </div>
+    <!-- Section 3: Visual Appearance -->
+    <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+      <div class="flex items-center gap-2 mb-2 text-primary font-bold">
+        <i class="pi pi-palette"></i>
+        <span>Aparência Visual</span>
+      </div>
 
- <!-- Parent Category Selector -->
- <div class="flex flex-col gap-2">
- <label class="font-semibold text-color ">Categoria Pai (Opcional)</label>
- <p-select [options]="getParentOptions()" formControlName="parent_id" optionLabel="name" optionValue="id"
- placeholder="Nenhuma (Raiz)" [showClear]="true" styleClass="w-full" appendTo="body"
- panelStyleClass=" ">
- <ng-template pTemplate="item" let-item>
- <div class="flex items-center gap-2">
- <i [class]="item.icon" [style.color]="item.color"></i>
- <span>{{ item.name }}</span>
- </div>
- </ng-template>
- </p-select>
- </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+          <label for="icon" class="font-semibold text-sm">Ícone</label>
+          <p-select
+            id="icon"
+            [options]="icons"
+            formControlName="icon"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+            placeholder="Selecione..."
+          >
+            <ng-template pTemplate="item" let-i>
+              <div class="flex items-center gap-2">
+                <i [class]="i.value" class="text-lg"></i>
+                <span class="text-sm">{{ i.label }}</span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="selectedItem" let-i>
+              @if (i) {
+                <div class="flex items-center gap-2">
+                  <i [class]="i.value"></i>
+                  <span>{{ i.label }}</span>
+                </div>
+              }
+            </ng-template>
+          </p-select>
+        </div>
 
- <div class="flex gap-4 items-end">
- <div class="flex-1 flex flex-col gap-2">
- <label class="font-semibold text-color ">Ícone</label>
- <p-select [options]="icons" formControlName="icon" optionLabel="label" optionValue="value"
- [style]="{ width: '100%' }" appendTo="body" placeholder="Selecione..."
- panelStyleClass=" ">
- <ng-template pTemplate="item" let-i>
- <div class="flex items-center gap-2">
- <i [class]="i.value" class="text-lg"></i>
- <span>{{ i.label }}</span>
- </div>
- </ng-template>
+        <div class="flex flex-col gap-2">
+          <label for="color" class="font-semibold text-sm text-center">Cor Principal</label>
+          <div class="flex justify-center mt-1">
+            <p-colorPicker id="color" formControlName="color" appendTo="body"></p-colorPicker>
+          </div>
+        </div>
+      </div>
+    </div>
 
- <ng-template pTemplate="selectedItem" let-i>
- @if (i) {
- <div class="flex items-center gap-2">
- <i [class]="i.value"></i>
- <span>{{ i.label }}</span>
- </div>
- }
- </ng-template>
- </p-select>
- </div>
+    <!-- Footer Actions -->
+    <div class="flex justify-between items-center mt-4 pt-4 border-t border-surface-border">
+      @if (editingId()) {
+        <p-button
+          label="Excluir"
+          severity="danger"
+          [text]="true"
+          icon="pi pi-trash"
+          (onClick)="deleteCategory($event, editingId()!); visible.set(false)"
+        ></p-button>
+      } @else {
+        <div></div>
+      }
 
- <div class="flex flex-col gap-2 items-center">
- <label class="font-semibold text-color ">Cor</label>
- <p-colorPicker formControlName="color" appendTo="body"></p-colorPicker>
- </div>
- </div>
-
- <div class="flex justify-between mt-4">
- <!-- Delete Button (Only if Editing) -->
- @if (editingId()) {
- <p-button label="Excluir" severity="danger" [text]="true" icon="pi pi-trash"
- (onClick)="deleteCategory($event, editingId()!); visible.set(false)"></p-button>
- } @else {
- <div></div>
- <!-- Spacer -->
- }
-
- <p-button label="Salvar" type="submit" [disabled]="form.invalid"></p-button>
- </div>
- </form>
+      <div class="flex gap-3">
+        <p-button
+          label="Cancelar"
+          [text]="true"
+          severity="secondary"
+          (onClick)="visible.set(false)"
+        ></p-button>
+        <p-button
+          label="Salvar Categoria"
+          type="submit"
+          icon="pi pi-check"
+          [disabled]="form.invalid"
+          styleClass="px-6 shadow-md"
+        ></p-button>
+      </div>
+    </div>
+  </form>
 </p-dialog>
 
 
