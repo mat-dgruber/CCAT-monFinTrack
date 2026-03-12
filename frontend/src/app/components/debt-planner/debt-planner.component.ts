@@ -39,6 +39,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { AccordionModule } from 'primeng/accordion';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
+import { PageHelpComponent } from '../page-help/page-help';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SliderModule } from 'primeng/slider';
@@ -98,11 +99,12 @@ import {
     AccordionModule,
     DatePickerModule,
     TagModule,
-    MarkdownModule,
+    PageHelpComponent,
     IconFieldModule,
     InputIconModule,
     SliderModule,
     ToggleSwitchModule,
+    MarkdownModule,
   ],
   providers: [MessageService],
   templateUrl: './debt-planner.html',
@@ -123,8 +125,31 @@ export class DebtPlannerComponent implements OnInit {
   canAccess = computed(() => this.subscriptionService.canAccess('debts'));
 
   activeIndex = signal(0);
-  debts = signal<Debt[]>([]);
   loading = signal(false);
+
+  helpDocument = computed(() => {
+    const docs = [
+      'debt-list.md',
+      'debt-plan.md',
+      'debt-housing.md',
+      'debt-scanner.md',
+      'debt-resources.md',
+    ];
+    return docs[this.activeIndex()] || 'debt-list.md';
+  });
+
+  helpTitle = computed(() => {
+    const titles = [
+      'Ajuda: Minhas Dívidas',
+      'Ajuda: Plano de Pagamento',
+      'Ajuda: Financiamento',
+      'Ajuda: IA Scanner / OCR',
+      'Ajuda: Recursos & Estratégia',
+    ];
+    return titles[this.activeIndex()] || 'Ajuda: Planejador de Dívidas';
+  });
+
+  debts = signal<Debt[]>([]);
 
   // DETAILS VIEW
   selectedDebtForDetails = signal<Debt | null>(null);
@@ -167,6 +192,12 @@ export class DebtPlannerComponent implements OnInit {
     closing_day: [null as number | null],
     remaining_installments: [null as number | null],
 
+    // Universal Fields
+    creditor_institution: [''],
+    contract_date: [null as Date | null],
+    next_due_date: [null as Date | null],
+    observations: [''],
+
     // Specifics
     card_brand: [null as CardBrand | null],
     card_limit: [0],
@@ -192,6 +223,20 @@ export class DebtPlannerComponent implements OnInit {
 
     daily_interest_rate: [0],
     days_used_in_month: [0],
+
+    // Vehicle
+    vehicle_brand: [''],
+    vehicle_model: [''],
+    vehicle_year: [null as number | null],
+    vehicle_plate: [''],
+    vehicle_renavam: [''],
+    vehicle_chassi: [''],
+    down_payment: [0],
+    gravame_registered: [false],
+    vehicle_insurance_active: [false],
+    vehicle_insurance_expiry: [null as Date | null],
+    ipva_paid: [false],
+    licensing_ok: [false],
 
     contract_file_path: [''],
     amortization_system: [AmortizationSystem.NONE],
@@ -302,6 +347,11 @@ export class DebtPlannerComponent implements OnInit {
       value: AmortizationSystem.SAC,
       icon: 'pi pi-sort-amount-down',
     },
+    {
+      label: 'Price (Fixa)',
+      value: AmortizationSystem.PRICE,
+      icon: 'pi pi-equals',
+    },
     { label: 'Nenhum', value: AmortizationSystem.NONE, icon: 'pi pi-times' },
   ];
 
@@ -311,6 +361,11 @@ export class DebtPlannerComponent implements OnInit {
   strategies = [
     { name: 'Bola de Neve', value: 'snowball' },
     { name: 'Avalanche', value: 'avalanche' },
+  ];
+
+  housingSystems = [
+    { name: 'SAC', value: AmortizationSystem.SAC },
+    { name: 'Price', value: AmortizationSystem.PRICE },
   ];
   paymentPlan = signal<PaymentPlan | null>(null);
   simulating = signal(false);
@@ -325,6 +380,7 @@ export class DebtPlannerComponent implements OnInit {
   housingResult: any = null;
   housingSimulating = false;
   housingErrors = signal<Record<string, boolean>>({});
+  debtFormErrors = signal<Record<string, boolean>>({});
 
   // ADVICE
   adviceDialog = false;
@@ -503,6 +559,10 @@ export class DebtPlannerComponent implements OnInit {
       due_day: null,
       closing_day: null,
       remaining_installments: null,
+      creditor_institution: '',
+      contract_date: null,
+      next_due_date: null,
+      observations: '',
       card_brand: null,
       card_limit: 0,
       contract_number: '',
@@ -521,6 +581,18 @@ export class DebtPlannerComponent implements OnInit {
       subsidy_expiration_date: null,
       daily_interest_rate: 0,
       days_used_in_month: 0,
+      vehicle_brand: '',
+      vehicle_model: '',
+      vehicle_year: null,
+      vehicle_plate: '',
+      vehicle_renavam: '',
+      vehicle_chassi: '',
+      down_payment: 0,
+      gravame_registered: false,
+      vehicle_insurance_active: false,
+      vehicle_insurance_expiry: null,
+      ipva_paid: false,
+      licensing_ok: false,
       amortization_system: AmortizationSystem.NONE,
       is_subsidized: false,
       contract_file_path: '',
@@ -546,6 +618,37 @@ export class DebtPlannerComponent implements OnInit {
 
   saveDebt() {
     this.submitted = true;
+    const errors: Record<string, boolean> = {};
+
+    // Mandatory Field Check for Visual Feedback
+    if (!this.debtForm.get('name')?.value) errors['name'] = true;
+    if (!this.debtForm.get('debt_type')?.value) errors['debt_type'] = true;
+    if (
+      this.debtForm.get('total_amount')?.value === null ||
+      this.debtForm.get('total_amount')?.value === undefined ||
+      (this.debtForm.get('total_amount')?.value ?? 0) <= 0
+    )
+      errors['total_amount'] = true;
+
+    if (
+      this.debtForm.get('interest_rate')?.value === null ||
+      this.debtForm.get('interest_rate')?.value === undefined
+    )
+      errors['interest_rate'] = true;
+
+    this.debtFormErrors.set(errors);
+
+    if (Object.keys(errors).length > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos Obrigatórios',
+        detail: 'Por favor, preencha todos os campos destacados em vermelho.',
+      });
+      // Clear errors after 1s for the shake animation to be repeatable if they click again
+      setTimeout(() => this.debtFormErrors.set({}), 1000);
+      return;
+    }
+
     if (this.debtForm.valid) {
       const rawValue = this.debtForm.getRawValue();
       const payload: any = { ...rawValue };
@@ -666,6 +769,10 @@ export class DebtPlannerComponent implements OnInit {
       due_day: null,
       closing_day: null,
       remaining_installments: null,
+      creditor_institution: '',
+      contract_date: null,
+      next_due_date: null,
+      observations: '',
       card_brand: null,
       card_limit: 0,
       contract_number: '',
@@ -684,6 +791,18 @@ export class DebtPlannerComponent implements OnInit {
       subsidy_expiration_date: null,
       daily_interest_rate: 0,
       days_used_in_month: 0,
+      vehicle_brand: '',
+      vehicle_model: '',
+      vehicle_year: null,
+      vehicle_plate: '',
+      vehicle_renavam: '',
+      vehicle_chassi: '',
+      down_payment: 0,
+      gravame_registered: false,
+      vehicle_insurance_active: false,
+      vehicle_insurance_expiry: null,
+      ipva_paid: false,
+      licensing_ok: false,
       amortization_system: AmortizationSystem.NONE,
       is_subsidized: false,
       contract_file_path: '',

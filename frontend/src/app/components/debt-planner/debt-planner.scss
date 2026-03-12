@@ -77,6 +77,16 @@
       border: none;
     }
   }
+
+  .p-column-title {
+    display: none;
+  }
+
+  &.p-datatable-stack {
+    .p-column-title {
+      display: block;
+    }
+  }
 }
 
 /* Badge / Pills - Dark Mode Optimized */

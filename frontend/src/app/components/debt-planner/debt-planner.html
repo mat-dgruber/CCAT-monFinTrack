@@ -2,7 +2,13 @@
   <!-- HEADER -->
   <div class="page-header">
     <div class="page-title-group">
-      <h1 class="page-title">Planejador de Dívidas</h1>
+      <div class="flex items-center gap-3">
+        <h1 class="page-title">Planejador de Dívidas</h1>
+        <app-page-help
+          [document]="helpDocument()"
+          [title]="helpTitle()"
+        ></app-page-help>
+      </div>
       <p class="page-description">
         Gerencie suas dívidas e simule estratégias de quitação.
       </p>
@@ -449,10 +455,11 @@
                   @for (i of [1, 2, 3, 4, 5]; track $index) {
                     <div class="flex justify-between">
                       <div class="flex gap-4 w-full">
-                        <p-skeleton width="20%" height="1.5rem"></p-skeleton>
                         <p-skeleton width="15%" height="1.5rem"></p-skeleton>
                         <p-skeleton width="15%" height="1.5rem"></p-skeleton>
-                        <p-skeleton width="10%" height="1.5rem"></p-skeleton>
+                        <p-skeleton width="15%" height="1.5rem"></p-skeleton>
+                        <p-skeleton width="15%" height="1.5rem"></p-skeleton>
+                        <p-skeleton width="15%" height="1.5rem"></p-skeleton>
                         <div class="flex gap-2 ml-auto">
                           <p-skeleton shape="circle" size="2rem"></p-skeleton>
                           <p-skeleton shape="circle" size="2rem"></p-skeleton>
@@ -469,6 +476,8 @@
               [value]="debts()"
               styleClass="p-datatable-sm"
               [rowHover]="true"
+              responsiveLayout="stack"
+              [breakpoint]="'960px'"
               class="bg-surface-card organic-shape elegant-shadow border-none overflow-hidden block"
             >
               <ng-template pTemplate="header">
@@ -476,14 +485,26 @@
                   <th>Nome</th>
                   <th>Tipo</th>
                   <th>Saldo Devedor</th>
+                  <th>Custo Futuro</th>
                   <th>Juros</th>
                   <th class="text-right">Ações</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-debt>
                 <tr>
-                  <td class="font-medium">{{ debt.name }}</td>
+                  <td class="font-medium">
+                    <span class="p-column-title font-bold">Nome</span>
+                    <div class="flex flex-col">
+                      <span>{{ debt.name }}</span>
+                      @if (debt.creditor_institution) {
+                        <span class="text-[10px] text-secondary font-normal">{{
+                          debt.creditor_institution
+                        }}</span>
+                      }
+                    </div>
+                  </td>
                   <td>
+                    <span class="p-column-title font-bold">Tipo</span>
                     <div class="flex flex-col gap-2">
                       <!-- TYPE BADGE -->
                       <span
@@ -503,14 +524,23 @@
                       </span>
 
                       <!-- PRIORITY INDICATOR -->
-                      @if (isHighPriority(debt)) {
+                      @if (debt.stats) {
                         <div
-                          class="flex items-center gap-1 text-red-500 text-xs font-bold animate-pulse"
-                          pTooltip="Prioridade: Juros Altos ou Atraso"
-                          tooltipPosition="top"
+                          class="flex items-center gap-1 text-xs font-bold"
+                          [ngClass]="{
+                            'text-red-500 animate-pulse':
+                              debt.stats.priority_score > 70,
+                            'text-orange-500':
+                              debt.stats.priority_score > 50 &&
+                              debt.stats.priority_score <= 70,
+                            'text-blue-500': debt.stats.priority_score <= 50,
+                          }"
+                          [pTooltip]="
+                            'Score de Prioridade: ' + debt.stats.priority_score
+                          "
                         >
                           <i class="pi pi-bolt"></i>
-                          <span>PRIORIDADE</span>
+                          <span>{{ debt.stats.priority_label }}</span>
                         </div>
                       }
 
@@ -531,9 +561,32 @@
                     [class.text-red-500]="debt.status === 'overdue'"
                     [class.text-accent]="debt.status !== 'overdue'"
                   >
+                    <span class="p-column-title font-bold">Saldo Devedor</span>
                     {{ debt.total_amount | currency: "BRL" }}
                   </td>
+                  <td>
+                    <span class="p-column-title font-bold">Custo Futuro</span>
+                    @if (debt.stats) {
+                      <div class="flex flex-col">
+                        <span
+                          class="font-bold text-red-500"
+                          pTooltip="Juros totais estimados até a quitação"
+                        >
+                          {{
+                            debt.stats.total_interest_remaining
+                              | currency: "BRL"
+                          }}
+                        </span>
+                        <span class="text-[10px] text-secondary">
+                          em ~{{ debt.stats.months_remaining }} meses
+                        </span>
+                      </div>
+                    } @else {
+                      <span class="text-secondary">---</span>
+                    }
+                  </td>
                   <td class="whitespace-nowrap">
+                    <span class="p-column-title font-bold">Juros</span>
                     <div class="flex flex-col gap-0.5">
                       <span class="font-bold flex items-baseline gap-0.5"
                         >{{
@@ -555,7 +608,8 @@
                     </div>
                   </td>
                   <td class="text-right">
-                    <div class="flex justify-content-end gap-1">
+                    <span class="p-column-title font-bold">Ações</span>
+                    <div class="flex justify-content-end gap-1 flex-wrap">
                       <p-button
                         icon="pi pi-calculator"
                         [text]="true"
@@ -608,7 +662,7 @@
               </ng-template>
               <ng-template pTemplate="emptymessage">
                 <tr>
-                  <td colspan="5">
+                  <td colspan="6">
                     <div class="empty-state">
                       <i class="pi pi-wallet"></i>
                       <p class="m-0 font-medium text-lg">
@@ -841,8 +895,10 @@
                   <i class="pi pi-chart-bar text-6xl mb-3 text-500"></i>
                   <p class="text-xl font-medium m-0">Aguardando Simulação</p>
                   <p class="text-500">
-                    Defina seu orçamento e estratégia ao lado para visualizar o
-                    plano.
+                    Defina seu orçamento e estratégia
+                    <span class="lg:hidden">acima</span>
+                    <span class="hidden lg:inline">ao lado</span>
+                    para visualizar o plano.
                   </p>
                 </div>
               }
@@ -972,32 +1028,13 @@
                     <label class="font-semibold text-sm"
                       >Sistema de Amortização</label
                     >
-                    <div
-                      class="flex flex-wrap gap-4 p-3 bg-surface-ground/50 border border-surface-border rounded-xl"
-                    >
-                      <div class="flex items-center gap-2">
-                        <p-radioButton
-                          name="sys"
-                          value="sac"
-                          [(ngModel)]="housingSystem"
-                          inputId="sys_sac"
-                        ></p-radioButton>
-                        <label for="sys_sac" class="text-sm cursor-pointer"
-                          >SAC (Decrescente)</label
-                        >
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <p-radioButton
-                          name="sys"
-                          value="price"
-                          [(ngModel)]="housingSystem"
-                          inputId="sys_price"
-                        ></p-radioButton>
-                        <label for="sys_price" class="text-sm cursor-pointer"
-                          >Price (Fixa)</label
-                        >
-                      </div>
-                    </div>
+                    <p-selectButton
+                      [options]="housingSystems"
+                      [(ngModel)]="housingSystem"
+                      optionLabel="name"
+                      optionValue="value"
+                      styleClass="w-full"
+                    ></p-selectButton>
                   </div>
                   <p-button
                     label="Calcular Simulação"
@@ -1088,7 +1125,10 @@
                   <div class="text-center">
                     <i class="pi pi-home text-6xl mb-4 text-secondary"></i>
                     <p class="text-lg font-medium">
-                      Preencha os dados ao lado para simular.
+                      Preencha os dados
+                      <span class="lg:hidden">acima</span>
+                      <span class="hidden lg:inline">ao lado</span>
+                      para simular.
                     </p>
                   </div>
                 </div>
@@ -1479,7 +1519,11 @@
             <span>Identificação Básica</span>
           </div>
 
-          <div class="field">
+          <div
+            class="field"
+            [class.field-error]="debtFormErrors()['name']"
+            [class.animate-shake]="debtFormErrors()['name']"
+          >
             <label for="name" class="font-semibold text-sm"
               >Nome da Dívida <span class="text-red-500">*</span></label
             >
@@ -1499,7 +1543,11 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="field flex flex-col gap-2">
+            <div
+              class="field flex flex-col gap-2"
+              [class.field-error]="debtFormErrors()['debt_type']"
+              [class.animate-shake]="debtFormErrors()['debt_type']"
+            >
               <label class="font-semibold text-sm"
                 >Tipo de Dívida <span class="text-red-500">*</span></label
               >
@@ -1549,6 +1597,60 @@
                 </ng-template>
               </p-select>
             </div>
+          </div>
+        </div>
+
+        <!-- NOVO: INFORMAÇÕES ADICIONAIS -->
+        <div
+          class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm"
+        >
+          <div class="flex items-center gap-2 mb-2 text-primary font-bold">
+            <i class="pi pi-plus-circle"></i>
+            <span>Informações Adicionais</span>
+          </div>
+
+          <div class="field">
+            <label class="font-semibold text-sm">Instituição Credora</label>
+            <p-iconField>
+              <p-inputIcon class="pi pi-building" />
+              <input
+                pInputText
+                formControlName="creditor_institution"
+                placeholder="Ex: Banco do Brasil, Itaú, Localiza..."
+              />
+            </p-iconField>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="field flex flex-col gap-2">
+              <label class="font-semibold text-sm">Data de Contratação</label>
+              <p-datepicker
+                formControlName="contract_date"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                appendTo="body"
+              ></p-datepicker>
+            </div>
+            <div class="field flex flex-col gap-2">
+              <label class="font-semibold text-sm">Próximo Vencimento</label>
+              <p-datepicker
+                formControlName="next_due_date"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                appendTo="body"
+              ></p-datepicker>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="font-semibold text-sm">Observações</label>
+            <textarea
+              pInputTextarea
+              formControlName="observations"
+              rows="2"
+              placeholder="Notas adicionais sobre esta dívida..."
+              class="w-full"
+            ></textarea>
           </div>
         </div>
 
@@ -1604,6 +1706,136 @@
                     locale="pt-BR"
                     placeholder="R$ 0,00"
                   ></p-inputNumber>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- FINANCIAMENTO DE VEÍCULO -->
+          @if (type === DebtType.VEHICLE_FINANCING) {
+            <div
+              class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm animate-fadein"
+            >
+              <div class="flex items-center gap-2 mb-2 text-primary font-bold">
+                <i class="pi pi-car"></i>
+                <span>Detalhes do Veículo</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Marca</label>
+                  <input
+                    pInputText
+                    formControlName="vehicle_brand"
+                    placeholder="Ex: Toyota, VW..."
+                  />
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Modelo</label>
+                  <input
+                    pInputText
+                    formControlName="vehicle_model"
+                    placeholder="Ex: Corolla, Golf..."
+                  />
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Ano</label>
+                  <p-inputNumber
+                    formControlName="vehicle_year"
+                    [useGrouping]="false"
+                    placeholder="Ex: 2022"
+                  ></p-inputNumber>
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Placa</label>
+                  <input
+                    pInputText
+                    formControlName="vehicle_plate"
+                    placeholder="Ex: ABC-1234"
+                  />
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">RENAVAM</label>
+                  <input pInputText formControlName="vehicle_renavam" />
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Chassi</label>
+                  <input pInputText formControlName="vehicle_chassi" />
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Valor do Veículo</label>
+                  <p-inputNumber
+                    formControlName="property_value"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                  ></p-inputNumber>
+                </div>
+                <div class="field flex flex-col gap-2">
+                  <label class="font-semibold text-sm">Valor da Entrada</label>
+                  <p-inputNumber
+                    formControlName="down_payment"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                  ></p-inputNumber>
+                </div>
+
+                <div
+                  class="col-span-full grid grid-cols-2 md:grid-cols-3 gap-3"
+                >
+                  <div class="flex items-center gap-2">
+                    <p-toggleswitch
+                      formControlName="gravame_registered"
+                      inputId="gravame"
+                    ></p-toggleswitch>
+                    <label for="gravame" class="text-xs cursor-pointer"
+                      >Gravame registrado</label
+                    >
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <p-toggleswitch
+                      formControlName="ipva_paid"
+                      inputId="ipva"
+                    ></p-toggleswitch>
+                    <label for="ipva" class="text-xs cursor-pointer"
+                      >IPVA Pago</label
+                    >
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <p-toggleswitch
+                      formControlName="licensing_ok"
+                      inputId="licensing"
+                    ></p-toggleswitch>
+                    <label for="licensing" class="text-xs cursor-pointer"
+                      >Licenciamento OK</label
+                    >
+                  </div>
+                </div>
+
+                <div
+                  class="col-span-full border-t border-emphasis/10 pt-4 flex flex-col gap-3"
+                >
+                  <div class="flex items-center justify-between">
+                    <label class="text-sm font-semibold"
+                      >Seguro do Veículo Ativo?</label
+                    >
+                    <p-toggleswitch
+                      formControlName="vehicle_insurance_active"
+                    ></p-toggleswitch>
+                  </div>
+                  @if (debtForm.get("vehicle_insurance_active")?.value) {
+                    <div class="field flex flex-col gap-2 animate-fadein">
+                      <label class="font-semibold text-xs"
+                        >Vencimento da Apólice</label
+                      >
+                      <p-datepicker
+                        formControlName="vehicle_insurance_expiry"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        appendTo="body"
+                      ></p-datepicker>
+                    </div>
+                  }
                 </div>
               </div>
             </div>
@@ -1974,7 +2206,11 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="field flex flex-col gap-2">
+            <div
+              class="field flex flex-col gap-2"
+              [class.field-error]="debtFormErrors()['total_amount']"
+              [class.animate-shake]="debtFormErrors()['total_amount']"
+            >
               <label for="total_amount" class="font-semibold text-sm">
                 {{
                   debtForm.get("debt_type")?.value ===
@@ -2031,7 +2267,11 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="field flex flex-col gap-2">
+            <div
+              class="field flex flex-col gap-2"
+              [class.field-error]="debtFormErrors()['interest_rate']"
+              [class.animate-shake]="debtFormErrors()['interest_rate']"
+            >
               <label for="interest_rate" class="font-semibold text-sm"
                 >Taxa de Juros <span class="text-red-500">*</span></label
               >

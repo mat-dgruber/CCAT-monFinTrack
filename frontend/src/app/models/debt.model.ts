@@ -100,12 +100,20 @@ export interface Debt {
   is_subsidized?: boolean;
   report?: string;
 
+  // Universal Fields
+  creditor_institution?: string;
+  contract_date?: Date | string;
+  next_due_date?: Date | string;
+  observations?: string;
+
   // Financiamento Veículo
   vehicle_brand?: string;
   vehicle_model?: string;
   vehicle_year?: number;
   vehicle_plate?: string;
   vehicle_renavam?: string;
+  vehicle_chassi?: string;
+  down_payment?: number;
   gravame_registered?: boolean;
   vehicle_insurance_active?: boolean;
   vehicle_insurance_expiry?: Date | string;
@@ -136,6 +144,16 @@ export interface Debt {
   consigned_years_committed?: number;
   consigned_end_year?: number;
   blocks_fgts_withdrawal?: boolean;
+
+  stats?: DebtStats;
+}
+
+export interface DebtStats {
+  priority_score: number;
+  priority_label: string;
+  total_interest_remaining: number;
+  months_remaining: number;
+  monthly_rate: number;
 }
 
 export interface PaymentStep {
