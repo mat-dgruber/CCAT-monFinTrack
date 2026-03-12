@@ -25,6 +25,12 @@ class DebtBase(BaseModel):
     remaining_installments: Optional[int] = Field(default=None, ge=0, description="Parcelas restantes")
     category_id: Optional[str] = Field(default=None, description="Categoria vinculada")
     
+    # --- Universal Fields ---
+    creditor_institution: Optional[str] = Field(default=None, description="Instituição Credora (Banco/Financiatória)")
+    contract_date: Optional[date] = Field(default=None, description="Data de contratação da dívida")
+    next_due_date: Optional[date] = Field(default=None, description="Data do próximo vencimento")
+    observations: Optional[str] = Field(default=None, description="Observações livres")
+
     # --- Advanced Fields ---
     card_brand: Optional[CardBrand] = Field(default=None)
     card_limit: Optional[float] = Field(default=None, ge=0)
@@ -56,6 +62,8 @@ class DebtBase(BaseModel):
     vehicle_year: Optional[int] = Field(default=None)
     vehicle_plate: Optional[str] = Field(default=None)
     vehicle_renavam: Optional[str] = Field(default=None)
+    vehicle_chassi: Optional[str] = Field(default=None)
+    down_payment: Optional[float] = Field(default=None, ge=0)
     gravame_registered: Optional[bool] = Field(default=False)
     vehicle_insurance_active: Optional[bool] = Field(default=False)
     vehicle_insurance_expiry: Optional[date] = Field(default=None)
@@ -145,11 +153,18 @@ class DebtUpdate(BaseModel):
     report: Optional[str] = None
 
     # --- New Fields for Update ---
+    creditor_institution: Optional[str] = None
+    contract_date: Optional[date] = None
+    next_due_date: Optional[date] = None
+    observations: Optional[str] = None
+
     vehicle_brand: Optional[str] = None
     vehicle_model: Optional[str] = None
     vehicle_year: Optional[int] = None
     vehicle_plate: Optional[str] = None
     vehicle_renavam: Optional[str] = None
+    vehicle_chassi: Optional[str] = None
+    down_payment: Optional[float] = None
     gravame_registered: Optional[bool] = None
     vehicle_insurance_active: Optional[bool] = None
     vehicle_insurance_expiry: Optional[date] = None
@@ -173,10 +188,18 @@ class DebtUpdate(BaseModel):
     consigned_end_year: Optional[int] = None
     blocks_fgts_withdrawal: Optional[bool] = None
 
+class DebtStats(BaseModel):
+    priority_score: float
+    priority_label: str
+    total_interest_remaining: float
+    months_remaining: int
+    monthly_rate: float
+
 class Debt(DebtBase):
     id: str
     user_id: str
     created_at: Optional[str] = None
+    stats: Optional[DebtStats] = None
 
     class Config:
         from_attributes = True

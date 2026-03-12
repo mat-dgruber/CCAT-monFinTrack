@@ -248,3 +248,69 @@ class DebtCalculatorService:
             "pay_today_savings": round(total_pago_min - balance, 2),
         }
 
+    @staticmethod
+    def calculate_debt_stats(debt: Any) -> Dict[str, Any]:
+        """
+        Calcula estatísticas de custo e prioridade para uma dívida específica.
+        """
+        from app.models.debt import DebtType, InterestPeriod
+
+        # 1. Converter taxa para mensal
+        rate_monthly = debt.interest_rate / 100.0
+        if debt.interest_period == InterestPeriod.YEARLY:
+            rate_monthly = ((1 + rate_monthly) ** (1 / 12)) - 1
+
+        # 2. Prioridade (0 a 100)
+        # Baseada no tipo de dívida e na taxa de juros
+        priority_score = 0
+        if debt.debt_type in [DebtType.CREDIT_CARD_ROTATING, DebtType.OVERDRAFT]:
+            priority_score = 80 + min(rate_monthly * 100, 20)
+        elif debt.debt_type in [DebtType.PERSONAL_LOAN, DebtType.CONSIGNED_CREDIT]:
+            priority_score = 50 + min(rate_monthly * 100 * 5, 30)
+        else:
+            priority_score = 20 + min(rate_monthly * 100 * 10, 30)
+
+        priority_label = "Baixa"
+        if priority_score > 70:
+            priority_label = "Crítica (Pague Logo)"
+        elif priority_score > 50:
+            priority_label = "Alta"
+        elif priority_score > 30:
+            priority_label = "Média"
+
+        # 3. Custo Total Restante (Estimativa "se não fizer nada")
+        total_interest_remaining = 0.0
+        months_remaining = 0
+
+        if debt.debt_type in [DebtType.CREDIT_CARD_ROTATING, DebtType.OVERDRAFT]:
+            # Para rotativo, projetamos 12 meses pagando o mínimo (ou 15%)
+            proj = DebtCalculatorService.simulate_revolving(debt.total_amount, rate_monthly, 0.15)
+            total_interest_remaining = proj["paying_minimum"]["total_paid_12m"] - debt.total_amount
+            months_remaining = 12
+        else:
+            # Para financiamentos/empréstimos fixos
+            # Se temos parcelas restantes e valor da parcela
+            n = debt.remaining_installments or (
+                debt.total_installments - debt.installments_paid if (debt.total_installments and debt.installments_paid) else 0)
+            pmt = debt.minimum_payment or 0.0
+
+            if n > 0 and pmt > 0:
+                total_to_pay = n * pmt
+                total_interest_remaining = max(0, total_to_pay - debt.total_amount)
+                months_remaining = n
+            elif rate_monthly > 0 and debt.total_amount > 0 and pmt > 0:
+                # Tenta calcular n se não tivermos
+                try:
+                    n_calc = -math.log(1 - (debt.total_amount * rate_monthly / pmt)) / math.log(1 + rate_monthly)
+                    total_interest_remaining = (n_calc * pmt) - debt.total_amount
+                    months_remaining = round(n_calc)
+                except:
+                    total_interest_remaining = 0.0
+
+        return {
+            "priority_score": round(priority_score, 2),
+            "priority_label": priority_label,
+            "total_interest_remaining": round(max(0, total_interest_remaining), 2),
+            "months_remaining": months_remaining,
+            "monthly_rate": round(rate_monthly * 100, 4)
+        }

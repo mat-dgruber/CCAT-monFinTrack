@@ -8,10 +8,12 @@ from app.schemas.debt import (
     Debt,
     DebtCreate,
     DebtPayoffSummary,
+    DebtStats,
     DebtUpdate,
     PaymentPlan,
     PaymentStep,
 )
+from app.services.debt_calculator_service import DebtCalculatorService
 from app.services.user_preference import get_preferences
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
@@ -61,7 +63,7 @@ def create_debt(user_id: str, debt_in: DebtCreate) -> Debt:
     try:
         update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
         service_logger.info("Dívida criada com sucesso no Firestore: %s", doc_ref.id)
-        return Debt(id=doc_ref.id, **data)
+        return get_debt(user_id, doc_ref.id)
     except Exception as e:
         service_logger.error(
             "Erro CRÍTICO ao adicionar dívida no Firestore: %s", e, exc_info=True
@@ -77,7 +79,19 @@ def list_debts(user_id: str) -> List[Debt]:
 
     db = get_db()
     docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
-    return [Debt(id=doc.id, **doc.to_dict()) for doc in docs]
+    debts = []
+    for doc in docs:
+        d_dict = doc.to_dict()
+        debt_obj = Debt(id=doc.id, **d_dict)
+        # Calculate stats
+        try:
+            stats = DebtCalculatorService.calculate_debt_stats(debt_obj)
+            debt_obj.stats = stats
+        except Exception as e:
+            # Silent fail for stats, don't break the whole list
+            pass
+        debts.append(debt_obj)
+    return debts
 
 
 def get_debt(user_id: str, debt_id: str) -> Debt:
@@ -85,7 +99,17 @@ def get_debt(user_id: str, debt_id: str) -> Debt:
     doc = db.collection(COLLECTION_NAME).document(debt_id).get()
     if not doc.exists or doc.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Debt not found")
-    return Debt(id=doc.id, **doc.to_dict())
+    
+    d_dict = doc.to_dict()
+    debt_obj = Debt(id=doc.id, **d_dict)
+    # Calculate stats
+    try:
+        stats = DebtCalculatorService.calculate_debt_stats(debt_obj)
+        debt_obj.stats = stats
+    except Exception as e:
+        pass
+    
+    return debt_obj
 
 
 def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
@@ -100,7 +124,7 @@ def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
     data = debt_in.model_dump(exclude_unset=True)
     doc_ref.update(data)
 
-    return Debt(id=debt_id, **doc_ref.get().to_dict())
+    return get_debt(user_id, debt_id)
 
 
 def delete_debt(user_id: str, debt_id: str):
@@ -209,7 +233,6 @@ def generate_payment_plan(
     month_idx = 0
 
     while any(d["balance"] > 0.01 for d in sim_debts) and month_idx < max_months:
-        month_idx += 1
         current_date_step = current_date + relativedelta(months=month_idx)
 
         # 1. Accrue Interest & Calculate Minimums
@@ -329,6 +352,8 @@ def generate_payment_plan(
                     )
                 )
                 d["current_payment"] = 0  # Reset
+        
+        month_idx += 1
 
     # Summaries
     summaries = []
