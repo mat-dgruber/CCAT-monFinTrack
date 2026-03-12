@@ -92,13 +92,13 @@
           <div class="flex items-center gap-3 min-w-0 flex-1">
             <div
               class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              [style.backgroundColor]="t.category?.color || '#ccc'"
-              pTooltip="{{ t.category?.name }}"
+              [style.backgroundColor]="t.category.color || '#ccc'"
+              pTooltip="{{ t.category.name }}"
               tooltipPosition="top"
             >
               <i
                 [class]="
-                  (t.category?.icon || 'pi pi-tag') + ' text-white text-xs'
+                  (t.category.icon || 'pi pi-tag') + ' text-white text-xs'
                 "
               ></i>
             </div>

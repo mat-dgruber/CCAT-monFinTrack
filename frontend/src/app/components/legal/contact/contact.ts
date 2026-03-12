@@ -55,8 +55,7 @@ export class Contact {
  this.isLoading.set(true);
  const formData = this.contactForm.value;
 
- this.http.post('https://formspree.io/f/mqarylvo', formData).subscribe({
- next: () => {
+ this.http.post('https://formspree.io/f/xqeybqqd', formData).subscribe({ next: () => {
  this.isLoading.set(false);
  this.messageService.add({
  severity: 'success',

@@ -34,6 +34,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 import { MessageService } from 'primeng/api';
 
@@ -79,6 +81,8 @@ import { SubscriptionService } from '../../services/subscription.service';
     FormsModule,
     PeriodicityPipe,
     SkeletonModule,
+    IconFieldModule,
+    InputIconModule,
   ],
   providers: [MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
@@ -251,8 +255,8 @@ export class SubscriptionsDashboardComponent implements OnInit {
   selectedType: 'expense' | 'income' = 'expense';
 
   typeOptions = [
-    { label: 'Despesa', value: 'expense' },
-    { label: 'Receita', value: 'income' },
+    { label: 'Despesa', value: 'expense', icon: 'pi pi-minus-circle' },
+    { label: 'Receita', value: 'income', icon: 'pi pi-plus-circle' },
   ];
 
   periodicityOptions = [
