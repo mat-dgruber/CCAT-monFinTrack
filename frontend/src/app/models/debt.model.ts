@@ -6,6 +6,8 @@ export enum DebtType {
   CONSIGNED_CREDIT = 'consigned_credit',
   VEHICLE_FINANCING = 'vehicle_financing',
   REAL_ESTATE_FINANCING = 'real_estate_financing',
+  LOAN = 'loan',
+  FINANCING = 'financing',
   OTHER = 'other',
 }
 
@@ -23,6 +25,7 @@ export enum AmortizationSystem {
 export enum DebtStatus {
   ON_TIME = 'on_time',
   OVERDUE = 'overdue',
+  LATE = 'late',
   NEGOTIATION = 'negotiation',
 }
 
@@ -73,9 +76,21 @@ export interface Debt {
 
   indexer?: IndexerType;
   insurance_value?: number;
+  administration_fee?: number;
   property_value?: number;
   current_property_value?: number;
   fgts_usage_interval?: number;
+  last_fgts_usage_date?: Date | string;
+  estimated_fgts_balance?: number;
+
+  is_under_construction?: boolean;
+  construction_end_date?: Date | string;
+
+  total_installments?: number;
+  installments_paid?: number;
+
+  subsidy_amount?: number;
+  subsidy_expiration_date?: Date | string;
 
   daily_interest_rate?: number;
   days_used_in_month?: number;
@@ -83,6 +98,44 @@ export interface Debt {
   contract_file_path?: string;
   amortization_system?: AmortizationSystem;
   is_subsidized?: boolean;
+  report?: string;
+
+  // Financiamento Veículo
+  vehicle_brand?: string;
+  vehicle_model?: string;
+  vehicle_year?: number;
+  vehicle_plate?: string;
+  vehicle_renavam?: string;
+  gravame_registered?: boolean;
+  vehicle_insurance_active?: boolean;
+  vehicle_insurance_expiry?: Date | string;
+  ipva_paid?: boolean;
+  licensing_ok?: boolean;
+
+  // Cartão
+  card_current_bill?: number;
+  card_closing_date?: Date | string;
+  card_minimum_payment_pct?: number;
+  months_in_revolving?: number;
+
+  // Cartão Parcelado
+  purchase_description?: string;
+  purchase_date?: Date | string;
+  has_interest?: boolean;
+
+  // Cheque Especial
+  overdraft_limit?: number;
+  overdraft_used?: number;
+  overdraft_days_used?: number;
+  overdraft_start_date?: Date | string;
+
+  // Consignado
+  consigned_type?: 'inss' | 'servidor_publico' | 'clt' | 'fgts_aniversario';
+  payroll_org?: string;
+  consigned_margin_used?: number;
+  consigned_years_committed?: number;
+  consigned_end_year?: number;
+  blocks_fgts_withdrawal?: boolean;
 }
 
 export interface PaymentStep {
