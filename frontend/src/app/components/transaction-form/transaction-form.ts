@@ -31,6 +31,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { SelectItemGroup, SelectItem, MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../services/category.service';
@@ -76,6 +78,8 @@ import { environment } from '../../../environments/environment';
     TooltipModule,
     TagModule,
     AccountTypePipe,
+    IconFieldModule,
+    InputIconModule,
   ],
   templateUrl: './transaction-form.html',
   styleUrl: './transaction-form.scss',
@@ -218,14 +222,14 @@ export class TransactionForm implements OnInit {
   });
 
   typeOptions = [
-    { label: 'Despesas', value: 'expense' },
-    { label: 'Receitas', value: 'income' },
+    { label: 'Despesas', value: 'expense', icon: 'pi pi-minus-circle' },
+    { label: 'Receitas', value: 'income', icon: 'pi pi-plus-circle' },
   ];
 
   modeOptions = [
-    { label: 'Única', value: 'single' },
-    { label: 'Parcelada', value: 'installments' },
-    { label: 'Recorrente', value: 'recurrence' },
+    { label: 'Única', value: 'single', icon: 'pi pi-calendar' },
+    { label: 'Parcelada', value: 'installments', icon: 'pi pi-list' },
+    { label: 'Recorrente', value: 'recurrence', icon: 'pi pi-sync' },
   ];
 
   visibleModeOptions = computed(() => {
@@ -236,18 +240,18 @@ export class TransactionForm implements OnInit {
   });
 
   periodicityOptions = [
-    { label: 'Mensal', value: 'monthly' },
-    { label: 'Semanal', value: 'weekly' },
-    { label: 'Anual', value: 'yearly' },
+    { label: 'Mensal', value: 'monthly', icon: 'pi pi-calendar' },
+    { label: 'Semanal', value: 'weekly', icon: 'pi pi-calendar-minus' },
+    { label: 'Anual', value: 'yearly', icon: 'pi pi-calendar-plus' },
   ];
 
   paymentOptions = [
-    { label: 'Cartão de Crédito', value: 'credit_card' },
-    { label: 'Débito', value: 'debit_card' },
-    { label: 'Pix', value: 'pix' },
-    { label: 'Dinheiro', value: 'cash' },
-    { label: 'Transferência', value: 'bank_transfer' },
-    { label: 'Boleto', value: 'bank_slip' },
+    { label: 'Cartão de Crédito', value: 'credit_card', icon: 'pi pi-credit-card' },
+    { label: 'Débito', value: 'debit_card', icon: 'pi pi-credit-card' },
+    { label: 'Pix', value: 'pix', icon: 'pi pi-bolt' },
+    { label: 'Dinheiro', value: 'cash', icon: 'pi pi-money-bill' },
+    { label: 'Transferência', value: 'bank_transfer', icon: 'pi pi-building' },
+    { label: 'Boleto', value: 'bank_slip', icon: 'pi pi-barcode' },
   ];
 
   form: FormGroup = this.fb.group({

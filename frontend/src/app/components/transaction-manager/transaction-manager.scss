@@ -1,4 +1,111 @@
+@import "../../../styles.scss";
+
 :host {
   display: block;
   height: 100%;
+}
+
+/* Page Header adjustments */
+.page-header {
+  margin-bottom: 2rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  backdrop-filter: none;
+  border-radius: 0;
+}
+
+/* Table Enhancements */
+::v-deep {
+  .p-datatable-sm .p-datatable-thead > tr > th {
+    background: transparent !important;
+    padding: 1rem 1.5rem !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-secondary);
+    border-bottom: 2px solid var(--surface-border) !important;
+  }
+
+  .p-datatable-tbody > tr {
+    transition: var(--transition-smooth);
+    background: transparent !important;
+
+    &:hover {
+      cursor: pointer;
+      background: var(--surface-hover) !important;
+      transform: scale(1.002) translateY(-1px);
+      box-shadow: var(--shadow-elegant);
+    }
+
+    > td {
+      padding: 1.25rem 1.5rem !important;
+      border-bottom: 1px solid
+        rgba(var(--surface-border-rgb, 229, 231, 235), 0.5) !important;
+    }
+  }
+
+  /* Group Headers */
+  tr.p-rowgroup-header {
+    background: transparent !important;
+
+    td {
+      background: transparent !important;
+      border: none !important;
+      padding-top: 2rem !important;
+    }
+  }
+
+  /* Amount Column logic to prevent breaking */
+  .amount-cell {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Skeleton animation refine */
+.p-skeleton {
+  opacity: 0.6;
+}
+
+/* Mobile Cards */
+.mobile-card {
+  transition: var(--transition-smooth);
+  border: 1px solid var(--surface-border);
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Custom Status Badges */
+.status-badge {
+  @apply px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider;
+
+  &.paid {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+  }
+
+  &.pending {
+    background: rgba(249, 115, 22, 0.1);
+    color: #ea580c;
+  }
+}
+
+/* Entry Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

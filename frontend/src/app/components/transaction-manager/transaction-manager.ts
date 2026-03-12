@@ -7,6 +7,7 @@ import {
   computed,
   ViewChild,
   AfterViewInit,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -69,15 +70,17 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     IconFieldModule,
     InputIconModule,
     SkeletonModule,
-    
+
     InputNumberModule,
-    
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss',
 })
 export class TransactionManager implements OnInit, AfterViewInit {
   @ViewChild(TransactionForm) transactionForm!: TransactionForm;
+  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('mobileSearchInput')
+  mobileSearchInput!: ElementRef<HTMLInputElement>;
 
   private transactionService = inject(TransactionService);
   private categoryService = inject(CategoryService);
@@ -100,7 +103,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
   });
 
   // Data
-  transactions = signal<Transaction[]>([]);
+  rawTransactions = signal<Transaction[]>([]);
   categories = signal<Category[]>([]);
   accounts = signal<Account[]>([]);
 
@@ -221,7 +224,8 @@ export class TransactionManager implements OnInit, AfterViewInit {
     // Fetch all transactions by default
     this.transactionService.getTransactions().subscribe({
       next: (data: Transaction[]) => {
-        this.processTransactions(data);
+        this.rawTransactions.set(data);
+        this.currentViewTransactions.set(data);
         this.loading.set(false);
       },
       error: () => {
@@ -246,7 +250,8 @@ export class TransactionManager implements OnInit, AfterViewInit {
         .getTransactions(undefined, undefined, undefined, start, end)
         .subscribe({
           next: (data: Transaction[]) => {
-            this.processTransactions(data);
+            this.rawTransactions.set(data);
+            this.currentViewTransactions.set(data);
             this.loading.set(false);
           },
           error: () => {
@@ -353,20 +358,21 @@ export class TransactionManager implements OnInit, AfterViewInit {
   currentGroupField = signal<string | null>('dateGroup');
 
   clear(table: Table) {
-    table.clear();
+    table.reset();
+    // Clear search inputs visually
+    if (this.searchInput) this.searchInput.nativeElement.value = '';
+    if (this.mobileSearchInput) this.mobileSearchInput.nativeElement.value = '';
     this.filterDateRange.set(null);
     this.selectedDatePreset.set('all');
     this.currentSortField.set('dateGroup');
     this.currentSortOrder.set(-1);
     this.currentGroupField.set('dateGroup');
-    // Clear mobile filters too
     this.clearMobileFilters();
-
     this.loadData();
   }
 
   applyMobileFilters() {
-    let filtered = this.transactions();
+    let filtered = this.rawTransactions();
 
     // 1. Apply Category Filter
     const cat = this.mobileCategoryFilter();
@@ -432,8 +438,9 @@ export class TransactionManager implements OnInit, AfterViewInit {
     }
 
     // 6. Update View
-    this.recalculateGroupingFlags(filtered);
-    this.currentViewTransactions.set(filtered);
+    setTimeout(() => {
+      this.currentViewTransactions.set(filtered);
+    });
     this.mobileFilterVisible.set(false);
   }
 
@@ -456,63 +463,54 @@ export class TransactionManager implements OnInit, AfterViewInit {
   }
 
   onFilter(event: any) {
-    const filtered = event.filteredValue;
-    this.recalculateGroupingFlags(filtered);
-    this.currentViewTransactions.set(filtered);
+    // Use setTimeout to ensure the update happens outside the current change detection cycle
+    // This is a common pattern to avoid NG0103 when one part of the view updates state that affects another part
+    setTimeout(() => {
+      this.currentViewTransactions.set(event.filteredValue);
+    });
   }
 
   onSort(event: any) {
-    const field = event.field;
-    const order = event.order;
+    setTimeout(() => {
+      this.currentSortField.set(event.field);
+      this.currentSortOrder.set(event.order);
 
-    this.currentSortField.set(field);
-    this.currentSortOrder.set(order);
-
-    // Only group rows if sorting by date
-    if (field === 'date' || field === 'dateGroup') {
-      this.currentGroupField.set('dateGroup');
-    } else {
-      this.currentGroupField.set(null);
-    }
-
-    if (event.data) {
-      this.recalculateGroupingFlags(event.data);
-    }
+      // Only group rows if sorting by date fields
+      if (event.field === 'date' || event.field === 'dateGroup') {
+        this.currentGroupField.set('dateGroup');
+      } else {
+        this.currentGroupField.set(null);
+      }
+    });
   }
 
-  private processTransactions(data: Transaction[]) {
-    // 1. Sort by Date Descending (Default)
-    const sorted = [...data].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-    this.recalculateGroupingFlags(sorted);
-    this.transactions.set(sorted);
-    this.currentViewTransactions.set(sorted);
-  }
+  transactions = computed(() => {
+    const data = this.rawTransactions();
+    const field = this.currentSortField() as keyof Transaction;
+    const order = this.currentSortOrder();
 
-  private recalculateGroupingFlags(list: Transaction[]) {
+    const sorted = [...data].sort((a, b) => {
+      let valA: any = (a as any)[field];
+      let valB: any = (b as any)[field];
+
+      if (field === 'date' || field === 'dateGroup') {
+        valA = new Date(a.date).getTime();
+        valB = new Date(b.date).getTime();
+      }
+
+      if (valA < valB) return -1 * order;
+      if (valA > valB) return order;
+      return 0;
+    });
+
+    // Pure mapping to add grouping flags
     let lastYear = -1;
     let lastMonth = -1;
 
-    // We must mutate the objects in the list to update flags based on the current list order.
-    // Since objects are references, this updates the data source too, which is fine for view flags.
-    list.forEach((t) => {
-      // Guard against skeleton loader numbers
-      if (typeof t !== 'object' || t === null) return;
-
+    return sorted.map((t) => {
       const d = new Date(t.date);
       const year = d.getFullYear();
       const month = d.getMonth();
-
-      // Ensure dateGroup is set (it should be, but just in case)
-      if (!t.dateGroup) {
-        if (!isNaN(d.getTime())) {
-          t.dateGroup = d.toISOString().split('T')[0];
-        } else {
-          // Fallback for invalid dates
-          t.dateGroup = 'Invalid Date';
-        }
-      }
 
       const isNewYear = year !== lastYear;
       const isNewMonth = month !== lastMonth || isNewYear;
@@ -520,12 +518,17 @@ export class TransactionManager implements OnInit, AfterViewInit {
       if (isNewYear) lastYear = year;
       if (isNewMonth) lastMonth = month;
 
-      t.isNewYear = isNewYear;
-      t.isNewMonth = isNewMonth;
-      t.yearLabel = isNewYear ? year.toString() : undefined;
-      t.monthLabel = isNewMonth ? this.getMonthName(month) : undefined;
+      return {
+        ...t,
+        dateGroup: t.dateGroup || (isNaN(d.getTime()) ? 'Invalid Date' : d.toISOString().split('T')[0]),
+        isNewYear,
+        isNewMonth,
+        yearLabel: isNewYear ? year.toString() : undefined,
+        monthLabel: isNewMonth ? this.getMonthName(month) : undefined,
+      };
     });
-  }
+  });
+
 
   private getMonthName(monthIndex: number): string {
     const months = [
@@ -599,7 +602,7 @@ export class TransactionManager implements OnInit, AfterViewInit {
         });
 
         // Update local state
-        this.transactions.update((list) =>
+        this.rawTransactions.update((list) =>
           list.map((item) =>
             item.id === t.id ? { ...item, status: newStatus } : item,
           ),
@@ -638,10 +641,11 @@ export class TransactionManager implements OnInit, AfterViewInit {
             const now = new Date();
             this.transactionService
               .getTransactions(now.getMonth() + 1, now.getFullYear())
-              .subscribe((d) => {
-                this.transactions.set(d);
-                this.currentViewTransactions.set(d);
+              .subscribe((d: Transaction[]) => {
+                this.rawTransactions.set(d);
               });
+          } else {
+            this.onDateRangeChange();
           }
         });
       },
