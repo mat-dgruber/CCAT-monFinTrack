@@ -1,3 +1,4 @@
+#app/services/document_analysis.py
 import json
 import os
 from typing import Any, Dict, Optional
@@ -38,30 +39,66 @@ class DocumentAnalysisService:
             model = genai.GenerativeModel(AI_MODEL_NAME)
 
             prompt = """
-            Role: Expert Financial Document Analyzer.
-            Task: Extract structured debt information from this document (Loan Contract, Credit Card Statement, etc.).
-            Language: PT-BR.
-            
-            Target Fields (JSON):
+            Você é um Analista de Contratos Bancários Sênior.
+            Primeiro, identifique o tipo de documento:
+            - Financiamento Imobiliário → debt_type: "real_estate_financing"
+            - Financiamento de Veículo → debt_type: "vehicle_financing"  
+            - Cartão de Crédito → debt_type: "credit_card_rotating"
+            - Empréstimo Pessoal → debt_type: "personal_loan"
+            - Consignado → debt_type: "consigned_credit"
+            - Cheque Especial → debt_type: "overdraft"
+
+            Depois extraia os campos relevantes conforme o tipo identificado:
+
+            ### PARTE 1: EXTRAÇÃO TÉCNICA (JSON)
+            Extraia os dados no seguinte formato JSON estrito:
             {
-                "name": "Creditor Name / Bank",
-                "total_amount": 0.00 (Outstanding Balance / Saldo Devedor),
-                "original_amount": 0.00 (Contract Value / Valor Original),
-                "interest_rate": 0.00 (Monthly Rate % / Taxa Mensal),
-                "interest_period": "monthly" (or "yearly"),
-                "cet": 0.00 (Custo Efetivo Total % a.m.),
-                "installments_total": 0 (Total number of installments),
-                "installments_paid": 0 (Number of paid installments),
-                "due_day": 0 (Day of month),
-                "debt_type": "type_enum" (Allowed: credit_card_rotating, credit_card_installment, personal_loan, vehicle_financing, real_estate_financing, overdraft, consigned_credit, other)
+                "name": "Nome do Banco/Credor",
+                "debt_type": "...",
+                "status": "on_time",
+                "total_amount": 0.00 (Saldo Devedor Atual),
+                "original_amount": 0.00 (Valor total financiado),
+                "interest_rate": 0.00 (Taxa de juros mensal %),
+                "interest_period": "monthly",
+                "cet": 0.00 (Custo Efetivo Total ANUAL %),
+                "minimum_payment": 0.00 (Valor do encargo mensal),
+                "due_day": 0,
+                
+                // Campos Veículo (se aplicável)
+                "vehicle_brand": "...",
+                "vehicle_model": "...",
+                "vehicle_year": 0,
+                "vehicle_plate": "...",
+                "vehicle_renavam": "...",
+                
+                // Campos Imóvel (se aplicável)
+                "amortization_system": "price" ou "sac",
+                "indexer": "tr", "ipca", "poupanca" ou "none",
+                "insurance_value": 0.00,
+                "administration_fee": 0.00,
+                "property_value": 0.00,
+                
+                // Campos comuns a financiamentos
+                "total_installments": 0,
+                "installments_paid": 0,
+                
+                // Outros campos Imóvel
+                "is_under_construction": true ou false,
+                "construction_end_date": "YYYY-MM-DD",
+                "subsidy_amount": 0.00,
+                "subsidy_expiration_date": "YYYY-MM-DD"
             }
-            
-            Rules:
-            - If a value is not found, use null or 0.
-            - Ensure 'interest_rate' is the MONTHLY rate. If yearly is found, convert or note it.
-            - Look for "Taxa de Juros", "CET", "Saldo Devedor".
-            - 'debt_type' MUST be one of the allowed values above.
-            - Return PURE JSON.
+
+            ### PARTE 2: RELATÓRIO EDUCATIVO (MARKDOWN)
+            Gere um relatório detalhado na chave "report" do JSON explicando:
+            1. Como funcionam as taxas e o indexador especificamente para este contrato.
+            2. De onde vem o juro mensal (base de cálculo).
+            3. Como funcionam as amortizações extras: Redução de Prazo vs Prestação. Qual a melhor e por que.
+            4. Dicas de gestão específicas para o tipo de dívida detectado.
+
+            ### REGRAS CRÍTICAS:
+            - Se não encontrar um campo, use null.
+            - Retorne APENAS o JSON, sem textos explicativos fora do bloco.
             """
 
             # Create content part
