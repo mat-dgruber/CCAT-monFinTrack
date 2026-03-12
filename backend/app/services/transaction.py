@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.database import get_db
 from app.core.date_utils import get_month_range
@@ -279,8 +280,9 @@ def list_transactions(
         if start_date.tzinfo is None:
             pass
 
-        query = query.where("date", ">=", start_date).where("date", "<=", end_date)
-
+        query = query.where(filter=FieldFilter("date", ">=", start_date)).where(
+            filter=FieldFilter("date", "<=", end_date)
+        )
         # OTIMIZAÇÃO EXTRA: Ordenação e Limite no DB
         # Isso requer índice: user_id ASC, date DESC
         query = query.order_by("date", direction=firestore.Query.DESCENDING)
@@ -590,7 +592,10 @@ def delete_transaction(transaction_id: str, user_id: str, scope: str = "all"):
 
 
 def update_installment_group(
-    transaction_id: str, transaction_in: TransactionUpdate, user_id: str, scope: str = "single"
+    transaction_id: str,
+    transaction_in: TransactionUpdate,
+    user_id: str,
+    scope: str = "single",
 ) -> List[Transaction]:
     """
     Atualiza parcelas com suporte a escopo.
@@ -615,7 +620,14 @@ def update_installment_group(
     # Campos seguros para propagar em lote (não propagar data, status, payment_date)
     safe_fields = {}
     update_data = transaction_in.model_dump(exclude_unset=True, mode="json")
-    propagatable = ["category_id", "account_id", "payment_method", "title", "credit_card_id", "amount"]
+    propagatable = [
+        "category_id",
+        "account_id",
+        "payment_method",
+        "title",
+        "credit_card_id",
+        "amount",
+    ]
     for field in propagatable:
         if field in update_data:
             safe_fields[field] = update_data[field]

@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from app.core.database import get_db
 from app.schemas.category import Category, CategoryCreate, CategoryType
 from fastapi import HTTPException
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 COLLECTION_NAME = "categories"
 
@@ -382,8 +383,6 @@ def ensure_default_categories(user_id: str):
 
     # Batch para criação eficiente
     batch = db.batch()
-    new_categories = []
-
     # Se não tiver NENHUMA categoria, cria todas
     # Se tiver algumas, verifica especificamente Fatura Cartão
 
@@ -452,7 +451,7 @@ def list_categories(
     query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
 
     if cat_type:
-        query = query.where("type", "==", cat_type.value)
+        query = query.where(filter=FieldFilter("type", "==", cat_type.value))
 
     docs = query.stream()
 

@@ -60,10 +60,10 @@ import { TransactionService } from '../../services/transaction.service';
 
       <!-- Glassmorphic Global Toolbar -->
       <div
-        class="mb-8 relative overflow-hidden rounded-3xl border border-white/20 dark:border-surface-border/50 bg-white/60 dark:bg-surface-card/60 backdrop-blur-xl shadow-xl shadow-surface-900/5 p-1"
+        class="backdrop-blur-lg bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl mb-8 relative overflow-hidden"
       >
         <div
-          class="p-5 md:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6"
+          class="flex flex-col xl:flex-row xl:items-center justify-between gap-6"
         >
           <!-- Left Side: Controls -->
           <div
