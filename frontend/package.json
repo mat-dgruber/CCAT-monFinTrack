@@ -31,6 +31,7 @@
     "@angular/service-worker": "^20.0.0",
     "@primeng/themes": "^20.0.0",
     "chart.js": "^4.5.1",
+    "date-fns": "^4.1.0",
     "firebase": "^12.6.0",
     "html2canvas": "^1.4.1",
     "lucide-angular": "^0.561.0",
