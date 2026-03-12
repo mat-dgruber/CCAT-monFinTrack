@@ -49,6 +49,7 @@
     "@angular/compiler-cli": "^20.0.0",
     "@angular/pwa": "^20.0.0",
     "@playwright/test": "^1.57.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/html2canvas": "^0.5.35",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.22",
