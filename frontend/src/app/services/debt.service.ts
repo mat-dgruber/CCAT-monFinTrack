@@ -12,6 +12,8 @@ export class DebtService {
 
   constructor(private http: HttpClient) {}
 
+  // --- CRUD ---
+
   getDebts(): Observable<Debt[]> {
     return this.http.get<Debt[]>(this.apiUrl);
   }
@@ -28,6 +30,8 @@ export class DebtService {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
+  // --- PLANNER ---
+
   generatePlan(
     strategy: 'snowball' | 'avalanche',
     monthlyBudget: number,
@@ -35,9 +39,10 @@ export class DebtService {
     const params = new HttpParams()
       .set('strategy', strategy)
       .set('monthly_budget', monthlyBudget.toString());
-
     return this.http.post<PaymentPlan>(`${this.apiUrl}/plan`, {}, { params });
   }
+
+  // --- HOUSING SIMULATOR ---
 
   getHousingDefaults(income: number): Observable<any> {
     const params = new HttpParams().set('income', income.toString());
@@ -57,9 +62,10 @@ export class DebtService {
       .set('interest_rate_yearly', rate.toString())
       .set('months', months.toString())
       .set('system', system);
-
     return this.http.post(`${this.apiUrl}/simulation/housing`, {}, { params });
   }
+
+  // --- AI FEATURES ---
 
   analyzeDocument(file: File): Observable<any> {
     const formData = new FormData();
@@ -77,11 +83,64 @@ export class DebtService {
 
   // --- CALCULATOR ---
 
+  simulateAmortization(
+    balance: number,
+    rateMonthly: number,
+    installment: number,
+    extraAmount: number,
+    system: string = 'price',
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('balance', balance.toString())
+      .set('rate_monthly', rateMonthly.toString())
+      .set('installment', installment.toString())
+      .set('extra_amount', extraAmount.toString())
+      .set('system', system);
+    return this.http.get(`${this.apiUrl}/simulation/amortization`, { params });
+  }
+
+  simulateMultipleParcels(
+    rateMonthly: number,
+    installment: number,
+    count: number,
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('rate_monthly', rateMonthly.toString())
+      .set('installment', installment.toString())
+      .set('count', count.toString());
+    return this.http.get(`${this.apiUrl}/simulation/anticipate-multiple`, { params });
+  }
+
+  /**
+   * Simula o estrago do cartão rotativo ou cheque especial.
+   * Projeção pagando mínimo vs valor fixo.
+   */
+  simulateRevolving(
+    balance: number,
+    rateMonthly: number,         // em %, ex: 15.5
+    minimumPct: number = 15,     // em %, ex: 15
+    fixedPayment: number = 0,
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('balance', balance.toString())
+      .set('rate_monthly', rateMonthly.toString())
+      .set('minimum_pct', minimumPct.toString())
+      .set('fixed_payment', fixedPayment.toString());
+    return this.http.get(`${this.apiUrl}/simulation/revolving`, { params });
+  }
+
+  /**
+   * Busca alertas específicos de uma dívida (IPVA, seguro, subsídio, gravame...).
+   */
+  getDebtAlerts(debtId: string): Observable<DebtAlert[]> {
+    return this.http.get<DebtAlert[]>(`${this.apiUrl}/alerts/${debtId}`);
+  }
+
   calculatePresentValue(
     parcelValue: number,
     monthlyRate: number,
-    dueDate: string, // YYYY-MM-DD
-    paymentDate?: string, // YYYY-MM-DD
+    dueDate: string,
+    paymentDate?: string,
   ): Observable<any> {
     const payload = {
       parcel_value: parcelValue,
@@ -94,4 +153,14 @@ export class DebtService {
       payload,
     );
   }
+}
+
+// --- TIPOS DE SUPORTE ---
+
+export interface DebtAlert {
+  type: 'error' | 'warning' | 'info';
+  code: string;
+  title: string;
+  message: string;
+  priority: number;
 }
