@@ -39,6 +39,7 @@ import { CategoryService } from '../../services/category.service';
 import { ColorService } from '../../services/color.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import html2canvas from 'html2canvas';
+import { PageHelpComponent } from '../page-help/page-help';
 
 interface TreemapNode {
   label: string;
@@ -101,6 +102,7 @@ interface SankeyLink {
     TooltipModule,
     PopoverModule,
     SkeletonModule,
+    PageHelpComponent,
   ],
   template: `
     <div
@@ -357,6 +359,7 @@ interface SankeyLink {
             class="p-button-text p-button-danger p-button-sm p-0 w-8 h-8"
             (click)="onRemoveWidget()"
           ></button>
+          <app-page-help document="chart-widget.md"></app-page-help>
         </div>
       </div>
 

@@ -21,6 +21,7 @@ import { Budget } from '../../models/budget.model';
 import { Category } from '../../models/category.model';
 
 import { SkeletonModule } from 'primeng/skeleton';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
  selector: 'app-budget-manager',
@@ -28,7 +29,7 @@ import { SkeletonModule } from 'primeng/skeleton';
  imports: [
  CommonModule, ReactiveFormsModule, ProgressBarModule, ButtonModule,
  DialogModule, InputNumberModule, SelectModule, CurrencyPipe, SkeletonModule,
- IconFieldModule, InputIconModule
+ IconFieldModule, InputIconModule, PageHelpComponent
  ],
  providers: [CurrencyPipe],
  templateUrl: './budget-manager.html',

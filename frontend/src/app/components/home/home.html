@@ -70,6 +70,14 @@
  </a>
  </li>
  <li>
+ <a routerLink="/debt-planner" (click)="closeSidebar()"
+ routerLinkActive="bg-nav-active text-nav-active-text"
+ class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors">
+ <i class="pi pi-money-bill"></i>
+ <span class="font-medium">Dívidas</span>
+ </a>
+ </li>
+ <li>
  <a routerLink="/categories" (click)="closeSidebar()"
  routerLinkActive="bg-nav-active text-nav-active-text"
  class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors">

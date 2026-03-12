@@ -5,11 +5,12 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction } from '../../models/transaction.model';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
  selector: 'app-financial-calendar',
  standalone: true,
- imports: [CommonModule, ButtonModule, TooltipModule],
+ imports: [CommonModule, ButtonModule, TooltipModule, PageHelpComponent],
  templateUrl: './financial-calendar.component.html',
  styleUrl: './financial-calendar.component.scss'
 })

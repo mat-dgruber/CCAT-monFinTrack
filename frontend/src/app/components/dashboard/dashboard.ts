@@ -50,6 +50,7 @@ import { BudgetManager } from '../budget-manager/budget-manager';
 import { InvoiceDashboard } from '../invoice-dashboard/invoice-dashboard';
 import { RecentTransactionsComponent } from '../recent-transactions/recent-transactions.component';
 import { TitheSummaryComponent } from '../tithe-summary/tithe-summary';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
  selector: 'app-dashboard',
@@ -72,6 +73,7 @@ import { TitheSummaryComponent } from '../tithe-summary/tithe-summary';
  ButtonModule,
  RouterModule,
  ToastModule, // Add ToastModule
+ PageHelpComponent,
  ],
  providers: [MessageService], // Add MessageService
  templateUrl: './dashboard.html',

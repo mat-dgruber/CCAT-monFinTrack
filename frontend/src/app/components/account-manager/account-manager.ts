@@ -29,6 +29,7 @@ import { Category } from '../../models/category.model';
 
 // Lista de Ícones Compartilhada
 import { ICON_LIST } from '../../shared/icons';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
  selector: 'app-account-manager',
@@ -48,6 +49,7 @@ import { ICON_LIST } from '../../shared/icons';
  DatePickerModule,
  IconFieldModule,
  InputIconModule,
+ PageHelpComponent,
  ],
  templateUrl: './account-manager.html',
  styleUrl: './account-manager.scss'

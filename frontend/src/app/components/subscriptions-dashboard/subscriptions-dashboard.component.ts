@@ -9,7 +9,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
@@ -56,6 +56,7 @@ import { PeriodicityPipe } from '../../pipes/periodicity.pipe';
 import { SkeletonModule } from 'primeng/skeleton';
 import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
   selector: 'app-subscriptions-dashboard',
@@ -83,6 +84,9 @@ import { SubscriptionService } from '../../services/subscription.service';
     SkeletonModule,
     IconFieldModule,
     InputIconModule,
+    CurrencyPipe,
+    PageHelpComponent,
+    CommonModule
   ],
   providers: [MessageService],
   templateUrl: './subscriptions-dashboard.component.html',

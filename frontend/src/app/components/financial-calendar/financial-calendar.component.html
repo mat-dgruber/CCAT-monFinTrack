@@ -5,16 +5,15 @@
     <div class="page-title-group">
       <h1 class="page-title !text-xl capitalize">{{ monthLabel() }}</h1>
     </div>
-    <div class="page-actions">
+    <div class="flex items-center gap-2">
+      <app-page-help document="financial-calendar.md"></app-page-help>
       <p-button
         icon="pi pi-chevron-left"
-        [rounded]="true"
         [text]="true"
         (onClick)="prevMonth()"
       ></p-button>
       <p-button
         icon="pi pi-chevron-right"
-        [rounded]="true"
         [text]="true"
         (onClick)="nextMonth()"
       ></p-button>

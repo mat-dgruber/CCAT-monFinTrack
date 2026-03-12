@@ -6,6 +6,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { ChartModule } from 'primeng/chart';
+import { TooltipModule } from 'primeng/tooltip';
+import { PageHelpComponent } from '../page-help/page-help';
 
 interface ChatMessage {
  sender: 'user' | 'ai';
@@ -19,7 +21,7 @@ import { Router } from '@angular/router';
 @Component({
  selector: 'app-chat',
  standalone: true,
- imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, ChartModule],
+ imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, ChartModule, TooltipModule, PageHelpComponent],
  templateUrl: './chat.component.html',
  styleUrl: './chat.component.scss'
 })

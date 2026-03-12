@@ -10,6 +10,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -48,6 +49,7 @@ import { ImportTransactionsComponent } from '../import-transactions/import-trans
 // Components & Pipes
 import { TransactionForm } from '../transaction-form/transaction-form';
 import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
   selector: 'app-transaction-manager',
@@ -72,6 +74,8 @@ import { PaymentFormatPipe } from '../../pipes/payment-format.pipe';
     SkeletonModule,
 
     InputNumberModule,
+    PageHelpComponent,
+    CommonModule
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss',

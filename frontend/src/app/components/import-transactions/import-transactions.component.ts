@@ -21,6 +21,7 @@ import { firstValueFrom } from 'rxjs';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Transaction } from '../../models/transaction.model';
+import { PageHelpComponent } from '../page-help/page-help';
 
 interface DraftTransaction {
  date: string;
@@ -44,7 +45,8 @@ interface DraftTransaction {
  SelectModule, // Updated
  ToastModule,
  TooltipModule,
- CheckboxModule
+ CheckboxModule,
+ PageHelpComponent
  ],
  providers: [MessageService],
  templateUrl: './import-transactions.component.html',

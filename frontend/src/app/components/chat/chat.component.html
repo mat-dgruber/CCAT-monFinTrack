@@ -1,117 +1,124 @@
 <div class="chat-widget" [class.expanded]="expanded()">
- <!-- Header (Visible when expanded) -->
- <div class="chat-header" *ngIf="expanded()" (click)="toggleChat()">
-   <div class="header-content">
-     <div class="chat-icon-bg">
-       <i class="pi pi-sparkles"></i>
-     </div>
-     <span>Assistente Financeiro</span>
-   </div>
-   <div class="header-actions">
-     <i
-       class="pi pi-fire mr-3 cursor-pointer transition-colors duration-300 roast-icon"
-       [class.active]="isRoastMode()"
-       pTooltip="Modo Roast 🔥"
-       tooltipPosition="bottom"
-       (click)="toggleRoastMode(); $event.stopPropagation()"
-     >
-     </i>
-     <div class="close-btn">
-       <i class="pi pi-times"></i>
-     </div>
-   </div>
- </div>
+  <!-- Header (Visible when expanded) -->
+  <div class="chat-header" *ngIf="expanded()" (click)="toggleChat()">
+    <div class="header-content">
+      <div class="chat-icon-bg">
+        <i class="pi pi-sparkles"></i>
+      </div>
+      <span>Assistente Financeiro</span>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        icon="pi pi-roast"
+        class="p-button-rounded transition-colors duration-300 w-8 h-8"
+        [class.p-button-help]="isRoastMode()"
+        [class.p-button-text]="!isRoastMode()"
+        [class.opacity-50]="!subscriptionService.canAccess('roast_mode')"
+        (click)="toggleRoastMode()"
+        [pTooltip]="
+          isRoastMode() ? 'Desativar Modo Roast' : 'Ativar Modo Roast'
+        "
+      ></button>
+      <app-page-help document="chat.md"></app-page-help>
+      <button
+        pButton
+        icon="pi pi-times"
+        class="p-button-rounded p-button-text w-8 h-8"
+        (click)="toggleChat()"
+      ></button>
+    </div>
+  </div>
 
- <!-- FAB Button (Visible when collapsed) -->
- <button 
-   *ngIf="!expanded()" 
-   class="fab-trigger" 
-   (click)="toggleChat()"
-   aria-label="Abrir Assistente Financeiro">
-   <i class="pi pi-sparkles"></i>
- </button>
+  <!-- FAB Button (Visible when collapsed) -->
+  <button
+    *ngIf="!expanded()"
+    class="fab-trigger"
+    (click)="toggleChat()"
+    aria-label="Abrir Assistente Financeiro"
+  >
+    <i class="pi pi-sparkles"></i>
+  </button>
 
- <!-- Body (Visible only when expanded) -->
- <div class="chat-body" *ngIf="expanded()">
- @if (canAccess()) {
- <div class="messages-list" #scrollContainer>
- <div
- *ngFor="let msg of messages()"
- class="message"
- [class.user]="msg.sender === 'user'"
- [class.ai]="msg.sender === 'ai'"
- >
- <div class="message-content">
- {{ msg.text }}
+  <!-- Body (Visible only when expanded) -->
+  <div class="chat-body" *ngIf="expanded()">
+    @if (canAccess()) {
+      <div class="messages-list" #scrollContainer>
+        <div
+          *ngFor="let msg of messages()"
+          class="message"
+          [class.user]="msg.sender === 'user'"
+          [class.ai]="msg.sender === 'ai'"
+        >
+          <div class="message-content">
+            {{ msg.text }}
 
- <div
- *ngIf="msg.chartData"
- class="mt-3 w-full"
- style="max-height: 250px"
- >
- <p-chart
- [type]="msg.chartData.type"
- [data]="msg.chartData.data"
- [options]="msg.chartData.options"
- height="200px"
- ></p-chart>
- </div>
- </div>
- <div class="message-time">
- {{ msg.timestamp | date: "shortTime" }}
- </div>
- </div>
+            <div
+              *ngIf="msg.chartData"
+              class="mt-3 w-full"
+              style="max-height: 250px"
+            >
+              <p-chart
+                [type]="msg.chartData.type"
+                [data]="msg.chartData.data"
+                [options]="msg.chartData.options"
+                height="200px"
+              ></p-chart>
+            </div>
+          </div>
+          <div class="message-time">
+            {{ msg.timestamp | date: "shortTime" }}
+          </div>
+        </div>
 
- <div *ngIf="loading()" class="message ai loading-message">
-   <div class="typing-indicator">
-     <span></span>
-     <span></span>
-     <span></span>
-   </div>
- </div>
+        <div *ngIf="loading()" class="message ai loading-message">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
 
- <div *ngIf="messages().length === 0" class="empty-state">
- <p>Olá! Sou seu assistente financeiro.</p>
- <p>Pergunte sobre seu saldo, gastos recentes ou dicas de economia.</p>
- </div>
- </div>
+        <div *ngIf="messages().length === 0" class="empty-state">
+          <p>Olá! Sou seu assistente financeiro.</p>
+          <p>Pergunte sobre seu saldo, gastos recentes ou dicas de economia.</p>
+        </div>
+      </div>
 
- <div class="chat-input-area">
-   <div class="input-wrapper">
-     <input
-       type="text"
-       pInputText
-       class="chat-input"
-       placeholder="Pergunte algo..."
-       [(ngModel)]="currentMessage"
-       (keydown.enter)="sendMessage()"
-       [disabled]="loading()"
-     />
-     <button
-       class="send-btn"
-       (click)="sendMessage()"
-       [disabled]="!currentMessage || loading()"
-       aria-label="Enviar mensagem"
-     >
-       <i class="pi pi-send"></i>
-     </button>
-   </div>
- </div>
- } @else {
- <div
- class="flex flex-col items-center justify-center h-full p-4 text-center"
- >
- <div class="text-4xl mb-2">💎</div>
- <h3 class="font-bold text-color mb-1">
- IA Financeira
- </h3>
- <p class="text-sm text-secondary mb-4">Chat exclusivo para Pro.</p>
- <p-button
- label="Upgrade"
- styleClass="p-button-sm p-button-rounded"
- (onClick)="navigateToPricing()"
- ></p-button>
- </div>
- }
- </div>
+      <div class="chat-input-area">
+        <div class="input-wrapper">
+          <input
+            type="text"
+            pInputText
+            class="chat-input"
+            placeholder="Pergunte algo..."
+            [(ngModel)]="currentMessage"
+            (keydown.enter)="sendMessage()"
+            [disabled]="loading()"
+          />
+          <button
+            class="send-btn"
+            (click)="sendMessage()"
+            [disabled]="!currentMessage || loading()"
+            aria-label="Enviar mensagem"
+          >
+            <i class="pi pi-send"></i>
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div
+        class="flex flex-col items-center justify-center h-full p-4 text-center"
+      >
+        <div class="text-4xl mb-2">💎</div>
+        <h3 class="font-bold text-color mb-1">IA Financeira</h3>
+        <p class="text-sm text-secondary mb-4">Chat exclusivo para Pro.</p>
+        <p-button
+          label="Upgrade"
+          styleClass="p-button-sm p-button-rounded"
+          (onClick)="navigateToPricing()"
+        ></p-button>
+      </div>
+    }
+  </div>
 </div>

@@ -8,6 +8,7 @@ import { RefreshService } from '../../services/refresh.service';
 import { SubscriptionService } from '../../services/subscription.service'; // Import SubscriptionService
 import { InvoiceSummary } from '../../models/invoice.model';
 import { Account } from '../../models/account.model';
+import { PageHelpComponent } from '../page-help/page-help';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -27,7 +28,8 @@ import { MessageService } from 'primeng/api';
  SkeletonModule,
  DialogModule,
  SelectModule,
- DatePickerModule
+ DatePickerModule,
+ PageHelpComponent
  ],
  templateUrl: './invoice-dashboard.html',
  styles: [`

@@ -1,5 +1,4 @@
 <p-dialog
-  [header]="editingId() ? 'Editar Transação' : 'Nova Transação'"
   [modal]="true"
   [(visible)]="visible"
   [style]="{ width: '36rem', maxHeight: '90vh' }"
@@ -9,6 +8,14 @@
   [contentStyle]="{ overflowY: 'auto' }"
   styleClass="p-fluid custom-transaction-dialog"
 >
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 w-full">
+      <i class="pi pi-plus-circle text-primary text-xl"></i>
+      <span class="font-bold text-xl">{{ editingId() ? 'Editar Transação' : 'Nova Transação' }}</span>
+      <div class="flex-1"></div>
+      <app-page-help document="transaction-form.md"></app-page-help>
+    </div>
+  </ng-template>
   <form
     [formGroup]="form"
     (ngSubmit)="onSubmit()"

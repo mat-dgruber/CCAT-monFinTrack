@@ -17,6 +17,7 @@ import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { PageHelpComponent } from '../page-help/page-help';
 
 interface Message {
  severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
@@ -41,7 +42,8 @@ interface Message {
  CurrencyPipe,
  DecimalPipe,
  SkeletonModule,
- MarkdownModule
+ MarkdownModule,
+ PageHelpComponent
  ],
  templateUrl: './cost-of-living.component.html',
  styleUrl: './cost-of-living.component.scss'

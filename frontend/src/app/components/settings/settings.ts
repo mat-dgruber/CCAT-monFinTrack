@@ -29,6 +29,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { PageHelpComponent } from '../page-help/page-help';
 
 import { PwaService } from '../../services/pwa.service';
 
@@ -58,6 +59,7 @@ import { PwaService } from '../../services/pwa.service';
     RouterModule,
     ProgressBarModule,
     ProgressSpinnerModule,
+    PageHelpComponent,
   ],
   providers: [MessageService],
 })

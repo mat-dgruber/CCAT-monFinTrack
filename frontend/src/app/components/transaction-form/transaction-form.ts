@@ -58,6 +58,7 @@ import { Account } from '../../models/account.model';
 
 import { AccountTypePipe } from '../../pipes/account-type.pipe';
 import { environment } from '../../../environments/environment';
+import { PageHelpComponent } from '../page-help/page-help';
 
 @Component({
   selector: 'app-transaction-form',
@@ -80,6 +81,7 @@ import { environment } from '../../../environments/environment';
     AccountTypePipe,
     IconFieldModule,
     InputIconModule,
+    PageHelpComponent
   ],
   templateUrl: './transaction-form.html',
   styleUrl: './transaction-form.scss',

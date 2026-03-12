@@ -19,6 +19,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
 import { ICON_LIST } from '../../shared/icons';
+import { PageHelpComponent } from '../page-help/page-help';
 
 
 @Component({
@@ -37,6 +38,7 @@ import { ICON_LIST } from '../../shared/icons';
  SkeletonModule,
  IconFieldModule,
  InputIconModule,
+ PageHelpComponent,
  ],
  templateUrl: './category-manager.html',
  styleUrl: './category-manager.scss'
