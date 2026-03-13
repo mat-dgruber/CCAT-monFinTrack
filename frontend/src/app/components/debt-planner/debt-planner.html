@@ -4,16 +4,16 @@
     <div class="page-title-group">
       <div class="flex items-center gap-3">
         <h1 class="page-title">Planejador de Dívidas</h1>
-        <app-page-help
-          [document]="helpDocument()"
-          [title]="helpTitle()"
-        ></app-page-help>
       </div>
       <p class="page-description">
         Gerencie suas dívidas e simule estratégias de quitação.
       </p>
     </div>
     <div class="flex gap-2">
+      <app-page-help
+        [document]="helpDocument()"
+        [title]="helpTitle()"
+      ></app-page-help>
       <p-button
         label="Simulação Habitacional"
         icon="pi pi-home"
@@ -22,8 +22,8 @@
       ></p-button>
       <p-button
         label="Consultor IA"
-        icon="pi pi-sparkles"
-        styleClass="p-button-warning ai-button-glow"
+        icon="pi pi-bolt"
+        styleClass="ai-button-glow"
         (onClick)="openAdvice()"
       ></p-button>
     </div>
@@ -50,7 +50,7 @@
           Financiamento
         </p-tab>
         <p-tab [value]="3">
-          <i class="pi pi-file-pdf mr-2"></i>
+          <i class="pi pi-camera mr-2"></i>
           IA Scanner
         </p-tab>
         <p-tab [value]="4">
@@ -378,7 +378,7 @@
                             <div
                               class="flex items-center gap-2 text-primary-600 dark:text-primary-400"
                             >
-                              <i class="pi pi-sparkles"></i>
+                              <i class="pi pi-file-import"></i>
                               <span
                                 class="font-bold uppercase tracking-wider text-xs"
                                 >Relatório de Análise (IA)</span
@@ -1163,19 +1163,23 @@
 
                   <ng-template pTemplate="content">
                     <div
-                      class="upload-zone premium-dashed-border flex-grow flex flex-col items-center justify-center p-12 relative transition-all duration-300 group bg-surface-card/30"
+                      class="upload-zone-ai flex-grow flex flex-col items-center justify-center p-12 relative transition-all duration-300 group border-2 border-dashed rounded-3xl"
                       (click)="fileUploader.choose()"
                       (dragenter)="fileUploader.onDragEnter($event)"
                       (dragleave)="fileUploader.onDragLeave($event)"
                     >
+                      <!-- Scanner Animation Effect -->
+                      <div
+                        class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent top-0 animate-scan opacity-0 group-hover:opacity-100"
+                      ></div>
                       <div
                         class="relative z-10 text-center pointer-events-none"
                       >
                         <div
-                          class="bg-accent-bg w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300"
+                          class="bg-gradient-to-br from-amber-400 to-orange-600 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3 group-hover:rotate-0 group-hover:scale-110 transition-all duration-500 shadow-xl shadow-amber-500/20"
                         >
                           <i
-                            class="pi pi-cloud-upload text-4xl text-accent"
+                            class="pi pi-file-import text-4xl text-white"
                           ></i>
                         </div>
 
@@ -1193,10 +1197,10 @@
 
                         <button
                           type="button"
-                          class="px-10 py-4 bg-accent hover:opacity-90 text-white rounded-full font-bold shadow-lg shadow-accent/30 transition-all flex items-center gap-3 mx-auto pointer-events-auto mt-4"
+                          class="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-3 mx-auto pointer-events-auto mt-4 ai-button-glow"
                           (click)="fileUploader.choose()"
                         >
-                          <i class="pi pi-search"></i>
+                          <i class="pi pi-search-plus"></i>
                           Selecionar Arquivo
                         </button>
                       </div>
@@ -1212,12 +1216,12 @@
                 <!-- Central Pulsing Icon -->
                 <div class="relative mb-8">
                   <div
-                    class="absolute inset-0 bg-accent rounded-full blur-xl opacity-20 processing-pulse"
+                    class="absolute inset-0 bg-amber-500 rounded-full blur-xl opacity-20 processing-pulse-amber"
                   ></div>
                   <div
-                    class="bg-gray-900 text-white w-20 h-20 rounded-full flex items-center justify-center relative z-10 shadow-2xl border border-gray-700"
+                    class="bg-gradient-to-br from-gray-800 to-gray-950 text-white w-20 h-20 rounded-full flex items-center justify-center relative z-10 shadow-2xl border border-amber-500/30"
                   >
-                    <i class="pi pi-spin pi-cog text-3xl text-accent"></i>
+                    <i class="pi pi-spin pi-cog text-3xl text-amber-500"></i>
                   </div>
                 </div>
 
@@ -1469,7 +1473,7 @@
           >
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2 text-primary font-bold">
-                <i class="pi pi-sparkles"></i>
+                <i class="pi pi-file-import"></i>
                 <span>Relatório de Análise IA</span>
               </div>
               <div class="flex gap-2">

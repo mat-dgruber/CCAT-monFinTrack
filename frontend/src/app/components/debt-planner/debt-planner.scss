@@ -294,3 +294,62 @@ label {
   backface-visibility: hidden;
   perspective: 1000px;
 }
+
+/* AI Premium Styles managed globally in styles.scss to handle theme overrides */
+.ai-button-glow {
+  /* Keep specific animations or relative positioning if needed, but the colors are now global */
+  position: relative;
+  overflow: visible !important;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Glassmorphism Upload Zone */
+.upload-zone-ai {
+  background: rgba(245, 158, 11, 0.03) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  backdrop-filter: blur(8px);
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.6) !important;
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.1);
+  }
+}
+
+.processing-pulse-amber {
+  background: #f59e0b !important;
+  animation: processing-pulse-ai 2s infinite ease-in-out;
+}
+
+@keyframes processing-pulse-ai {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.3;
+  }
+}
+
+.ai-gradient-text {
+  background: linear-gradient(45deg, #f59e0b, #ea580c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}

@@ -32,6 +32,7 @@ export class ChatComponent {
  canAccess = computed(() => this.subscriptionService.canAccess('chat'));
 
  expanded = signal(false);
+ isHelpOpen = signal(false);
  messages = signal<ChatMessage[]>([]);
  loading = signal(false);
  isRoastMode = signal(false);
@@ -40,8 +41,20 @@ export class ChatComponent {
  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
  constructor() {
- // Auto-scroll logic could go here in an effect, or just manual in settimeout
+ // Sync help state when drawer closes - we can check signal in template or use a listener
  }
+
+ toggleHelp(help: any) {
+    if (this.isHelpOpen()) {
+      help.closeDrawer();
+      this.isHelpOpen.set(false);
+    } else {
+      help.openDrawer();
+      this.isHelpOpen.set(true);
+      // We need a way to detect closing from inside app-page-help
+      // For now, let's just ensure it's open
+    }
+  }
 
  navigateToPricing() {
  this.router.navigate(['/pricing']);

@@ -10,10 +10,12 @@ import { CustomConfirmDialogComponent } from './components/shared/custom-confirm
 import { PushNotificationService } from './services/push-notification.service';
 import { SeoService } from './services/seo.service';
 
+import { ToastModule } from 'primeng/toast';
+
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatComponent, CustomConfirmDialogComponent],
+  imports: [CommonModule, RouterModule, ChatComponent, CustomConfirmDialogComponent, ToastModule],
 
   templateUrl: './app.html',
   styleUrl: './app.scss',

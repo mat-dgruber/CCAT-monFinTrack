@@ -8,20 +8,20 @@
     <div
       class="page-actions bg-surface-card p-2 rounded-xl shadow-sm border border-surface-border"
     >
+      <app-page-help document="dashboard.md"></app-page-help>
       <app-month-selector></app-month-selector>
 
       <!-- AI Report Trigger (Desktop) -->
       @if (subscriptionService.canAccess("monthly_report")) {
         <button
           (click)="generateReport()"
-          class="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg hover:shadow-orange-500/30 transition-all hover:scale-105"
+          class="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg hover:shadow-orange-500/30 transition-all hover:scale-105 ai-button-glow cursor-pointer border-none"
           pTooltip="Gerar Relatório IA"
           tooltipPosition="bottom"
         >
-          <i class="pi pi-sparkles"></i>
+          <i class="pi pi-file"></i>
         </button>
       }
-      <app-page-help document="dashboard.md"></app-page-help>
     </div>
   </div>
 
@@ -133,14 +133,13 @@
             class="p-5 border-b border-surface-border flex justify-between items-center bg-surface-ground/30"
           >
             <h3 class="font-bold text-emphasis m-0">Últimas Transações</h3>
-            <button
-              pButton
+            <p-button
               icon="pi pi-arrow-right"
               [rounded]="true"
               [text]="true"
               size="small"
               routerLink="/transactions"
-            ></button>
+            ></p-button>
           </div>
           <div class="flex-1 overflow-y-auto custom-scrollbar p-2">
             <!-- We need to render the component but ideally it should handle its own scrolling or fit nicely.

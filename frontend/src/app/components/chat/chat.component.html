@@ -1,34 +1,58 @@
-<div class="chat-widget" [class.expanded]="expanded()">
+<div
+  class="chat-widget"
+  [class.expanded]="expanded()"
+  [class.help-active]="isHelpOpen()"
+>
   <!-- Header (Visible when expanded) -->
-  <div class="chat-header" *ngIf="expanded()" (click)="toggleChat()">
+  <div class="chat-header" *ngIf="expanded()">
     <div class="header-content">
       <div class="chat-icon-bg">
-        <i class="pi pi-sparkles"></i>
+        <i class="pi pi-comments"></i>
       </div>
       <span>Assistente Financeiro</span>
     </div>
     <div class="header-actions">
       <button
         pButton
-        icon="pi pi-roast"
+        icon="pi pi-bolt"
         class="p-button-rounded transition-colors duration-300 w-8 h-8"
         [class.p-button-help]="isRoastMode()"
         [class.p-button-text]="!isRoastMode()"
         [class.opacity-50]="!subscriptionService.canAccess('roast_mode')"
-        (click)="toggleRoastMode()"
+        (click)="toggleRoastMode(); $event.stopPropagation()"
         [pTooltip]="
           isRoastMode() ? 'Desativar Modo Roast' : 'Ativar Modo Roast'
         "
+        appendTo="body"
       ></button>
-      <app-page-help document="chat.md"></app-page-help>
+
+      <button
+        pButton
+        icon="pi pi-question-circle"
+        class="p-button-rounded p-button-text w-8 h-8"
+        (click)="toggleHelp(help); $event.stopPropagation()"
+        pTooltip="Ajuda"
+        appendTo="body"
+      ></button>
+
       <button
         pButton
         icon="pi pi-times"
         class="p-button-rounded p-button-text w-8 h-8"
-        (click)="toggleChat()"
+        (click)="toggleChat(); $event.stopPropagation()"
       ></button>
     </div>
   </div>
+
+  <!-- FAB Button (Visible when collapsed) -->
+  <!-- ... existing FAB ... -->
+
+  <!-- Page Help Component (Hidden button, used via template ref) -->
+  <app-page-help
+    #help
+    document="chat.md"
+    class="hidden-help-trigger"
+  ></app-page-help>
 
   <!-- FAB Button (Visible when collapsed) -->
   <button
@@ -37,7 +61,7 @@
     (click)="toggleChat()"
     aria-label="Abrir Assistente Financeiro"
   >
-    <i class="pi pi-sparkles"></i>
+    <i class="pi pi-comments"></i>
   </button>
 
   <!-- Body (Visible only when expanded) -->
