@@ -1,11 +1,7 @@
-import os
-import shutil
 import uuid
-from typing import Optional
 
 from app.core.logger import get_logger
 from app.core.security import get_current_user
-from app.services import user_preference as preference_service
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 logger = get_logger(__name__)
@@ -17,31 +13,23 @@ router = APIRouter()
 async def upload_attachment(
     file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
 ):
-    user_id = current_user["uid"]
-    prefs = preference_service.get_preferences(user_id)
-
-    # Check quota or tier if needed (optional)
-
-    if not file.content_type.startswith("image/") and not file.content_type.startswith(
-        "application/pdf"
-    ):
-        # For now, allow basic types
-        pass
-
     try:
         file_ext = file.filename.split(".")[-1] if "." in file.filename else "bin"
         filename = f"{uuid.uuid4()}.{file_ext}"
 
-        # Ensure directory exists
-        save_dir = "app/static/attachments"
-        os.makedirs(save_dir, exist_ok=True)
+        # Read file content
+        content = await file.read()
 
-        file_path = os.path.join(save_dir, filename)
+        from app.services.storage_service import storage_service
 
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        url = storage_service.upload_file(
+            file_content=content,
+            filename=filename,
+            folder="attachments",
+            content_type=file.content_type,
+        )
 
-        return {"url": f"/static/attachments/{filename}"}
+        return {"url": url}
 
     except Exception as e:
         logger.error("Upload Error: %s", e)
