@@ -52,7 +52,7 @@ def test_upload_file_local(storage_service_local, tmp_path):
     assert saved_file.read_bytes() == content
 
 
-@patch("firebase_admin.storage.bucket")
+@patch("app.services.storage_service.storage.bucket")
 def test_upload_file_cloud(mock_bucket_func, storage_service_cloud):
     mock_bucket = MagicMock()
     mock_bucket_func.return_value = mock_bucket
