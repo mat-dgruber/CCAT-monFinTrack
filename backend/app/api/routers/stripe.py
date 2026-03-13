@@ -1,21 +1,29 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, Header
-from app.services.stripe_service import StripeService
-from app.schemas.stripe import CheckoutSessionCreate, PortalSessionCreate, StripeConfigResponse
+from typing import Any, Dict
+
 from app.api.routes import get_current_user
-from typing import Dict, Any
+from app.schemas.stripe import (
+    CheckoutSessionCreate,
+    PortalSessionCreate,
+    StripeConfigResponse,
+)
+from app.services.stripe_service import StripeService
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 router = APIRouter()
 stripe_service = StripeService()
 
+
 @router.get("/config", response_model=StripeConfigResponse)
 async def get_stripe_config():
     import os
+
     return {"publishable_key": os.getenv("STRIPE_PUBLISHABLE_KEY", "")}
+
 
 @router.post("/create-checkout-session")
 async def create_checkout_session(
     data: CheckoutSessionCreate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     try:
         user_id = current_user["uid"]
@@ -23,28 +31,28 @@ async def create_checkout_session(
             user_id=user_id,
             plan=data.plan,
             success_url=data.success_url,
-            cancel_url=data.cancel_url
+            cancel_url=data.cancel_url,
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/create-portal-session")
 async def create_portal_session(
-    data: PortalSessionCreate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    data: PortalSessionCreate, current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     try:
         user_id = current_user["uid"]
         return stripe_service.create_portal_session(
-            user_id=user_id,
-            return_url=data.return_url
+            user_id=user_id, return_url=data.return_url
         )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
@@ -54,4 +62,4 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
     except HTTPException:
         raise
     except Exception as e:
-         raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))

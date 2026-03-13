@@ -52,7 +52,6 @@ import { PwaService } from '../../services/pwa.service';
     DatePickerModule,
     TagModule,
     AvatarModule,
-    AvatarModule,
     FileUploadModule,
     DialogModule,
     TooltipModule,
@@ -91,12 +90,16 @@ export class Settings {
   displayName = signal('');
   email = signal('');
 
-  // MFA
   mfaEnabled = signal(false);
   showMfaSetupDialog = signal(false);
   mfaSecret = signal('');
   qrCodeUrl = signal('');
   mfaToken = signal('');
+
+  // Email Change
+  showEmailChangeDialog = signal(false);
+  newEmail = signal('');
+  isRequestingEmailChange = signal(false);
 
   // Profile
   birthday = signal<Date | null>(null);
@@ -389,6 +392,29 @@ export class Settings {
     }
   }
 
+  async confirmEmailChange() {
+    if (!this.newEmail()) return;
+    this.isRequestingEmailChange.set(true);
+    try {
+      await this.auth.requestEmailChange(this.newEmail());
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Enviado',
+        detail: 'Email de confirmação enviado para o novo endereço.',
+      });
+      this.showEmailChangeDialog.set(false);
+      this.newEmail.set('');
+    } catch (err: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: err.error?.detail || 'Falha ao solicitar alteração de e-mail.',
+      });
+    } finally {
+      this.isRequestingEmailChange.set(false);
+    }
+  }
+
   async sendPasswordReset() {
     if (this.email()) {
       try {
@@ -486,6 +512,14 @@ export class Settings {
     this.auth.logout().then(() => {
       this.router.navigate(['/login']);
     });
+  }
+
+  handleImageError() {
+    console.warn('Settings: Falha ao carregar imagem de perfil. Usando iniciais.');
+    if (this.preferences) {
+      // Local overwrite to force initial fallback in current session
+      this.preferences.profile_image_url = undefined;
+    }
   }
 
   confirmDelete() {

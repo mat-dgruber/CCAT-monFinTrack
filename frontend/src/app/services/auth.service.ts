@@ -37,6 +37,15 @@ export class AuthService {
       this.isAuthResolved.set(true);
     });
 
+    // Safety timeout: se o Firebase não responder em 5s, marcamos como resolvido
+    // para não travar o JWT Interceptor e deixar o app carregar (mesmo que deslogado)
+    setTimeout(() => {
+      if (!this.isAuthResolved()) {
+        console.warn('AuthService: Auth resolution safety timeout reached.');
+        this.isAuthResolved.set(true);
+      }
+    }, 5000);
+
     // Verifica a sessão periodicamente se houver duração configurada
     if (environment.sessionDuration > 0) {
       this.checkSession();
@@ -115,6 +124,12 @@ export class AuthService {
   async resetPassword(email: string) {
     return await firstValueFrom(
       this.http.post(`${environment.apiUrl}/auth/reset-password`, { email }),
+    );
+  }
+
+  async requestEmailChange(newEmail: string) {
+    return await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/auth/change-email`, { new_email: newEmail }),
     );
   }
 

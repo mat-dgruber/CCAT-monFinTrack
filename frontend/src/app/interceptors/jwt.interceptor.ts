@@ -1,7 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { from, switchMap, filter, take } from 'rxjs';
+import { from, switchMap, filter, take, timeout, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
@@ -13,9 +13,11 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   // Aguarda até que o estado de autenticação seja resolvido (Firebase carregado)
+  // Adicionamos um timeout de 10s para evitar que o app trave (504) se o Firebase falhar
   return authService.isAuthResolved$.pipe(
     filter((resolved) => resolved === true),
     take(1),
+    timeout(10000), // 10 segundos de segurança
     switchMap(() => authService.authState$.pipe(
       take(1),
       switchMap((user) => {
@@ -29,10 +31,19 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
               });
               return next(clonedReq);
             }),
+            catchError((err) => {
+              console.error('Erro ao obter token do Firebase:', err);
+              return next(req);
+            })
           );
         }
         return next(req);
       }),
     )),
+    catchError((err) => {
+      // Se der timeout ou erro na resolução do Auth, prosseguimos sem token para não travar o app
+      console.error('JWT Interceptor: Auth resolution timed out or failed. Proceeding without token.', err);
+      return next(req);
+    })
   );
 };

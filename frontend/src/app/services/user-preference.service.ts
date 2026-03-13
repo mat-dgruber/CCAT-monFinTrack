@@ -130,8 +130,8 @@ export class UserPreferenceService {
     return this.http.post(`${this.apiUrl}/reset`, {});
   }
 
-  getProfileImageUrl(path: string | undefined | null): string {
-    if (!path) return 'assets/default-avatar.png';
+  getProfileImageUrl(path: string | undefined | null): string | null {
+    if (!path) return null;
     if (path.startsWith('http')) return path;
 
     // Construct absolute URL from environment.apiUrl

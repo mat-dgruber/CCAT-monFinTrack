@@ -1,18 +1,26 @@
 import os
 
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-load_dotenv()
-
+from app.api.calculator import router as calculator_router
+from app.api.debts import router as debt_router
+from app.api.indicators import router as indicators_router
+from app.api.jobs import router as jobs_router
+from app.api.resources import router as resources_router
 from app.api.routes import router as api_router
+from app.api.routers import ai, analysis, attachments, import_transactions, stripe
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.core.logger import get_logger
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
+
+load_dotenv()
 
 logger = get_logger(__name__)
 app = FastAPI()
@@ -20,8 +28,6 @@ app = FastAPI()
 # Conecta o limitador ao App
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-from fastapi import Response
 
 # --- CONFIGURAÇÃO DO CORS (LIBERAR O FRONTEND) ---
 # Custom Middleware to handle specific dev scenarios and avoid "No Access-Control-Allow-Origin"
@@ -31,8 +37,6 @@ origins = [
     "http://localhost",
     "http://127.0.0.1",
     "http://127.0.0.1:4200",
-    "https://ccat-monfintrack.web.app",
-    "https://ccat-monfintrack.firebaseapp.com",
     "https://monfintrack.com.br",
     "https://www.monfintrack.com.br",
 ]
@@ -62,8 +66,6 @@ async def add_cors_headers(request: Request, call_next):
     except Exception as e:
         logger.error("Unhandled Exception in Middleware: %s", e, exc_info=True)
         # Se for um erro real não tratado, retornamos 500
-        from fastapi.responses import JSONResponse
-
         response = JSONResponse(
             status_code=500,
             content={"detail": "Internal Server Error", "error": str(e)},
@@ -83,8 +85,6 @@ async def add_cors_headers(request: Request, call_next):
 # --- CRITICAL: FIX HTTPS REDIRECTS ON CLOUD RUN ---
 # Diga ao FastAPI que ele está atrás de um proxy HTTPS (Cloud Run/Firebase)
 # Isso evita redirects para http:// e erros de Mixed Content
-from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 # --------------------------------------------------
 
@@ -92,39 +92,19 @@ app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 #  Adicione as rotas ao app principal
 app.include_router(api_router, prefix="/api")
 
-# AI Router (Novo)
-from app.api.routers import ai, analysis, attachments, import_transactions
-
+# AI Routers
 app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
 app.include_router(import_transactions.router, prefix="/api/import", tags=["Import"])
 app.include_router(attachments.router, prefix="/api/attachments", tags=["Attachments"])
-
-from app.api.routers import stripe
-
 app.include_router(stripe.router, prefix="/api/stripe", tags=["Stripe"])
 
-from app.api.calculator import router as calculator_router
-
+# Other Routers
 app.include_router(calculator_router, prefix="/api", tags=["Calculator"])
-
-from app.api.debts import router as debt_router
-
 app.include_router(debt_router, prefix="/api")
-
-from app.api.resources import router as resources_router
-
 app.include_router(resources_router)
-
-from app.api.indicators import router as indicators_router
-
 app.include_router(indicators_router)
-
-from app.api.jobs import router as jobs_router
-
 app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
-
-from fastapi.staticfiles import StaticFiles
 
 # Mount Static Files
 os.makedirs("app/static/profile_images", exist_ok=True)
@@ -135,7 +115,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 @app.on_event("startup")
 async def startup_event():
     try:
-        db = get_db()
+        get_db()
         logger.info("Conexão com Firestore estabelecida com sucesso na inicialização!")
     except Exception as e:
         logger.critical("Erro CRÍTICO ao conectar ao Firestore na inicialização: %s", e)
@@ -151,7 +131,7 @@ def health_check():
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Database connection error: {str(e)}"
-        )
+        ) from e
 
 
 @app.get("/")
