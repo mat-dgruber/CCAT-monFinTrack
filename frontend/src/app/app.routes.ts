@@ -182,6 +182,14 @@ export const routes: Routes = [
     title: 'Verificar E-mail',
   },
   {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./components/reset-password/reset-password').then(
+        (m) => m.ResetPassword,
+      ),
+    title: 'Redefinir Senha',
+  },
+  {
     path: 'terms',
     component: Terms,
     title: 'Termos de Uso',

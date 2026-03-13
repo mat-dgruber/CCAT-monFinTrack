@@ -5,3 +5,6 @@ class PasswordResetRequest(BaseModel):
 
 class EmailVerificationRequest(BaseModel):
     email: EmailStr
+
+class EmailChangeRequest(BaseModel):
+    new_email: EmailStr

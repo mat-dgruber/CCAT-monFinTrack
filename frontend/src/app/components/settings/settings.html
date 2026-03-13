@@ -24,13 +24,19 @@
       <div class="flex flex-col gap-6">
         <!-- Profile Picture -->
         <div class="flex items-center gap-4">
-          <div class="relative">
-            <img
-              [src]="profileImageUrl()"
-              alt="Profile"
-              class="w-24 h-24 rounded-full object-cover border-4 border-surface-ground"
-              onerror="this.src = 'assets/default-avatar.png'"
-            />
+          <div
+            class="w-24 h-24 rounded-full bg-surface-ground flex items-center justify-center text-3xl font-bold text-secondary shadow-sm overflow-hidden border-4 border-surface-ground"
+          >
+            @if (preferences?.profile_image_url) {
+              <img
+                [src]="profileImageUrl()"
+                alt="Profile"
+                class="w-full h-full object-cover"
+                (error)="handleImageError()"
+              />
+            } @else {
+              {{ displayName().charAt(0).toUpperCase() || "?" }}
+            }
           </div>
           <div class="flex flex-col gap-2">
             <p-fileUpload
@@ -99,7 +105,7 @@
         <!-- Col 1: Access -->
         <div class="flex flex-col gap-6">
           <h3
-            class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
+            class="font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
           >
             Credenciais de Acesso
           </h3>
@@ -108,6 +114,13 @@
           <div class="flex flex-col gap-2">
             <div class="flex justify-between items-center">
               <span class="font-medium text-secondary">Email Cadastrado</span>
+              <p-button
+                label="Alterar"
+                [text]="true"
+                size="small"
+                (onClick)="showEmailChangeDialog.set(true)"
+              >
+              </p-button>
             </div>
             <div
               class="flex items-center gap-3 p-3 bg-surface-ground rounded-lg border border-surface-border"
@@ -154,7 +167,7 @@
           class="col-span-1 lg:col-span-2 border-t border-surface-border pt-6 mt-2"
         >
           <h3
-            class="text-base font-bold text-color uppercase tracking-wider text-xs mb-6"
+            class="font-bold text-color uppercase tracking-wider text-xs mb-6"
           >
             Privacidade e Notificações
           </h3>
@@ -223,7 +236,7 @@
         <!-- Col 2: MFA -->
         <div class="flex flex-col gap-6">
           <h3
-            class="text-base font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
+            class="font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
           >
             Autenticação em Duas Etapas (MFA)
           </h3>
@@ -644,6 +657,47 @@
         label="Verificar e Ativar"
         (onClick)="confirmEnableMFA()"
         [disabled]="mfaToken().length !== 6"
+      ></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Alterar E-mail"
+  [(visible)]="showEmailChangeDialog"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  styleClass="bg-surface-card text-color"
+  appendTo="body"
+>
+  <div class="flex flex-col gap-4 py-4">
+    <p class="text-secondary text-sm">
+      Enviaremos um link de confirmação para o novo endereço. A alteração só será efetivada após a confirmação.
+    </p>
+
+    <div class="flex flex-col gap-2">
+      <label for="newEmail" class="font-medium text-color">Novo E-mail</label>
+      <input
+        pInputText
+        id="newEmail"
+        [(ngModel)]="newEmail"
+        class="w-full"
+        placeholder="exemplo@email.com"
+        type="email"
+      />
+    </div>
+
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+          label="Cancelar"
+          styleClass="p-button-text p-button-secondary"
+          (onClick)="showEmailChangeDialog.set(false)"
+      ></p-button>
+      <p-button
+          label="Enviar Confirmação"
+          (onClick)="confirmEmailChange()"
+          [loading]="isRequestingEmailChange()"
+          [disabled]="!newEmail() || isRequestingEmailChange()"
       ></p-button>
     </div>
   </div>

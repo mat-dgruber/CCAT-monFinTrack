@@ -47,10 +47,24 @@
         <p class="text-red-500 mb-4">{{ errorMessage() }}</p>
 
         <p-button
+          label="Tentar Novamente"
+          (onClick)="retry()"
+          styleClass="p-button-success w-full mb-2"
+        ></p-button>
+
+        @if (isLoggedIn()) {
+          <p-button
+            label="Reenviar E-mail"
+            (onClick)="resendEmail()"
+            [loading]="status() === 'resending'"
+            styleClass="p-button-outlined p-button-secondary w-full mb-4"
+          ></p-button>
+        }
+
+        <p-button
           label="Voltar ao Início"
-          severity="secondary"
           (onClick)="goToLogin()"
-          styleClass="w-full"
+          styleClass="p-button-text p-button-secondary w-full"
         ></p-button>
       </div>
     }
