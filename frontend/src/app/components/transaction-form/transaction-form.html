@@ -96,13 +96,13 @@
 
           <p-button
             [icon]="isScanning() ? 'pi pi-spin pi-spinner' : 'pi pi-camera'"
-            severity="secondary"
-            [outlined]="true"
+            [styleClass]="isScanning() ? 'bg-amber-100 text-amber-600 border-amber-200' : 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md hover:shadow-orange-500/30 ai-button-glow'"
             (onClick)="fileInput.click()"
             type="button"
             [disabled]="isScanning()"
-            pTooltip="Scanear Comprovante (IA)"
-            tooltipPosition="top"
+            pTooltip="Escanear Comprovante (IA)"
+            tooltipPosition="bottom"
+            appendTo="body"
           ></p-button>
           <input
             #fileInput

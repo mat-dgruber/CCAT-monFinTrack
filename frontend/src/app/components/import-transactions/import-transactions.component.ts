@@ -111,55 +111,48 @@ export class ImportTransactionsComponent {
  });
  }
 
- async importSelected() {
- const selected = this.transactions().filter(t => t.selected);
- if (selected.length === 0) return;
+  async importSelected() {
+    const selected = this.transactions().filter(t => t.selected);
+    if (selected.length === 0) return;
 
- const account = this.selectedAccount();
- if (!account) {
- this.messageService.add({severity:'warn', summary: 'Conta necessária', detail: 'Selecione a conta bancária para atribuir estas transações.'});
- return;
- }
+    const account = this.selectedAccount();
+    if (!account) {
+      this.messageService.add({severity:'warn', summary: 'Conta necessária', detail: 'Selecione a conta bancária para atribuir estas transações.'});
+      return;
+    }
 
- this.loading.set(true);
+    this.loading.set(true);
 
- let successCount = 0;
+    let successCount = 0;
 
- for (const draft of selected) {
- try {
- // Fix: Create proper Partial<Transaction> object or cast as any if service is strict
- // The service expects 'Transaction', but typically creation only needs subset.
- // Let's create a partial object and force cast to 'any' or 'Transaction' to bypass strict checks if acceptable,
- // OR ideally, use a dedicated CreateTransactionDTO.
- // Given the error was "Object literal may only specify known properties...", it means we were passing account_id which is NOT in Transaction interface.
- // We should pass 'account' object if the interface demands it, or ignore if backend handles ID mapping.
- // Backend create_transaction expects Pydantic model which takes account_id.
- // Frontend model usually mirrors full object.
+    for (const draft of selected) {
+      try {
+        const newTx: any = {
+          title: draft.description,
+          amount: draft.amount,
+          type: draft.type,
+          date: new Date(draft.date),
+          category: this.categories().find(c => c.id === draft.category_id) as Category,
+          account: account,
+          payment_method: 'debit',
+          description: `Importado de ${draft.source}`,
+          status: 'paid'
+        };
 
- // Let's construct a payload that satisfies the interface or trick it.
- // Usually we assign the full account object if we have it.
+        await firstValueFrom(this.transactionService.createTransaction(newTx));
+        successCount++;
+      } catch (err) {
+        console.error('Import error for', draft.description, err);
+      }
+    }
 
- const newTx: any = {
- title: draft.description,
- amount: draft.amount,
- type: draft.type,
- date: new Date(draft.date),
- category: this.categories().find(c => c.id === draft.category_id) as Category, // Try to find category object
- account: account, // We have the full account object!
- payment_method: 'debit',
- description: `Importado de ${draft.source}`,
- status: 'paid'
- };
+    this.loading.set(false);
+    this.messageService.add({severity:'success', summary: 'Importação Concluída', detail: `${successCount} transações importadas com sucesso.`});
+    this.transactions.set([]);
+  }
 
- await firstValueFrom(this.transactionService.createTransaction(newTx));
- successCount++;
- } catch (err) {
- console.error('Import error for', draft.description, err);
- }
- }
-
- this.loading.set(false);
- this.messageService.add({severity:'success', summary: 'Importação Concluída', detail: `${successCount} transações importadas com sucesso.`});
- this.transactions.set([]);
- }
+  toggleAll(event: any) {
+    const isChecked = event.checked;
+    this.transactions.update(drafts => drafts.map(d => ({ ...d, selected: isChecked })));
+  }
 }

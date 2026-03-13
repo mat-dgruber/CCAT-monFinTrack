@@ -1099,6 +1099,21 @@ h2 {
     }
   }
 
+  /* Global AI Button Overrides (Bypass Theme) */
+  .p-button.ai-button-glow,
+  .ai-button-glow {
+    background: linear-gradient(45deg, #f59e0b, #ea580c) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.2) !important;
+
+    &:hover {
+      background: linear-gradient(45deg, #ea580c, #f59e0b) !important;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
+      opacity: 0.9 !important;
+    }
+  }
+
   /* SelectButton Specifics for Capycro - Targeted for PrimeNG 18+ items */
   .p-selectbutton {
     background: #f3e4c9 !important; /* Bege de fundo do container */

@@ -17,6 +17,9 @@ import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
+import { provideMarkdown } from 'ngx-markdown';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('SubscriptionsDashboardComponent', () => {
   let component: SubscriptionsDashboardComponent;
@@ -55,7 +58,7 @@ describe('SubscriptionsDashboardComponent', () => {
       imports: [
         SubscriptionsDashboardComponent,
         DatePickerModule,
-        
+        HttpClientTestingModule,
         NoopAnimationsModule,
       ],
       providers: [
@@ -71,6 +74,7 @@ describe('SubscriptionsDashboardComponent', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParams: {} }, queryParams: of({}) },
         },
+        provideMarkdown({ loader: HttpClient }),
       ],
     }).compileComponents();
 
