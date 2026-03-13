@@ -15,10 +15,10 @@ async def test():
         get_db()
 
         # Generate Firebase Reset Link
-        action_code_settings = {
-            "url": f"{APP_URL}/login",
-            "handle_code_in_app": True,
-        }
+        action_code_settings = auth.ActionCodeSettings(
+            url=f"{APP_URL}/login",
+            handle_code_in_app=True,
+        )
 
         email = "matheus.gruber123@gmail.com"
         print("Generating link...")
