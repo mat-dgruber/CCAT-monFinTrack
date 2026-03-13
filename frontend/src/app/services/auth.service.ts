@@ -63,18 +63,30 @@ export class AuthService {
       await this.firebaseWrapper.createUserWithEmailAndPassword(email, pass);
 
     if (credential.user) {
-      await this.firebaseWrapper.updateProfile(credential.user, {
-        displayName: name,
-      });
+      try {
+        await this.firebaseWrapper.updateProfile(credential.user, {
+          displayName: name,
+        });
 
-      // Chamada ao backend para enviar e-mail personalizado
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/auth/verify-email`, {
-          email: credential.user.email,
-        }),
-      );
+        // Chamada ao backend para enviar e-mail personalizado
+        await firstValueFrom(
+          this.http.post(`${environment.apiUrl}/auth/verify-email`, {
+            email: credential.user.email,
+          }),
+        );
 
-      await this.firebaseWrapper.signOut();
+        await this.firebaseWrapper.signOut();
+      } catch (error: any) {
+        // Se falhar o backend, deletamos o usuário no firebase para permitir retry
+        const errorMsg = error.error?.detail || error.message || 'Erro desconhecido';
+        console.error(`Falha no processo de registro (backend): ${errorMsg}. Removendo usuário do Firebase para permitir nova tentativa...`);
+        try {
+          await this.firebaseWrapper.deleteUser(credential.user);
+        } catch (deleteError) {
+          console.error('Erro ao remover usuário órfão do Firebase:', deleteError);
+        }
+        throw error;
+      }
     }
     return credential;
   }
@@ -85,7 +97,12 @@ export class AuthService {
       pass,
     );
 
-    // 5. Verificação de Segurança no Login
+    // 5. Verificação de Segurança no Login: Impedir acesso se e-mail não estiver verificado
+    if (!credential.user.emailVerified) {
+      await this.firebaseWrapper.signOut();
+      throw new Error('E-mail não verificado. Verifique sua caixa de entrada antes de acessar o sistema.');
+    }
+    
     return credential;
   }
 

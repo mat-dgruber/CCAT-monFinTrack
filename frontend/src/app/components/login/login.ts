@@ -171,14 +171,43 @@ export class Login {
  this.router.navigate(['/']);
  }
  } catch (error: any) {
- console.error(error);
- let msg = 'Ocorreu um erro.';
+ console.error('Login error detail:', error);
+ let msg = 'Ocorreu um erro inesperado.';
+ const errorStr = error?.toString() || '';
 
- if (error.message === 'email-not-verified') msg = 'Por favor, verifique seu email antes de entrar.';
- else if (error.code === 'auth/invalid-credential') msg = 'Email ou senha incorretos.';
- else if (error.code === 'auth/email-already-in-use') msg = 'Este email já está em uso.';
+ // 1. Erros do Firebase (Verifica .code ou busca na string para ser infalível)
+ if (error.code === 'auth/invalid-credential' || errorStr.includes('invalid-credential')) {
+   msg = 'Email ou senha incorretos.';
+ } else if (error.code === 'auth/email-already-in-use' || errorStr.includes('email-already-in-use')) {
+   msg = 'Este email já está em uso.';
+ } else if (error.code === 'auth/user-not-found' || errorStr.includes('user-not-found')) {
+   msg = 'E-mail não cadastrado.';
+ } else if (error.code === 'auth/network-request-failed' || errorStr.includes('network-request-failed')) {
+   msg = 'Falha na rede. Verifique sua conexão.';
+ } else if (error.message === 'email-not-verified') {
+   msg = 'Por favor, verifique seu email antes de entrar.';
+ }
+ // 2. Erros de HTTP (Backend/Timeout)
+ else if (error.status !== undefined && error.status !== null) {
+   if (error.status === 0) msg = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+   else if (error.status === 504) msg = 'O servidor demorou muito para responder (Timeout).';
+   else if (error.status === 500) msg = 'Erro interno no servidor. Tente novamente mais tarde.';
+   else if (error.error?.detail) msg = error.error.detail;
+   else msg = `Erro no servidor (${error.status})`;
+ }
+ // 3. Fallback Final
+ else if (error.message) {
+   msg = error.message;
+ }
 
- this.messageService.add({ severity: 'error', summary: 'Atenção', detail: msg });
+ console.log('Comando MessageService.add disparado para:', msg);
+ this.messageService.add({ 
+   key: 'main-toast',
+   severity: 'error', 
+   summary: 'Atenção', 
+   detail: msg, 
+   life: 5000
+ });
  } finally {
  this.isLoading.set(false);
  }
