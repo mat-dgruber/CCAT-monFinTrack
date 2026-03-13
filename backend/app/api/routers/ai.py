@@ -1,4 +1,3 @@
-import os
 import uuid
 from typing import List, Optional
 
@@ -156,15 +155,19 @@ async def scan_receipt_endpoint(
         content = await file.read()
         content_type = file.content_type
 
-        # Save file locally
+        # Save file using StorageService
         file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
         filename = f"{uuid.uuid4()}.{file_ext}"
-        file_path = f"app/static/attachments/{filename}"
+
+        from app.services.storage_service import storage_service
 
         try:
-            with open(file_path, "wb") as buffer:
-                buffer.write(content)
-            attachment_url = f"/static/attachments/{filename}"
+            attachment_url = storage_service.upload_file(
+                file_content=content,
+                filename=filename,
+                folder="attachments",
+                content_type=content_type,
+            )
         except Exception as e:
             logger.error("Error saving file: %s", e)
             attachment_url = None
@@ -176,25 +179,22 @@ async def scan_receipt_endpoint(
         if not file_url.startswith("/static/attachments/") or ".." in file_url:
             raise HTTPException(status_code=400, detail="Invalid file path")
 
-        local_path = f"app{file_url}"  # e.g. app/static/attachments/xyz.jpg
-
-        if not os.path.exists(local_path):
-            raise HTTPException(status_code=404, detail="File not found")
+        from app.services.storage_service import storage_service
 
         try:
-            with open(local_path, "rb") as f:
-                content = f.read()
+            content = storage_service.get_file_content(file_url)
             # Infer mime type? Simple check
-            if local_path.lower().endswith(".png"):
+            if file_url.lower().split("?")[0].endswith(".png"):
                 content_type = "image/png"
-            elif local_path.lower().endswith(".pdf"):
+            elif file_url.lower().split("?")[0].endswith(".pdf"):
                 content_type = "application/pdf"
             else:
                 content_type = "image/jpeg"
 
             attachment_url = file_url
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Could not read local file")
+            logger.error("Error reading file: %s", e)
+            raise HTTPException(status_code=500, detail="Could not read file")
 
     else:
         raise HTTPException(status_code=400, detail="Must provide 'file' or 'file_url'")

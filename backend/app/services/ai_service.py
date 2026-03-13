@@ -10,6 +10,7 @@ import google.generativeai as genai
 from app.core.database import get_db
 from app.core.logger import get_logger
 from app.services import account as account_service
+from app.services import budget as budget_service
 from app.services import category as category_service
 from app.services import transaction as transaction_service
 
@@ -468,8 +469,18 @@ def generate_monthly_report(
 
         top3 = dict(sorted(cat_vals.items(), key=lambda x: x[1], reverse=True)[:3])
 
+        # --- BUDGETS ---
+        budgets = budget_service.list_budgets_with_progress(user_id, month, year)
+        over_budget = []
+        for b in budgets:
+            if b.spent > b.amount:
+                over_budget.append(f"{b.category_name}:+R${(b.spent - b.amount):.0f}")
+        
+        budget_ctx = "Over:" + ",".join(over_budget) if over_budget else "Budgets OK"
+        # ---------------
+
         # 4. Prompt
-        ctx = f"M:{month}/{year}. Tot:R${total:.0f}. Top3:{json.dumps(top3, ensure_ascii=False)}"
+        ctx = f"M:{month}/{year}. Tot:R${total:.0f}. Top3:{json.dumps(top3, ensure_ascii=False)}. {budget_ctx}"
 
         model_name = get_model_for_tier(tier)
         model = genai.GenerativeModel(model_name)
@@ -477,21 +488,22 @@ def generate_monthly_report(
         if tier == "premium":
             prompt = f"""
             Data:{ctx}
-            Role:Expert Advisor.
-            Task:Premium Report (PT-BR).
+            Role:Financial Expert.
+            Task:Comprehensive Report (PT-BR).
             1.Health Score(0-10).
-            2.Trends.
-            3.Forecast.
-            4.Actionable Tip.
+            2.Expense Trends vs Top Categories.
+            3.Budget Compliance (highlight over-budget areas).
+            4.Forecast & Saving Advice.
             """
         else:
             prompt = f"""
             Data:{ctx}
             Role:Assistant.
-            Task:Simple Summary (PT-BR).
-            1.Total.
-            2.Top Cats.
-            Keep it short.
+            Task:Monthly Summary (PT-BR).
+            1.Total Expenses.
+            2.Top Categories.
+            3.Budget Status (if any category exceeded).
+            Keep it actionable.
             """
 
         response = _call_with_retry(model, prompt)

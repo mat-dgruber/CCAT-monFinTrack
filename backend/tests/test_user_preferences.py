@@ -98,16 +98,11 @@ def test_update_preferences():
 
 
 def test_upload_avatar():
-    """Avatar upload calls Firebase Storage and returns signed URL."""
-    with patch("app.services.user_preference.storage") as mock_storage:
-        mock_bucket = MagicMock()
-        mock_storage.bucket.return_value = mock_bucket
-
-        mock_blob = MagicMock()
-        mock_blob.generate_signed_url.return_value = (
+    """Avatar upload calls storage service and returns signed URL."""
+    with patch("app.services.storage_service.storage_service") as mock_storage_service:
+        mock_storage_service.upload_file.return_value = (
             "https://storage.googleapis.com/profile_images/test_user.jpg?signed=true"
         )
-        mock_bucket.blob.return_value = mock_blob
 
         from app.services.user_preference import save_profile_image
 
@@ -119,5 +114,4 @@ def test_upload_avatar():
         result = save_profile_image("test_user", mock_file)
 
         assert "signed=true" in result
-        mock_blob.upload_from_file.assert_called_once()
-        mock_blob.generate_signed_url.assert_called_once()
+        mock_storage_service.upload_file.assert_called_once()
