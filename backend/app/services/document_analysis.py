@@ -3,7 +3,7 @@ import json
 import os
 from typing import Any, Dict, Optional
 
-import google.generativeai as genai
+from google import genai
 from app.core.logger import get_logger
 from app.services.user_preference import get_preferences
 
@@ -11,10 +11,11 @@ logger = get_logger(__name__)
 
 # Reuse environment variables
 GENAI_API_KEY = os.getenv("GOOGLE_API_KEY")
-AI_MODEL_NAME = os.getenv("GOOGLE_AI_MODEL", "gemini-2.0-flash-lite")
+AI_MODEL_NAME = os.getenv("GOOGLE_AI_MODEL", "gemini-2.5-flash-lite")
 
+client = None
 if GENAI_API_KEY:
-    genai.configure(api_key=GENAI_API_KEY)
+    client = genai.Client(api_key=GENAI_API_KEY)
 
 
 class DocumentAnalysisService:
@@ -32,17 +33,15 @@ class DocumentAnalysisService:
             # Return error that frontend can parse
             return {"error": "Recurso disponível apenas para usuários Premium."}
 
-        if not GENAI_API_KEY:
+        if not client:
             return {"error": "Serviço de IA indisponível no momento."}
 
         try:
-            model = genai.GenerativeModel(AI_MODEL_NAME)
-
             prompt = """
             Você é um Analista de Contratos Bancários Sênior.
             Primeiro, identifique o tipo de documento:
             - Financiamento Imobiliário → debt_type: "real_estate_financing"
-            - Financiamento de Veículo → debt_type: "vehicle_financing"  
+            - Financiamento de Veículo → debt_type: "vehicle_financing"
             - Cartão de Crédito → debt_type: "credit_card_rotating"
             - Empréstimo Pessoal → debt_type: "personal_loan"
             - Consignado → debt_type: "consigned_credit"
@@ -102,9 +101,13 @@ class DocumentAnalysisService:
             """
 
             # Create content part
-            document_part = {"mime_type": mime_type, "data": file_bytes}
+            from google.genai import types
+            document_part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
 
-            response = model.generate_content([prompt, document_part])
+            response = client.models.generate_content(
+                model=AI_MODEL_NAME,
+                contents=[prompt, document_part]
+            )
             text = response.text.strip()
 
             # Clean Markdown

@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional
 
-import google.generativeai as genai
+from google import genai
 from app.core.database import get_db
 from app.core.logger import get_logger
 from app.services import account as account_service
@@ -16,23 +16,31 @@ from app.services import transaction as transaction_service
 
 logger = get_logger(__name__)
 
-# Configura a API Key (carregado do .env)
+# Configura o Cliente (carregado do .env)
 GENAI_API_KEY = os.getenv("GOOGLE_API_KEY")
 
+client = None
 if GENAI_API_KEY:
-    genai.configure(api_key=GENAI_API_KEY)
+    client = genai.Client(api_key=GENAI_API_KEY)
 else:
     logger.warning("GOOGLE_API_KEY not found. AI features will be disabled.")
 
 
-def _call_with_retry(model, prompt_or_parts, retries=3, initial_delay=2):
+def _call_with_retry(model_name, prompt_or_parts, retries=3, initial_delay=2, config=None):
     """
-    Helper function to call model.generate_content with exponential backoff for rate limits (429).
+    Helper function to call client.models.generate_content with exponential backoff for rate limits (429).
     """
+    if not client:
+        return None
+
     delay = initial_delay
     for attempt in range(retries):
         try:
-            return model.generate_content(prompt_or_parts)
+            return client.models.generate_content(
+                model=model_name,
+                contents=prompt_or_parts,
+                config=config
+            )
         except Exception as e:
             error_str = str(e).lower()
             if (
@@ -62,12 +70,12 @@ def get_model_for_tier(tier: str = "free") -> str:
     Retorna o modelo adequado para o Tier do usuário.
     """
     if tier == "premium":
-        return "gemini-3-flash-preview"
+        return "gemini-2.5-flash-lite"
     elif tier == "pro":
         return "gemini-2.5-flash-lite"
     else:
         # Fallback ou Free (se chamado indevidamente)
-        return "gemini-2.0-flash-lite"
+        return "gemini-2.5-flash-lite"
 
 
 def classify_transaction(
@@ -76,14 +84,13 @@ def classify_transaction(
     """
     Usa IA para classificar transação.
     """
-    if not GENAI_API_KEY:
+    if not client:
         return None
 
     try:
-        # 0. CACHE check (Smart Hashing)
-        # Hash inclui description E tier (caso modelos diferentes dêem resultados diferentes)
+        # Hash inclui description, user_id E tier (privacidade e precisão)
         desc_clean = description.strip().lower()
-        desc_hash = hashlib.md5(f"{desc_clean}".encode("utf-8")).hexdigest()
+        desc_hash = hashlib.md5(f"{user_id}:{desc_clean}".encode("utf-8"), usedforsecurity=False).hexdigest()
 
         db = get_db()
         cache_ref = db.collection("ai_predictions").document(desc_hash)
@@ -115,7 +122,6 @@ def classify_transaction(
 
         # 3. Prompt Otimizado
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         prompt = f"""
         {cat_context}
@@ -126,7 +132,7 @@ def classify_transaction(
         """
 
         # 3. Chama a IA
-        response = _call_with_retry(model, prompt)
+        response = _call_with_retry(model_name, prompt)
         predicted_id = response.text.strip()
 
         if predicted_id.lower() == "null":
@@ -162,7 +168,7 @@ def chat_finance(
     if tier == "free":
         return "Upgrade to Pro to chat with AI!"
 
-    if not GENAI_API_KEY:
+    if not client:
         return "AI offline."
 
     try:
@@ -205,7 +211,6 @@ def chat_finance(
 
         # 2. System Prompt
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         sys_ctx = f"""
         Ctx:
@@ -245,7 +250,7 @@ def chat_finance(
             """
 
         response = _call_with_retry(
-            model,
+            model_name,
             final_prompt,
         )
         text_response = response.text.strip()
@@ -258,7 +263,7 @@ def chat_finance(
         try:
             ai_data = json.loads(text_response)
         except json.JSONDecodeError:
-            return response.text # Fallback to raw text if model ignores instructions
+            return text_response # Fallback to raw text if model ignores instructions
         
         final_message = ai_data.get("response", "Não entendi.")
         action_data = ai_data.get("action")
@@ -356,7 +361,7 @@ def parse_receipt(
     """
     Extrai dados de comprovante com foco em descrição detalhada (Itens + Localização).
     """
-    if not GENAI_API_KEY:
+    if not client:
         return None
 
     try:
@@ -364,7 +369,6 @@ def parse_receipt(
         cat_str = ";".join([f"{c.id}:{c.name}" for c in categories])
 
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         # Otimização do Prompt: Instruções detalhadas para o campo 'description'
         prompt = f"""
@@ -378,15 +382,19 @@ def parse_receipt(
         - "title": Store Name (String)
         - "category_id": Best Match ID from Ctx (String or null)
         - "payment_method": credit_card, debit_card, pix, cash (String)
-        - "description": MUST FOLLOW THIS STRUCTURE: 
-          [Full Address]. Items: [(Qty)x Name (Price) - Discount]. 
+        - "description": MUST FOLLOW THIS STRUCTURE:
+          [Full Address]. Items: [(Qty)x Name (Price) - Discount].
           Example: "Rua ABC, 123, SP. Items: 1x Livro (R$10); 2x Caneta (R$5)." (String)
 
         Important: Do not use markdown backticks in the response. Return raw JSON.
         """
 
+        # For vision, the new SDK uses a different parts structure
+        from google.genai import types
+        img_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+
         response = _call_with_retry(
-            model, [prompt, {"mime_type": mime_type, "data": image_bytes}]
+            model_name, [prompt, img_part]
         )
         text = response.text.strip()
 
@@ -409,9 +417,6 @@ def parse_receipt(
             logger.warning("AI Parse Failed (Invalid JSON). Response: %s", text)
             return None
 
-        logger.warning("AI Parse Failed. Response: %s", text)
-        return None
-
     except Exception as e:
         logger.error("Receipt Error: %s", e)
         return None
@@ -423,7 +428,7 @@ def generate_monthly_report(
     """
     Relatório mensal com Cache e Modelo Dinâmico.
     """
-    if not GENAI_API_KEY:
+    if not client:
         return "IA indisponível."
 
     try:
@@ -441,7 +446,8 @@ def generate_monthly_report(
         # 2. Cache Key (Hash rápido: User+Date+Length+Sum+Tier)
         total_amount = sum(t.amount for t in txs)
         full_hash = hashlib.md5(
-            f"{user_id}{month}{year}{len(txs)}{total_amount:.2f}{tier}".encode()
+            f"{user_id}:{month}:{year}:{len(txs)}:{total_amount:.2f}:{tier}".encode(),
+            usedforsecurity=False
         ).hexdigest()
 
         db = get_db()
@@ -483,7 +489,6 @@ def generate_monthly_report(
         ctx = f"M:{month}/{year}. Tot:R${total:.0f}. Top3:{json.dumps(top3, ensure_ascii=False)}. {budget_ctx}"
 
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         if tier == "premium":
             prompt = f"""
@@ -506,7 +511,7 @@ def generate_monthly_report(
             Keep it actionable.
             """
 
-        response = _call_with_retry(model, prompt)
+        response = _call_with_retry(model_name, prompt)
         content = response.text
 
         # 5. Salvar Cache
@@ -532,7 +537,7 @@ def generate_budget_plan(user_id: str, tier: str = "pro") -> str:
     """
     Gera um plano orçamentário (50/30/20 ou Base Zero) com base nos gastos recentes.
     """
-    if not GENAI_API_KEY:
+    if not client:
         return "IA indisponível. Verifique a API Key."
 
     try:
@@ -571,7 +576,6 @@ def generate_budget_plan(user_id: str, tier: str = "pro") -> str:
 
         # 3. Prompt
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         prompt = f"""
         Data:{ctx}
@@ -587,7 +591,7 @@ def generate_budget_plan(user_id: str, tier: str = "pro") -> str:
         Format: Markdown. Concise. Use bullets.
         """
 
-        response = _call_with_retry(model, prompt)
+        response = _call_with_retry(model_name, prompt)
         return response.text
 
     except Exception as e:
@@ -602,7 +606,7 @@ def generate_debt_advice(
     Gera conselhos sobre dívidas (Avalanche vs Bola de Neve).
     debts_data: Lista de dicts ou objetos com {name, total_amount, interest_rate, minimum_payment}
     """
-    if not GENAI_API_KEY:
+    if not client:
         return "IA indisponível."
 
     try:
@@ -634,7 +638,6 @@ def generate_debt_advice(
         )
 
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         prompt = f"""
         Data:{ctx}
@@ -649,7 +652,7 @@ def generate_debt_advice(
         Format: Markdown. Short and encouraging.
         """
 
-        response = _call_with_retry(model, prompt)
+        response = _call_with_retry(model_name, prompt)
         return response.text
 
     except Exception as e:
@@ -661,7 +664,7 @@ def analyze_cost_of_living(user_id: str, data: dict, tier: str = "premium") -> s
     """
     Analisa os dados de custo de vida e fornece insights sobre anomalias e projeções.
     """
-    if not GENAI_API_KEY:
+    if not client:
         return "IA indisponível."
 
     try:
@@ -683,7 +686,6 @@ def analyze_cost_of_living(user_id: str, data: dict, tier: str = "premium") -> s
 
         # 2. Prompt
         model_name = get_model_for_tier(tier)
-        model = genai.GenerativeModel(model_name)
 
         prompt = f"""
         Data: {ctx}
@@ -697,7 +699,7 @@ def analyze_cost_of_living(user_id: str, data: dict, tier: str = "premium") -> s
         Estilo: Markdown. Linguagem super acessível, direta, como se estivesse explicando para um amigo no café. Evite termos técnicos complicados. Máximo 3 parágrafos curtos.
         """
 
-        response = _call_with_retry(model, prompt)
+        response = _call_with_retry(model_name, prompt)
         return response.text
 
     except Exception as e:
