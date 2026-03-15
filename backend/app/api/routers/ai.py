@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from app.core.logger import get_logger
 from app.core.rate_limiter import limiter
+from app.core.security import get_current_user
 from app.services import ai_service
 from app.services import user_preference as preference_service
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -11,8 +12,6 @@ from pydantic import BaseModel
 logger = get_logger(__name__)
 
 router = APIRouter()
-
-from app.core.security import get_current_user
 
 
 class LimitsResponse(BaseModel):
@@ -162,31 +161,39 @@ async def scan_receipt_endpoint(
         from app.services.storage_service import storage_service
 
         try:
-            attachment_url = storage_service.upload_file(
+            # New Isolated Storage
+            internal_path = storage_service.upload_file(
                 file_content=content,
                 filename=filename,
                 folder="attachments",
                 content_type=content_type,
+                user_id=user_id
             )
+            attachment_url = f"/api/attachments/{internal_path}"
         except Exception as e:
             logger.error("Error saving file: %s", e)
             attachment_url = None
 
     # Scenario B: Existing File URL
     elif file_url:
-        # Security: Prevent Directory Traversal
-        # Ensure url starts with /static/attachments/ and contains no ..
-        if not file_url.startswith("/static/attachments/") or ".." in file_url:
-            raise HTTPException(status_code=400, detail="Invalid file path")
+        # Security: Prevent Directory Traversal and ensure ownership via the URL structure
+        # Expected: /api/attachments/users/{user_id}/attachments/{filename}
+        expected_prefix = f"/api/attachments/users/{user_id}/attachments/"
+        if not file_url.startswith(expected_prefix) or ".." in file_url:
+            logger.warning("Attempted unauthorized file access or invalid path: %s (User: %s)", file_url, user_id)
+            raise HTTPException(status_code=403, detail="Invalid file path or access denied.")
 
         from app.services.storage_service import storage_service
 
         try:
-            content = storage_service.get_file_content(file_url)
+            # Extract internal path from API URL
+            internal_path = file_url.replace("/api/attachments/", "")
+            content = storage_service.get_file_content(internal_path)
             # Infer mime type? Simple check
-            if file_url.lower().split("?")[0].endswith(".png"):
+            lower_url = file_url.lower().split("?")[0]
+            if lower_url.endswith(".png"):
                 content_type = "image/png"
-            elif file_url.lower().split("?")[0].endswith(".pdf"):
+            elif lower_url.endswith(".pdf"):
                 content_type = "application/pdf"
             else:
                 content_type = "image/jpeg"
@@ -194,7 +201,7 @@ async def scan_receipt_endpoint(
             attachment_url = file_url
         except Exception as e:
             logger.error("Error reading file: %s", e)
-            raise HTTPException(status_code=500, detail="Could not read file")
+            raise HTTPException(status_code=500, detail="Could not read file") from e
 
     else:
         raise HTTPException(status_code=400, detail="Must provide 'file' or 'file_url'")

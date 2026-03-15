@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 from firebase_admin import storage
 from app.core.logger import get_logger
 
@@ -8,81 +7,102 @@ logger = get_logger(__name__)
 class StorageService:
     def __init__(self):
         self.use_local = os.getenv("USE_LOCAL_STORAGE", "false").lower() == "true" or os.getenv("ENV", "development") == "development"
-        self.local_base_dir = "app/static"
+        # Move local storage outside of /static to prevent public access
+        self.local_base_dir = "data/storage"
 
-    def upload_file(self, file_content: bytes, filename: str, folder: str, content_type: str) -> str:
+    def upload_file(self, file_content: bytes, filename: str, folder: str, content_type: str, user_id: str) -> str:
         """
         Uploads a file to local storage or Firebase Storage.
-        Returns the relative URL (local) or signed URL (Firebase).
+        Includes user_id in the path for isolation.
+        Returns the internal path (relative to base dir).
         """
+        # Isolation: users/user_id/folder/filename (Aligned with Firebase Rules)
+        relative_path = f"users/{user_id}/{folder}/{filename}"
+
         if self.use_local:
-            save_dir = os.path.join(self.local_base_dir, folder)
-            os.makedirs(save_dir, exist_ok=True)
-            file_path = os.path.join(save_dir, filename)
+            save_path = os.path.join(self.local_base_dir, relative_path)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             
-            with open(file_path, "wb") as f:
+            with open(save_path, "wb") as f:
                 f.write(file_content)
             
-            return f"/static/{folder}/{filename}"
+            return relative_path
         else:
             try:
                 bucket = storage.bucket()
-                blob_name = f"{folder}/{filename}"
-                blob = bucket.blob(blob_name)
+                blob = bucket.blob(relative_path)
                 
                 # Upload bytes
                 blob.upload_from_string(file_content, content_type=content_type)
                 
-                # Generate signed URL (v4 is mandatory for modern buckets)
-                url = blob.generate_signed_url(
-                    version="v4",
-                    expiration=timedelta(days=365),
-                    method="GET"
-                )
-                return url
+                return relative_path
             except Exception as e:
                 logger.error("Firebase Storage Upload Error: %s", e)
                 raise e
 
-    def get_file_content(self, path_or_url: str) -> bytes:
+    def get_file_content(self, path: str) -> bytes:
         """
-        Retrieves file content from local path or Firebase Storage.
+        Retrieves file content from internal path or URL.
+        Handles both local storage (data/storage) and Firebase Storage.
         """
-        if path_or_url.startswith("/static/"):
-            # Local file
-            local_path = f"app{path_or_url}"
+        if self.use_local:
+            # Try internal path first (relative to local_base_dir)
+            local_path = os.path.join(self.local_base_dir, path)
+            
+            # Fallback for old /static paths if still in use
+            if path.startswith("/static/"):
+                local_path = f"app{path}"
+            
             if not os.path.exists(local_path):
+                logger.error("File not found at path: %s", local_path)
                 raise FileNotFoundError(f"Local file not found: {local_path}")
             
             with open(local_path, "rb") as f:
                 return f.read()
-        elif "storage.googleapis.com" in path_or_url:
-            # Firebase Storage URL
-            try:
-                # Extract blob name from URL if possible, or use storage SDK
-                # A safer way is to use the blob name directly if we store it, 
-                # but for now let's try to fetch via URL or use the bucket if we can parse it.
-                # Actually, signed URLs are tricky to parse back to blob names easily without a helper.
-                # However, if it's a signed URL from our own bucket, we can often find the blob name.
-                
-                # Alternative: if it's a URL, we might need to download it via HTTP if we don't have the blob name.
-                # But since we are the backend, we should ideally know the blob name.
-                # If we only have the URL, let's use requests or just the SDK if we can map it.
-                
-                # For CCAT-monFinTrack, we can try to guess the blob name from the path.
-                # E.g. https://.../o/attachments%2Fuuid.jpg?... -> attachments/uuid.jpg
-                
-                # But wait, if it's a signed URL, it might not be easy.
-                # Let's use a simpler approach for now: if it's a URL, download it via HTTP.
-                import requests
-                response = requests.get(path_or_url, timeout=10)
-                response.raise_for_status()
-                return response.content
-            except Exception as e:
-                logger.error("Error retrieving file from URL %s: %s", path_or_url, e)
-                raise e
         else:
-            raise ValueError(f"Unknown file path or URL: {path_or_url}")
+            # Firebase Storage
+            try:
+                # If it's a full URL, we might need a different approach, 
+                # but our secure server passes the internal path.
+                if path.startswith("http"):
+                    import requests
+                    response = requests.get(path, timeout=10)
+                    response.raise_for_status()
+                    return response.content
+                
+                bucket = storage.bucket()
+                blob = bucket.blob(path)
+                
+                if not blob.exists():
+                    logger.error("Blob not found in Firebase: %s", path)
+                    raise FileNotFoundError(f"Firebase blob not found: {path}")
+                
+                return blob.download_as_bytes()
+            except Exception as e:
+                logger.error("Error retrieving file: %s", e)
+                raise e
+
+    def delete_user_folder(self, user_id: str, folder: str):
+        """
+        Deletes all files for a specific user in a folder.
+        """
+        prefix = f"users/{user_id}/{folder}/"
+        if self.use_local:
+            import shutil
+            target_dir = os.path.join(self.local_base_dir, folder, user_id)
+            if os.path.exists(target_dir):
+                shutil.rmtree(target_dir)
+                logger.info("Deleted local folder: %s", target_dir)
+        else:
+            try:
+                bucket = storage.bucket()
+                blobs = bucket.list_blobs(prefix=prefix)
+                for blob in blobs:
+                    blob.delete()
+                logger.info("Deleted Firebase blobs with prefix: %s", prefix)
+            except Exception as e:
+                logger.error("Error deleting Firebase blobs: %s", e)
+                raise e
 
 # Global instance
 storage_service = StorageService()
