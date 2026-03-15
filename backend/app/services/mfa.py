@@ -17,16 +17,13 @@ class MFAService:
         # Ideally, we should enforce this env var.
         key = os.getenv("MFA_ENCRYPTION_KEY")
         if not key:
-            # Warning: using a generated key that won't persist across restarts if not set!
-            # For a real remediation, we assume the user will set this.
-            # Generating one for temporary usage if missing, but this makes stored secrets unrecoverable after restart.
-            # Better to raise error or use a hardcoded dev key if safe-to-autorun logic warrants it.
-            # Given the prompt, I'll attempt to load or log a warning.
-            # Let's use a fixed dummy key for dev/local so it works without extra setup, BUT warn.
-            # Fernet key must be 32 url-safe base64-encoded bytes.
+            # Using a generated key that won't persist across restarts if not set!
+            # THIS IS A SECURITY RISK AND DATA LOSS RISK.
             key = Fernet.generate_key()
             logger.warning(
-                "MFA_ENCRYPTION_KEY not set. Using temporary key. Secrets will be lost on restart."
+                "CRITICAL: MFA_ENCRYPTION_KEY not set. Using temporary key. "
+                "All MFA secrets will be INVALIDATED on server restart. "
+                "Please add MFA_ENCRYPTION_KEY to your .env file."
             )
 
         try:

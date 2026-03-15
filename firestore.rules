@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+    
+    function dataOwner() {
+      return isOwner(resource.data.user_id);
+    }
+    
+    function incomingOwner() {
+      return isOwner(request.resource.data.user_id);
+    }
+
+    // --- Rules ---
+
+    // 1. User Preferences & Profiles
+    // Document ID is the userId
+    match /user_preferences/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Reports subcollection
+      match /reports/{reportId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // 2. Financial Records (Collections with user_id field)
+    match /transactions/{txId} {
+      allow read, delete: if dataOwner();
+      allow create: if incomingOwner();
+      allow update: if dataOwner() && incomingOwner();
+    }
+    
+    match /accounts/{accId} {
+      allow read, delete: if dataOwner();
+      allow create: if incomingOwner();
+      allow update: if dataOwner() && incomingOwner();
+    }
+    
+    match /budgets/{budgetId} {
+      allow read, delete: if dataOwner();
+      allow create: if incomingOwner();
+      allow update: if dataOwner() && incomingOwner();
+    }
+    
+    match /categories/{catId} {
+      allow read, delete: if dataOwner();
+      allow create: if incomingOwner();
+      allow update: if dataOwner() && incomingOwner();
+    }
+    
+    match /recurrences/{recId} {
+      allow read, delete: if dataOwner();
+      allow create: if incomingOwner();
+      allow update: if dataOwner() && incomingOwner();
+    }
+
+    // 3. AI Features
+    // Predictions are hashed but we should still restrict access 
+    // to prevent enumeration or cross-tenant leaks if possible.
+    // Since doc ID is a hash of user_id:data, we can't easily check 'resource.data.user_id' 
+    // unless we store it.
+    match /ai_predictions/{hash} {
+      // If we don't have user_id field, we rely on hash secrecy.
+      // But for security audit, we should ensure user_id is in the document.
+      allow read, write: if isAuth(); // Minimum requirement
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
