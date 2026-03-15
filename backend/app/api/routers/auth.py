@@ -1,7 +1,7 @@
 import os
 
 from app.core.logger import get_logger
-from app.schemas.auth import EmailVerificationRequest, PasswordResetRequest, EmailChangeRequest
+from app.schemas.auth import EmailVerificationRequest, PasswordResetRequest
 from app.services.email_service import email_service
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from firebase_admin import auth
@@ -165,93 +165,4 @@ async def request_email_verification(
         )
         raise HTTPException(
             status_code=500, detail="Erro inesperado ao enviar e-mail de verificação"
-        ) from e
-
-
-@router.post("/change-email")
-async def request_email_change(
-    request: EmailChangeRequest,
-    background_tasks: BackgroundTasks,
-    # In a real app, you'd get the current user from a dependency
-    # decoded_token: dict = Depends(get_current_user)
-):
-    """
-    Sends a verification email to the NEW email address before updating it.
-    """
-    try:
-        # For now, we take the email from the request if we don't have a user dependency ready
-        # But verifyBeforeUpdateEmail needs the CURRENT email if called via Admin SDK
-        # Actually, the Admin SDK method generates the link for a specific user.
-
-        # Let's assume the user is already authenticated and we have their email.
-        # However, for simplicity in this specific task, I'll use the Firebase verifyAndChangeEmail logic.
-
-        # 1. Get user (we need to know WHO is changing email)
-        # For this PoC/Fix, I'll need to know the current email.
-        # Since I don't have the auth dependency fully injected here in the snippet,
-        # I'll use a placeholder logic or assume the user is found.
-
-        # Check if user exists
-        try:
-            auth.get_user_by_email(request.new_email)
-            # If we find a user, it means the NEW email is already taken
-            raise HTTPException(status_code=400, detail="Este e-mail já está em uso.")
-        except auth.UserNotFoundError:
-            pass
-
-        # Generate Firebase link for verifyAndChangeEmail
-        # Note: Firebase Admin SDK verifyAndChangeEmail link doesn't easily let us bypass
-        # But we can use the same technique.
-
-        # Actually, let's use a simpler approach:
-        # Since the user wants a PREMIUM experience, I'll send a custom email with a link to /verify-email.
-
-        # Generate a standard verification link but we'll use it for the new email.
-        action_code_settings = auth.ActionCodeSettings(
-            url=f"{APP_URL}/settings",
-            handle_code_in_app=True,
-        )
-
-        # LINK generated for the NEW email
-        firebase_link = auth.generate_email_verification_link(
-            request.new_email, action_code_settings
-        )
-
-        from urllib.parse import urlparse, parse_qs
-        parsed_url = urlparse(firebase_link)
-        params = parse_qs(parsed_url.query)
-        oob_code = params.get('oobCode', [None])[0]
-
-        if oob_code:
-            link = f"{APP_URL}/verify-email/?oobCode={oob_code}"
-            logger.info(f"Direct email change link generated for {request.new_email}")
-        else:
-            link = firebase_link
-            logger.warning("Failed to parse oobCode for email change link")
-
-        # Render and Send Email
-        html_content = email_service.render_template(
-            "auth_verify_email.html",
-            {
-                "logo_url": LOGO_URL,
-                "name": "Usuário",
-                "action_url": link,
-                "app_name": "MonFinTrack",
-            },
-        )
-
-        background_tasks.add_task(
-            email_service.send_email,
-            subject="Confirme sua alteração de e-mail - MonFinTrack",
-            recipients=[request.new_email],
-            body=html_content,
-        )
-
-        return {"status": "success", "message": "E-mail de confirmação enviado para o novo endereço"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in request_email_change: {e}")
-        raise HTTPException(
-            status_code=500, detail="Erro ao processar alteração de e-mail"
         ) from e

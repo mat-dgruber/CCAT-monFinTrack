@@ -127,11 +127,6 @@ export class AuthService {
     );
   }
 
-  async requestEmailChange(newEmail: string) {
-    return await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/auth/change-email`, { new_email: newEmail }),
-    );
-  }
 
   async deleteAccount() {
     const user = this.firebaseWrapper.getAuth().currentUser;

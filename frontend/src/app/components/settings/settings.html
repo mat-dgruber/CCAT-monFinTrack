@@ -114,13 +114,6 @@
           <div class="flex flex-col gap-2">
             <div class="flex justify-between items-center">
               <span class="font-medium text-secondary">Email Cadastrado</span>
-              <p-button
-                label="Alterar"
-                [text]="true"
-                size="small"
-                (onClick)="showEmailChangeDialog.set(true)"
-              >
-              </p-button>
             </div>
             <div
               class="flex items-center gap-3 p-3 bg-surface-ground rounded-lg border border-surface-border"
@@ -657,47 +650,6 @@
         label="Verificar e Ativar"
         (onClick)="confirmEnableMFA()"
         [disabled]="mfaToken().length !== 6"
-      ></p-button>
-    </div>
-  </div>
-</p-dialog>
-
-<p-dialog
-  header="Alterar E-mail"
-  [(visible)]="showEmailChangeDialog"
-  [modal]="true"
-  [style]="{ width: '400px' }"
-  styleClass="bg-surface-card text-color"
-  appendTo="body"
->
-  <div class="flex flex-col gap-4 py-4">
-    <p class="text-secondary text-sm">
-      Enviaremos um link de confirmação para o novo endereço. A alteração só será efetivada após a confirmação.
-    </p>
-
-    <div class="flex flex-col gap-2">
-      <label for="newEmail" class="font-medium text-color">Novo E-mail</label>
-      <input
-        pInputText
-        id="newEmail"
-        [(ngModel)]="newEmail"
-        class="w-full"
-        placeholder="exemplo@email.com"
-        type="email"
-      />
-    </div>
-
-    <div class="flex justify-end gap-2 mt-4">
-      <p-button
-          label="Cancelar"
-          styleClass="p-button-text p-button-secondary"
-          (onClick)="showEmailChangeDialog.set(false)"
-      ></p-button>
-      <p-button
-          label="Enviar Confirmação"
-          (onClick)="confirmEmailChange()"
-          [loading]="isRequestingEmailChange()"
-          [disabled]="!newEmail() || isRequestingEmailChange()"
       ></p-button>
     </div>
   </div>
