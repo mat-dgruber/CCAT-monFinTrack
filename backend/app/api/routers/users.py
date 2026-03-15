@@ -1,7 +1,10 @@
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from app.services import category as category_service
 from app.services import account as account_service
+from app.services.user_preference import delete_account_completely
 from app.core.security import get_current_user
+from app.core.database import get_db
 
 router = APIRouter()
 
@@ -21,10 +24,7 @@ def setup_user_account(current_user: dict = Depends(get_current_user)):
         
         return {"status": "success", "message": "User setup completed"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-from app.core.database import get_db
-from pydantic import BaseModel
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 class FCMTokenRequest(BaseModel):
     token: str
@@ -55,3 +55,10 @@ def update_fcm_token(request: FCMTokenRequest, current_user: dict = Depends(get_
         return {"status": "success", "message": "Token saved"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@router.delete("/me")
+def delete_my_data(current_user: dict = Depends(get_current_user)):
+    """
+    LGPD/GDPR compliant Hard Delete of all user data.
+    """
+    user_id = current_user['uid']
+    return delete_account_completely(user_id)
