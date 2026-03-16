@@ -1,13 +1,13 @@
 import os
 from datetime import datetime, timedelta, timezone
 
-from app.core import date_utils
 from app.core.database import get_db
 from app.core.logger import get_logger
+from app.services import ai_service
 from app.services import transaction as transaction_service
 from app.services.email_service import email_service
 from app.services.notification_service import notification_service
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 
 logger = get_logger(__name__)
 
@@ -60,30 +60,34 @@ async def process_weekly_reports():
                 user_id=user_id, start_date=start_date, end_date=end_date, limit=100
             )
 
-            # 2. Calcular Totais
+            # 2. Calcular Totais e Categorias
             income = 0.0
             expense = 0.0
             top_expenses = []
+            category_totals = {}
 
             for t in transactions:
-                # Ignorar Fatura de Cartão (Pagamento) para não duplicar despesa se já conta os gastos
-                # Mas aqui estamos vendo fluxo de caixa.
-                # Se o usuário paga a fatura, sai dinheiro.
-                # Se o usuário compra no cartão, cria dívida (não sai dinheiro na hora).
-                # O MonFinTrack considera compra no cartão como despesa na data da compra?
-                # Geralmente sim. Então o pagamento da fatura deve ser ignorado ou marcado como transferência.
-                # Vamos assumir que "Fatura Cartão" é Transferência ou ignorar se tiver flag.
-
-                # Simplificação: Somar tudo que é type=expense
                 if t.type == "expense":
                     expense += t.amount
                     top_expenses.append(t)
+
+                    cat_name = t.category.name if t.category else "Outros"
+                    category_totals[cat_name] = (
+                        category_totals.get(cat_name, 0) + t.amount
+                    )
                 elif t.type == "income":
                     income += t.amount
 
-            # Ordenar maiores gastos
             top_expenses.sort(key=lambda x: x.amount, reverse=True)
             top_5_expenses = top_expenses[:5]
+
+            sorted_categories = sorted(
+                category_totals.items(), key=lambda x: x[1], reverse=True
+            )
+            category_breakdown = [
+                {"name": name, "amount": f"{amt:.2f}".replace(".", ",")}
+                for name, amt in sorted_categories[:5]
+            ]
 
             # Saldo Atual (Total)
             all_accounts = (
@@ -91,8 +95,31 @@ async def process_weekly_reports():
             )
             total_balance = sum(acc.to_dict().get("balance", 0) for acc in all_accounts)
 
+            # 3. Gerar Insights de IA
+            period_str = (
+                f"{start_date.strftime('%d %b')} - {end_date.strftime('%d %b')}"
+            )
+            insight_data = {
+                "income": income,
+                "expense": expense,
+                "balance": total_balance,
+                "top_categories": [
+                    {"name": name, "amount": amt} for name, amt in sorted_categories[:3]
+                ],
+                "period": period_str,
+            }
+
+            try:
+                ai_insight = await ai_service.generate_weekly_insights(
+                    user_id, insight_data
+                )
+            except Exception as e:
+                logger.error("Weekly Insights Error for user %s: %s", user_id, e)
+                ai_insight = "Continue focado em seus objetivos financeiros! A consistência é o segredo do sucesso."
+
             # Montar Dados
             report_data = {
+                "period": period_str,
                 "income_total": f"{income:.2f}".replace(".", ","),
                 "expense_total": f"{expense:.2f}".replace(".", ","),
                 "balance": f"{total_balance:.2f}".replace(".", ","),
@@ -103,6 +130,8 @@ async def process_weekly_reports():
                     }
                     for t in top_5_expenses
                 ],
+                "category_breakdown": category_breakdown,
+                "ai_insight": ai_insight,
                 "alerts": [],
             }
 
