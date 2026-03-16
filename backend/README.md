@@ -34,12 +34,14 @@ cd monFinTrack/backend
 É recomendável usar um ambiente virtual para isolar as dependências do projeto.
 
 **Windows:**
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
 **Linux/macOS:**
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -73,7 +75,7 @@ Para que a aplicação se conecte ao Firestore, você precisa das credenciais de
 
 ## ⚡ Executando a Aplicação
 
-Para iniciar o servidor de desenvolvimento com *hot-reload*:
+Para iniciar o servidor de desenvolvimento com _hot-reload_:
 
 ```bash
 uv run uvicorn app.main:app --reload
