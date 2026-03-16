@@ -1,6 +1,6 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ChildrenOutletContexts } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { UserPreferenceService } from '../../services/user-preference.service';
 import { PwaService } from '../../services/pwa.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { CalculatorComponent } from '../shared/calculator/calculator.component';
+import { routeTransitionAnimations } from '../../route-animations';
 
 @Component({
  selector: 'app-home',
@@ -30,12 +31,14 @@ import { CalculatorComponent } from '../shared/calculator/calculator.component';
  CalculatorComponent
  ],
  templateUrl: './home.html',
+ animations: [routeTransitionAnimations]
 })
 export class Home {
  authService = inject(AuthService);
  userPreferenceService = inject(UserPreferenceService);
  pwaService = inject(PwaService);
  subscriptionService = inject(SubscriptionService);
+ private contexts = inject(ChildrenOutletContexts);
 
  sidebarVisible = signal(false);
  calculatorVisible = signal(false);
@@ -66,5 +69,9 @@ export class Home {
 
  toggleMoreMenu() {
  this.moreMenuVisible.update(v => !v);
+ }
+
+ getRouteAnimationData() {
+ return this.contexts.getContext('primary')?.route?.snapshot?.data?.['animation'] || this.contexts.getContext('primary')?.route?.snapshot?.url?.[0]?.path;
  }
 }

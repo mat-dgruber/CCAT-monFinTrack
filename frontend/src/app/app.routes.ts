@@ -38,6 +38,7 @@ export const routes: Routes = [
         data: {
           description:
             'Visão geral das suas finanças: saldo, gastos recentes e métricas rápidas.',
+          animation: 1,
         },
       },
       { path: 'dashboard', redirectTo: '', pathMatch: 'full' },
@@ -48,6 +49,7 @@ export const routes: Routes = [
         data: {
           description:
             'Personalize sua experiência no monFinTrack: perfil, notificações e preferências.',
+          animation: 13,
         },
       },
       {
@@ -57,6 +59,7 @@ export const routes: Routes = [
         data: {
           description:
             'Controle suas contas bancárias, carteiras e cartões em um só lugar.',
+          animation: 6,
         },
       },
       {
@@ -66,6 +69,7 @@ export const routes: Routes = [
         data: {
           description:
             'Organize seus gastos e ganhos com categorias personalizadas.',
+          animation: 5,
         },
       },
       {
@@ -75,6 +79,7 @@ export const routes: Routes = [
         data: {
           description:
             'Histórico detalhado de todas as suas entradas e saídas financeiras.',
+          animation: 2,
         },
       },
       {
@@ -84,6 +89,7 @@ export const routes: Routes = [
         data: {
           description:
             'Visualize seus vencimentos e recebimentos em uma visão mensal prática.',
+          animation: 11,
         },
       },
       {
@@ -93,6 +99,7 @@ export const routes: Routes = [
         data: {
           description:
             'Acompanhe seus serviços de streaming, planos e custos recorrentes.',
+          animation: 3,
         },
       },
       {
@@ -102,6 +109,7 @@ export const routes: Routes = [
         data: {
           description:
             'Análises visuais profundas sobre sua evolução financeira e padrões de gastos.',
+          animation: 10,
         },
       },
       {
@@ -111,6 +119,7 @@ export const routes: Routes = [
         data: {
           description:
             'Defina limites de gastos e crie metas para economizar com inteligência.',
+          animation: 7,
         },
       },
       {
@@ -124,6 +133,7 @@ export const routes: Routes = [
         data: {
           description:
             'Gerencie suas faturas de cartão de crédito e evite juros indesejados.',
+          animation: 8,
         },
       },
       {
@@ -136,6 +146,7 @@ export const routes: Routes = [
         data: {
           description:
             'Importe extratos bancários de forma rápida para manter seu controle em dia.',
+          animation: 12,
         },
       },
       {
@@ -148,6 +159,7 @@ export const routes: Routes = [
         data: {
           description:
             'Estratégias para quitação de dívidas e reconquista da sua liberdade financeira.',
+          animation: 4,
         },
       },
       {
@@ -160,6 +172,7 @@ export const routes: Routes = [
         data: {
           description:
             'Análise detalhada do seu custo de vida por localidade ou categoria.',
+          animation: 9,
         },
       },
       {
@@ -172,6 +185,7 @@ export const routes: Routes = [
         data: {
           description:
             'Conheça o monFinTrack Premium e desbloqueie recursos exclusivos.',
+          animation: 14,
         },
       },
     ],

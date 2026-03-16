@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ChildrenOutletContexts } from '@angular/router';
 import { UserPreferenceService } from './services/user-preference.service';
 import { AuthService } from './services/auth.service'; // Added Import
 
@@ -11,6 +11,7 @@ import { PushNotificationService } from './services/push-notification.service';
 import { SeoService } from './services/seo.service';
 
 import { ToastModule } from 'primeng/toast';
+import { routeTransitionAnimations } from './route-animations';
 
 @Component({
   selector: 'app-root',
@@ -19,9 +20,11 @@ import { ToastModule } from 'primeng/toast';
 
   templateUrl: './app.html',
   styleUrl: './app.scss',
+  animations: [routeTransitionAnimations]
 })
 export class App {
   public authService = inject(AuthService); // Injected public for template access
+  private contexts = inject(ChildrenOutletContexts);
 
   constructor(
     private userPrefs: UserPreferenceService,
@@ -33,5 +36,9 @@ export class App {
     this.seoService.initDynamicSeo();
     // Solicitar permissão de notificação ao iniciar
     this.pushService.requestPermission();
+  }
+
+  getRouteAnimationData() {
+    return this.contexts.getContext('primary')?.route?.snapshot?.data?.['animation'];
   }
 }
