@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
-from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.database import get_db
 from app.core.date_utils import get_month_range
@@ -8,6 +7,7 @@ from app.schemas.dashboard import CategoryTotal, DashboardSummary, MonthlyEvolut
 from app.services import budget as budget_service
 from app.services import category as category_service
 from app.services import transaction as transaction_service
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 
 def get_dashboard_data(
@@ -44,7 +44,6 @@ def get_dashboard_data(
         now = datetime.now(timezone.utc)
         current_start, current_end = get_month_range(now.month, now.year)
         ref_date = now
-
 
     # DETERMINE O RANGE TOTAL NECESSÁRIO (Mês Atual + 6 Meses de Evolução)
     # Start: O menor entre (current_start) e (6 meses atrás)
@@ -142,48 +141,67 @@ def get_dashboard_data(
             if t.get("payment_method") in payment_methods
         ]
 
-    # ... (Keep existing code above) ...
+    # --- Pre-fetch categories to optimize and handle orphans ---
+    # Fetch all user categories (hierarchy)
+    all_user_cats = category_service.list_categories(user_id)
+
+    flat_cat_map = {}
+    parent_map = {}  # child_id -> parent_obj
+
+    def process_cats(cats, parent=None):
+        for c in cats:
+            flat_cat_map[c.id] = c
+            if parent:
+                parent_map[c.id] = parent
+            if c.subcategories:
+                process_cats(c.subcategories, c)
+
+    process_cats(all_user_cats)
+
     income = 0.0
     expense = 0.0
-    category_map = {}
+    # Map to store totals by "display" category (either the cat itself or its parent)
+    display_category_map = {}  # cat_id -> total
 
     for data in current_transactions:
         # Check exclusion for Invoice
         if invoice_category_id and data.get("category_id") == invoice_category_id:
             continue
 
-        amount = data.get("amount", 0)
+        amount = abs(float(data.get("amount", 0)))
         t_type = data.get("type")
         cat_id = data.get("category_id")
+
+        # Fallback if category_id is missing but category object is present (robustness)
+        if not cat_id and data.get("category"):
+            # If it's a model, it might be an object or a dict from previous dumps
+            cat_obj_data = data.get("category")
+            if isinstance(cat_obj_data, dict):
+                cat_id = cat_obj_data.get("id")
+            elif hasattr(cat_obj_data, "id"):
+                cat_id = cat_obj_data.id
 
         if t_type == "income":
             income += amount
         elif t_type == "expense":
             expense += amount
-            # Use 'uncategorized' key for None or missing IDs effectively handled later
-            key = cat_id if cat_id else "unknown"
-            if key in category_map:
-                category_map[key] += amount
-            else:
-                category_map[key] = amount
 
-    # --- Pre-fetch categories to optimize and handle orphans ---
-    # Fetch all user categories (including subcategories flattened)
-    all_user_cats = category_service.list_categories(user_id)
+            # Resolution logic: Group by parent if exists
+            target_cat_id = "unknown"
+            if cat_id:
+                # If it's a subcategory, use its parent for the dashboard chart grouping
+                if cat_id in parent_map:
+                    target_cat_id = parent_map[cat_id].id
+                else:
+                    target_cat_id = cat_id
 
-    flat_cat_map = {}
-
-    def flatten_cats(cats):
-        for c in cats:
-            flat_cat_map[c.id] = c
-            if c.subcategories:
-                flatten_cats(c.subcategories)
-
-    flatten_cats(all_user_cats)
+            display_category_map[target_cat_id] = (
+                display_category_map.get(target_cat_id, 0) + amount
+            )
 
     categories_list = []
 
-    for cat_id, total in category_map.items():
+    for cat_id, total in display_category_map.items():
         if not total:
             continue
 
@@ -206,6 +224,9 @@ def get_dashboard_data(
                     total=total,
                 )
             )
+
+    # Sort by total descending
+    categories_list.sort(key=lambda x: x.total, reverse=True)
 
     # 3. Orçamentos (Budgets)
     budgets_with_spent = budget_service.list_budgets_with_progress(user_id, month, year)
@@ -254,12 +275,10 @@ def get_dashboard_data(
                 # Para performance, vamos pegar o ID da Fatura Cartão uma vez só fora do loop.
                 # (Vou inserir essa busca antes dos loops)
 
-                # Check exclusion based on cached ID (passed via closure/local var)
-                # Assuming `invoice_category_id` is defined above.
                 if t.get("category_id") == invoice_category_id:
                     continue
 
-                val = t.get("amount", 0)
+                val = abs(float(t.get("amount", 0)))
                 tp = t.get("type")
                 if tp == "income":
                     m_income += val

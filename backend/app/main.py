@@ -1,6 +1,3 @@
-import os
-
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,6 +16,8 @@ from app.api.routers import ai, analysis, attachments, import_transactions, stri
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.core.logger import get_logger
+from dotenv import load_dotenv
+import os
 
 load_dotenv()
 

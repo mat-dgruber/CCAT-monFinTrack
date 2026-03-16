@@ -1,50 +1,60 @@
+from datetime import datetime, timezone
+from typing import Optional
+
 from app.core.database import get_db
-from app.schemas.budget import BudgetCreate, Budget
+from app.core.date_utils import get_month_range
+from app.schemas.budget import Budget, BudgetCreate
 from app.schemas.category import Category, CategoryType
 from app.services import category as category_service
-from app.core.date_utils import get_month_range
-from typing import Optional
 from fastapi import HTTPException
-from datetime import datetime, timezone
 
 COLLECTION_NAME = "budgets"
 
+
 def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
-    
+
     cat = category_service.get_category(budget_in.category_id, user_id)
-    
+
     # Validar Duplicidade
 
     # Validar Tipo de Categoria
     if cat.type != CategoryType.EXPENSE:
-        raise HTTPException(status_code=400, detail="Budgets can only be created for expense categories")
+        raise HTTPException(
+            status_code=400, detail="Budgets can only be created for expense categories"
+        )
     data = budget_in.model_dump()
-    data['user_id'] = user_id
-    
+    data["user_id"] = user_id
+
     update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
     return Budget(id=doc_ref.id, category=cat, **data)
 
+
 def list_budgets(user_id: str) -> list[dict]:
     db = get_db()
-    budget_docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    budget_docs = (
+        db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    )
     return [{**doc.to_dict(), "id": doc.id} for doc in budget_docs]
 
-def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: Optional[int] = None) -> list[dict]:
+
+def list_budgets_with_progress(
+    user_id: str, month: Optional[int] = None, year: Optional[int] = None
+) -> list[dict]:
     db = get_db()
-    
+
     # 0. Buscar todas as categorias para montar mapa de hierarquia
     cat_docs = db.collection("categories").where("user_id", "==", user_id).stream()
     # Mapa: parent_id -> [child_id, child_id, ...]
     children_map = {}
-    all_categories_map = {} # id -> obj
-    
+    all_categories_map = {}  # id -> obj
+
     for doc in cat_docs:
         d = doc.to_dict()
         cid = doc.id
         all_categories_map[cid] = d
         pid = d.get("parent_id")
-        
+
         if pid:
             if pid not in children_map:
                 children_map[pid] = []
@@ -52,25 +62,31 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
 
     def get_descendants(root_id):
         """Retorna lista contendo root_id e todos os IDs dos descendentes (recursivo)"""
-        result = [root_id]
+        result = []
         stack = [root_id]
+        visited = set()
+
         while stack:
             curr = stack.pop()
+            if curr in visited:
+                continue
+            visited.add(curr)
+            result.append(curr)
+
             children = children_map.get(curr, [])
             for child in children:
-                result.append(child)
-                stack.append(child)
+                if child not in visited:
+                    stack.append(child)
         return result
 
     # 1. Pegar metas DO USUÁRIO
-    budget_docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
-    budgets = []
-    
-    # 2. Pegar todas as transações DO USUÁRIO e filtrar em memória para manter compatibilidade com testes e evitar problemas de índice
-    transactions_query = (
-        db.collection("transactions")
-        .where("user_id", "==", user_id)
+    budget_docs = (
+        db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
     )
+    budgets = []
+
+    # 2. Pegar todas as transações DO USUÁRIO e filtrar em memória para manter compatibilidade com testes e evitar problemas de índice
+    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
 
     try:
         all_transactions = transactions_query.stream()
@@ -80,8 +96,11 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
         # If it's the specific index error (status 400), we fallback to a simpler query
         # and filter by type manually.
         from app.core.logger import get_logger
+
         logger = get_logger(__name__)
-        logger.warning(f"Optimized budget query failed (likely missing index): {e}. Falling back to memory filtering.")
+        logger.warning(
+            f"Optimized budget query failed (likely missing index): {e}. Falling back to memory filtering."
+        )
 
         # Simple query: just user_id
         fallback_query = db.collection("transactions").where("user_id", "==", user_id)
@@ -119,14 +138,14 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
             # but since we are already evaluating, we can just store the data or the doc itself.
             # To maintain compatibility with the rest of the code that calls doc.to_dict():
             filtered_transactions.append(doc)
-        
-    spending_map = {} 
-    
+
+    spending_map = {}
+
     for t in filtered_transactions:
         data = t.to_dict()
         cat_id = data.get("category_id")
         amount = data.get("amount", 0)
-        
+
         if cat_id in spending_map:
             spending_map[cat_id] += amount
         else:
@@ -135,7 +154,7 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
     for doc in budget_docs:
         data = doc.to_dict()
         cat_id = data.get("category_id")
-        
+
         # cat_obj = category_service.get_category(cat_id) # Evitar N queries
         # Usar mapa carregado previamente
         cat_data = all_categories_map.get(cat_id)
@@ -143,7 +162,7 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
         # O `get_category` retorna um objeto Pydantic. Vamos manter simples por enquanto.
         # Mas para compatibilidade, ideal é chamar o service ou simular o objeto.
         # Como estamos retornando dict aqui, podemos apenas passar o dict da categoria.
-        
+
         # Se o frontend espera 'name', 'color', etc.
         cat_obj = None
         if cat_data:
@@ -155,80 +174,85 @@ def list_budgets_with_progress(user_id: str, month: Optional[int] = None, year: 
                 color=cat_data.get("color", "#000000"),
                 type=cat_data.get("type", "expense"),
                 user_id=cat_data.get("user_id", user_id),
-                is_custom=cat_data.get("is_custom", True)
+                is_custom=cat_data.get("is_custom", True),
             )
 
         # CÁLCULO DE GASTO AGREGADO (Meta da Categoria + Subcategorias)
         target_ids = get_descendants(cat_id)
         spent = sum(spending_map.get(cid, 0.0) for cid in target_ids)
-        
+
         limit = data.get("amount", 0.0)
         percentage = (spent / limit) * 100 if limit > 0 else 0
-        
-        budgets.append({
-            "id": doc.id,
-            "user_id": user_id, # REQUIRED by Budget Schema
-            "category_id": cat_id,
-            "category": cat_obj, # Pydantic model expects obj, but dict works if schema allows or if we cast.
-            "amount": limit,
-            "spent": spent,
-            "percentage": min(percentage, 100),
-            "is_over_budget": spent > limit
-        })
-        
+
+        budgets.append(
+            {
+                "id": doc.id,
+                "user_id": user_id,  # REQUIRED by Budget Schema
+                "category_id": cat_id,
+                "category": cat_obj,  # Pydantic model expects obj, but dict works if schema allows or if we cast.
+                "amount": limit,
+                "spent": spent,
+                "percentage": min(percentage, 100),
+                "is_over_budget": spent > limit,
+            }
+        )
+
     return budgets
+
 
 def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(budget_id)
     doc = doc_ref.get()
-    
-    if not doc.exists or doc.to_dict().get('user_id') != user_id:
+
+    if not doc.exists or doc.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Budget not found or access denied")
-    
+
     cat = category_service.get_category(budget_in.category_id, user_id)
-    
+
     # Validate Category Type
     if cat.type != CategoryType.EXPENSE:
         raise Exception("Budgets can only be created for expense categories")
-        
+
     data = budget_in.model_dump()
-    data['user_id'] = user_id
-    
+    data["user_id"] = user_id
+
     doc_ref.update(data)
     return Budget(id=budget_id, category=cat, **data)
+
 
 def delete_budget(budget_id: str, user_id: str):
     db = get_db()
     doc_ref = db.collection(COLLECTION_NAME).document(budget_id)
     doc = doc_ref.get()
-    
-    if not doc.exists or doc.to_dict().get('user_id') != user_id:
+
+    if not doc.exists or doc.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Budget not found")
 
     doc_ref.delete()
     return {"status": "success"}
 
+
 def delete_all_budgets(user_id: str):
     db = get_db()
     docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
-    
+
     batch = db.batch()
     count = 0
     deleted_count = 0
-    
+
     for doc in docs:
         batch.delete(doc.reference)
         count += 1
-        
+
         if count >= 400:
             batch.commit()
             batch = db.batch()
             deleted_count += count
             count = 0
-            
+
     if count > 0:
         batch.commit()
         deleted_count += count
-        
+
     return deleted_count

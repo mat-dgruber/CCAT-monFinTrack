@@ -61,6 +61,10 @@ class TransactionBase(BaseModel):
      tithe_status: Optional[str] = Field(None, description="Status do dízimo: NONE, PENDING, PAID")
      gross_amount: Optional[float] = Field(None, description="Valor bruto da transação (antes das deduções)")
      
+     # Relacionamentos (IDs para persistência e filtros)
+     category_id: Optional[str] = Field(default=None, description="ID da categoria")
+     account_id: Optional[str] = Field(default=None, description="ID da conta")
+
      # Anomaly Warning
      warning: Optional[str] = Field(None, description="Avisos de anomalias (gastos excessivos)")
 
@@ -76,7 +80,7 @@ class TransactionBase(BaseModel):
 
 # 3. Create: O que precisamos receber para CRIAR uma despesa?
 class TransactionCreate(TransactionBase):
-     category_id: str = Field(..., description="ID da categoria")
+     category_id: str = Field(..., description="ID da categoria") # Obrigatórios na criação
      account_id: str = Field(..., description="ID da conta")
      
      # Novos campos para Recorrência e Parcelamento
@@ -131,7 +135,8 @@ class TransactionUpdate(BaseModel):
      @field_validator('title', 'description')
      @classmethod
      def clean_description(cls, v):
-          if v is None: return v
+          if v is None:
+               return v
           return sanitize_html(v)
      # -----------------------------
 

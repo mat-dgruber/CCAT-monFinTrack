@@ -1,14 +1,19 @@
-import stripe
-import os
-import logging
-from fastapi import HTTPException
 from app.core.database import get_db
+from fastapi import HTTPException
+import logging
+import os
+
+import stripe
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY") or os.getenv("STRIPE_API_KEY")
+
 
 class StripeService:
     def __init__(self):
@@ -20,54 +25,85 @@ class StripeService:
             "premium_yearly": os.getenv("STRIPE_PRICE_PREMIUM_YEARLY"),
         }
         self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-        
+
         # Verify keys
         missing_keys = [k for k, v in self.prices.items() if not v]
         if missing_keys:
-             logger.warning(f"⚠️  Missing Stripe Price IDs for: {missing_keys}. Checkout will fail for these plans.")
-             
+            logger.warning(
+                f"⚠️  Missing Stripe Price IDs for: {missing_keys}. Checkout will fail for these plans."
+            )
+
         if not stripe.api_key:
-             logger.critical("❌ STRIPE_SECRET_KEY is not set!")
+            logger.critical("❌ STRIPE_SECRET_KEY is not set!")
 
     def _get_price_id(self, plan: str):
         price_id = self.prices.get(plan)
         if not price_id:
-            logger.error(f"❌ Plan '{plan}' not found in configuration. Available: {list(self.prices.keys())}")
-            raise HTTPException(status_code=400, detail=f"Invalid plan or missing configuration for: {plan}")
+            logger.error(
+                f"❌ Plan '{plan}' not found in configuration. Available: {list(self.prices.keys())}"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid plan or missing configuration for: {plan}",
+            )
         return price_id
 
-    def create_checkout_session(self, user_id: str, plan: str, success_url: str, cancel_url: str):
+    def _get_or_create_customer(self, user_id: str):
+        user_ref = self.db.collection("users").document(user_id)
+        user_doc = user_ref.get()
+        stripe_customer_id = None
+
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            stripe_customer_id = user_data.get("stripe_customer_id")
+
+        if stripe_customer_id:
+            try:
+                # Verify customer exists in current Stripe mode
+                stripe.Customer.retrieve(stripe_customer_id)
+                return stripe_customer_id
+            except stripe.error.InvalidRequestError as e:
+                if "No such customer" in str(e):
+                    logger.warning(
+                        f"⚠️ Stripe customer {stripe_customer_id} not found in this mode. Recreating for user {user_id}."
+                    )
+                else:
+                    raise e
+
+        # Create new customer
+        try:
+            customer = stripe.Customer.create(metadata={"user_id": user_id})
+            stripe_customer_id = customer.id
+            user_ref.set({"stripe_customer_id": stripe_customer_id}, merge=True)
+            return stripe_customer_id
+        except Exception as exc:
+            logger.error(
+                f"❌ Stripe Customer creation failed for user {user_id}: {exc}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to create Stripe customer: {str(exc)}",
+            ) from exc
+
+    def create_checkout_session(
+        self, user_id: str, plan: str, success_url: str, cancel_url: str
+    ):
         try:
             if not stripe.api_key:
                 logger.error("❌ STRIPE_SECRET_KEY is MISSING! Payment will fail.")
-                raise HTTPException(status_code=500, detail="Stripe configuration error")
+                raise HTTPException(
+                    status_code=500, detail="Stripe configuration error"
+                )
 
-            # Get user to check for existing customer_id
-            user_ref = self.db.collection("users").document(user_id)
-            user_doc = user_ref.get()
-            stripe_customer_id = None
-            
-            if user_doc.exists:
-                user_data = user_doc.to_dict()
-                stripe_customer_id = user_data.get("stripe_customer_id")
-
-            customer_kwargs = {}
-            if stripe_customer_id:
-                customer_kwargs["customer"] = stripe_customer_id
-            else:
-                 try:
-                    customer = stripe.Customer.create(metadata={"user_id": user_id})
-                    stripe_customer_id = customer.id
-                    user_ref.set({"stripe_customer_id": stripe_customer_id}, merge=True)
-                    customer_kwargs["customer"] = stripe_customer_id
-                 except Exception as exc:
-                     logger.error(f"❌ Stripe Customer creation failed for user {user_id}: {exc}")
-                     raise HTTPException(status_code=500, detail=f"Failed to create Stripe customer: {str(exc)}") from exc
-
+            stripe_customer_id = self._get_or_create_customer(user_id)
             price_id = self._get_price_id(plan)
-            logger.info(f"Creating checkout session for user={user_id}, plan={plan}, price={price_id}")
+
+            logger.info(
+                f"Creating checkout session for user={user_id}, plan={plan}, customer={stripe_customer_id}"
+            )
 
             checkout_session = stripe.checkout.Session.create(
+                customer=stripe_customer_id,
                 payment_method_types=["card"],
                 line_items=[
                     {
@@ -80,13 +116,7 @@ class StripeService:
                 success_url=success_url,
                 cancel_url=cancel_url,
                 client_reference_id=user_id,
-                subscription_data={
-                    "metadata": {
-                        "user_id": user_id,
-                        "plan": plan
-                    }
-                },
-                **customer_kwargs
+                subscription_data={"metadata": {"user_id": user_id, "plan": plan}},
             )
             return {"sessionId": checkout_session["id"], "url": checkout_session["url"]}
         except HTTPException:
@@ -101,12 +131,14 @@ class StripeService:
             user_doc = user_ref.get()
             if not user_doc.exists:
                 raise HTTPException(status_code=404, detail="User not found")
-            
+
             user_data = user_doc.to_dict()
             stripe_customer_id = user_data.get("stripe_customer_id")
 
             if not stripe_customer_id:
-                raise HTTPException(status_code=400, detail="User does not have a Stripe Customer ID")
+                raise HTTPException(
+                    status_code=400, detail="User does not have a Stripe Customer ID"
+                )
 
             portal_session = stripe.billing_portal.Session.create(
                 customer=stripe_customer_id,
@@ -135,7 +167,10 @@ class StripeService:
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
             await self._handle_checkout_completed(session)
-        elif event["type"] in ["customer.subscription.updated", "customer.subscription.created"]:
+        elif event["type"] in [
+            "customer.subscription.updated",
+            "customer.subscription.created",
+        ]:
             subscription = event["data"]["object"]
             await self._handle_subscription_updated(subscription)
         elif event["type"] == "customer.subscription.deleted":
@@ -148,14 +183,17 @@ class StripeService:
         user_id = session.get("client_reference_id")
         customer_id = session.get("customer")
         subscription_id = session.get("subscription")
-        
+
         if user_id and customer_id:
             # Update user with Stripe ID
             user_ref = self.db.collection("users").document(user_id)
-            user_ref.set({
-                "stripe_customer_id": customer_id,
-                "stripe_subscription_id": subscription_id
-            }, merge=True)
+            user_ref.set(
+                {
+                    "stripe_customer_id": customer_id,
+                    "stripe_subscription_id": subscription_id,
+                },
+                merge=True,
+            )
             logger.info(f"Linked user {user_id} to customer {customer_id}")
 
         # Checkout completed means payment was successful.
@@ -165,7 +203,9 @@ class StripeService:
                 subscription = stripe.Subscription.retrieve(subscription_id)
                 await self._handle_subscription_updated(subscription)
             except Exception:
-                logger.error(f"Failed to retrieve subscription {subscription_id} after checkout")
+                logger.error(
+                    f"Failed to retrieve subscription {subscription_id} after checkout"
+                )
 
     async def _handle_subscription_updated(self, subscription):
         customer_id = subscription.get("customer")
@@ -176,7 +216,9 @@ class StripeService:
         try:
             items_data = subscription.get("items", {}).get("data", [])
             if not items_data:
-                logger.warning(f"Subscription for customer {customer_id} has no items, defaulting to free")
+                logger.warning(
+                    f"Subscription for customer {customer_id} has no items, defaulting to free"
+                )
                 tier = "free"
             else:
                 plan_id = items_data[0]["price"]["id"]
@@ -186,7 +228,11 @@ class StripeService:
             tier = "free"
 
         # Find user by customer_id
-        users_ref = self.db.collection("users").where("stripe_customer_id", "==", customer_id).limit(1)
+        users_ref = (
+            self.db.collection("users")
+            .where("stripe_customer_id", "==", customer_id)
+            .limit(1)
+        )
         docs = list(users_ref.stream())
 
         if docs:
@@ -205,35 +251,44 @@ class StripeService:
             prefs_doc = prefs_ref.get()
             if prefs_doc.exists:
                 current_version = prefs_doc.to_dict().get("version", 0)
-                prefs_ref.set({
-                    "subscription_tier": effective_tier,
-                    "version": current_version + 1,
-                }, merge=True)
+                prefs_ref.set(
+                    {
+                        "subscription_tier": effective_tier,
+                        "version": current_version + 1,
+                    },
+                    merge=True,
+                )
 
-            logger.info(f"Updated subscription for customer {customer_id} to tier={effective_tier} status={status}")
+            logger.info(
+                f"Updated subscription for customer {customer_id} to tier={effective_tier} status={status}"
+            )
 
     async def _handle_subscription_deleted(self, subscription):
         customer_id = subscription.get("customer")
-        users_ref = self.db.collection("users").where("stripe_customer_id", "==", customer_id).limit(1)
+        users_ref = (
+            self.db.collection("users")
+            .where("stripe_customer_id", "==", customer_id)
+            .limit(1)
+        )
         docs = list(users_ref.stream())
-        
+
         if docs:
             user_ref = docs[0].reference
             user_id = user_ref.id
-            user_ref.set({
-                "subscription_status": "canceled",
-                "subscription_tier": "free"
-            }, merge=True)
+            user_ref.set(
+                {"subscription_status": "canceled", "subscription_tier": "free"},
+                merge=True,
+            )
 
             prefs_ref = self.db.collection("user_preferences").document(user_id)
             prefs_doc = prefs_ref.get()
             if prefs_doc.exists:
                 current_version = prefs_doc.to_dict().get("version", 0)
-                prefs_ref.set({
-                    "subscription_tier": "free",
-                    "version": current_version + 1
-                }, merge=True)
-            
+                prefs_ref.set(
+                    {"subscription_tier": "free", "version": current_version + 1},
+                    merge=True,
+                )
+
             logger.info(f"Canceled subscription for customer {customer_id}")
 
     def _infer_tier_from_price(self, price_id: str) -> str:
