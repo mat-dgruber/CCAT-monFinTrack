@@ -1,5 +1,6 @@
 import io
 import uuid
+from typing import Annotated
 
 from app.core.logger import get_logger
 from app.core.security import get_current_user
@@ -13,7 +14,8 @@ router = APIRouter()
 
 @router.post("/upload")
 async def upload_attachment(
-    file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     try:
         user_id = current_user["uid"]
@@ -43,7 +45,10 @@ async def upload_attachment(
 
 @router.get("/users/{uid}/{folder}/{filename}")
 async def serve_attachment(
-    uid: str, folder: str, filename: str, current_user: dict = Depends(get_current_user)
+    uid: str,
+    folder: str,
+    filename: str,
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """
     Securely serves an attachment after verifying user ownership.

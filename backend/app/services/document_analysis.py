@@ -1,7 +1,7 @@
 #app/services/document_analysis.py
 import json
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from google import genai
 from app.core.logger import get_logger
@@ -47,77 +47,65 @@ class DocumentAnalysisService:
             - Consignado → debt_type: "consigned_credit"
             - Cheque Especial → debt_type: "overdraft"
 
-            Depois extraia os campos relevantes conforme o tipo identificado:
-
-            ### PARTE 1: EXTRAÇÃO TÉCNICA (JSON)
-            Extraia os dados no seguinte formato JSON estrito:
+            Extraia os dados no seguinte formato JSON:
             {
                 "name": "Nome do Banco/Credor",
                 "debt_type": "...",
                 "status": "on_time",
-                "total_amount": 0.00 (Saldo Devedor Atual),
-                "original_amount": 0.00 (Valor total financiado),
-                "interest_rate": 0.00 (Taxa de juros mensal %),
+                "total_amount": 0.00,
+                "original_amount": 0.00,
+                "interest_rate": 0.00,
                 "interest_period": "monthly",
-                "cet": 0.00 (Custo Efetivo Total ANUAL %),
-                "minimum_payment": 0.00 (Valor do encargo mensal),
+                "cet": 0.00,
+                "minimum_payment": 0.00,
                 "due_day": 0,
-                
-                // Campos Veículo (se aplicável)
                 "vehicle_brand": "...",
                 "vehicle_model": "...",
                 "vehicle_year": 0,
                 "vehicle_plate": "...",
                 "vehicle_renavam": "...",
-                
-                // Campos Imóvel (se aplicável)
                 "amortization_system": "price" ou "sac",
                 "indexer": "tr", "ipca", "poupanca" ou "none",
                 "insurance_value": 0.00,
                 "administration_fee": 0.00,
                 "property_value": 0.00,
-                
-                // Campos comuns a financiamentos
                 "total_installments": 0,
                 "installments_paid": 0,
-                
-                // Outros campos Imóvel
                 "is_under_construction": true ou false,
                 "construction_end_date": "YYYY-MM-DD",
                 "subsidy_amount": 0.00,
-                "subsidy_expiration_date": "YYYY-MM-DD"
+                "subsidy_expiration_date": "YYYY-MM-DD",
+                "report": "MANDATORY: Detailed analysis explaining interest, amortization options, and management tips."
+
             }
 
-            ### PARTE 2: RELATÓRIO EDUCATIVO (MARKDOWN)
-            Gere um relatório detalhado na chave "report" do JSON explicando:
-            1. Como funcionam as taxas e o indexador especificamente para este contrato.
-            2. De onde vem o juro mensal (base de cálculo).
-            3. Como funcionam as amortizações extras: Redução de Prazo vs Prestação. Qual a melhor e por que.
-            4. Dicas de gestão específicas para o tipo de dívida detectado.
-
-            ### REGRAS CRÍTICAS:
+            ### REGRAS:
             - Se não encontrar um campo, use null.
-            - Retorne APENAS o JSON, sem textos explicativos fora do bloco.
+            - Retorne APENAS o JSON.
             """
 
             # Create content part
             from google.genai import types
             document_part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
 
-            response = client.models.generate_content(
-                model=AI_MODEL_NAME,
-                contents=[prompt, document_part]
+            # Centralized call with retry (importing the function here if needed or moving it to a core utility)
+            # For now, let's use a local implementation of retry to avoid circular imports if shared
+            from app.services.ai_service import _call_with_retry
+            
+            config = types.GenerateContentConfig(
+                response_mime_type="application/json",
+                candidate_count=1,
+                max_output_tokens=2048,
+                temperature=0.2, # Lower temperature for extraction
             )
+
+            response = _call_with_retry(AI_MODEL_NAME, [prompt, document_part], config=config)
+            if not response:
+                return {"error": "Sem resposta da IA."}
+
             text = response.text.strip()
-
-            # Clean Markdown
-            if text.startswith("```"):
-                text = (text.split("```")[1]).strip()
-                if text.startswith("json"):
-                    text = text[4:].strip()
-
             return json.loads(text)
 
         except Exception as e:
-            logger.error("Error analyzing document: %s", e)
+            logger.error("Error analyzing document: %s", e, exc_info=True)
             return {"error": f"Falha ao analisar documento: {str(e)}"}

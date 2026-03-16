@@ -3,9 +3,6 @@ from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.core.logger import get_logger
-
-logger = get_logger(__name__)
-
 from app.schemas.user_preference import UserPreference, UserPreferenceCreate
 from app.services import account as account_service
 from app.services import budget as budget_service
@@ -15,6 +12,9 @@ from app.services import transaction as transaction_service
 from app.services.storage_service import storage_service
 from fastapi import UploadFile
 from firebase_admin import auth
+
+logger = get_logger(__name__)
+
 
 COLLECTION_NAME = "user_preferences"
 
@@ -118,17 +118,17 @@ def delete_account_completely(user_id: str):
     LGPD/GDPR Compliance: Hard delete of all user records and the user profile itself.
     This should be followed by a Firebase Auth user deletion.
     """
-    
+
     # 1. Wipe all data first (Transactions, etc.)
     reset_account(user_id)
-    
+
     # 2. Wipe Profile Images
     storage_service.delete_user_folder(user_id, "profile_images")
-    
+
     # 3. Delete Preferences document
     db = get_db()
     db.collection(COLLECTION_NAME).document(user_id).delete()
-    
+
     # 4. Delete User reports
     reports_ref = db.collection("users").document(user_id).collection("reports")
     for r in reports_ref.stream():
@@ -145,7 +145,7 @@ def delete_account_completely(user_id: str):
         logger.info("Deleted Firebase Auth user: %s", user_id)
     except Exception as e:
         logger.error("Error deleting Firebase Auth user: %s", e)
-        # We don't raise here to ensure the API response can be sent before the token is invalidated, 
+        # We don't raise here to ensure the API response can be sent before the token is invalidated,
         # or we assume the user might already be gone.
 
     return {"status": "success", "message": "All user data has been deleted."}
