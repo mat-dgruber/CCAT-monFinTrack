@@ -6,6 +6,7 @@ import {
   computed,
   effect,
 } from '@angular/core';
+import { trigger, transition, style, animate, query, group } from '@angular/animations';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import {
@@ -109,6 +110,42 @@ import {
   providers: [MessageService],
   templateUrl: './debt-planner.html',
   styleUrl: './debt-planner.scss',
+  animations: [
+    trigger('tabAnimation', [
+      transition(':increment', [
+        style({ position: 'relative', overflow: 'hidden' }),
+        query(':enter, :leave', [
+          style({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          })
+        ], { optional: true }),
+        query(':enter', [style({ left: '100%', opacity: 0 })], { optional: true }),
+        group([
+          query(':leave', [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))], { optional: true }),
+          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
+        ])
+      ]),
+      transition(':decrement', [
+        style({ position: 'relative', overflow: 'hidden' }),
+        query(':enter, :leave', [
+          style({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          })
+        ], { optional: true }),
+        query(':enter', [style({ left: '-100%', opacity: 0 })], { optional: true }),
+        group([
+          query(':leave', [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))], { optional: true }),
+          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
+        ])
+      ])
+    ])
+  ]
 })
 export class DebtPlannerComponent implements OnInit {
   private debtService = inject(DebtService);

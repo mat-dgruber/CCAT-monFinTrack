@@ -91,7 +91,7 @@
   </div>
 
   <!-- Main Content Tabs -->
-  <p-tabs value="calendar">
+  <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($event?.toString() || 'calendar')">
     <p-tablist>
       <p-tab value="calendar">
         <i class="pi pi-calendar mr-2"></i>
@@ -107,10 +107,10 @@
       </p-tab>
     </p-tablist>
 
-    <p-tabpanels>
+    <p-tabpanels [@tabAnimation]="tabIndex()">
       <!-- Calendar View -->
       <p-tabpanel value="calendar">
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 animate-fade-in-up">
           <!-- Month Navigation -->
           <div
             class="flex items-center justify-between bg-surface-card p-4 rounded-xl shadow-sm border border-surface-border"
@@ -401,7 +401,7 @@
       <!-- Management List -->
       <p-tabpanel value="list">
         <div
-          class="bg-surface-card rounded-xl shadow-sm border border-surface-border overflow-hidden"
+          class="bg-surface-card rounded-xl shadow-sm border border-surface-border overflow-hidden animate-fade-in-up"
         >
           @if (loading()) {
             <div class="p-4 space-y-3">
@@ -567,91 +567,97 @@
 
       <!-- Suggestions Tab -->
       <p-tabpanel value="suggestions">
-        <!-- LOCKED STATE (If not Premium) -->
-        <div
-          *ngIf="!subscriptionService.canAccess('subscription_hunter')"
-          class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-8 text-center flex flex-col items-center gap-4"
-        >
-          <div class="bg-surface-hover p-4 rounded-full">
-            <i class="pi pi-lock text-4xl text-gray-400"></i>
-          </div>
-          <div>
-            <h3 class="text-xl font-bold text-color mb-2">
-              Recurso Premium Detectado! 🕵️‍♂️
-            </h3>
-            <p class="text-secondary max-w-md mx-auto">
-              O Caçador de Assinaturas utiliza Inteligência Artificial para
-              analisar seu histórico e encontrar cobranças recorrentes ocultas.
-            </p>
-          </div>
-          <p-button
-            label="Desbloquear Premium"
-            icon="pi pi-bolt"
-            styleClass="p-button-warning p-button-rounded"
-            (onClick)="navigateToPricing()"
-          ></p-button>
-        </div>
-
-        <!-- UNLOCKED STATE -->
-        <div
-          *ngIf="subscriptionService.canAccess('subscription_hunter')"
-          class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6"
-        >
-          <h3 class="text-lg font-bold text-color mb-2 flex items-center gap-2">
-            <i class="pi pi-search-plus text-amber-500"></i>
-            Caçador de Assinaturas (IA)
-          </h3>
-          <p class="text-secondary mb-6">
-            Analisei seus últimos 90 dias e encontrei estas possíveis
-            assinaturas.
-          </p>
-
-          @if (suggestions().length > 0) {
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (sug of suggestions(); track sug.title) {
-                <div
-                  class="border border-amber-100 bg-amber-50 dark:bg-slate-900 dark:border-amber-900 rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden"
-                >
-                  <div class="absolute top-0 right-0 p-2 opacity-10">
-                    <i class="pi pi-search-plus text-6xl text-amber-500"></i>
-                  </div>
-
-                  <div class="z-10">
-                    <h4
-                      class="font-bold text-lg text-amber-900 dark:text-amber-300"
-                    >
-                      {{ sug.title }}
-                    </h4>
-                    <div class="text-2xl font-bold text-color">
-                      {{ sug.avg_amount | currency: "BRL" }}
-                    </div>
-                    <div
-                      class="text-xs text-amber-600 bg-amber-100 dark:bg-amber-900 px-2 py-1 rounded inline-block mt-1"
-                    >
-                      Recorrência Mensal Detectada
-                    </div>
-                  </div>
-
-                  <div class="mt-auto z-10">
-                    <p-button
-                      label="Converter"
-                      icon="pi pi-check"
-                      styleClass="w-full"
-                      (onClick)="openSuggestionDialog(sug)"
-                    >
-                    </p-button>
-                  </div>
-                </div>
-              }
+        <div class="animate-fade-in-up">
+          <!-- LOCKED STATE (If not Premium) -->
+          <div
+            *ngIf="!subscriptionService.canAccess('subscription_hunter')"
+            class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-8 text-center flex flex-col items-center gap-4"
+          >
+            <div class="bg-surface-hover p-4 rounded-full">
+              <i class="pi pi-lock text-4xl text-gray-400"></i>
             </div>
-          } @else {
-            <div class="text-center py-10 text-secondary">
-              <i class="pi pi-check-circle text-4xl mb-4 text-green-500"></i>
-              <p>
-                Nenhuma assinatura oculta encontrada. Você está no controle! 🎉
+            <div>
+              <h3 class="text-xl font-bold text-color mb-2">
+                Recurso Premium Detectado! 🕵️‍♂️
+              </h3>
+              <p class="text-secondary max-w-md mx-auto">
+                O Caçador de Assinaturas utiliza Inteligência Artificial para
+                analisar seu histórico e encontrar cobranças recorrentes
+                ocultas.
               </p>
             </div>
-          }
+            <p-button
+              label="Desbloquear Premium"
+              icon="pi pi-bolt"
+              styleClass="p-button-warning p-button-rounded"
+              (onClick)="navigateToPricing()"
+            ></p-button>
+          </div>
+
+          <!-- UNLOCKED STATE -->
+          <div
+            *ngIf="subscriptionService.canAccess('subscription_hunter')"
+            class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6"
+          >
+            <h3
+              class="text-lg font-bold text-color mb-2 flex items-center gap-2"
+            >
+              <i class="pi pi-search-plus text-amber-500"></i>
+              Caçador de Assinaturas (IA)
+            </h3>
+            <p class="text-secondary mb-6">
+              Analisei seus últimos 90 dias e encontrei estas possíveis
+              assinaturas.
+            </p>
+
+            @if (suggestions().length > 0) {
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @for (sug of suggestions(); track sug.title) {
+                  <div
+                    class="border border-amber-100 bg-amber-50 dark:bg-slate-900 dark:border-amber-900 rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden"
+                  >
+                    <div class="absolute top-0 right-0 p-2 opacity-10">
+                      <i class="pi pi-search-plus text-6xl text-amber-500"></i>
+                    </div>
+
+                    <div class="z-10">
+                      <h4
+                        class="font-bold text-lg text-amber-900 dark:text-amber-300"
+                      >
+                        {{ sug.title }}
+                      </h4>
+                      <div class="text-2xl font-bold text-color">
+                        {{ sug.avg_amount | currency : "BRL" }}
+                      </div>
+                      <div
+                        class="text-xs text-amber-600 bg-amber-100 dark:bg-amber-900 px-2 py-1 rounded inline-block mt-1"
+                      >
+                        Recorrência Mensal Detectada
+                      </div>
+                    </div>
+
+                    <div class="mt-auto z-10">
+                      <p-button
+                        label="Converter"
+                        icon="pi pi-check"
+                        styleClass="w-full"
+                        (onClick)="openSuggestionDialog(sug)"
+                      >
+                      </p-button>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="text-center py-10 text-secondary">
+                <i class="pi pi-check-circle text-4xl mb-4 text-green-500"></i>
+                <p>
+                  Nenhuma assinatura oculta encontrada. Você está no controle!
+                  🎉
+                </p>
+              </div>
+            }
+          </div>
         </div>
       </p-tabpanel>
     </p-tabpanels>

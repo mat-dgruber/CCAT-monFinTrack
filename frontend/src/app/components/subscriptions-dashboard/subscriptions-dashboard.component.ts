@@ -8,6 +8,7 @@ import {
   effect,
   ElementRef,
 } from '@angular/core';
+import { trigger, transition, style, animate, query, group } from '@angular/animations';
 import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
@@ -91,9 +92,43 @@ import { PageHelpComponent } from '../page-help/page-help';
   providers: [MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
   styleUrl: './subscriptions-dashboard.component.scss',
+  animations: [
+    trigger('tabAnimation', [
+      transition(':increment', [
+        style({ position: 'relative', overflow: 'hidden' }),
+        query(':enter, :leave', [
+          style({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          })
+        ], { optional: true }),
+        query(':enter', [style({ left: '100%', opacity: 0 })], { optional: true }),
+        group([
+          query(':leave', [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))], { optional: true }),
+          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
+        ])
+      ]),
+      transition(':decrement', [
+        style({ position: 'relative', overflow: 'hidden' }),
+        query(':enter, :leave', [
+          style({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          })
+        ], { optional: true }),
+        query(':enter', [style({ left: '-100%', opacity: 0 })], { optional: true }),
+        group([
+          query(':leave', [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))], { optional: true }),
+          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
+        ])
+      ])
+    ])
+  ]
 })
-
-// ... existing code ...
 export class SubscriptionsDashboardComponent implements OnInit {
   private recurrenceService = inject(RecurrenceService);
   private transactionService = inject(TransactionService);
@@ -105,6 +140,12 @@ export class SubscriptionsDashboardComponent implements OnInit {
   subscriptionService = inject(SubscriptionService);
   private fb = inject(FormBuilder);
   private router = inject(Router); // Injected Router
+
+  activeTab = signal('calendar');
+  tabIndex = computed(() => {
+    const tabs = ['calendar', 'list', 'suggestions'];
+    return tabs.indexOf(this.activeTab());
+  });
 
   recurrences = signal<Recurrence[]>([]);
   transactions = signal<Transaction[]>([]);
