@@ -2,8 +2,8 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { User, UserCredential } from 'firebase/auth';
-import { from, switchMap, ReplaySubject, firstValueFrom } from 'rxjs';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { from, switchMap, ReplaySubject, firstValueFrom, BehaviorSubject } from 'rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { environment } from '../../environments/environment';
 import { FirebaseWrapperService } from './firebase-wrapper.service';
 
@@ -16,8 +16,9 @@ export class AuthService {
   private http = inject(HttpClient);
 
   currentUser = signal<User | null>(null);
-  isAuthResolved = signal<boolean>(false);
-  isAuthResolved$ = toObservable(this.isAuthResolved);
+  private _isAuthResolved = new BehaviorSubject<boolean>(false);
+  isAuthResolved$ = this._isAuthResolved.asObservable();
+  isAuthResolved = toSignal(this.isAuthResolved$, { initialValue: false });
 
   // Use ReplaySubject(1) to hold the latest auth state and emit immediately to new subscribers
   private authStateSubject = new ReplaySubject<User | null>(1);
@@ -34,17 +35,17 @@ export class AuthService {
         this.currentUser.set(null);
         this.authStateSubject.next(null);
       }
-      this.isAuthResolved.set(true);
+      this._isAuthResolved.next(true);
     });
 
-    // Safety timeout: se o Firebase não responder em 5s, marcamos como resolvido
-    // para não travar o JWT Interceptor e deixar o app carregar (mesmo que deslogado)
+    // Safety timeout: se o Firebase não responder em 3s, marcamos como resolvido
+    // Diminuído para 3s para falhar mais rápido e evitar o timeout do Interceptor (10s)
     setTimeout(() => {
-      if (!this.isAuthResolved()) {
+      if (!this._isAuthResolved.value) {
         console.warn('AuthService: Auth resolution safety timeout reached.');
-        this.isAuthResolved.set(true);
+        this._isAuthResolved.next(true);
       }
-    }, 5000);
+    }, 3000);
 
     // Verifica a sessão periodicamente se houver duração configurada
     if (environment.sessionDuration > 0) {

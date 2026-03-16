@@ -12,5 +12,5 @@ export const environment = {
     measurementId: "G-9B3JJ3LY34"
   },
   firebaseVapidKey: "BPJa6EYXgmh2aJafafwQ5Gtuztotw6LoZKECW9y4C8JMfRQD2a5oUF-kw0JmB3Ls7MEgMN4knWco4bEH7ViWh7Y", // Pegar no Firebase Console -> Cloud Messaging -> Web Push
-  sessionDuration: 60000 // 1 minuto para teste
+  sessionDuration: 14400000 // 4 horas em ms para evitar timeouts de 1 minuto
 };
