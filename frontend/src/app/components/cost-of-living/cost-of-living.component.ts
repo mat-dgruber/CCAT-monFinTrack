@@ -11,148 +11,235 @@ import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MarkdownModule } from 'ngx-markdown';
+import { trigger, transition, style, animate, query, group } from '@angular/animations';
 
-import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly } from '../../services/analysis.service';
+import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly, SubscriptionCandidate } from '../../services/analysis.service';
 import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
+import { DashboardService } from '../../services/dashboard.service';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { PageHelpComponent } from '../page-help/page-help';
 
 interface Message {
- severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
- summary: string;
- detail: string;
+  severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
+  summary: string;
+  detail: string;
 }
 
 @Component({
- selector: 'app-cost-of-living',
- standalone: true,
- imports: [
- CommonModule,
- FormsModule,
- ChartModule,
- TableModule,
- CardModule,
- ButtonModule,
- InputNumberModule,
- TabsModule,
- MessageModule,
- TooltipModule,
- CurrencyPipe,
- DecimalPipe,
- SkeletonModule,
- MarkdownModule,
- PageHelpComponent
- ],
- templateUrl: './cost-of-living.component.html',
- styleUrl: './cost-of-living.component.scss'
+  selector: 'app-cost-of-living',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ChartModule,
+    TableModule,
+    CardModule,
+    ButtonModule,
+    InputNumberModule,
+    TabsModule,
+    MessageModule,
+    TooltipModule,
+    CurrencyPipe,
+    DecimalPipe,
+    SkeletonModule,
+    MarkdownModule,
+    PageHelpComponent
+  ],
+  templateUrl: './cost-of-living.component.html',
+  styleUrl: './cost-of-living.component.scss',
+  animations: [
+    trigger('tabAnimation', [
+      transition(':increment', [
+        style({ position: 'relative', overflow: 'hidden' }),
+        query(':enter, :leave', [
+          style({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          })
+        ], { optional: true }),
+        query(':enter', [style({ left: '100%', opacity: 0 })], { optional: true }),
+        group([
+          query(':leave', [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))], { optional: true }),
+          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
+        ])
+      ]),
+      transition(':decrement', [
+        style({ position: 'relative', overflow: 'hidden' }),
+        query(':enter, :leave', [
+          style({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+          })
+        ], { optional: true }),
+        query(':enter', [style({ left: '-100%', opacity: 0 })], { optional: true }),
+        group([
+          query(':leave', [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))], { optional: true }),
+          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
+        ])
+      ])
+    ])
+  ]
 })
 export class CostOfLivingComponent implements OnInit {
 
- // Signals for state
- loading = signal(false);
- data = signal<MonthlyAverageResponse | null>(null);
- inflation = signal<InflationResponse | null>(null);
- anomalies = signal<Anomaly[]>([]);
+  // Signals for state
+  loading = signal(false);
+  activeTab = signal(0);
+  data = signal<MonthlyAverageResponse | null>(null);
+  inflation = signal<InflationResponse | null>(null);
+  anomalies = signal<Anomaly[]>([]);
+  subscriptions = signal<SubscriptionCandidate[]>([]);
+  income = signal(0);
 
- // Projection State
- baseMonthlyCost = signal(0);
- inflationRate = signal(4.5);
- projectionYears = signal(10);
+  // Projection State
+  baseMonthlyCost = signal(0);
+  inflationRate = signal(4.5);
+  projectionYears = signal(10);
 
- // Chart Data Signals
- breakdownChartData = signal<any>(null);
- breakdownChartOptions = signal<any>(null);
+  // Chart Data Signals
+  breakdownChartData = signal<any>(null);
+  breakdownChartOptions = signal<any>(null);
+  selectedCategory = signal<string | null>(null);
 
- projectionChartData = signal<any>(null);
- projectionChartOptions = signal<any>(null);
+  // Table Data (Sorted)
+  tableData = computed(() => {
+    const data = this.data();
+    if (!data || !data.realized.by_category) return [];
 
- // UX
- inflationMessages: Message[] = [];
- insufficientData = signal(false);
+    const colors = this.generateColors(Object.keys(data.realized.by_category).length);
+    
+    return Object.entries(data.realized.by_category)
+      .map(([category, value], index) => ({
+        category,
+        value,
+        color: colors[index]
+      }))
+      .sort((a, b) => b.value - a.value);
+  });
 
- // AI Analysis (Premium)
- aiAnalysis = signal<string | null>(null);
- aiLoading = signal(false);
+  projectionChartData = signal<any>(null);
+  projectionChartOptions = signal<any>(null);
 
- subscriptionService = inject(SubscriptionService);
- canAccess = computed(() => this.subscriptionService.canAccess('cost_of_living'));
- canUseAi = computed(() => this.subscriptionService.canAccess('ai_advisor'));
+  // UX
+  inflationMessages: Message[] = [];
+  insufficientData = signal(false);
 
- private router = inject(Router);
+  // AI Analysis (Premium)
+  aiAnalysis = signal<string | null>(null);
+  aiLoading = signal(false);
 
- navigateToPricing() {
- this.router.navigate(['/pricing']);
- }
+  // Constants for template
+  protected readonly Infinity = Infinity;
 
- constructor(private analysisService: AnalysisService, private aiService: AIService) { // Inject AIService
- // Effect to update breakdown chart when data changes
- effect(() => {
- const d = this.data();
- if (d) {
- this.initBreakdownChart(d);
- // Initialize projection base cost if 0
- if (this.baseMonthlyCost() === 0) {
- this.baseMonthlyCost.set(d.total_estimated_monthly);
- }
+  subscriptionService = inject(SubscriptionService);
+  canAccess = computed(() => this.subscriptionService.canAccess('cost_of_living'));
+  canUseAi = computed(() => this.subscriptionService.canAccess('ai_advisor'));
+  canUsePremium = computed(() => this.subscriptionService.canAccess('subscription_hunter'));
 
- // Check for Insufficient Data
- if (d.total_estimated_monthly === 0) {
- this.insufficientData.set(true);
- } else {
- this.insufficientData.set(false);
+  // Computed Financial Metrics
+  totalMonthlyCost = computed(() => this.data()?.total_estimated_monthly || 0);
+  savingsCapacity = computed(() => Math.max(0, this.income() - this.totalMonthlyCost()));
+  savingsRate = computed(() => this.income() > 0 ? (this.savingsCapacity() / this.income()) * 100 : 0);
 
- this.insufficientData.set(false);
+  // FIRE Number (25x annual cost)
+  fireNumber = computed(() => this.totalMonthlyCost() * 12 * 25);
 
- // Auto-trigger REMOVED as per user request (On-demand only)
- // if (this.canUseAi() && !this.aiAnalysis()) {
- // this.analyzeWithAi();
- // }
- }
- }
- });
+  // Years to FIRE (Simplified 4% rule assumption)
+  // We assume user saves the savingsCapacity every month
+  yearsToFire = computed(() => {
+    const monthlySavings = this.savingsCapacity();
+    const target = this.fireNumber();
+    if (monthlySavings <= 0) return Infinity;
+    return target / (monthlySavings * 12);
+  });
 
- // Effect to update projection chart when inputs change
- effect(() => {
- this.updateProjectionChart();
- });
- }
+  private router = inject(Router);
+  private dashboardService = inject(DashboardService);
 
- ngOnInit() {
- this.loadData();
- }
+  navigateToPricing() {
+    this.router.navigate(['/pricing']);
+  }
 
- loadData() {
- this.loading.set(true);
+  constructor(private analysisService: AnalysisService, private aiService: AIService) { // Inject AIService
+    // Effect to update breakdown chart when data changes
+    effect(() => {
+      const d = this.data();
+      if (d) {
+        this.initBreakdownChart(d);
+        // Initialize projection base cost if 0
+        if (this.baseMonthlyCost() === 0) {
+          this.baseMonthlyCost.set(d.total_estimated_monthly);
+        }
 
- // Load Averages
- this.analysisService.getMonthlyAverages().subscribe({
- next: (res) => this.data.set(res),
- error: (err) => console.error(err)
- });
+        // Check for Insufficient Data
+        if (d.total_estimated_monthly === 0) {
+          this.insufficientData.set(true);
+        } else {
+          this.insufficientData.set(false);
+        }
+      }
+    });
 
- // Load Inflation
- this.analysisService.getInflationRate().subscribe({
- next: (res) => {
- this.inflation.set(res);
- this.inflationRate.set(res.rate);
- if (res.is_fallback) {
- this.inflationMessages = [{ severity: 'warn', summary: 'Atenção', detail: res.message }];
- }
- },
- error: (err) => console.error(err)
- });
+    // Effect to update projection chart when inputs change
+    effect(() => {
+      this.updateProjectionChart();
+    });
+  }
 
- // Load Anomalies
- this.analysisService.getAnomalies().subscribe({
- next: (res) => this.anomalies.set(res),
- error: (err) => console.error(err)
- });
+  ngOnInit() {
+    this.loadData();
+  }
 
- this.loading.set(false);
- }
+  loadData() {
+    this.loading.set(true);
+    const today = new Date();
 
+    // Load Income from Dashboard (Current Month)
+    this.dashboardService.getSummary(today.getMonth() + 1, today.getFullYear()).subscribe({
+      next: (res) => this.income.set(res.income_month),
+      error: (err) => console.error(err)
+    });
+
+    // Load Averages
+    this.analysisService.getMonthlyAverages().subscribe({
+      next: (res) => this.data.set(res),
+      error: (err) => console.error(err)
+    });
+
+    // Load Inflation
+    this.analysisService.getInflationRate().subscribe({
+      next: (res) => {
+        this.inflation.set(res);
+        this.inflationRate.set(res.rate);
+        if (res.is_fallback) {
+          this.inflationMessages = [{ severity: 'warn', summary: 'Atenção', detail: res.message }];
+        }
+      },
+      error: (err) => console.error(err)
+    });
+
+    // Load Anomalies
+    this.analysisService.getAnomalies().subscribe({
+      next: (res) => this.anomalies.set(res),
+      error: (err) => console.error(err)
+    });
+
+    // Load Subscriptions (Premium only)
+    if (this.canUsePremium()) {
+      this.analysisService.getSubscriptions().subscribe({
+        next: (res) => this.subscriptions.set(res),
+        error: (err) => console.error(err)
+      });
+    }
+
+    this.loading.set(false);
+  }
  analyzeWithAi() {
  const d = this.data();
  if (!d || d.total_estimated_monthly === 0) return;
@@ -171,37 +258,54 @@ export class CostOfLivingComponent implements OnInit {
  });
  }
 
+ selectCategory(category: string | null) {
+   if (this.selectedCategory() === category) {
+     this.selectedCategory.set(null);
+   } else {
+     this.selectedCategory.set(category);
+   }
+ }
+
  initBreakdownChart(data: MonthlyAverageResponse) {
- const categories = Object.keys(data.realized.by_category);
- const values = Object.values(data.realized.by_category);
+   const categories = Object.keys(data.realized.by_category);
+   const values = Object.values(data.realized.by_category);
+   const colors = this.generateColors(categories.length);
 
- this.breakdownChartData.set({
- labels: categories,
- datasets: [
- {
- data: values,
- backgroundColor: this.generateColors(categories.length),
- hoverBackgroundColor: this.generateColors(categories.length) // Simplification
- }
- ]
- });
+   this.breakdownChartData.set({
+     labels: categories,
+     datasets: [
+       {
+         data: values,
+         backgroundColor: colors,
+         hoverBackgroundColor: colors
+       }
+     ]
+   });
 
- const documentStyle = getComputedStyle(document.documentElement);
- const textColor = documentStyle.getPropertyValue('--text-color');
+   const documentStyle = getComputedStyle(document.documentElement);
+   const textColor = documentStyle.getPropertyValue('--text-color');
 
- this.breakdownChartOptions.set({
- plugins: {
- legend: {
- position: 'right',
- labels: {
- usePointStyle: true,
- color: textColor
+   this.breakdownChartOptions.set({
+     plugins: {
+       legend: {
+         position: 'right',
+         labels: {
+           usePointStyle: true,
+           color: textColor
+         }
+       }
+     },
+     onClick: (event: any, elements: any) => {
+       if (elements && elements.length > 0) {
+         const index = elements[0].index;
+         const category = this.breakdownChartData().labels[index];
+         this.selectCategory(category);
+       } else {
+         this.selectCategory(null);
+       }
+     }
+   });
  }
- }
- }
- });
- }
-
  updateProjectionChart() {
  const base = this.baseMonthlyCost();
  const rate = this.inflationRate() / 100;

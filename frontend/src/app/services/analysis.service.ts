@@ -33,6 +33,13 @@ export interface Anomaly {
   severity: 'warning' | 'critical';
 }
 
+export interface SubscriptionCandidate {
+  title: string;
+  avg_amount: number;
+  recurrence_periodicity: string;
+  confidence: 'High' | 'Medium' | 'Low';
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -64,5 +71,9 @@ export class AnalysisService {
     if (year) params = params.set('year', year);
 
     return this.http.get<Anomaly[]>(`${this.apiUrl}/anomalies`, { params });
+  }
+
+  getSubscriptions(): Observable<SubscriptionCandidate[]> {
+    return this.http.get<SubscriptionCandidate[]>(`${this.apiUrl}/subscriptions`);
   }
 }

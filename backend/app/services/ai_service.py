@@ -47,6 +47,9 @@ def _call_with_retry(
                 "429" in error_str
                 or "quota" in error_str
                 or "resourceexhausted" in error_str
+                or "503" in error_str
+                or "unavailable" in error_str
+                or "500" in error_str
             ):
                 if attempt < retries - 1:
                     sleep_time = delay + random.uniform(0, 1)  # Add jitter
@@ -143,6 +146,9 @@ def classify_transaction(
         )
 
         response = _call_with_retry(model_name, prompt, config=config)
+        if not response:
+            return None
+
         predicted_id = response.text.strip()
 
         if predicted_id.lower() == "null":
@@ -188,34 +194,57 @@ def chat_finance(
     try:
         # 1. Contexto Otimizado
 
-        # A. Contas (Simplificado)
-        accounts = account_service.list_accounts(user_id)
-        acc_str = ",".join([f"{a.name}:{int(a.balance)}" for a in accounts])
+        # A. Contas (Simplificado com Cartões)
+        try:
+            accounts = account_service.list_accounts(user_id)
+        except Exception as e:
+            logger.error("Error listing accounts for chat: %s", e)
+            accounts = []
+
+        acc_details = []
+        for a in accounts:
+            cards_str = ""
+            if a.credit_cards:
+                cards_str = f" [Cards: {', '.join([c.name for c in a.credit_cards])}]"
+            acc_details.append(f"{a.name}:R${int(a.balance)}{cards_str}")
+
+        acc_str = " | ".join(acc_details)
 
         # B. Transações (Últimas 15 para manter o contexto leve)
-        transactions = transaction_service.list_transactions(user_id, limit=15)
+        try:
+            transactions = transaction_service.list_transactions(user_id, limit=15)
+        except Exception as e:
+            logger.error("Error listing transactions for chat: %s", e)
+            transactions = []
+
         tx_list = []
         for t in transactions:
-            d = t.date.strftime("%d")
-            n = t.title[:15]
-            v = int(t.amount)
-            c = t.category.name if t.category else "?"
-            tx_list.append(f"{d},{n},{v},{c}")
+            # Use YYYY-MM-DD for clear temporal awareness
+            d = t.date.strftime("%Y-%m-%d")
+            n = t.title[:20]
+            v = float(t.amount)
+            c = t.category.name if t.category else "Outros"
+            tx_list.append(f"[{d}] {n}: R${v:.2f} ({c})")
         tx_str = "\n".join(tx_list)
 
-        # C. Totais Mês Atual (Limitado a 50 transações recentes para evitar congelamento do BD a cada mensagem)
+        # C. Totais Mês Atual
         now = datetime.now()
         start_month = datetime(now.year, now.month, 1)
-        txs_month = transaction_service.list_transactions(
-            user_id, start_date=start_month, limit=50
-        )
+
+        try:
+            txs_month = transaction_service.list_transactions(
+                user_id, start_date=start_month, limit=100
+            )
+        except Exception as e:
+            logger.error("Error listing month transactions: %s", e)
+            txs_month = []
 
         cat_totals = {}
         total_spent = 0
         for t in txs_month:
             if t.type == "expense":
-                c = t.category.name if t.category else "Other"
-                v = abs(t.amount)
+                c = t.category.name if t.category else "Outros"
+                v = abs(float(t.amount))
                 cat_totals[c] = cat_totals.get(c, 0) + v
                 total_spent += v
 
@@ -236,55 +265,91 @@ def chat_finance(
         # 2. System Prompt
         model_name = get_model_for_tier(tier)
 
-        sys_ctx = f"""
-        Ctx:
-        Time: {now_str}
-        Accs:{acc_str}
-        Spent:{int(total_spent)} (Top 50 txs)
-        Top:{json.dumps(top_cats, ensure_ascii=False)}
-        LastTx:
-        {tx_str}
-        
+        base_ctx = f"""
+        # CONTEXTO ATUAL
+        - Data/Hora: {now_str}
+        - Contas: {acc_str if acc_str else "Nenhuma conta cadastrada"}
+        - Gasto Total no Mês: R${total_spent:.2f}
+        - Top Categorias: {json.dumps(top_cats, ensure_ascii=False)}
+
+        # ÚLTIMAS TRANSAÇÕES
+        {tx_str if tx_str else "Nenhuma transação recente encontrada"}
+
+        # HISTÓRICO RECENTE
         {history_str}
-        Q:{message}
         """
 
         if persona == "roast":
-            final_prompt = f"""
-            {sys_ctx}
-            Role:Sarcastic.
-            Task:Roast spending. PT-BR.
-            Output as valid JSON: {{"response": "your message here", "action": null}}
+            system_instructions = """
+            Role: Assistente Financeiro Sarcástico e Ácido (Roast).
+            Task: Critique os gastos do usuário com muito sarcasmo e humor ácido. Seja direto e "bravo" com desperdícios.
+            Rules:
+            1. Idioma: Português (Brasil).
+            2. Se o usuário quiser adicionar uma transação, você DEVE fazer isso, mas reclamando muito.
+            3. Use o contexto de data/hora para resolver datas relativas como "ontem", "anteontem", "hoje" em datas reais (YYYY-MM-DD).
+            4. Tente extrair um 'title' curto (ex: Pizza) e uma 'description' mais detalhada se o usuário falar algo extra.
+            5. SELEÇÃO DE CONTA/PAGAMENTO:
+               - Se o usuário NÃO mencionou a FORMA DE PAGAMENTO (Crédito, Débito, PIX, Dinheiro, etc.), PERGUNTE como ele pagou antes de criar.
+               - Se mencionou 'cartão de crédito' e a conta tiver APENAS UM cartão, selecione-o automaticamente.
+               - Se a conta tiver MAIS DE UM cartão e o usuário não especificou qual, PERGUNTE qual cartão.
+               - Se o usuário NÃO mencionou a CONTA, PERGUNTE qual conta usar.
+            6. Saída: SEMPRE JSON válido. Se faltar informação (conta, forma de pagamento ou cartão ambíguo), 'action' deve ser null e você deve perguntar o que falta na 'response'.
             """
         else:
-            final_prompt = f"""
-            {sys_ctx}
-            Role:FinAssistant.
+            system_instructions = """
+            Role: Assistente Financeiro Amigável e Prestativo.
+            Task: Ajude o usuário a gerenciar suas finanças com clareza e empatia.
             Rules:
-            1. PT-BR. Concise.
-            2. To add a transaction, populate "action" with action type 'create_transaction' and necessary data.
-            3. Must output ONLY valid object JSON format.
-            Example JSON:
-            {{
-              "response": "Adicionei sua pizza no crédito!",
-              "action": {{
-                "type": "create_transaction",
-                "data": {{"amount": 50, "title": "Pizza", "category": "Alimentação", "account": "Nubank", "type": "expense"}}
-              }}
-            }}
-            If no action is needed, send "action": null.
+            1. Idioma: Português (Brasil). Conciso.
+            2. Use o contexto de data/hora para referências temporais. Converta "ontem", "hoje", etc., em datas reais (YYYY-MM-DD).
+            3. Tente extrair um 'title' curto e uma 'description' mais detalhada se o usuário fornecer contexto.
+            4. SELEÇÃO DE CONTA/PAGAMENTO:
+               - Se o usuário NÃO mencionou a FORMA DE PAGAMENTO (Crédito, Débito, PIX, Dinheiro, etc.), PERGUNTE educadamente como ele pagou antes de criar.
+               - Se mencionou 'cartão de crédito' e a conta tiver APENAS UM cartão, selecione-o automaticamente.
+               - Se a conta tiver MAIS DE UM cartão e o usuário não especificou qual, PERGUNTE qual cartão ele quer usar.
+               - Se o usuário NÃO mencionou a CONTA, PERGUNTE qual conta ele quer usar.
+            5. Saída: SEMPRE JSON válido. Se faltar informação (conta, forma de pagamento ou cartão ambíguo), 'action' deve ser null e você deve perguntar o que falta na 'response'.
             """
 
+        final_prompt = f"""
+        {system_instructions}
+
+        {base_ctx}
+
+        USER QUESTION: {message}
+
+        RESPONSE FORMAT (JSON ONLY):
+        {{
+          "response": "Sua mensagem aqui",
+          "action": {{
+            "type": "create_transaction",
+            "data": {{
+              "amount": 50.0,
+              "title": "Nome Curto",
+              "description": "Detalhes opcionais aqui",
+              "date": "YYYY-MM-DD",
+              "category": "Nome da Categoria",
+              "account": "Nome da Conta",
+              "credit_card": "Nome do Cartão (opcional)",
+              "payment_method": "credit_card, debit_card, pix, cash, bank_transfer, etc",
+              "type": "expense"
+            }}
+          }} OR null
+        }}
+        """
         from google.genai import types
 
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
             candidate_count=1,
             max_output_tokens=1000,
-            temperature=0.7,
+            temperature=0.8 if persona == "roast" else 0.4,
         )
 
         response = _call_with_retry(model_name, final_prompt, config=config)
+        if not response:
+            return "Estou com dificuldades para processar sua mensagem agora. Tente novamente em alguns segundos."
+
         text_response = response.text.strip()
 
         # Limpar markdown ```json se presente
@@ -297,13 +362,21 @@ def chat_finance(
         try:
             ai_data = json.loads(text_response)
         except json.JSONDecodeError:
-            return text_response  # Fallback to raw text if model ignores instructions
+            # Se falhar o JSON, tenta extrair apenas o campo response se possível, ou retorna o texto puro
+            logger.warning("AI failed to return valid JSON: %s", text_response)
+            return text_response
 
-        final_message = ai_data.get("response", "Não entendi.")
+        final_message = ai_data.get("response", "Não consegui formular uma resposta.")
         action_data = ai_data.get("action")
 
         # 1.b Pre-fetch Categories for resolution se houver ação
-        categories = category_service.list_categories(user_id) if action_data else []
+        categories = []
+        if action_data:
+            try:
+                categories = category_service.list_all_categories_flat(user_id)
+            except Exception as e:
+                logger.error("Error listing categories for chat: %s", e)
+                categories = []
 
         # 4. Action JSON Handling
         def process_json_action(action_data):
@@ -315,6 +388,7 @@ def chat_finance(
 
                     # Resolve Account
                     acc_id = t_data.get("account_id")
+                    target_account = None
                     if not acc_id:
                         acc_name = t_data.get("account")
                         if acc_name and accounts:
@@ -322,14 +396,44 @@ def chat_finance(
                             for a in accounts:
                                 if a.name.lower() == acc_name.lower():
                                     acc_id = a.id
+                                    target_account = a
                                     break
 
-                        # Fallback to first account
-                        if not acc_id and accounts:
+                        # Fallback to first account ONLY if there's only one account total
+                        if not acc_id and len(accounts) == 1:
                             acc_id = accounts[0].id
+                            target_account = accounts[0]
+                    else:
+                        # Find object for acc_id
+                        for a in accounts:
+                            if a.id == acc_id:
+                                target_account = a
+                                break
 
                     if not acc_id:
-                        raise ValueError("No account found")
+                        return " (Não consegui encontrar uma conta para salvar a transação)"
+
+                    # Resolve Credit Card
+                    cc_id = t_data.get("credit_card_id")
+                    cc_name_display = ""
+
+                    if not cc_id and target_account:
+                        cc_name_input = t_data.get("credit_card")
+                        if cc_name_input and target_account.credit_cards:
+                            for c in target_account.credit_cards:
+                                if c.name.lower() == cc_name_input.lower():
+                                    cc_id = c.id
+                                    cc_name_display = c.name
+                                    break
+
+                        # Auto-select if only one card in the account
+                        if (
+                            not cc_id
+                            and target_account.credit_cards
+                            and len(target_account.credit_cards) == 1
+                        ):
+                            cc_id = target_account.credit_cards[0].id
+                            cc_name_display = target_account.credit_cards[0].name
 
                     # Resolve Category
                     cat_id = t_data.get("category_id")
@@ -340,53 +444,84 @@ def chat_finance(
                                 if c.name.lower() == cat_name.lower():
                                     cat_id = c.id
                                     break
-                        # Fallback if still no category?
-                        # Try to find 'Outros' or first
+
+                        # Se não encontrar, tenta criar ou usa default?
+                        # Aqui vamos apenas usar o fallback se existir
                         if not cat_id and categories:
                             cat_id = categories[0].id
 
                     if not cat_id:
-                        raise ValueError("No category found")
+                        return " (Não consegui encontrar uma categoria adequada)"
 
                     # Fix: Handle description vs title mismatch
                     title_val = (
                         t_data.get("title")
                         or t_data.get("description")
-                        or "Transação AI"
+                        or "Transação IA"
                     )
                     if len(title_val) < 3:
                         title_val = f"{title_val} IA"
 
+                    description_val = t_data.get("description")
+
                     # Fix: Handle amount parsing with possible comma
                     amount_str = str(t_data["amount"]).replace(",", ".")
-                    amount_val = float(amount_str)
+                    amount_val = abs(float(amount_str))
+
+                    # Resolve Date
+                    tx_date = datetime.now()
+                    date_str = t_data.get("date")
+                    if date_str:
+                        try:
+                            # Aceita YYYY-MM-DD
+                            parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
+                            # Manter a hora atual para não ficar tudo meia-noite
+                            now_time = datetime.now()
+                            tx_date = parsed_date.replace(
+                                hour=now_time.hour,
+                                minute=now_time.minute,
+                                second=now_time.second,
+                            )
+                        except ValueError:
+                            logger.warning(
+                                "AI provided invalid date format: %s", date_str
+                            )
+
+                    # Resolve Payment Method
+                    payment_method_val = t_data.get("payment_method", "debit_card")
+                    if cc_id and not t_data.get("payment_method"):
+                        payment_method_val = "credit_card"
 
                     new_tx = TransactionCreate(
                         title=title_val,
+                        description=description_val,
                         amount=amount_val,
                         type=t_data.get("type", "expense"),
                         category_id=cat_id,
                         account_id=acc_id,
-                        payment_method="credit_card",
-                        date=datetime.now(),
+                        credit_card_id=cc_id,
+                        payment_method=payment_method_val,
+                        date=tx_date,
                         status="paid",
                     )
                     created = transaction_service.create_transaction(new_tx, user_id)
-                    return f"✅ Criado: {created.title} (R$ {created.amount})."
+                    date_display = created.date.strftime("%d/%m")
+                    cc_info = f" no cartão {cc_name_display}" if cc_id else ""
+                    return f"\n\n✅ Transação anotada ({date_display}): {created.title} (R$ {created.amount:.2f}){cc_info}."
             except Exception as e:
                 logger.error("Error creating AI transaction: %s", e, exc_info=True)
-            return None
+                return f"\n\n❌ Erro ao salvar transação: {str(e)}"
+            return ""
 
         if action_data:
-            result = process_json_action(action_data)
-            if result:
-                return f"{final_message}\n\n{result}"
+            result_msg = process_json_action(action_data)
+            final_message += result_msg
 
         return final_message
 
     except Exception as e:
-        logger.error("Chat Error: %s", e)
-        return "Erro no chat."
+        logger.error("Chat Error: %s", e, exc_info=True)
+        return "Tive um problema técnico ao processar sua mensagem. Pode repetir?"
 
 
 def parse_receipt(
@@ -435,6 +570,9 @@ def parse_receipt(
         )
 
         response = _call_with_retry(model_name, [prompt, img_part], config=config)
+        if not response:
+            return {"error": "Sem resposta da AI após o upload."}
+
         text = response.text.strip()
 
         # Limpeza de markdown caso o modelo ignore a instrução
@@ -500,6 +638,7 @@ def generate_monthly_report(
         if doc.exists:
             d = doc.to_dict()
             if d.get("hash") == full_hash and d.get("content"):
+                logger.info("[REPORTE] Cache hit.")
                 return d.get("content")
 
         # 3. Processamento
@@ -513,6 +652,7 @@ def generate_monthly_report(
                 cat_vals[c] = cat_vals.get(c, 0) + v
 
         top3 = dict(sorted(cat_vals.items(), key=lambda x: x[1], reverse=True)[:3])
+        logger.info("[REPORTE] Tópicos calculados: %s", top3)
 
         # --- BUDGETS ---
         budgets = budget_service.list_budgets_with_progress(user_id, month, year)
@@ -523,6 +663,7 @@ def generate_monthly_report(
                 over_budget.append(f"{c_name}:+R${(b['spent'] - b['amount']):.0f}")
 
         budget_ctx = "Over:" + ",".join(over_budget) if over_budget else "Budgets OK"
+        logger.info("[REPORTE] Budget Context: %s", budget_ctx)
         # ---------------
 
         # 4. Prompt
@@ -552,6 +693,9 @@ def generate_monthly_report(
             """
 
         response = _call_with_retry(model_name, prompt)
+        if not response:
+            return "Não foi possível conectar ao consultor financeiro agora. Tente novamente em instantes."
+
         content = response.text
 
         # 5. Salvar Cache
@@ -569,7 +713,14 @@ def generate_monthly_report(
         return content
 
     except Exception as e:
-        logger.error("Report Error: %s", e)
+        logger.error(
+            "Report Error for user %s (%d/%d): %s",
+            user_id,
+            month,
+            year,
+            e,
+            exc_info=True,
+        )
         return "Erro ao gerar."
 
 
@@ -632,6 +783,9 @@ def generate_budget_plan(user_id: str, tier: str = "pro") -> str:
         """
 
         response = _call_with_retry(model_name, prompt)
+        if not response:
+            return "Erro ao contatar a IA para o plano."
+
         return response.text
 
     except Exception as e:
@@ -693,6 +847,9 @@ def generate_debt_advice(
         """
 
         response = _call_with_retry(model_name, prompt)
+        if not response:
+            return "O consultor de dívidas está ocupado. Tente logo mais."
+
         return response.text
 
     except Exception as e:
@@ -740,6 +897,9 @@ def analyze_cost_of_living(user_id: str, data: dict, tier: str = "premium") -> s
         """
 
         response = _call_with_retry(model_name, prompt)
+        if not response:
+            return "Não foi possível analisar o custo de vida agora."
+
         return response.text
 
     except Exception as e:
@@ -790,6 +950,9 @@ def generate_weekly_insights(user_id: str, data: dict, tier: str = "pro") -> str
         """
 
         response = _call_with_retry(model_name, prompt)
+        if not response:
+            return ""
+
         return response.text.strip()
 
     except Exception as e:
