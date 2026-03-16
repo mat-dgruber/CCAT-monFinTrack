@@ -1,117 +1,86 @@
-# MonFinTrack
+# 💰 MonFinTrack
 
-MonFinTrack is a robust personal finance tracking application designed to help you manage your expenses, income, and budgets with ease. It features a modern, responsive user interface and a powerful backend API.
+<div align="center">
+  <img src="https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white" alt="Angular" />
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/MIT-yellow.svg?style=for-the-badge" alt="License" />
+</div>
 
-## 🌟 Features
+<p align="center">
+  <strong>MonFinTrack</strong> é uma plataforma robusta de controle financeiro pessoal, projetada para simplificar a gestão de despesas, receitas e orçamentos com inteligência e elegância.
+</p>
 
-- **Dashboard**: Overview of your financial health with interactive charts and summaries.
-- **Transaction Management**: Add, edit, delete, and categorize transactions.
-- **Recurring Transactions**: Set up auto-repeating income or expenses.
-- **Subscriptions**: Track monthly subscriptions and recurring bills.
-- **Budgets**: Set monthly limits for categories and track your progress.
-- **Accounts**: Manage multiple bank accounts and credit cards.
-- **Advanced Graphics**: Visual analysis of your spending habits over time.
-- **Dark Mode**: Fully supported dark theme for comfortable viewing at night.
-- **Security**:
-  - Secure Authentication with Firebase.
-  - Multi-Factor Authentication (MFA) support with TOTP (Google Authenticator, Authy, etc.).
-- **Responsive Design**: Works seamlessly on desktop and mobile devices.
+---
 
-## 🛠️ Tech Stack
+## 🌟 Funcionalidades Principais
+
+- 📊 **Dashboard Interativo**: Visão completa da sua saúde financeira com gráficos dinâmicos.
+- 💸 **Gestão de Transações**: Controle total sobre entradas e saídas, com categorização inteligente.
+- 🔁 **Recorrências e Assinaturas**: Automação de contas repetitivas e controle de serviços de streaming.
+- 🎯 **Planejamento de Orçamentos**: Defina metas de gastos por categoria e acompanhe o progresso em tempo real.
+- 🏦 **Multicontas**: Gerencie diversos bancos, carteiras e cartões de crédito em um só lugar.
+- 🤖 **IA Financeira**: Insights personalizados e geração de relatórios automáticos usando Google Gemini.
+- 🛡️ **Segurança Avançada**:
+  - Autenticação robusta via Firebase.
+  - Segundo Fator de Autenticação (MFA/TOTP).
+  - Isolamento rigoroso de dados por usuário.
+- 📱 **Design Responsivo & Dark Mode**: Experiência premium em qualquer dispositivo.
+
+---
+
+## 🛠️ Stack Tecnológica
+
+### 🎨 Frontend
+
+- **Framework**: [Angular v20](https://angular.io/)
+- **UI & Estilo**: [PrimeNG](https://primeng.org/) & [Tailwind CSS](https://tailwindcss.com/)
+- **Gráficos**: [Chart.js](https://www.chartjs.org/)
+
+### ⚙️ Backend
+
+- **Linguagem**: [Python 3.13](https://www.python.org/)
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
+- **Banco de Dados**: [Firebase Firestore](https://firebase.google.com/products/firestore)
+- **IA**: [Google GenAI (Gemini)](https://ai.google.dev/)
+
+---
+
+## 🚀 Como Começar (Docker)
+
+A forma mais rápida de rodar o projeto é utilizando o Docker Compose.
+
+### Pré-requisitos
+
+- Docker & Docker Compose instalados.
+- Chave de serviço do Firebase (`serviceAccountKey.json`) em `backend/app/certs/`.
+
+### Execução
+
+1. **Clone o repositório**:
+
+   ```bash
+   git clone https://github.com/seu-usuario/monFinTrack.git
+   cd monFinTrack
+   ```
+
+2. **Suba os containers**:
+
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. **Acesse**:
+   - **Frontend**: [http://localhost](http://localhost)
+   - **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## 🧪 Desenvolvimento & Testes
 
 ### Frontend
-
-- **Framework**: Angular v20
-- **UI Library**: PrimeNG v20 & Tailwind CSS
-- **Charts**: Chart.js
-- **Styling**: SCSS
-
-### Backend
-
-- **Framework**: FastAPI (Python 3.13)
-- **Database**: Firebase (Firestore)
-### Backend
-
-- **Framework**: FastAPI (Python 3.13)
-- **Database**: Firebase (Firestore)
-- **Authentication**: Firebase Auth
-
-## ⚙️ CI/CD Configuration
-
-The project is configured with **GitHub Actions** for continuous integration and deployment.
-
-### Secrets Required
-To enable automated deployment to Firebase Hosting, you must add the following secret to your GitHub Repository:
-1. Go to **Settings** > **Secrets and variables** > **Actions**.
-2. Click **New repository secret**.
-3. Name: `FIREBASE_TOKEN`
-4. Value: The output of running `firebase login:ci` locally.
-
-### Security Rules
-The project uses `firestore.rules` and `storage.rules` to enforce strict user data isolation.
-- **Firestore**: Users can only access documents in `users/{userId}` and related subcollections.
-- **Storage**: Users can only access files in `storage/{userId}/`.
-
-Deploy rules with:
-```bash
-firebase deploy --only firestore:rules,storage
-```
-
-## 🚀 Production Deployment
-
-### Frontend (Firebase Hosting)
-The frontend is hosted on **Firebase Hosting**.
-1. Navigate to the frontend directory: `cd frontend`
-2. Build for production: `npm run build`
-3. Deploy: `firebase deploy` (or `cd .. && firebase deploy`)
-
-### Backend (Google Cloud Run)
-The backend is hosted on **Google Cloud Run** and configured for deployment via Cloud Build.
-- **Deployment:** Managed via `gcloud builds submit` as described in the `package.json` scripts.
-
-## 🚀 Getting Started with Docker
-
-The easiest way to run the application is using Docker Compose.
-
-### Prerequisites
-
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-### Installation & Running
-
-1. **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/your-username/monFinTrack.git
-    cd monFinTrack
-    ```
-
-2. **Setup Environment Variables:**
-    - Place your Firebase `serviceAccountKey.json` in `backend/app/certs/`.
-    - Ensure `backend/.env` is configured correctly (should point to the certs).
-
-3. **Start the application:**
-
-    ```bash
-    docker-compose up -d --build
-    ```
-
-4. **Access the application:**
-    - **Frontend**: [http://localhost](http://localhost)
-    - **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Stopping the Application
-
-To stop the containers, run:
-
-```bash
-docker-compose down
-```
-
-## 🧪 Development
-
-### Running Frontend Locally
 
 ```bash
 cd frontend
@@ -119,44 +88,26 @@ npm install
 ng serve
 ```
 
-Access at `http://localhost:4200`.
-
-### Running Tests
-
-#### Frontend Unit Tests (Karma)
-```bash
-cd frontend
-npm test
-```
-Runs tests in Headless Chrome with increased timeouts for stability.
-
-#### Frontend E2E Tests (Playwright)
-```bash
-cd frontend
-# Install browsers (first time only)
-npx playwright install
-npm run test:e2e
-```
-Runs end-to-end login and flow tests.
-
-#### Backend Unit Tests (pytest)
-```bash
-cd backend
-python -m pytest
-```
-
-### Running Backend Locally
+### Backend
 
 ```bash
 cd backend
-python -m venv .venv
-# Activate venv (Windows: .venv\Scripts\activate, Linux/Mac: source .venv/bin/activate)
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+# Recomendado usar 'uv' para gestão de pacotes
+uv run uvicorn app.main:app --reload
 ```
 
-Access API at `http://localhost:8000`.
+### Testes
 
-## 📝 License
+- **Backend**: `pytest`
+- **Frontend Unit**: `npm test`
+- **Frontend E2E**: `npm run test:e2e`
 
-This project is licensed under the MIT License.
+---
+
+## 📝 Licença
+
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+
+<div align="center">
+  Feito com ❤️ para ajudar na sua liberdade financeira.
+</div>

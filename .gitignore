@@ -69,3 +69,4 @@ llms.txt
 
 /.agent
 *.txt
+.firebase/

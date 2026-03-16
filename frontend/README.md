@@ -1,75 +1,104 @@
-# MonFinTrack Frontend
+# 🎨 monFinTrack - Frontend
 
-This is the frontend for the MonFinTrack application, a personal finance tracker. It is built with Angular.
+<div align="center">
+  <img src="https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white" alt="Angular" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PrimeNG-DD0031?style=for-the-badge&logo=primeng&logoColor=white" alt="PrimeNG" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Firebase_Hosting-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase Hosting" />
+</div>
 
-## Technologies Used
+Esta é a interface moderna e intuitiva do **monFinTrack**, construída com **Angular** para proporcionar a melhor experiência de gestão financeira pessoal.
 
-- Angular
-- TypeScript
-- SCSS
-- PrimeNG
-- ngx-markdown
+---
 
-## 🚀 Deployment
+## 🚀 Tecnologias
 
-The application is configured for deployment to **Firebase Hosting**.
+- **Framework**: [Angular v20](https://angular.io/) - Framework robusto e componentizado.
+- **UI Kit**: [PrimeNG](https://primeng.org/) - Componentes visuais ricos e acessíveis.
+- **Estilização**: [Tailwind CSS](https://tailwindcss.com/) - Estilo atômico e utilitário.
+- **Gráficos**: [Chart.js](https://www.chartjs.org/) - Visualização de dados interativa.
+- **Hospedagem**: [Firebase Hosting](https://firebase.google.com/products/hosting) - CDN rápida e segura.
 
-1.  **Build:**
-    ```bash
-    npm run build
-    ```
-    This generates the production artifacts in `dist/frontend/browser`.
+---
 
-2.  **Deploy:**
-    From the root directory (where `firebase.json` resides):
-    ```bash
-    firebase deploy
-    ```
+## 🔧 Configuração e Instalação
 
-## Getting Started
+### 1. Pré-requisitos
 
-### Prerequisites
+- Node.js (recomendado v20+)
+- npm ou yarn
 
-- Node.js and npm (or yarn)
+### 2. Instalar Dependências
 
-### Installation
+Navegue até o diretório `frontend/`:
 
-1.  Navigate to the `frontend` directory.
-2.  Install the dependencies:
-    ```bash
-    npm install --legacy-peer-deps
-    ```
-
-### Running the Application
-
-1.  Run the development server:
-    ```bash
-    ng serve
-    ```
-    ng serve
-    ```
-2.  Open your browser and navigate to `http://localhost:4200/`.
-
-### Running Tests
-
-#### Unit Tests (Karma)
 ```bash
-npm test
+cd frontend
+npm install --legacy-peer-deps
 ```
-Runs unit tests using Karma and Headless Chrome.
 
-#### E2E Tests (Playwright)
+### 3. Execução Local
+
+Inicie o servidor de desenvolvimento:
+
 ```bash
-# First time setup
-npx playwright install
-# Run tests
-npm run test:e2e
+ng serve
 ```
-Runs end-to-end tests for critical flows like login.
 
-## Folder Structure
+Acesse em: [http://localhost:4200](http://localhost:4200)
 
-- `src/`: Contains the main application code.
-- `src/app/`: Contains the core Angular components, services, and routes.
-- `src/assets/`: For static assets like images and fonts.
-- `src/environments/`: For environment-specific configuration.
+---
+
+## 🧪 Testes
+
+A suite de testes garante a estabilidade da interface:
+
+- **Unitários (Karma)**:
+  ```bash
+  npm test
+  ```
+- **End-to-End (Playwright)**:
+  ```bash
+  npx playwright install
+  npm run test:e2e
+  ```
+
+---
+
+## 🚀 Deploy
+
+A aplicação está configurada para deploy no **Firebase Hosting**.
+
+1. **Build de Produção**:
+   ```bash
+   npm run build
+   ```
+2. **Deploy**:
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+---
+
+## 📂 Estrutura de Pastas
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── components/  # Componentes reutilizáveis
+│   │   ├── pages/       # Telas principais
+│   │   ├── services/    # Lógica de chamadas de API
+│   │   └── shared/      # Utilitários, pipes e diretivas
+│   ├── assets/          # Imagens, ícones e fontes
+│   └── environments/    # Configurações de API e Firebase
+├── tailwind.config.js   # Configuração do Tailwind
+└── angular.json         # Configuração do Angular
+```
+
+---
+
+## 🛡️ Licença
+
+Licença [MIT](../LICENSE).
