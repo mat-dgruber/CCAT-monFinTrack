@@ -229,7 +229,9 @@ def chat_finance(
         if history:
             # Pegar últimas 6 mensagens do histórico para manter contexto mas economizar tokens
             last_history = history[-6:]
-            history_str = "\n".join([f"{h['role']}: {h['content']}" for h in last_history])
+            history_str = "\n".join(
+                [f"{h['role']}: {h['content']}" for h in last_history]
+            )
 
         # 2. System Prompt
         model_name = get_model_for_tier(tier)
@@ -743,3 +745,53 @@ def analyze_cost_of_living(user_id: str, data: dict, tier: str = "premium") -> s
     except Exception as e:
         logger.error("Cost of Living Analysis Error: %s", e)
         return "Erro ao analisar custo de vida."
+
+
+def generate_weekly_insights(user_id: str, data: dict, tier: str = "pro") -> str:
+    """
+    Gera insights personalizados para o relatório semanal.
+    data: {
+        "income": float,
+        "expense": float,
+        "balance": float,
+        "top_categories": [{"name": str, "amount": float}],
+        "period": str (ex: "09 Mar - 16 Mar")
+    }
+    """
+    if not client:
+        return ""
+
+    try:
+        cat_str = "|".join(
+            [f"{c['name']}:R${c['amount']:.0f}" for c in data.get("top_categories", [])]
+        )
+        ctx = (
+            f"Period:{data.get('period')} | "
+            f"In:R${data.get('income'):.0f} | "
+            f"Out:R${data.get('expense'):.0f} | "
+            f"Bal:R${data.get('balance'):.0f} | "
+            f"Cats:[{cat_str}]"
+        )
+
+        model_name = get_model_for_tier(tier)
+
+        prompt = f"""
+        Data: {ctx}
+        Role: CapyCro (Mascote e Mentor Financeiro). Amigável, motivador, mas direto.
+        Task: Analisar a semana e dar um "Conselho da CapyCro" (PT-BR).
+
+        Regras:
+        1. Comece com um elogio ou observação sobre o padrão de gastos.
+        2. Dê uma dica prática baseada na maior categoria de gasto.
+        3. Termine com uma frase motivadora curta.
+        4. Máximo 4 frases curtas. Sem termos técnicos.
+
+        Estilo: Texto puro, sem markdown complexo.
+        """
+
+        response = _call_with_retry(model_name, prompt)
+        return response.text.strip()
+
+    except Exception as e:
+        logger.error("Weekly Insights Error: %s", e)
+        return "Continue focado em seus objetivos financeiros! A consistência é o segredo do sucesso."
