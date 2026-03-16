@@ -4,15 +4,15 @@ import os
 import random
 import time
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional
 
-from google import genai
 from app.core.database import get_db
 from app.core.logger import get_logger
 from app.services import account as account_service
 from app.services import budget as budget_service
 from app.services import category as category_service
 from app.services import transaction as transaction_service
+from google import genai
 
 logger = get_logger(__name__)
 
@@ -26,7 +26,9 @@ else:
     logger.warning("GOOGLE_API_KEY not found. AI features will be disabled.")
 
 
-def _call_with_retry(model_name, prompt_or_parts, retries=3, initial_delay=2, config=None):
+def _call_with_retry(
+    model_name, prompt_or_parts, retries=3, initial_delay=2, config=None
+):
     """
     Helper function to call client.models.generate_content with exponential backoff for rate limits (429).
     """
@@ -37,9 +39,7 @@ def _call_with_retry(model_name, prompt_or_parts, retries=3, initial_delay=2, co
     for attempt in range(retries):
         try:
             return client.models.generate_content(
-                model=model_name,
-                contents=prompt_or_parts,
-                config=config
+                model=model_name, contents=prompt_or_parts, config=config
             )
         except Exception as e:
             error_str = str(e).lower()
@@ -90,7 +90,9 @@ def classify_transaction(
     try:
         # Hash inclui description, user_id E tier (privacidade e precisão)
         desc_clean = description.strip().lower()
-        desc_hash = hashlib.md5(f"{user_id}:{desc_clean}".encode("utf-8"), usedforsecurity=False).hexdigest()
+        desc_hash = hashlib.md5(
+            f"{user_id}:{desc_clean}".encode("utf-8"), usedforsecurity=False
+        ).hexdigest()
 
         db = get_db()
         cache_ref = db.collection("ai_predictions").document(desc_hash)
@@ -132,7 +134,15 @@ def classify_transaction(
         """
 
         # 3. Chama a IA
-        response = _call_with_retry(model_name, prompt)
+        from google.genai import types
+
+        config = types.GenerateContentConfig(
+            candidate_count=1,
+            max_output_tokens=500,
+            temperature=0.1,  # Low temperature for classification
+        )
+
+        response = _call_with_retry(model_name, prompt, config=config)
         predicted_id = response.text.strip()
 
         if predicted_id.lower() == "null":
@@ -160,7 +170,11 @@ def classify_transaction(
 
 
 def chat_finance(
-    message: str, user_id: str, tier: str = "pro", persona: str = "friendly"
+    message: str,
+    user_id: str,
+    tier: str = "pro",
+    persona: str = "friendly",
+    history: Optional[List[dict]] = None,
 ) -> str:
     """
     Chatbot financeiro.
@@ -209,17 +223,27 @@ def chat_finance(
             sorted(cat_totals.items(), key=lambda x: x[1], reverse=True)[:5]
         )
 
+        # D. Histórico e Relógio
+        now_str = now.strftime("%Y-%m-%d %H:%M:%S (%A)")
+        history_str = ""
+        if history:
+            # Pegar últimas 6 mensagens do histórico para manter contexto mas economizar tokens
+            last_history = history[-6:]
+            history_str = "\n".join([f"{h['role']}: {h['content']}" for h in last_history])
+
         # 2. System Prompt
         model_name = get_model_for_tier(tier)
 
         sys_ctx = f"""
         Ctx:
+        Time: {now_str}
         Accs:{acc_str}
         Spent:{int(total_spent)} (Top 50 txs)
         Top:{json.dumps(top_cats, ensure_ascii=False)}
         LastTx:
         {tx_str}
         
+        {history_str}
         Q:{message}
         """
 
@@ -249,22 +273,30 @@ def chat_finance(
             If no action is needed, send "action": null.
             """
 
-        response = _call_with_retry(
-            model_name,
-            final_prompt,
+        from google.genai import types
+
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            candidate_count=1,
+            max_output_tokens=1000,
+            temperature=0.7,
         )
+
+        response = _call_with_retry(model_name, final_prompt, config=config)
         text_response = response.text.strip()
-        
+
         # Limpar markdown ```json se presente
         if "```json" in text_response:
-            text_response = text_response.replace("```json", "").replace("```", "").strip()
+            text_response = (
+                text_response.replace("```json", "").replace("```", "").strip()
+            )
 
         # Parse the JSON response
         try:
             ai_data = json.loads(text_response)
         except json.JSONDecodeError:
-            return text_response # Fallback to raw text if model ignores instructions
-        
+            return text_response  # Fallback to raw text if model ignores instructions
+
         final_message = ai_data.get("response", "Não entendi.")
         action_data = ai_data.get("action")
 
@@ -391,11 +423,16 @@ def parse_receipt(
 
         # For vision, the new SDK uses a different parts structure
         from google.genai import types
+
         img_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
 
-        response = _call_with_retry(
-            model_name, [prompt, img_part]
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            candidate_count=1,
+            max_output_tokens=1000,
         )
+
+        response = _call_with_retry(model_name, [prompt, img_part], config=config)
         text = response.text.strip()
 
         # Limpeza de markdown caso o modelo ignore a instrução
@@ -447,7 +484,7 @@ def generate_monthly_report(
         total_amount = sum(t.amount for t in txs)
         full_hash = hashlib.md5(
             f"{user_id}:{month}:{year}:{len(txs)}:{total_amount:.2f}:{tier}".encode(),
-            usedforsecurity=False
+            usedforsecurity=False,
         ).hexdigest()
 
         db = get_db()
@@ -479,9 +516,10 @@ def generate_monthly_report(
         budgets = budget_service.list_budgets_with_progress(user_id, month, year)
         over_budget = []
         for b in budgets:
-            if b.spent > b.amount:
-                over_budget.append(f"{b.category_name}:+R${(b.spent - b.amount):.0f}")
-        
+            if b["spent"] > b["amount"]:
+                c_name = b["category"].name if b["category"] else "Other"
+                over_budget.append(f"{c_name}:+R${(b['spent'] - b['amount']):.0f}")
+
         budget_ctx = "Over:" + ",".join(over_budget) if over_budget else "Budgets OK"
         # ---------------
 

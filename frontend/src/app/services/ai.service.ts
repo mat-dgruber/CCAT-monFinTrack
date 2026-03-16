@@ -22,10 +22,12 @@ export class AIService {
   sendMessage(
     message: string,
     persona: string = 'friendly',
+    history: any[] = [],
   ): Observable<{ response: string }> {
     return this.http.post<{ response: string }>(`${this.apiUrl}/chat`, {
       message,
       persona,
+      history,
     });
   }
 

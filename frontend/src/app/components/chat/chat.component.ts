@@ -73,30 +73,36 @@ export class ChatComponent {
  }
 
  sendMessage() {
- if (!this.currentMessage.trim() || this.loading()) return;
+  if (!this.currentMessage.trim() || this.loading()) return;
 
- const userMsg = this.currentMessage.trim();
- const persona = this.isRoastMode() ? 'roast' : 'friendly';
+  const userMsg = this.currentMessage.trim();
+  const persona = this.isRoastMode() ? 'roast' : 'friendly';
 
- this.addMessage('user', userMsg);
- this.currentMessage = '';
- this.loading.set(true);
- this.scrollToBottom();
+  // Map messages to history format
+  const history = this.messages().slice(-10).map(m => ({
+    role: m.sender === 'user' ? 'user' : 'assistant',
+    content: m.text
+  }));
 
- this.aiService.sendMessage(userMsg, persona).subscribe({
- next: (res) => {
- const { text, chart } = this.parseResponse(res.response);
- this.addMessage('ai', text, chart);
- this.loading.set(false);
- this.scrollToBottom();
- },
- error: (err) => {
- console.error(err);
- this.addMessage('ai', 'Desculpe, não consegui conectar ao cérebro financeiro agora. 🧠💥');
- this.loading.set(false);
- this.scrollToBottom();
- }
- });
+  this.addMessage('user', userMsg);
+  this.currentMessage = '';
+  this.loading.set(true);
+  this.scrollToBottom();
+
+  this.aiService.sendMessage(userMsg, persona, history).subscribe({
+    next: (res) => {
+      const { text, chart } = this.parseResponse(res.response);
+      this.addMessage('ai', text, chart);
+      this.loading.set(false);
+      this.scrollToBottom();
+    },
+    error: (err) => {
+      console.error(err);
+      this.addMessage('ai', 'Desculpe, não consegui conectar ao cérebro financeiro agora. 🧠💥');
+      this.loading.set(false);
+      this.scrollToBottom();
+    }
+  });
  }
 
  private parseResponse(raw: string): { text: string, chart?: any } {

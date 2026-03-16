@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from app.core.logger import get_logger
 from app.core.rate_limiter import limiter
@@ -21,7 +21,7 @@ class LimitsResponse(BaseModel):
 
 
 @router.get("/limits", response_model=LimitsResponse)
-def get_limits(current_user: dict = Depends(get_current_user)):
+def get_limits(current_user: Annotated[dict, Depends(get_current_user)]):
     user_id = current_user["uid"]
     prefs = preference_service.get_preferences(user_id)
     tier = prefs.subscription_tier or "free"
@@ -42,7 +42,8 @@ class ClassificationResponse(BaseModel):
 
 @router.post("/classify", response_model=ClassificationResponse)
 def classify_endpoint(
-    request: ClassificationRequest, current_user: dict = Depends(get_current_user)
+    request: ClassificationRequest,
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     user_id = current_user["uid"]
     prefs = preference_service.get_preferences(user_id)
@@ -66,6 +67,7 @@ def classify_endpoint(
 
 class ChatRequest(BaseModel):
     message: str
+    history: Optional[List[dict]] = []
     persona: Optional[str] = "friendly"
 
 
@@ -74,7 +76,9 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest, current_user: dict = Depends(get_current_user)):
+def chat_endpoint(
+    request: ChatRequest, current_user: Annotated[dict, Depends(get_current_user)]
+):
     """
     Endpoint para conversar com o assistente financeiro.
     """
@@ -94,7 +98,11 @@ def chat_endpoint(request: ChatRequest, current_user: dict = Depends(get_current
     limiter.check_limit(user_id, "chat", tier)
 
     response_text = ai_service.chat_finance(
-        request.message, user_id, tier=tier, persona=request.persona or "friendly"
+        request.message,
+        user_id,
+        tier=tier,
+        persona=request.persona or "friendly",
+        history=request.history,
     )
 
     return ChatResponse(response=response_text)
@@ -121,11 +129,9 @@ class ScanResponse(BaseModel):
 
 @router.post("/scan", response_model=ScanResponse)
 async def scan_receipt_endpoint(
-    file: Optional[UploadFile] = File(None),
-    file_url: Optional[
-        str
-    ] = None,  # Expecting form field if multipart, or we need to separate endpoints?
-    current_user: dict = Depends(get_current_user),
+    file: Annotated[Optional[UploadFile], File()] = None,
+    file_url: Optional[str] = None,
+    current_user: Annotated[dict, Depends(get_current_user)] = None,
 ):
     """
     Recebe uma imagem de comprovante (UploadFile) OU uma URL local (file_url) e retorna os dados extraídos.
@@ -167,7 +173,7 @@ async def scan_receipt_endpoint(
                 filename=filename,
                 folder="attachments",
                 content_type=content_type,
-                user_id=user_id
+                user_id=user_id,
             )
             attachment_url = f"/api/attachments/{internal_path}"
         except Exception as e:
@@ -180,8 +186,14 @@ async def scan_receipt_endpoint(
         # Expected: /api/attachments/users/{user_id}/attachments/{filename}
         expected_prefix = f"/api/attachments/users/{user_id}/attachments/"
         if not file_url.startswith(expected_prefix) or ".." in file_url:
-            logger.warning("Attempted unauthorized file access or invalid path: %s (User: %s)", file_url, user_id)
-            raise HTTPException(status_code=403, detail="Invalid file path or access denied.")
+            logger.warning(
+                "Attempted unauthorized file access or invalid path: %s (User: %s)",
+                file_url,
+                user_id,
+            )
+            raise HTTPException(
+                status_code=403, detail="Invalid file path or access denied."
+            )
 
         from app.services.storage_service import storage_service
 
@@ -219,7 +231,7 @@ async def scan_receipt_endpoint(
 
 @router.get("/report")
 def generate_report(
-    month: int, year: int, current_user: dict = Depends(get_current_user)
+    month: int, year: int, current_user: Annotated[dict, Depends(get_current_user)]
 ):
     user_id = current_user["uid"]
     prefs = preference_service.get_preferences(user_id)
@@ -244,7 +256,8 @@ class CostOfLivingAnalysisRequest(BaseModel):
 
 @router.post("/cost-of-living-analysis")
 def analyze_cost_of_living_endpoint(
-    request: CostOfLivingAnalysisRequest, current_user: dict = Depends(get_current_user)
+    request: CostOfLivingAnalysisRequest,
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     user_id = current_user["uid"]
     prefs = preference_service.get_preferences(user_id)
