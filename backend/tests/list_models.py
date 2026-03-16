@@ -1,6 +1,6 @@
+import os
 
 from google import genai
-import os
 
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
@@ -11,6 +11,6 @@ else:
     try:
         # Use the models.list method in the new SDK
         for m in client.models.list():
-            print(f"- {m.name} (Supported: {m.supported_generation_methods})")
+            print(f"- {m.name}")
     except Exception as e:
         print(f"Error listing models: {e}")
