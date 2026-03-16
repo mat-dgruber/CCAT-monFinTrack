@@ -4,6 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TransactionService } from '../../services/transaction.service';
 import { of } from 'rxjs';
+import { provideMarkdown } from 'ngx-markdown';
 
 describe('AdvancedGraphicsComponent', () => {
   let component: AdvancedGraphicsComponent;
@@ -24,6 +25,7 @@ describe('AdvancedGraphicsComponent', () => {
       ],
       providers: [
         { provide: TransactionService, useValue: transactionServiceSpy },
+        provideMarkdown(),
       ],
     }).compileComponents();
 

@@ -11,6 +11,7 @@ import { of, throwError } from 'rxjs';
 import { Transaction } from '../../models/transaction.model';
 import { Table } from 'primeng/table';
 import { ActivatedRoute } from '@angular/router';
+import { provideMarkdown } from 'ngx-markdown';
 
 // Register locale data
 import { registerLocaleData } from '@angular/common';
@@ -104,6 +105,7 @@ describe('TransactionManager', () => {
         },
         CustomConfirmService,
         MessageService,
+        provideMarkdown(),
       ],
     }).compileComponents();
 
@@ -142,12 +144,12 @@ describe('TransactionManager', () => {
 
   it('should clear filters', () => {
     // Mock Table
-    const tableSpy = jasmine.createSpyObj('Table', ['clear']);
+    const tableSpy = jasmine.createSpyObj('Table', ['reset']);
     component.filterDateRange.set([new Date(), new Date()]);
 
     component.clear(tableSpy);
 
-    expect(tableSpy.clear).toHaveBeenCalled();
+    expect(tableSpy.reset).toHaveBeenCalled();
     expect(component.filterDateRange()).toBeNull();
     expect(transactionService.getTransactions).toHaveBeenCalled();
   });

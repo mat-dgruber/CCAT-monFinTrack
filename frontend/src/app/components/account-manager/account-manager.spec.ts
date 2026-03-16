@@ -4,6 +4,7 @@ import { AccountManager } from './account-manager';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
+import { provideMarkdown } from 'ngx-markdown';
 
 describe('AccountManager', () => {
  let component: AccountManager;
@@ -12,7 +13,7 @@ describe('AccountManager', () => {
  beforeEach(async () => {
  await TestBed.configureTestingModule({
  imports: [AccountManager, HttpClientTestingModule, NoopAnimationsModule],
- providers: [CustomConfirmService, MessageService]
+ providers: [CustomConfirmService, MessageService, provideMarkdown()]
  })
  .compileComponents();
 

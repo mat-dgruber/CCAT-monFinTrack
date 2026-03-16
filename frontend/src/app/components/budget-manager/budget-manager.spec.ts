@@ -4,6 +4,7 @@ import { BudgetManager } from './budget-manager';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
+import { provideMarkdown } from 'ngx-markdown';
 
 describe('BudgetManager', () => {
  let component: BudgetManager;
@@ -12,7 +13,7 @@ describe('BudgetManager', () => {
  beforeEach(async () => {
  await TestBed.configureTestingModule({
  imports: [BudgetManager, HttpClientTestingModule, NoopAnimationsModule],
- providers: [CustomConfirmService, MessageService]
+ providers: [CustomConfirmService, MessageService, provideMarkdown()]
  })
  .compileComponents();
 
