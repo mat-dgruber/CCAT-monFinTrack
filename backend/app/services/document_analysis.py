@@ -1,11 +1,11 @@
-#app/services/document_analysis.py
+# app/services/document_analysis.py
 import json
 import os
 from typing import Any, Dict
 
-from google import genai
 from app.core.logger import get_logger
 from app.services.user_preference import get_preferences
+from google import genai
 
 logger = get_logger(__name__)
 
@@ -76,7 +76,6 @@ class DocumentAnalysisService:
                 "subsidy_amount": 0.00,
                 "subsidy_expiration_date": "YYYY-MM-DD",
                 "report": "MANDATORY: Detailed analysis explaining interest, amortization options, and management tips."
-
             }
 
             ### REGRAS:
@@ -86,20 +85,23 @@ class DocumentAnalysisService:
 
             # Create content part
             from google.genai import types
+
             document_part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
 
             # Centralized call with retry (importing the function here if needed or moving it to a core utility)
             # For now, let's use a local implementation of retry to avoid circular imports if shared
             from app.services.ai_service import _call_with_retry
-            
+
             config = types.GenerateContentConfig(
                 response_mime_type="application/json",
                 candidate_count=1,
                 max_output_tokens=2048,
-                temperature=0.2, # Lower temperature for extraction
+                temperature=0.2,  # Lower temperature for extraction
             )
 
-            response = _call_with_retry(AI_MODEL_NAME, [prompt, document_part], config=config)
+            response = _call_with_retry(
+                AI_MODEL_NAME, [prompt, document_part], config=config
+            )
             if not response:
                 return {"error": "Sem resposta da IA."}
 
