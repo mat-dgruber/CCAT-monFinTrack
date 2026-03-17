@@ -20,23 +20,23 @@
   .p-datatable-sm .p-datatable-thead > tr > th {
     background: transparent !important;
     padding: 1rem 1.5rem !important;
-    font-weight: 600;
-    font-size: 0.875rem;
+    font-weight: 700;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     color: var(--text-color-secondary);
     border-bottom: 2px solid var(--surface-border) !important;
   }
 
   .p-datatable-tbody > tr {
-    transition: var(--transition-smooth);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent !important;
 
     &:hover {
       cursor: pointer;
       background: var(--surface-hover) !important;
-      transform: scale(1.002) translateY(-1px);
-      box-shadow: var(--shadow-elegant);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
     }
 
     > td {
@@ -46,21 +46,39 @@
     }
   }
 
-  /* Group Headers */
+  /* Group Headers (Timeline) */
   tr.p-rowgroup-header {
     background: transparent !important;
 
     td {
       background: transparent !important;
       border: none !important;
-      padding-top: 2rem !important;
+      padding-top: 2.5rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+
+    .timeline-accent {
+      @apply w-1.5 h-6 bg-primary rounded-full mr-3;
     }
   }
 
   /* Amount Column logic to prevent breaking */
   .amount-cell {
     white-space: nowrap;
-    font-variant-numeric: tabular-nums;
+    @apply tabular-nums;
+  }
+}
+
+/* Status Pills */
+.status-pill {
+  @apply px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit;
+
+  &.paid {
+    @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400;
+  }
+
+  &.pending {
+    @apply bg-amber-500/10 text-amber-600 dark:text-amber-400;
   }
 }
 

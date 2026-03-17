@@ -326,11 +326,13 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 html,
 body {
   height: 100%;
+  overflow-x: hidden;
   background-color: var(--surface-ground);
   color: var(--text-color);
   font-family: var(--font-family);
@@ -364,6 +366,14 @@ h2 {
 /* 4.6 Standardized Page Header */
 .page-header {
   @apply flex flex-col md:flex-row justify-between items-center md:items-end gap-4 mb-8;
+}
+
+.glass-panel {
+  @apply bg-surface-card/80 backdrop-blur-md border border-surface-border/50;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 .page-title-group {
