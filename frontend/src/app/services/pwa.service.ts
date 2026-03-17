@@ -14,6 +14,7 @@ export class PwaService {
 
   private deferredPrompt = signal<any>(null);
   private wakeLock: any = null;
+  public isSafari = signal<boolean>(false);
 
   constructor() {
     this.checkForUpdates();
@@ -104,20 +105,47 @@ export class PwaService {
 
   // --- Install Flow ---
   private initInstallPrompt() {
+    // Safari detection
+    const isSafari =
+      /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ||
+      ((navigator as any).standalone !== undefined &&
+        /iPad|iPhone|iPod/.test(navigator.userAgent));
+
+    this.isSafari.set(isSafari);
+
+    if (isSafari) {
+      console.info(
+        'PWA: Safari detected. Automatic install prompt not supported. Use "Share > Add to Home Screen".',
+      );
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferredPrompt.set(e);
-      console.log('App install prompt intercepted', e);
+      console.log('PWA: App install prompt intercepted', e);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA: App was installed');
+      this.deferredPrompt.set(null);
     });
   }
 
   async installApp() {
     const prompt = this.deferredPrompt();
     if (prompt) {
-      prompt.prompt();
-      const { outcome } = await prompt.userChoice;
-      console.log(`User response to the install prompt: ${outcome}`);
-      this.deferredPrompt.set(null);
+      try {
+        await prompt.prompt();
+        const { outcome } = await prompt.userChoice;
+        console.log(`PWA: User response to the install prompt: ${outcome}`);
+        this.deferredPrompt.set(null);
+      } catch (err) {
+        console.error('PWA: Error during installation:', err);
+      }
+    } else {
+      console.warn(
+        'PWA: Install prompt not available. Check if browser supports beforeinstallprompt or if app is already installed.',
+      );
     }
   }
 

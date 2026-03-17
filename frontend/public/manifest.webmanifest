@@ -12,19 +12,19 @@
   "start_url": "./",
   "icons": [
     {
-      "src": "assets/favicon/favicon-96x96.png",
+      "src": "/assets/favicon/favicon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "assets/favicon/web-app-manifest-192x192.png",
+      "src": "/assets/favicon/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "assets/favicon/web-app-manifest-512x512.png",
+      "src": "/assets/favicon/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
@@ -36,14 +36,14 @@
       "short_name": "Nova",
       "description": "Adicionar nova receita ou despesa",
       "url": "/transactions/new",
-      "icons": [{ "src": "assets/favicon/favicon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/favicon/favicon-96x96.png", "sizes": "96x96" }]
     },
     {
       "name": "Ver Dashboard",
       "short_name": "Dashboard",
       "description": "Visualizar seus gráficos financeiros",
       "url": "/dashboard",
-      "icons": [{ "src": "assets/favicon/favicon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/favicon/favicon-96x96.png", "sizes": "96x96" }]
     }
   ],
   "protocol_handlers": [

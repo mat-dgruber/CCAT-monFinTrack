@@ -29,6 +29,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { KnobModule } from 'primeng/knob';
+import { InputMaskModule } from 'primeng/inputmask';
 import { PageHelpComponent } from '../page-help/page-help';
 
 import { PwaService } from '../../services/pwa.service';
@@ -58,6 +60,8 @@ import { PwaService } from '../../services/pwa.service';
     RouterModule,
     ProgressBarModule,
     ProgressSpinnerModule,
+    KnobModule,
+    InputMaskModule,
     PageHelpComponent,
   ],
   providers: [MessageService],
@@ -79,6 +83,19 @@ export class Settings {
 
   // AI Limits
   aiLimits = signal<any>(null);
+
+  getAiLimitPercentage(type: 'classify' | 'chat'): number {
+    const limits = this.aiLimits();
+    if (!limits || !limits[type]) return 0;
+    if (limits[type].limit === 0) return 0;
+    return (limits[type].used / limits[type].limit) * 100;
+  }
+
+  getAiRemaining(type: 'classify' | 'chat'): number {
+    const limits = this.aiLimits();
+    if (!limits || !limits[type]) return 0;
+    return Math.max(0, limits[type].limit - limits[type].used);
+  }
 
   // Computed signal for profile image
   profileImageUrl = computed(() => {
@@ -582,5 +599,20 @@ export class Settings {
 
   navigateToPricing() {
     this.router.navigate(['/pricing']);
+  }
+
+  isSwEnabled() {
+    return localStorage.getItem('ENABLE_SW') === 'true';
+  }
+
+  toggleSw(enabled: boolean) {
+    localStorage.setItem('ENABLE_SW', enabled ? 'true' : 'false');
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Configuração Alterada',
+      detail:
+        'Reinicie o "ng serve" e recarregue a página para aplicar as mudanças do PWA.',
+      sticky: true,
+    });
   }
 }
