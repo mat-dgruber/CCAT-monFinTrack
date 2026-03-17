@@ -2,7 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { confirmPasswordReset, getAuth, verifyPasswordResetCode } from 'firebase/auth';
+import {
+  confirmPasswordReset,
+  getAuth,
+  verifyPasswordResetCode,
+} from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 import { environment } from '../../../environments/environment';
 
@@ -43,21 +47,25 @@ export class ResetPassword implements OnInit {
   oobCode = signal<string | null>(null);
   email = signal<string | null>(null);
 
-  form = this.fb.group({
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    confirmPassword: ['', [Validators.required]],
-  }, {
-    validators: (control: any) => {
-      const pass = control.get('password')?.value;
-      const confirm = control.get('confirmPassword')?.value;
-      return pass === confirm ? null : { mismatch: true };
-    }
-  });
+  form = this.fb.group(
+    {
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', [Validators.required]],
+    },
+    {
+      validators: (control: any) => {
+        const pass = control.get('password')?.value;
+        const confirm = control.get('confirmPassword')?.value;
+        return pass === confirm ? null : { mismatch: true };
+      },
+    },
+  );
 
   ngOnInit() {
     // 1. Capturar o código
-    this.route.queryParams.subscribe(params => {
-      const code = params['oobCode'] || this.route.snapshot.queryParams['oobCode'];
+    this.route.queryParams.subscribe((params) => {
+      const code =
+        params['oobCode'] || this.route.snapshot.queryParams['oobCode'];
       if (code) {
         this.oobCode.set(code);
         this.verifyCode(code);
@@ -87,7 +95,9 @@ export class ResetPassword implements OnInit {
     } catch (error: any) {
       console.error('ResetPassword code verification error:', error);
       this.status.set('error');
-      this.errorMessage.set('O link de redefinição expirou ou já foi utilizado.');
+      this.errorMessage.set(
+        'O link de redefinição expirou ou já foi utilizado.',
+      );
     }
   }
 

@@ -1,31 +1,39 @@
-<div class="max-w-[1600px] mx-auto p-4 lg:p-6">
-  <div class="page-header">
+<div class="max-w-[1600px] mx-auto p-4 md:p-10 min-h-screen bg-surface-ground/20">
+  <!-- Standard Header Section -->
+  <div class="page-header mb-12">
     <div class="page-title-group">
-      <h1 class="page-title">Configurações</h1>
-      <p class="page-description">
-        Personalize sua experiência: perfil, notificações e preferências.
+      <h1 class="page-title text-4xl font-black tracking-tight mb-2">
+        Configurações <span class="text-primary">Gerais</span>
+      </h1>
+      <p class="page-description text-lg text-secondary/80">
+        Personalize sua experiência completa: perfil, segurança e preferências do sistema.
       </p>
     </div>
-    <div class="page-actions flex items-center gap-2">
+    <div class="page-actions w-full md:w-auto flex items-center gap-4">
       <app-page-help document="settings.md"></app-page-help>
     </div>
   </div>
 
-  <!-- Organic Grid Layout -->
+  <!-- Bento Grid Layout -->
   <div
-    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start grid-flow-row-dense"
+    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 items-start grid-flow-row-dense"
   >
-    <!-- 1. PROFILE (Standard) -->
+    <!-- 1. PROFILE (Premium Card) -->
     <div
-      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-8 md:p-12 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
     >
-      <h2 class="text-xl font-semibold text-emphasis mb-6">Meu Perfil</h2>
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+          <i class="pi pi-user text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-emphasis tracking-tight">Meu Perfil</h2>
+      </div>
 
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-10">
         <!-- Profile Picture -->
-        <div class="flex items-center gap-4">
+        <div class="flex flex-col items-center gap-6">
           <div
-            class="w-24 h-24 rounded-full bg-surface-ground flex items-center justify-center text-3xl font-bold text-secondary shadow-sm overflow-hidden border-4 border-surface-ground"
+            class="relative w-36 h-32 rounded-[2.5rem] bg-surface-ground flex items-center justify-center text-4xl font-black text-primary shadow-2xl overflow-hidden border-4 border-white dark:border-surface-card group-hover:scale-105 transition-transform duration-500"
           >
             @if (preferences?.profile_image_url) {
               <img
@@ -38,51 +46,66 @@
               {{ displayName().charAt(0).toUpperCase() || "?" }}
             }
           </div>
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col items-center gap-3">
             <p-fileUpload
               mode="basic"
-              chooseLabel="Alterar Foto"
+              chooseLabel="Alterar Imagem"
               name="avatar"
               accept="image/*"
               maxFileSize="1000000"
               [auto]="true"
               customUpload="true"
               (uploadHandler)="onUpload($event)"
-              styleClass="p-button-outlined p-button-secondary p-button-sm"
+              styleClass="bg-surface-900 dark:bg-surface-50 text-white dark:text-surface-900 border-none rounded-xl px-6 py-2.5 text-sm font-bold shadow-lg"
             ></p-fileUpload>
-            <small class="text-secondary">Max 1MB. JPG/PNG.</small>
+            <p class="text-[10px] font-black text-secondary uppercase tracking-widest opacity-60">
+              Max 1MB • JPG/PNG
+            </p>
           </div>
         </div>
 
-        <!-- Full Name -->
-        <div class="flex flex-col gap-2">
-          <label for="displayName" class="font-medium text-secondary"
-            >Nome Completo</label
-          >
-          <input
-            pInputText
-            id="displayName"
-            [(ngModel)]="displayName"
-            class="w-full"
-          />
+        <div class="grid grid-cols-1 gap-6">
+          <!-- Full Name -->
+          <div class="flex flex-col gap-2">
+            <label for="displayName" class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1">Nome Completo</label>
+            <input
+              pInputText
+              id="displayName"
+              [(ngModel)]="displayName"
+              class="w-full !rounded-2xl !bg-surface-ground/50 !border-surface-border !py-4 hover:!border-primary/50 transition-all"
+            />
+          </div>
+
+          <!-- Phone -->
+          <div class="flex flex-col gap-2">
+            <label for="phone" class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1">Telefone / WhatsApp</label>
+            <input
+              pInputText
+              id="phone"
+              [(ngModel)]="phone"
+              class="w-full !rounded-2xl !bg-surface-ground/50 !border-surface-border !py-4 hover:!border-primary/50 transition-all"
+              placeholder="(00) 00000-0000"
+            />
+          </div>
+
+          <!-- Birthday -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1">Data de Nascimento</label>
+            <p-datePicker
+              [(ngModel)]="birthday"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              styleClass="w-full !rounded-2xl !bg-surface-ground/50 !border-surface-border overflow-hidden"
+              inputStyleClass="!bg-transparent !py-4"
+            ></p-datePicker>
+          </div>
         </div>
 
-        <!-- Birthday -->
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-secondary">Data de Nascimento</label>
-          <p-datePicker
-            [(ngModel)]="birthday"
-            dateFormat="dd/mm/yy"
-            [showIcon]="true"
-            styleClass="w-full"
-          ></p-datePicker>
-        </div>
-
-        <!-- Update Button -->
-        <div class="mt-auto pt-2">
+        <div class="mt-4">
           <p-button
-            label="Salvar Alterações"
-            styleClass="w-full bg-primary border-primary hover:bg-opacity-90 text-primary-text"
+            label="Salvar Perfil"
+            icon="pi pi-check"
+            styleClass="w-full bg-primary hover:bg-primary-600 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-primary/20 transition-all active:scale-95"
             (onClick)="updateProfile()"
           >
           </p-button>
@@ -90,90 +113,123 @@
       </div>
     </div>
 
-    <!-- 2. SECURITY CENTER (Wide - Merged Email, MFA, Danger) -->
+    <!-- 2. SECURITY CENTER (Wide Bento) -->
     <div
-      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1 md:col-span-2"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 md:col-span-2 transition-all duration-500 hover:-translate-y-1"
     >
-      <div class="flex items-center gap-3 mb-6">
-        <i class="pi pi-shield text-2xl text-primary"></i>
-        <h2 class="text-xl font-semibold text-color m-0">
-          Central de Segurança
-        </h2>
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner">
+          <i class="pi pi-shield text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-emphasis tracking-tight">Central de Segurança</h2>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8 mb-8">
-        <!-- Col 1: Access -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+        <!-- Access -->
         <div class="flex flex-col gap-6">
-          <h3
-            class="font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
-          >
-            Credenciais de Acesso
-          </h3>
+          <div class="flex flex-col">
+            <span class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4 opacity-70">Acesso e Identidade</span>
+            
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-2 p-6 bg-surface-ground/50 rounded-3xl border border-surface-border/50">
+                <span class="text-[10px] font-black text-secondary uppercase tracking-widest">E-mail Cadastrado</span>
+                <div class="flex items-center justify-between gap-4">
+                  <span class="text-lg font-black text-emphasis truncate">{{ email() }}</span>
+                  @if (auth.currentUser()?.emailVerified) {
+                    <div class="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5">
+                      <i class="pi pi-verified"></i> Verificado
+                    </div>
+                  } @else {
+                    <button (click)="verifyEmail()" class="bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all">
+                      Verificar
+                    </button>
+                  }
+                </div>
+              </div>
 
-          <!-- Email -->
-          <div class="flex flex-col gap-2">
-            <div class="flex justify-between items-center">
-              <span class="font-medium text-secondary">Email Cadastrado</span>
+              <div class="flex items-center justify-between p-6 bg-surface-ground/50 rounded-3xl border border-surface-border/50 group/pass">
+                <div class="flex flex-col">
+                  <span class="text-[10px] font-black text-secondary uppercase tracking-widest">Senha de Acesso</span>
+                  <span class="text-sm font-bold text-emphasis opacity-60">••••••••••••••••</span>
+                </div>
+                <p-button
+                  label="Alterar"
+                  [text]="true"
+                  styleClass="font-black text-primary hover:bg-primary/5 px-4 py-2 rounded-xl"
+                  (onClick)="sendPasswordReset()"
+                ></p-button>
+              </div>
             </div>
-            <div
-              class="flex items-center gap-3 p-3 bg-surface-ground rounded-lg border border-surface-border"
-            >
-              <i class="pi pi-envelope text-secondary"></i>
-              <span class="text-color font-medium break-all flex-1">{{
-                email()
-              }}</span>
-              @if (auth.currentUser()?.emailVerified) {
-                <i
-                  class="pi pi-check-circle text-green-500"
-                  pTooltip="Verificado"
-                ></i>
-              } @else {
-                <i
-                  class="pi pi-exclamation-circle text-orange-500 cursor-pointer"
-                  (click)="verifyEmail()"
-                  pTooltip="Não verificado. Clique para enviar email."
-                ></i>
-              }
-            </div>
-          </div>
-
-          <!-- Password -->
-          <div
-            class="flex justify-between items-center gap-4 p-3 bg-surface-ground rounded-lg border border-surface-border"
-          >
-            <div class="flex items-center gap-3">
-              <i class="pi pi-lock text-secondary"></i>
-              <span class="font-medium text-secondary">Senha de Acesso</span>
-            </div>
-            <p-button
-              label="Alterar"
-              [text]="true"
-              size="small"
-              (onClick)="sendPasswordReset()"
-            >
-            </p-button>
           </div>
         </div>
 
-        <!-- Col 3: Notifications & Privacy (Wide) -->
-        <div
-          class="col-span-1 lg:col-span-2 border-t border-surface-border pt-6 mt-2"
-        >
-          <h3
-            class="font-bold text-color uppercase tracking-wider text-xs mb-6"
-          >
-            Privacidade e Notificações
-          </h3>
+        <!-- MFA Protection -->
+        <div class="flex flex-col gap-6">
+          <span class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4 opacity-70">Camada Adicional</span>
+          
+          <div class="flex flex-col gap-6 p-8 bg-surface-ground/50 rounded-3xl border border-surface-border/50 relative overflow-hidden">
+            @if (mfaEnabled()) {
+              <div class="absolute -right-4 -top-4 w-24 h-24 bg-green-500/10 blur-3xl rounded-full"></div>
+            } @else {
+              <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 blur-3xl rounded-full"></div>
+            }
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Notifications -->
-            <div class="flex flex-col gap-4">
-              <div class="flex justify-between items-center">
-                <div class="flex flex-col">
-                  <span class="font-medium text-color">Notificações Push</span>
-                  <span class="text-xs text-secondary"
-                    >Alertas no navegador/celular.</span
-                  >
+            <div class="flex items-start gap-5 relative z-10">
+              <div class="shrink-0">
+                @if (mfaEnabled()) {
+                  <div class="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500 shadow-xl shadow-green-500/10">
+                    <i class="pi pi-shield-check text-2xl"></i>
+                  </div>
+                } @else {
+                  <div class="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-xl shadow-orange-500/10">
+                    <i class="pi pi-shield text-2xl"></i>
+                  </div>
+                }
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-lg font-black text-emphasis">MFA (2FA)</span>
+                  @if (mfaEnabled()) {
+                    <span class="bg-green-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">Ativo</span>
+                  } @else {
+                    <span class="bg-orange-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">Desativado</span>
+                  }
+                </div>
+                <p class="text-xs font-medium text-secondary leading-relaxed">
+                  Reforce sua segurança exigindo um código de autenticação único a cada login.
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              @if (!mfaEnabled()) {
+                <p-button
+                  label="Configurar Proteção"
+                  styleClass="w-full bg-surface-900 dark:bg-surface-50 text-white dark:text-surface-900 border-none rounded-2xl py-3.5 font-black text-sm transition-all shadow-xl"
+                  (onClick)="startMfaSetup()"
+                ></p-button>
+              } @else {
+                <p-button
+                  label="Desativar Proteção"
+                  styleClass="w-full bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white border-none rounded-2xl py-3.5 font-black text-sm transition-all"
+                  (onClick)="disableMFA()"
+                ></p-button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy & Notifications (Wide Bottom Section) -->
+        <div class="col-span-1 lg:col-span-2 pt-6">
+          <span class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-8 block opacity-70">Preferências de Privacidade & Alertas</span>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <!-- Notifications Group -->
+            <div class="flex flex-col gap-6">
+              <div class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30">
+                <div class="flex flex-col gap-1">
+                  <span class="text-sm font-black text-emphasis">Notificações Push</span>
+                  <span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Sistema & Alertas Instantâneos</span>
                 </div>
                 <p-toggleswitch
                   [(ngModel)]="preferences!.notifications_enabled"
@@ -181,41 +237,28 @@
                 ></p-toggleswitch>
               </div>
 
-              <div class="flex justify-between items-center">
-                <div class="flex flex-col">
+              <div class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30 relative">
+                <div class="flex flex-col gap-1">
                   <div class="flex items-center gap-2">
-                    <span class="font-medium text-color">Resumo por Email</span>
-                    <p-tag
-                      value="PRO"
-                      severity="info"
-                      styleClass="text-xs py-0"
-                    ></p-tag>
+                    <span class="text-sm font-black text-emphasis">Resumo Semanal</span>
+                    <span class="bg-gradient-to-r from-blue-400 to-indigo-600 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-sm">Pro</span>
                   </div>
-                  <span class="text-xs text-secondary"
-                    >Relatório semanal da sua vida financeira.</span
-                  >
+                  <span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Relatório completo via e-mail</span>
                 </div>
                 <p-toggleswitch
                   [ngModel]="emailDigestEnabled()"
-                  (ngModelChange)="
-                    emailDigestEnabled.set($event); onEmailDigestChange()
-                  "
+                  (ngModelChange)="emailDigestEnabled.set($event); onEmailDigestChange()"
                   [disabled]="selectedTier() === 'free'"
-                  pTooltip="Disponível apenas para membros PRO"
-                  tooltipPosition="top"
-                  [tooltipDisabled]="selectedTier() !== 'free'"
                 ></p-toggleswitch>
               </div>
             </div>
 
-            <!-- Privacy -->
-            <div class="flex flex-col gap-4">
-              <div class="flex justify-between items-center">
-                <div class="flex flex-col">
-                  <span class="font-medium text-color">Melhoria de IA</span>
-                  <span class="text-xs text-secondary"
-                    >Compartilhar dados anônimos para treinar modelos.</span
-                  >
+            <!-- Privacy Group -->
+            <div class="flex flex-col gap-6">
+              <div class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30">
+                <div class="flex flex-col gap-1">
+                  <span class="text-sm font-black text-emphasis">Contribuição de IA</span>
+                  <span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Treinamento anônimo de modelos</span>
                 </div>
                 <p-toggleswitch
                   [ngModel]="privacyShared()"
@@ -225,191 +268,129 @@
             </div>
           </div>
         </div>
-
-        <!-- Col 2: MFA -->
-        <div class="flex flex-col gap-6">
-          <h3
-            class="font-bold text-color uppercase tracking-wider text-xs border-b border-surface-border pb-2 m-0"
-          >
-            Autenticação em Duas Etapas (MFA)
-          </h3>
-
-          <div class="flex flex-col gap-4">
-            <div class="flex items-start gap-4">
-              <div class="mt-1">
-                @if (mfaEnabled()) {
-                  <div
-                    class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"
-                  >
-                    <i class="pi pi-check text-xl"></i>
-                  </div>
-                } @else {
-                  <div
-                    class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600"
-                  >
-                    <i class="pi pi-shield text-xl"></i>
-                  </div>
-                }
-              </div>
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="font-semibold text-color"
-                    >Status de Proteção</span
-                  >
-                  @if (mfaEnabled()) {
-                    <p-tag value="Ativado" severity="success"></p-tag>
-                  } @else {
-                    <p-tag value="Recomendado" severity="warn"></p-tag>
-                  }
-                </div>
-                <p class="text-sm text-secondary m-0 line-clamp-2">
-                  Proteja sua conta solicitando um código do seu aplicativo
-                  autenticador ao fazer login.
-                </p>
-              </div>
-            </div>
-
-            @if (!mfaEnabled()) {
-              <p-button
-                label="Configurar Agora"
-                styleClass="w-full p-button-secondary"
-                (onClick)="startMfaSetup()"
-              ></p-button>
-            } @else {
-              <p-button
-                label="Desativar Proteção"
-                styleClass="w-full p-button-outlined p-button-danger"
-                (onClick)="disableMFA()"
-              ></p-button>
-            }
-          </div>
-        </div>
       </div>
 
-      <!-- Danger Zone (Bottom) -->
-      <div class="mt-auto pt-6 border-t border-surface-border">
-        <div
-          class="flex flex-col sm:flex-row justify-between items-center gap-4"
-        >
-          <span class="text-sm text-secondary font-medium">Zona de Perigo</span>
-          <div class="flex gap-2 w-full sm:w-auto">
+      <!-- Danger Zone -->
+      <div class="mt-auto pt-10 border-t border-surface-border/50">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
+              <i class="pi pi-exclamation-triangle"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-black text-emphasis uppercase tracking-tighter">Zona de Perigo</span>
+              <span class="text-[10px] font-bold text-secondary">Ações irreversíveis de dados</span>
+            </div>
+          </div>
+          <div class="flex gap-4 w-full sm:w-auto">
             <p-button
               label="Limpar Dados"
-              styleClass="p-button-text p-button-secondary p-button-sm flex-1 sm:flex-none"
-              icon="pi pi-trash"
+              styleClass="p-button-text font-black text-xs text-secondary hover:text-emphasis px-6 py-3"
               (onClick)="onResetAccount()"
-            >
-            </p-button>
+            ></p-button>
             <p-button
               label="Excluir Conta"
-              styleClass="p-button-text p-button-danger p-button-sm flex-1 sm:flex-none"
-              icon="pi pi-times"
+              styleClass="bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white border-none rounded-2xl px-8 py-3.5 font-black text-xs transition-all shadow-xl shadow-red-500/10"
               (onClick)="confirmDelete()"
-            >
-            </p-button>
+            ></p-button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. APP PREFERENCES (Merged General + System) -->
+    <!-- 3. APP PREFERENCES (System Bento) -->
     <div
-      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
     >
-      <h2 class="text-xl font-semibold text-color mb-6">Sistema e Aparência</h2>
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shadow-inner">
+          <i class="pi pi-desktop text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-emphasis tracking-tight">Sistema</h2>
+      </div>
 
-      <div class="flex flex-col gap-5">
-        <!-- Theme -->
-        <div class="field">
-          <label class="font-medium text-secondary block mb-2"
-            >Tema da Interface</label
-          >
+      <div class="flex flex-col gap-8 flex-grow">
+        <!-- Theme Selection -->
+        <div class="flex flex-col gap-3">
+          <label class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1">Aparência Global</label>
           <p-select
             [options]="themeOptions"
             [(ngModel)]="selectedTheme"
             (onChange)="onThemeChange()"
             optionLabel="label"
             optionValue="value"
-            styleClass="w-full"
+            styleClass="w-full !rounded-2xl !bg-surface-ground/50 !border-surface-border !py-1"
             appendTo="body"
+            panelStyleClass="premium-dropdown-panel"
           ></p-select>
         </div>
 
-        <!-- Wake Lock -->
-        <div
-          class="flex justify-between items-center py-2 border-y border-surface-border"
-        >
-          <div class="flex flex-col">
-            <span class="font-medium text-color">Manter Tela Ligada</span>
-            <span class="text-xs text-secondary"
-              >Evita bloqueio automático.</span
-            >
+        <!-- System Toggles -->
+        <div class="flex flex-col gap-5">
+          <div class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30">
+            <div class="flex flex-col gap-1">
+              <span class="text-sm font-black text-emphasis">Manter Ativo</span>
+              <span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Evitar bloqueio de tela</span>
+            </div>
+            <p-toggleswitch
+              [ngModel]="wakeLockEnabled()"
+              (ngModelChange)="toggleWakeLock()"
+            ></p-toggleswitch>
           </div>
-          <p-toggleswitch
-            [ngModel]="wakeLockEnabled()"
-            (ngModelChange)="toggleWakeLock()"
-          ></p-toggleswitch>
+
+          @if (pwaService.isInstallable) {
+            <div class="flex justify-between items-center p-6 bg-primary/5 rounded-3xl border border-primary/20 group/install transition-all hover:bg-primary/10 cursor-pointer" (click)="installApp()">
+              <div class="flex flex-col gap-1">
+                <span class="text-sm font-black text-emphasis">Instalar WebApp</span>
+                <span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Acesso rápido nativo</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg group-hover/install:scale-110 transition-transform">
+                <i class="pi pi-download"></i>
+              </div>
+            </div>
+          }
         </div>
 
-        <!-- Install App -->
-        @if (pwaService.isInstallable) {
-          <div class="flex justify-between items-center">
-            <div class="flex flex-col">
-              <span class="font-medium text-color">Instalar App</span>
-              <span class="text-xs text-secondary">Versão desktop/mobile.</span>
-            </div>
-            <p-button
-              icon="pi pi-download"
-              [rounded]="true"
-              [text]="true"
-              (onClick)="installApp()"
-              pTooltip="Instalar"
-            ></p-button>
-          </div>
-        }
-
         <!-- Subscription Management -->
-        <div class="mt-auto pt-4 border-t border-surface-border">
-          <label class="font-medium text-secondary block mb-2"
-            >Minha Assinatura</label
-          >
-          <div class="flex flex-col gap-2">
-            <div
-              class="flex justify-between items-center bg-surface-ground p-3 rounded-lg border border-surface-border"
-            >
-              <div class="flex flex-col">
-                <span
-                  class="font-bold text-color uppercase text-xs tracking-wider"
-                  >{{ preferences?.subscription_tier || "FREE" }}</span
-                >
-                <span class="text-xs text-secondary">Plano Atual</span>
+        <div class="mt-auto pt-10 border-t border-surface-border/50">
+          <span class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-6 block opacity-70">Plano de Assinatura</span>
+          
+          <div class="p-8 bg-gradient-to-br from-primary/5 to-indigo-500/5 rounded-[2.5rem] border border-primary/20 relative overflow-hidden group/sub">
+            <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-primary/10 blur-3xl rounded-full group-hover/sub:scale-150 transition-transform duration-1000"></div>
+            
+            <div class="flex flex-col gap-4 relative z-10">
+              <div class="flex justify-between items-start">
+                <div class="flex flex-col">
+                  <span class="text-3xl font-black text-emphasis tracking-tighter uppercase">{{ preferences?.subscription_tier || "FREE" }}</span>
+                  <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Plano Vigente</span>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <i class="pi pi-crown text-xl"></i>
+                </div>
               </div>
+              
               <p-button
-                label="Gerenciar"
-                icon="pi pi-external-link"
-                [text]="true"
-                size="small"
+                label="Mudar de Plano"
+                icon="pi pi-sparkles"
+                styleClass="w-full bg-primary hover:bg-primary-600 text-white border-none rounded-2xl py-3 font-black text-sm shadow-xl shadow-primary/20 mt-2"
                 (onClick)="navigateToPricing()"
               ></p-button>
             </div>
           </div>
         </div>
 
-        <!-- Subscription Mode (Test) -->
+        <!-- Test Mode -->
         @if (!isProduction()) {
-          <div class="mt-auto pt-4">
-            <label
-              class="font-medium text-secondary block mb-2 text-xs uppercase tracking-wider"
-              >Ambiente de Teste (Tier)</label
-            >
-            <div class="flex items-center gap-2">
+          <div class="pt-6">
+            <div class="p-6 bg-surface-900/5 dark:bg-white/5 rounded-3xl border border-surface-border/50">
+              <label class="text-[9px] font-black text-secondary uppercase tracking-widest mb-3 block opacity-60">Laboratório (Dev Mode)</label>
               <p-select
                 [options]="tierOptions"
                 [(ngModel)]="selectedTier"
                 (onChange)="onTierChange($event)"
                 optionLabel="label"
                 optionValue="value"
-                styleClass="w-full"
+                styleClass="w-full !rounded-xl !bg-surface-ground !py-1"
                 appendTo="body"
               ></p-select>
             </div>
@@ -418,92 +399,97 @@
       </div>
     </div>
 
-    <!-- 4. AI INTEGRATION -->
+    <!-- 4. AI INTEGRATION (Modern Card) -->
     <div
-      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
     >
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold text-color m-0">Uso de IA</h2>
-        <p-tag
-          [value]="aiLimits()?.tier"
-          severity="info"
-          styleClass="uppercase"
-        ></p-tag>
+      <div class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
+            <i class="pi pi-sparkles text-xl"></i>
+          </div>
+          <h2 class="text-2xl font-black text-emphasis tracking-tight">Capy AI</h2>
+        </div>
+        <div class="bg-blue-500 text-white px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20">
+          {{ aiLimits()?.tier || "Basic" }}
+        </div>
       </div>
 
-      <div class="flex flex-col gap-6 flex-1">
+      <div class="flex flex-col gap-10 flex-1">
         @if (aiLimits()) {
-          <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-8">
             <!-- Classify Limit -->
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium text-sm">Scanner</span>
-                <span class="text-xs text-secondary"
-                  >{{ aiLimits().classify.used }} /
-                  {{ aiLimits().classify.limit }}</span
+            <div class="flex flex-col gap-3">
+              <div class="flex justify-between items-end">
+                <span class="text-sm font-black text-emphasis uppercase tracking-tight">Scanner de IA</span>
+                <span class="text-xs font-bold text-secondary"
+                  >{{ aiLimits().classify.used }} <span class="opacity-50 mx-1">/</span> {{ aiLimits().classify.limit }}</span
                 >
               </div>
-              <p-progressBar
-                [value]="
-                  aiLimits().classify.limit > 0
-                    ? (aiLimits().classify.used / aiLimits().classify.limit) *
-                      100
-                    : 0
-                "
-                [showValue]="false"
-                styleClass="h-2"
-              ></p-progressBar>
+              <div class="h-3 w-full bg-surface-ground rounded-full overflow-hidden border border-surface-border/50">
+                <div 
+                  class="h-full bg-gradient-to-r from-blue-400 to-indigo-600 rounded-full transition-all duration-1000"
+                  [style.width.%]="aiLimits().classify.limit > 0 ? (aiLimits().classify.used / aiLimits().classify.limit) * 100 : 0"
+                ></div>
+              </div>
             </div>
 
             <!-- Chat Limit -->
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium text-sm">Chat</span>
-                <span class="text-xs text-secondary"
-                  >{{ aiLimits().chat.used }} /
-                  {{ aiLimits().chat.limit }}</span
+            <div class="flex flex-col gap-3">
+              <div class="flex justify-between items-end">
+                <span class="text-sm font-black text-emphasis uppercase tracking-tight">Chat Inteligente</span>
+                <span class="text-xs font-bold text-secondary"
+                  >{{ aiLimits().chat.used }} <span class="opacity-50 mx-1">/</span> {{ aiLimits().chat.limit }}</span
                 >
               </div>
-              <p-progressBar
-                [value]="
-                  aiLimits().chat.limit > 0
-                    ? (aiLimits().chat.used / aiLimits().chat.limit) * 100
-                    : 0
-                "
-                [showValue]="false"
-                styleClass="h-2"
-              ></p-progressBar>
+              <div class="h-3 w-full bg-surface-ground rounded-full overflow-hidden border border-surface-border/50">
+                <div 
+                  class="h-full bg-gradient-to-r from-purple-400 to-pink-600 rounded-full transition-all duration-1000"
+                  [style.width.%]="aiLimits().chat.limit > 0 ? (aiLimits().chat.used / aiLimits().chat.limit) * 100 : 0"
+                ></div>
+              </div>
             </div>
           </div>
 
           <div
-            class="mt-auto p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex gap-3 text-sm text-blue-800 dark:text-blue-200"
+            class="mt-auto p-6 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-[2rem] border border-blue-500/20 flex gap-4 transition-all hover:scale-[1.02]"
           >
-            <i class="pi pi-sparkles mt-1"></i>
-            <p class="m-0 leading-tight">
-              Seu plano permite acesso a recursos avançados de análise.
+            <i class="pi pi-info-circle text-blue-500 text-xl shrink-0"></i>
+            <p class="text-xs font-bold text-blue-800 dark:text-blue-300 leading-relaxed m-0">
+              Seu plano {{ aiLimits()?.tier }} garante processamento prioritário e limites estendidos para todas as funcionalidades de inteligência artificial.
             </p>
           </div>
         } @else {
-          <div class="flex flex-col items-center justify-center h-40 gap-3">
-            <p-progressSpinner styleClass="w-2rem h-2rem"></p-progressSpinner>
-            <span class="text-secondary text-sm">Carregando limites...</span>
+          <div class="flex flex-col items-center justify-center flex-1 gap-6">
+            <div class="relative">
+              <div class="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse rounded-full"></div>
+              <p-progressSpinner styleClass="w-12 h-12 relative z-10" strokeWidth="4" fill="transparent" animationDuration=".8s"></p-progressSpinner>
+            </div>
+            <span class="text-secondary font-black text-xs uppercase tracking-[0.2em] opacity-60">Sincronizando IA...</span>
           </div>
         }
       </div>
     </div>
 
-    <!-- 5. TITHES -->
+    <!-- 5. TITHES (Modern Card) -->
     <div
-      class="bg-surface-card rounded-xl shadow-sm border border-surface-border p-6 h-full flex flex-col col-span-1"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
     >
-      <h2 class="text-xl font-semibold text-color mb-6">Dízimos</h2>
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 shadow-inner">
+          <i class="pi pi-heart text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-emphasis tracking-tight">Dízimos & Ofertas</h2>
+      </div>
 
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-10 flex-1">
         <div
-          class="flex justify-between items-center gap-4 bg-surface-ground p-3 rounded-lg border border-surface-border"
+          class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30 transition-all hover:bg-surface-ground/50"
         >
-          <span class="font-medium text-color">Habilitar Recurso</span>
+          <div class="flex flex-col gap-1">
+            <span class="text-sm font-black text-emphasis">Módulo de Dízimo</span>
+            <span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Ativar controles financeiros religiosos</span>
+          </div>
           <p-toggleswitch
             [(ngModel)]="tithesEnabled"
             (ngModelChange)="onTithesChange()"
@@ -511,11 +497,9 @@
         </div>
 
         @if (tithesEnabled()) {
-          <div class="grid grid-cols-2 gap-3">
-            <div class="flex flex-col gap-2">
-              <span class="font-medium text-xs text-secondary uppercase"
-                >Dízimo</span
-              >
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in duration-500">
+            <div class="flex flex-col gap-3">
+              <span class="text-[10px] font-black text-secondary uppercase tracking-widest ml-1 opacity-60">Dízimo Padrão</span>
               <p-inputNumber
                 [(ngModel)]="defaultTithePct"
                 (onBlur)="onTitheSettingsChange()"
@@ -528,15 +512,19 @@
                 [inputStyle]="{
                   width: '100%',
                   'text-align': 'center',
-                  padding: '0.5rem',
+                  padding: '1rem',
+                  'border-radius': '1rem',
+                  'font-weight': '900',
+                  'background': 'rgba(var(--surface-ground-rgb), 0.5)',
+                  'border': '1px solid var(--surface-border)'
                 }"
                 styleClass="w-full"
+                incrementButtonIcon="pi pi-plus"
+                decrementButtonIcon="pi pi-minus"
               ></p-inputNumber>
             </div>
-            <div class="flex flex-col gap-2">
-              <span class="font-medium text-xs text-secondary uppercase"
-                >Oferta</span
-              >
+            <div class="flex flex-col gap-3">
+              <span class="text-[10px] font-black text-secondary uppercase tracking-widest ml-1 opacity-60">Oferta Padrão</span>
               <p-inputNumber
                 [(ngModel)]="defaultOfferingPct"
                 (onBlur)="onTitheSettingsChange()"
@@ -549,34 +537,46 @@
                 [inputStyle]="{
                   width: '100%',
                   'text-align': 'center',
-                  padding: '0.5rem',
+                  padding: '1rem',
+                  'border-radius': '1rem',
+                  'font-weight': '900',
+                  'background': 'rgba(var(--surface-ground-rgb), 0.5)',
+                  'border': '1px solid var(--surface-border)'
                 }"
                 styleClass="w-full"
+                incrementButtonIcon="pi pi-plus"
+                decrementButtonIcon="pi pi-minus"
               ></p-inputNumber>
             </div>
           </div>
 
-          <div class="flex flex-col gap-3 mt-auto">
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-secondary">Dízimo Automático</span>
+          <div class="flex flex-col gap-5 mt-auto bg-surface-ground/20 p-6 rounded-3xl border border-surface-border/30">
+            <div class="flex justify-between items-center">
+              <div class="flex flex-col">
+                <span class="text-xs font-black text-emphasis">Aplicação Automática</span>
+                <span class="text-[10px] font-bold text-secondary uppercase tracking-tighter">Gerar dízimo em novas receitas</span>
+              </div>
               <p-toggleswitch
                 [(ngModel)]="autoApplyTithe"
                 (ngModelChange)="onTitheSettingsChange()"
-                styleClass="scale-75"
               ></p-toggleswitch>
             </div>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-secondary">Oferta Automática</span>
+            <div class="h-px bg-surface-border/50"></div>
+            <div class="flex justify-between items-center">
+              <div class="flex flex-col">
+                <span class="text-xs font-black text-emphasis">Oferta Automática</span>
+                <span class="text-[10px] font-bold text-secondary uppercase tracking-tighter">Gerar oferta em novas receitas</span>
+              </div>
               <p-toggleswitch
                 [(ngModel)]="autoApplyOffering"
                 (ngModelChange)="onTitheSettingsChange()"
-                styleClass="scale-75"
               ></p-toggleswitch>
             </div>
           </div>
         } @else {
-          <div class="flex items-center justify-center flex-1 opacity-50">
-            <i class="pi pi-heart text-4xl text-surface-border"></i>
+          <div class="flex flex-col items-center justify-center flex-1 opacity-20 py-10">
+            <i class="pi pi-heart text-8xl text-surface-border mb-4"></i>
+            <span class="text-xs font-black uppercase tracking-[0.3em]">Funcionalidade Inativa</span>
           </div>
         }
       </div>
@@ -588,68 +588,71 @@
 <!-- Dialogs & Toasts -->
 <p-toast></p-toast>
 
-
 <p-dialog
-  header="Configurar MFA"
+  header="Segurança em Duas Etapas"
   [(visible)]="showMfaSetupDialog"
   [modal]="true"
-  [style]="{ width: '400px' }"
-  styleClass="bg-surface-card text-color"
+  [style]="{ width: '450px' }"
+  styleClass="modern-dialog"
   appendTo="body"
 >
-  <div class="flex flex-col items-center gap-6 py-4">
-    <p class="text-center text-color">
-      Escaneie o QR Code abaixo com seu aplicativo autenticador.
-    </p>
+  <div class="flex flex-col items-center gap-8 py-6">
+    <div class="text-center flex flex-col gap-2">
+      <p class="text-lg font-black text-emphasis m-0">Proteja sua Conta</p>
+      <p class="text-sm font-medium text-secondary m-0">
+        Escaneie o QR Code abaixo com seu app autenticador (Google Auth, Microsoft Auth, Authy, etc).
+      </p>
+    </div>
 
-    <div class="bg-surface-card p-2 rounded-lg border border-surface-border">
+    <div class="bg-white p-6 rounded-[2rem] shadow-2xl border-4 border-primary/10">
       <img [src]="qrCodeUrl()" alt="QR Code" class="w-48 h-48" />
     </div>
 
-    <div class="flex flex-col gap-2 w-full items-center">
-      <p class="text-xs text-secondary text-center">
-        Não consegue ler o QR Code?
+    <div class="flex flex-col gap-3 w-full items-center bg-surface-ground/50 p-4 rounded-2xl border border-surface-border">
+      <p class="text-[10px] font-black text-secondary uppercase tracking-widest m-0">
+        Chave Manual (Backup)
       </p>
       <div
-        class="flex items-center gap-2 bg-surface-ground px-3 py-2 rounded-md border border-surface-border max-w-full"
+        class="flex items-center gap-3 w-full"
       >
-        <code class="text-sm font-mono text-color break-all select-all">{{
+        <code class="text-xs font-black text-primary break-all flex-1 text-center bg-white dark:bg-surface-card p-2 rounded-xl shadow-inner border border-surface-border">{{
           mfaSecret()
         }}</code>
-        <button
-          pButton
+        <p-button
           icon="pi pi-copy"
-          class="p-button-rounded p-button-text p-button-sm text-secondary hover:text-primary"
-          (click)="copyToClipboard(mfaSecret())"
-          pTooltip="Copiar código"
-        ></button>
+          styleClass="w-10 h-10 rounded-xl bg-primary text-white border-none shadow-lg active:scale-90 transition-all"
+          (onClick)="copyToClipboard(mfaSecret())"
+          pTooltip="Copiar"
+        ></p-button>
       </div>
     </div>
 
-    <div class="flex flex-col gap-2 w-full">
-      <label for="mfaToken" class="font-medium text-color"
+    <div class="flex flex-col gap-3 w-full">
+      <label for="mfaToken" class="text-[10px] font-black text-secondary uppercase tracking-widest ml-1"
         >Código de Verificação</label
       >
       <input
         pInputText
         id="mfaToken"
         [(ngModel)]="mfaToken"
-        class="w-full text-center text-2xl tracking-[0.5em] font-mono"
+        class="w-full text-center text-3xl tracking-[0.5em] font-black py-4 rounded-2xl border-2 border-primary/30 focus:border-primary transition-all"
         maxlength="6"
         placeholder="000000"
       />
     </div>
 
-    <div class="flex justify-end gap-2 w-full mt-2">
+    <div class="flex flex-col gap-3 w-full mt-4">
       <p-button
-        label="Cancelar"
-        styleClass="p-button-text"
-        (onClick)="showMfaSetupDialog.set(false)"
-      ></p-button>
-      <p-button
-        label="Verificar e Ativar"
+        label="Ativar Proteção Agora"
+        icon="pi pi-shield"
         (onClick)="confirmEnableMFA()"
         [disabled]="mfaToken().length !== 6"
+        styleClass="w-full bg-primary hover:bg-primary-600 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-primary/20"
+      ></p-button>
+      <p-button
+        label="Configurar depois"
+        styleClass="w-full p-button-text font-bold text-secondary"
+        (onClick)="showMfaSetupDialog.set(false)"
       ></p-button>
     </div>
   </div>

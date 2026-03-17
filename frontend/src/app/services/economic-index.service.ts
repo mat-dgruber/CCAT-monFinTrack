@@ -41,7 +41,7 @@ export class EconomicIndexService {
   getValuesForPeriod(
     serie: BCB_SERIES,
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Observable<any[]> {
     const url = `${this.apiUrl}/period/${serie}?start_date=${startDate}&end_date=${endDate}`;
     return this.http.get<any[]>(url);

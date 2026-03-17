@@ -16,11 +16,17 @@ import { routeTransitionAnimations } from './route-animations';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatComponent, CustomConfirmDialogComponent, ToastModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ChatComponent,
+    CustomConfirmDialogComponent,
+    ToastModule,
+  ],
 
   templateUrl: './app.html',
   styleUrl: './app.scss',
-  animations: [routeTransitionAnimations]
+  animations: [routeTransitionAnimations],
 })
 export class App {
   public authService = inject(AuthService); // Injected public for template access
@@ -39,6 +45,8 @@ export class App {
   }
 
   getRouteAnimationData() {
-    return this.contexts.getContext('primary')?.route?.snapshot?.data?.['animation'];
+    return this.contexts.getContext('primary')?.route?.snapshot?.data?.[
+      'animation'
+    ];
   }
 }

@@ -11,7 +11,9 @@
   <ng-template pTemplate="header">
     <div class="flex items-center gap-2 w-full">
       <i class="pi pi-plus-circle text-primary text-xl"></i>
-      <span class="font-bold text-xl">{{ editingId() ? 'Editar Transação' : 'Nova Transação' }}</span>
+      <span class="font-bold text-xl">{{
+        editingId() ? "Editar Transação" : "Nova Transação"
+      }}</span>
       <div class="flex-1"></div>
       <app-page-help document="transaction-form.md"></app-page-help>
     </div>
@@ -96,7 +98,11 @@
 
           <p-button
             [icon]="isScanning() ? 'pi pi-spin pi-spinner' : 'pi pi-camera'"
-            [styleClass]="isScanning() ? 'bg-amber-100 text-amber-600 border-amber-200' : 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md hover:shadow-orange-500/30 ai-button-glow'"
+            [styleClass]="
+              isScanning()
+                ? 'bg-amber-100 text-amber-600 border-amber-200'
+                : 'bg-gradient-to-r from-amber-500 to-orange-600 border-none text-white shadow-md hover:shadow-orange-500/30 ai-button-glow'
+            "
             (onClick)="fileInput.click()"
             type="button"
             [disabled]="isScanning()"

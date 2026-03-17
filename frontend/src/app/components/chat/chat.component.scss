@@ -68,9 +68,18 @@
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
 }
 
 /* --- FAB TRIGGER --- */
@@ -86,7 +95,9 @@
   justify-content: center;
   box-shadow: 0 8px 16px rgba(234, 88, 12, 0.3);
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s;
 
   i {
     font-size: 1.5rem;
@@ -103,7 +114,7 @@
 
   /* Premium AI Glow */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     background: linear-gradient(45deg, #f59e0b, #ea580c);
@@ -164,20 +175,22 @@
 
     /* Override Roast button colors when active */
     ::ng-deep .p-button.p-button-help {
-       background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-       border: none !important;
-       animation: pulse 2s infinite;
-       
-       i {
-         color: white !important;
-         font-size: 1rem;
-       }
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+      border: none !important;
+      animation: pulse 2s infinite;
+
+      i {
+        color: white !important;
+        font-size: 1rem;
+      }
     }
-    
+
     /* Ensure other header icons have consistent color */
     ::ng-deep .p-button-text {
       color: var(--text-color-secondary) !important;
-      &:hover { color: var(--text-color) !important; }
+      &:hover {
+        color: var(--text-color) !important;
+      }
     }
   }
 }
@@ -254,7 +267,7 @@
       border: 1px solid rgba(245, 158, 11, 0.2);
       /* iOS style left bubble */
       border-radius: 18px 18px 18px 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
   }
 
@@ -281,7 +294,7 @@
       background: var(--surface-card);
       border: 1px solid var(--surface-border);
       border-radius: 18px 18px 18px 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
       span {
         width: 6px;
@@ -291,8 +304,12 @@
         display: inline-block;
         animation: typingDot 1.4s infinite ease-in-out both;
 
-        &:nth-child(1) { animation-delay: -0.32s; }
-        &:nth-child(2) { animation-delay: -0.16s; }
+        &:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+        &:nth-child(2) {
+          animation-delay: -0.16s;
+        }
       }
     }
   }
@@ -319,7 +336,9 @@
       border: 1px solid var(--surface-border);
       font-size: 0.95rem;
       color: var(--text-color);
-      transition: border-color 0.25s, box-shadow 0.25s;
+      transition:
+        border-color 0.25s,
+        box-shadow 0.25s;
 
       &:focus {
         outline: none;
@@ -330,7 +349,7 @@
       &::placeholder {
         color: var(--text-color-secondary);
       }
-      
+
       &:disabled {
         opacity: 0.6;
       }
@@ -349,7 +368,10 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.2s, opacity 0.2s, background-color 0.2s;
+      transition:
+        transform 0.2s,
+        opacity 0.2s,
+        background-color 0.2s;
 
       i {
         font-size: 0.9rem;
@@ -383,4 +405,3 @@
   padding: 0 20px;
   line-height: 1.5;
 }
-

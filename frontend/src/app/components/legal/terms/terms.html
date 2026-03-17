@@ -1,142 +1,252 @@
-<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300"
- style="background-color: var(--surface-ground);">
- <div class="max-w-4xl mx-auto">
- <!-- Header / Navigation -->
- <div class="mb-6 flex items-center justify-between">
- <p-button label="Voltar" icon="pi pi-arrow-left" [text]="true" (onClick)="goBack()" class="!px-0"
- styleClass="text-[var(--text-color)] hover:bg-[var(--surface-hover)]"></p-button>
- </div>
+<div
+  class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300"
+  style="background-color: var(--surface-ground)"
+>
+  <div class="max-w-4xl mx-auto">
+    <!-- Header / Navigation -->
+    <div class="mb-6 flex items-center justify-between">
+      <p-button
+        label="Voltar"
+        icon="pi pi-arrow-left"
+        [text]="true"
+        (onClick)="goBack()"
+        class="!px-0"
+        styleClass="text-[var(--text-color)] hover:bg-[var(--surface-hover)]"
+      ></p-button>
+    </div>
 
- <div class="rounded-2xl shadow-xl overflow-hidden"
- style="background-color: var(--surface-card); border: 1px solid var(--surface-border);">
- <!-- Hero Header -->
- <div class="px-8 py-10 text-white"
- style="background: linear-gradient(135deg, var(--primary-color), var(--primary-color-text) 300%);">
- <h1 class="text-3xl font-bold mb-2 text-white">Termos de Uso</h1>
- <p class="opacity-90 text-white">Última atualização: 26 de Novembro de 2025</p>
- </div>
+    <div
+      class="rounded-2xl shadow-xl overflow-hidden"
+      style="
+        background-color: var(--surface-card);
+        border: 1px solid var(--surface-border);
+      "
+    >
+      <!-- Hero Header -->
+      <div
+        class="px-8 py-10 text-white"
+        style="
+          background: linear-gradient(
+            135deg,
+            var(--primary-color),
+            var(--primary-color-text) 300%
+          );
+        "
+      >
+        <h1 class="text-3xl font-bold mb-2 text-white">Termos de Uso</h1>
+        <p class="opacity-90 text-white">
+          Última atualização: 17 de Março de 2026
+        </p>
+      </div>
 
- <div class="p-8 md:p-12 space-y-8">
- <!-- Introduction -->
- <section class="max-w-none">
- <p class="text-lg leading-relaxed" style="color: var(--text-color);">
- Olá! Bem-vindo ao <strong style="color: var(--primary-color);">monFinTrack</strong>. Estes termos explicam
- como nosso serviço funciona e o que combinamos com você para garantir uma experiência segura e organizada.
- </p>
- </section>
+      <div class="p-8 md:p-12 space-y-8">
+        <!-- Introduction -->
+        <section class="max-w-none">
+          <p class="text-lg leading-relaxed" style="color: var(--text-color)">
+            Olá! Bem-vindo ao
+            <strong style="color: var(--primary-color)">monFinTrack</strong>.
+            Estes termos regulam o uso da nossa plataforma. Ao criar uma conta,
+            acessar o aplicativo ou assinar nossos planos, você concorda
+            legalmente com as regras abaixo.
+          </p>
+        </section>
 
- <div class="border-t my-8" style="border-color: var(--surface-border);"></div>
+        <div
+          class="border-t my-8"
+          style="border-color: var(--surface-border)"
+        ></div>
 
- <!-- Terms Section -->
- <section>
- <div class="space-y-8">
- <div class="group">
- <h3 class="text-xl font-semibold mb-3 flex items-center gap-2" style="color: var(--text-color);">
- <i class="pi pi-check-circle" style="color: var(--primary-color);"></i>
- 1. Aceitação
- </h3>
- <p class="leading-relaxed" style="color: var(--text-color-secondary);">
- Ao usar o monFinTrack, você concorda com estas regras. Se tiver alguma dúvida ou não concordar com algo,
- por favor, entre em contato ou suspenda o uso.
- </p>
- </div>
+        <!-- Terms Section -->
+        <section>
+          <div class="space-y-8">
+            <!-- 1. Aceitação e Cadastro -->
+            <div class="group">
+              <h3
+                class="text-xl font-semibold mb-3 flex items-center gap-2"
+                style="color: var(--text-color)"
+              >
+                <i class="pi pi-user" style="color: var(--primary-color)"></i>
+                1. Seu Cadastro e Responsabilidade
+              </h3>
+              <p
+                class="leading-relaxed"
+                style="color: var(--text-color-secondary)"
+              >
+                Para usar o monFinTrack, você deve fornecer informações
+                verdadeiras e manter sua senha segura. Você é inteiramente
+                responsável por todas as atividades que ocorrerem sob sua conta.
+                Se suspeitar de acesso indevido, deve nos notificar
+                imediatamente.
+              </p>
+            </div>
 
- <div class="group">
- <h3 class="text-xl font-semibold mb-3 flex items-center gap-2" style="color: var(--text-color);">
- <i class="pi pi-compass" style="color: var(--primary-color);"></i>
- 2. O que o monFinTrack faz por você
- </h3>
- <p class="leading-relaxed mb-4" style="color: var(--text-color-secondary);">Nossa missão é descomplicar
- sua vida financeira:</p>
- <ul class="list-none space-y-3 pl-4 border-l-4" style="border-color: var(--surface-border);">
- <li class="flex items-start gap-2">
- <span style="color: var(--text-color-secondary);"><strong
- style="color: var(--text-color);">Organize:</strong> Cadastre suas contas e crie categorias
- personalizadas.</span>
- </li>
- <li class="flex items-start gap-2">
- <span style="color: var(--text-color-secondary);"><strong
- style="color: var(--text-color);">Acompanhe:</strong> Registre receitas, despesas e acompanhe seus
- orçamentos.</span>
- </li>
- <li class="flex items-start gap-2">
- <span style="color: var(--text-color-secondary);"><strong
- style="color: var(--text-color);">Visualize:</strong> Veja gráficos claros sobre a evolução do seu
- dinheiro.</span>
- </li>
- </ul>
- <div class="mt-6 p-4 rounded-lg border flex gap-3"
- style="background-color: var(--surface-ground); border-color: var(--surface-border);">
- <i class="pi pi-info-circle mt-1" style="color: var(--primary-color);"></i>
- <p class="text-sm" style="color: var(--text-color-secondary);">
- <strong>Importante:</strong> Nós fornecemos as ferramentas, mas os dados são seus. A precisão das
- informações depende do que você insere. Lembre-se: não oferecemos consultoria financeira ou contábil.
- </p>
- </div>
- </div>
+            <!-- 2. Uso da Inteligência Artificial -->
+            <div class="group">
+              <h3
+                class="text-xl font-semibold mb-3 flex items-center gap-2"
+                style="color: var(--text-color)"
+              >
+                <i class="pi pi-bolt" style="color: var(--primary-color)"></i>
+                2. Uso da Inteligência Artificial (Advisor e Scanner)
+              </h3>
+              <p
+                class="leading-relaxed mb-4"
+                style="color: var(--text-color-secondary)"
+              >
+                Nossa plataforma utiliza modelos avançados de Inteligência
+                Artificial (Google Gemini) para leitura de recibos,
+                categorização automática e insights financeiros ("Modo Roast" e
+                "Advisor").
+              </p>
+              <ul
+                class="list-none space-y-3 pl-4 border-l-4"
+                style="border-color: var(--surface-border)"
+              >
+                <li class="flex items-start gap-2">
+                  <span style="color: var(--text-color-secondary)"
+                    ><strong style="color: var(--text-color)"
+                      >Isenção de Responsabilidade (Disclaimer):</strong
+                    >
+                    A IA do monFinTrack atua apenas como uma ferramenta
+                    analítica de apoio.
+                    <b
+                      >Nenhum conselho gerado pelo sistema substitui a
+                      orientação de um contador, advogado ou consultor
+                      financeiro certificado.</b
+                    >
+                    O monFinTrack não se responsabiliza por perdas ou danos
+                    decorrentes de decisões financeiras baseadas em relatórios
+                    da IA.</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span style="color: var(--text-color-secondary)"
+                    ><strong style="color: var(--text-color)"
+                      >Margem de Erro:</strong
+                    >
+                    O Scanner de Recibos e a classificação automática podem
+                    cometer erros. É sua responsabilidade revisar os valores e
+                    dados extraídos antes de confirmá-los.</span
+                  >
+                </li>
+              </ul>
+            </div>
 
- <div class="group">
- <h3 class="text-xl font-semibold mb-4 flex items-center gap-2" style="color: var(--text-color);">
- <i class="pi pi-cloud" style="color: var(--primary-color);"></i>
- 3. Seus dados estão seguros
- </h3>
- <ul class="grid md:grid-cols-3 gap-4">
- <li class="p-4 rounded-lg border"
- style="background-color: var(--surface-ground); border-color: var(--surface-border);">
- <strong class="block mb-2" style="color: var(--primary-color);">Onde ficam?</strong>
- <span class="text-sm" style="color: var(--text-color-secondary);">Armazenados em nuvem segura de alta
- performance (Google Cloud).</span>
- </li>
- <li class="p-4 rounded-lg border"
- style="background-color: var(--surface-ground); border-color: var(--surface-border);">
- <strong class="block mb-2" style="color: var(--primary-color);">Sempre online?</strong>
- <span class="text-sm" style="color: var(--text-color-secondary);">Trabalhamos para estar disponíveis
- 24/7, salvo manutenções essenciais.</span>
- </li>
- <li class="p-4 rounded-lg border"
- style="background-color: var(--surface-ground); border-color: var(--surface-border);">
- <strong class="block mb-2" style="color: var(--primary-color);">Seu acesso</strong>
- <span class="text-sm" style="color: var(--text-color-secondary);">Seus dados são seus. Você tem acesso
- a eles enquanto sua conta existir.</span>
- </li>
- </ul>
- </div>
+            <!-- 3. Assinaturas e Pagamentos -->
+            <div class="group">
+              <h3
+                class="text-xl font-semibold mb-3 flex items-center gap-2"
+                style="color: var(--text-color)"
+              >
+                <i
+                  class="pi pi-credit-card"
+                  style="color: var(--primary-color)"
+                ></i>
+                3. Assinaturas, Pagamentos e Stripe
+              </h3>
+              <p
+                class="leading-relaxed"
+                style="color: var(--text-color-secondary)"
+              >
+                Oferecemos planos gratuitos e pagos (Pro e Premium). O
+                processamento de pagamentos é realizado inteiramente pela
+                <b>Stripe</b>, uma das maiores e mais seguras infraestruturas de
+                pagamento do mundo.
+              </p>
+              <ul
+                class="list-none space-y-3 pl-4 mt-4 border-l-4"
+                style="border-color: var(--surface-border)"
+              >
+                <li class="flex items-start gap-2">
+                  <span style="color: var(--text-color-secondary)"
+                    ><b
+                      >Nós não armazenamos os dados do seu cartão de crédito</b
+                    >
+                    em nossos servidores. Tudo é processado via tokenização
+                    segura pela Stripe.</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span style="color: var(--text-color-secondary)"
+                    >Você pode cancelar sua assinatura a qualquer momento
+                    através do painel de usuário. O acesso aos recursos Premium
+                    continuará ativo até o fim do ciclo de faturamento atual.
+                    Não oferecemos reembolsos proporcionais para meses
+                    parcialmente utilizados.</span
+                  >
+                </li>
+              </ul>
+            </div>
 
- <div class="group">
- <h3 class="text-xl font-semibold mb-3 flex items-center gap-2" style="color: var(--text-color);">
- <i class="pi pi-user-edit" style="color: var(--primary-color);"></i>
- 4. Suas Responsabilidades
- </h3>
- <ul class="space-y-3">
- <li class="flex items-center gap-3" style="color: var(--text-color-secondary);">
- <span class="p-2 rounded-full bg-opacity-10" style="background-color: var(--surface-hover);">
- <i class="pi pi-lock" style="color: var(--primary-color);"></i>
- </span>
- Cuide bem da sua senha e login.
- </li>
- <li class="flex items-center gap-3" style="color: var(--text-color-secondary);">
- <span class="p-2 rounded-full bg-opacity-10" style="background-color: var(--surface-hover);">
- <i class="pi pi-thumbs-up" style="color: var(--primary-color);"></i>
- </span>
- Use a plataforma de forma ética e legal.
- </li>
- </ul>
- <!-- Contact -->
- <div class="mt-8 p-6 rounded-xl text-center" style="background-color: var(--surface-hover);">
- <h3 class="font-bold mb-2" style="color: var(--text-color);">Ficou com alguma dúvida?</h3>
- <p class="text-sm mb-4" style="color: var(--text-color-secondary);">Estamos aqui para ajudar você a
- entender como cuidamos dos seus dados.</p>
- <a routerLink="/contact"
- class="inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90 cursor-pointer"
- style="background-color: var(--primary-color);">
- <i class="pi pi-envelope"></i>
- Fale Conosco
- </a>
- </div>
- </div>
- </div>
- </section>
- </div>
- </div>
- </div>
+            <!-- 4. Conduta Ética e Proibições -->
+            <div class="group">
+              <h3
+                class="text-xl font-semibold mb-3 flex items-center gap-2"
+                style="color: var(--text-color)"
+              >
+                <i class="pi pi-shield" style="color: var(--primary-color)"></i>
+                4. Ética e Proibições
+              </h3>
+              <p
+                class="leading-relaxed"
+                style="color: var(--text-color-secondary)"
+              >
+                Você concorda em usar o monFinTrack estritamente para fins
+                legais e pessoais/familiares. É terminantemente proibido:
+              </p>
+              <ul
+                class="space-y-3 mt-3 ml-6 list-disc"
+                style="color: var(--text-color-secondary)"
+              >
+                <li>
+                  Usar a plataforma para gerenciar recursos provenientes de
+                  atividades ilícitas ou lavagem de dinheiro.
+                </li>
+                <li>
+                  Fazer upload de imagens ilegais, ofensivas ou que contenham
+                  malware através do nosso Scanner de Recibos.
+                </li>
+                <li>
+                  Tentar realizar engenharia reversa, ataques de negação de
+                  serviço (DDoS) ou burlar os limites de uso da API de
+                  Inteligência Artificial.
+                </li>
+              </ul>
+              <p
+                class="leading-relaxed mt-4"
+                style="color: var(--text-color-secondary)"
+              >
+                O monFinTrack reserva-se o direito de suspender ou banir contas
+                que violem estas diretrizes, sem aviso prévio ou reembolso.
+              </p>
+            </div>
+
+            <!-- Contact -->
+            <div
+              class="mt-8 p-6 rounded-xl text-center"
+              style="background-color: var(--surface-hover)"
+            >
+              <h3 class="font-bold mb-2" style="color: var(--text-color)">
+                Dúvidas sobre os Termos?
+              </h3>
+              <p
+                class="text-sm mb-4"
+                style="color: var(--text-color-secondary)"
+              >
+                A transparência é a base da nossa relação. Estamos à disposição.
+              </p>
+              <a
+                routerLink="/contact"
+                class="inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90 cursor-pointer"
+                style="background-color: var(--primary-color)"
+              >
+                <i class="pi pi-envelope"></i>
+                Fale Conosco
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
 </div>

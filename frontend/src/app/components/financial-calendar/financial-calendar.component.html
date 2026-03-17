@@ -1,5 +1,5 @@
 <div
- class="flex flex-col gap-4 p-4 bg-surface-card rounded-xl shadow-sm border border-surface-border"
+  class="flex flex-col gap-4 p-4 bg-surface-card rounded-xl shadow-sm border border-surface-border"
 >
   <div class="page-header border-none mb-2">
     <div class="page-title-group">
@@ -20,53 +20,55 @@
     </div>
   </div>
 
- <!-- Calendar Grid -->
- <div class="grid grid-cols-7 gap-2">
- <!-- Weekday Headers -->
- <div class="text-center text-sm font-semibold text-secondary py-2">Dom</div>
- <div class="text-center text-sm font-semibold text-secondary py-2">Seg</div>
- <div class="text-center text-sm font-semibold text-secondary py-2">Ter</div>
- <div class="text-center text-sm font-semibold text-secondary py-2">Qua</div>
- <div class="text-center text-sm font-semibold text-secondary py-2">Qui</div>
- <div class="text-center text-sm font-semibold text-secondary py-2">Sex</div>
- <div class="text-center text-sm font-semibold text-secondary py-2">Sáb</div>
+  <!-- Calendar Grid -->
+  <div class="grid grid-cols-7 gap-2">
+    <!-- Weekday Headers -->
+    <div class="text-center text-sm font-semibold text-secondary py-2">Dom</div>
+    <div class="text-center text-sm font-semibold text-secondary py-2">Seg</div>
+    <div class="text-center text-sm font-semibold text-secondary py-2">Ter</div>
+    <div class="text-center text-sm font-semibold text-secondary py-2">Qua</div>
+    <div class="text-center text-sm font-semibold text-secondary py-2">Qui</div>
+    <div class="text-center text-sm font-semibold text-secondary py-2">Sex</div>
+    <div class="text-center text-sm font-semibold text-secondary py-2">Sáb</div>
 
- <!-- Days -->
- @for (date of daysInMonth(); track $index) {
- <div
- class="min-h-[80px] border border-surface-border rounded-lg p-1 relative hover:bg-surface-ground transition-colors"
- [class.bg-surface-ground]="!date"
- [class.opacity-50]="!date"
- >
- @if (date) {
- <span class="text-sm font-medium text-color block mb-1">{{
- date.getDate()
- }}</span>
+    <!-- Days -->
+    @for (date of daysInMonth(); track $index) {
+      <div
+        class="min-h-[80px] border border-surface-border rounded-lg p-1 relative hover:bg-surface-ground transition-colors"
+        [class.bg-surface-ground]="!date"
+        [class.opacity-50]="!date"
+      >
+        @if (date) {
+          <span class="text-sm font-medium text-color block mb-1">{{
+            date.getDate()
+          }}</span>
 
- <!-- Indicators -->
- <div class="flex flex-col gap-1">
- @if (getDayTotal(date, 'income') > 0) {
- <div
- class="text-[10px] bg-green-100 text-green-700 px-1 rounded truncate"
- [pTooltip]="
- 'Receitas: ' + (getDayTotal(date, 'income') | currency : 'BRL')
- "
- >
- + {{ getDayTotal(date, "income") | currency : "BRL" }}
- </div>
- } @if (getDayTotal(date, 'expense') > 0) {
- <div
- class="text-[10px] bg-red-100 text-red-700 px-1 rounded truncate"
- [pTooltip]="
- 'Despesas: ' + (getDayTotal(date, 'expense') | currency : 'BRL')
- "
- >
- - {{ getDayTotal(date, "expense") | currency : "BRL" }}
- </div>
- }
- </div>
- }
- </div>
- }
- </div>
+          <!-- Indicators -->
+          <div class="flex flex-col gap-1">
+            @if (getDayTotal(date, "income") > 0) {
+              <div
+                class="text-[10px] bg-green-100 text-green-700 px-1 rounded truncate"
+                [pTooltip]="
+                  'Receitas: ' + (getDayTotal(date, 'income') | currency: 'BRL')
+                "
+              >
+                + {{ getDayTotal(date, "income") | currency: "BRL" }}
+              </div>
+            }
+            @if (getDayTotal(date, "expense") > 0) {
+              <div
+                class="text-[10px] bg-red-100 text-red-700 px-1 rounded truncate"
+                [pTooltip]="
+                  'Despesas: ' +
+                  (getDayTotal(date, 'expense') | currency: 'BRL')
+                "
+              >
+                - {{ getDayTotal(date, "expense") | currency: "BRL" }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>

@@ -15,7 +15,7 @@ export interface ConfirmOptions {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CustomConfirmService {
   isOpen = signal<boolean>(false);
@@ -32,7 +32,7 @@ export class CustomConfirmService {
       rejectButtonStyleClass: opts.rejectButtonStyleClass || '',
       severity: opts.severity || 'warning',
       accept: opts.accept,
-      reject: opts.reject
+      reject: opts.reject,
     });
     this.isOpen.set(true);
   }

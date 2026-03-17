@@ -91,7 +91,10 @@
   </div>
 
   <!-- Main Content Tabs -->
-  <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($event?.toString() || 'calendar')">
+  <p-tabs
+    [value]="activeTab()"
+    (valueChange)="activeTab.set($event?.toString() || 'calendar')"
+  >
     <p-tablist>
       <p-tab value="calendar">
         <i class="pi pi-calendar mr-2"></i>
@@ -627,7 +630,7 @@
                         {{ sug.title }}
                       </h4>
                       <div class="text-2xl font-bold text-color">
-                        {{ sug.avg_amount | currency : "BRL" }}
+                        {{ sug.avg_amount | currency: "BRL" }}
                       </div>
                       <div
                         class="text-xs text-amber-600 bg-amber-100 dark:bg-amber-900 px-2 py-1 rounded inline-block mt-1"
@@ -676,7 +679,9 @@
     <ng-template pTemplate="content">
       <form [formGroup]="recurrenceForm" class="flex flex-col gap-6 pt-4">
         <!-- Section 1: Basic Info -->
-        <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+        <div
+          class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm"
+        >
           <div class="flex items-center gap-2 mb-2 text-primary font-bold">
             <i class="pi pi-info-circle"></i>
             <span>Informações Básicas</span>
@@ -701,10 +706,18 @@
           </div>
 
           <div class="flex flex-col gap-2">
-            <label for="name" class="font-semibold text-sm">Nome da Recorrência</label>
+            <label for="name" class="font-semibold text-sm"
+              >Nome da Recorrência</label
+            >
             <p-iconField>
               <p-inputIcon class="pi pi-tag" />
-              <input pInputText id="name" formControlName="name" class="w-full" placeholder="Ex: Netflix, Aluguel, Salário..." />
+              <input
+                pInputText
+                id="name"
+                formControlName="name"
+                class="w-full"
+                placeholder="Ex: Netflix, Aluguel, Salário..."
+              />
             </p-iconField>
           </div>
 
@@ -724,7 +737,9 @@
         </div>
 
         <!-- Section 2: Scheduling -->
-        <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+        <div
+          class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm"
+        >
           <div class="flex items-center gap-2 mb-2 text-primary font-bold">
             <i class="pi pi-calendar"></i>
             <span>Agendamento</span>
@@ -732,7 +747,9 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-              <label for="periodicity" class="font-semibold text-sm">Frequência</label>
+              <label for="periodicity" class="font-semibold text-sm"
+                >Frequência</label
+              >
               <p-select
                 id="periodicity"
                 [options]="periodicityOptions"
@@ -744,7 +761,9 @@
               ></p-select>
             </div>
             <div class="flex flex-col gap-2">
-              <label for="due_day" class="font-semibold text-sm">Dia de Venc.</label>
+              <label for="due_day" class="font-semibold text-sm"
+                >Dia de Venc.</label
+              >
               <p-select
                 id="due_day"
                 [options]="dayOptions"
@@ -760,7 +779,9 @@
 
           @if (recurrenceForm.get("periodicity")?.value === "yearly") {
             <div class="flex flex-col gap-2 animate-fadein">
-              <label for="due_month" class="font-semibold text-sm">Mês de Vencimento</label>
+              <label for="due_month" class="font-semibold text-sm"
+                >Mês de Vencimento</label
+              >
               <p-select
                 id="due_month"
                 [options]="monthOptions"
@@ -775,7 +796,9 @@
           }
 
           <div class="flex flex-col gap-2">
-            <label for="start_date" class="font-semibold text-sm">Data de Início</label>
+            <label for="start_date" class="font-semibold text-sm"
+              >Data de Início</label
+            >
             <p-datepicker
               id="start_date"
               formControlName="start_date"
@@ -789,14 +812,18 @@
         </div>
 
         <!-- Section 3: Financial Details -->
-        <div class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm">
+        <div
+          class="flex flex-col gap-4 p-4 bg-surface-ground/50 dark:bg-surface-900 rounded-xl border border-emphasis/20 dark:border-surface-700 shadow-sm"
+        >
           <div class="flex items-center gap-2 mb-2 text-primary font-bold">
             <i class="pi pi-wallet"></i>
             <span>Detalhes Financeiros</span>
           </div>
 
           <div class="flex flex-col gap-2">
-            <label for="category_id" class="font-semibold text-sm">Categoria</label>
+            <label for="category_id" class="font-semibold text-sm"
+              >Categoria</label
+            >
             <p-select
               id="category_id"
               [options]="filteredCategories()"
@@ -818,7 +845,9 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-              <label for="payment_method" class="font-semibold text-sm">Meio de Pagamento</label>
+              <label for="payment_method" class="font-semibold text-sm"
+                >Meio de Pagamento</label
+              >
               <p-select
                 id="payment_method"
                 [options]="paymentOptions"
@@ -832,7 +861,9 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label for="account_id" class="font-semibold text-sm">Conta Destino/Origem</label>
+              <label for="account_id" class="font-semibold text-sm"
+                >Conta Destino/Origem</label
+              >
               <p-select
                 id="account_id"
                 [options]="accounts()"
@@ -851,7 +882,9 @@
             availableCreditCards().length > 0
           ) {
             <div class="flex flex-col gap-2 animate-fadein">
-              <label for="credit_card_id" class="font-semibold text-sm">Cartão de Crédito</label>
+              <label for="credit_card_id" class="font-semibold text-sm"
+                >Cartão de Crédito</label
+              >
               <p-select
                 id="credit_card_id"
                 [options]="availableCreditCards()"
@@ -878,10 +911,16 @@
         </div>
 
         <!-- Section 4: Automation -->
-        <div class="flex items-center justify-between p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl border border-primary-200 dark:border-primary-800">
+        <div
+          class="flex items-center justify-between p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl border border-primary-200 dark:border-primary-800"
+        >
           <div class="flex flex-col">
-            <label for="auto_pay" class="font-bold text-primary">Pagamento Automático</label>
-            <span class="text-xs text-secondary">Marcar como pago no vencimento</span>
+            <label for="auto_pay" class="font-bold text-primary"
+              >Pagamento Automático</label
+            >
+            <span class="text-xs text-secondary"
+              >Marcar como pago no vencimento</span
+            >
           </div>
           <p-checkbox
             id="auto_pay"

@@ -81,7 +81,7 @@ import { PageHelpComponent } from '../page-help/page-help';
     AccountTypePipe,
     IconFieldModule,
     InputIconModule,
-    PageHelpComponent
+    PageHelpComponent,
   ],
   templateUrl: './transaction-form.html',
   styleUrl: './transaction-form.scss',
@@ -248,7 +248,11 @@ export class TransactionForm implements OnInit {
   ];
 
   paymentOptions = [
-    { label: 'Cartão de Crédito', value: 'credit_card', icon: 'pi pi-credit-card' },
+    {
+      label: 'Cartão de Crédito',
+      value: 'credit_card',
+      icon: 'pi pi-credit-card',
+    },
     { label: 'Débito', value: 'debit_card', icon: 'pi pi-credit-card' },
     { label: 'Pix', value: 'pix', icon: 'pi pi-bolt' },
     { label: 'Dinheiro', value: 'cash', icon: 'pi pi-money-bill' },

@@ -11,71 +11,71 @@ import { ActivatedRoute } from '@angular/router';
 import { provideMarkdown } from 'ngx-markdown';
 
 describe('Dashboard', () => {
- let component: Dashboard;
- let fixture: ComponentFixture<Dashboard>;
- let dashboardService: jasmine.SpyObj<DashboardService>;
- let accountService: jasmine.SpyObj<AccountService>;
+  let component: Dashboard;
+  let fixture: ComponentFixture<Dashboard>;
+  let dashboardService: jasmine.SpyObj<DashboardService>;
+  let accountService: jasmine.SpyObj<AccountService>;
 
- beforeEach(async () => {
- const dashboardServiceSpy = jasmine.createSpyObj('DashboardService', [
- 'getSummary',
- ]);
- const accountServiceSpy = jasmine.createSpyObj('AccountService', [
- 'getAccounts',
- ]);
+  beforeEach(async () => {
+    const dashboardServiceSpy = jasmine.createSpyObj('DashboardService', [
+      'getSummary',
+    ]);
+    const accountServiceSpy = jasmine.createSpyObj('AccountService', [
+      'getAccounts',
+    ]);
 
- dashboardServiceSpy.getSummary.and.returnValue(
- of({
- total_balance: 1000,
- income_month: 500,
- expense_month: 200,
- expenses_by_category: [
- { category_name: 'Food', total: 100, color: '#000' },
- ],
- budgets: [],
- evolution: [],
- }),
- );
+    dashboardServiceSpy.getSummary.and.returnValue(
+      of({
+        total_balance: 1000,
+        income_month: 500,
+        expense_month: 200,
+        expenses_by_category: [
+          { category_name: 'Food', total: 100, color: '#000' },
+        ],
+        budgets: [],
+        evolution: [],
+      }),
+    );
 
- accountServiceSpy.getAccounts.and.returnValue(of([]));
+    accountServiceSpy.getAccounts.and.returnValue(of([]));
 
- await TestBed.configureTestingModule({
- imports: [Dashboard, HttpClientTestingModule, NoopAnimationsModule],
- providers: [
- { provide: DashboardService, useValue: dashboardServiceSpy },
- { provide: AccountService, useValue: accountServiceSpy },
- {
- provide: ActivatedRoute,
- useValue: { snapshot: { queryParams: {} }, queryParams: of({}) },
- },
- provideMarkdown(),
- CustomConfirmService,
- MessageService,
- ],
- }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [Dashboard, HttpClientTestingModule, NoopAnimationsModule],
+      providers: [
+        { provide: DashboardService, useValue: dashboardServiceSpy },
+        { provide: AccountService, useValue: accountServiceSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParams: {} }, queryParams: of({}) },
+        },
+        provideMarkdown(),
+        CustomConfirmService,
+        MessageService,
+      ],
+    }).compileComponents();
 
- fixture = TestBed.createComponent(Dashboard);
- component = fixture.componentInstance;
- dashboardService = TestBed.inject(
- DashboardService,
- ) as jasmine.SpyObj<DashboardService>;
- accountService = TestBed.inject(
- AccountService,
- ) as jasmine.SpyObj<AccountService>;
- fixture.detectChanges();
- });
+    fixture = TestBed.createComponent(Dashboard);
+    component = fixture.componentInstance;
+    dashboardService = TestBed.inject(
+      DashboardService,
+    ) as jasmine.SpyObj<DashboardService>;
+    accountService = TestBed.inject(
+      AccountService,
+    ) as jasmine.SpyObj<AccountService>;
+    fixture.detectChanges();
+  });
 
- it('should create', () => {
- expect(component).toBeTruthy();
- });
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 
- it('should load summary and accounts on init', () => {
- expect(dashboardService.getSummary).toHaveBeenCalled();
- expect(accountService.getAccounts).toHaveBeenCalled();
+  it('should load summary and accounts on init', () => {
+    expect(dashboardService.getSummary).toHaveBeenCalled();
+    expect(accountService.getAccounts).toHaveBeenCalled();
 
- const summary = component.summary();
- expect(summary!.total_balance).toBe(1000);
- expect(summary!.income_month).toBe(500);
- expect(summary!.expense_month).toBe(200);
- });
+    const summary = component.summary();
+    expect(summary!.total_balance).toBe(1000);
+    expect(summary!.income_month).toBe(500);
+    expect(summary!.expense_month).toBe(200);
+  });
 });

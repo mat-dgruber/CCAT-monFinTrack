@@ -11,9 +11,22 @@ import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MarkdownModule } from 'ngx-markdown';
-import { trigger, transition, style, animate, query, group } from '@angular/animations';
+import {
+  trigger,
+  transition,
+  style,
+  animate,
+  query,
+  group,
+} from '@angular/animations';
 
-import { AnalysisService, MonthlyAverageResponse, InflationResponse, Anomaly, SubscriptionCandidate } from '../../services/analysis.service';
+import {
+  AnalysisService,
+  MonthlyAverageResponse,
+  InflationResponse,
+  Anomaly,
+  SubscriptionCandidate,
+} from '../../services/analysis.service';
 import { AIService } from '../../services/ai.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { DashboardService } from '../../services/dashboard.service';
@@ -22,7 +35,7 @@ import { Router } from '@angular/router';
 import { PageHelpComponent } from '../page-help/page-help';
 
 interface Message {
-  severity: "success" | "info" | "warn" | "error" | "secondary" | "contrast";
+  severity: 'success' | 'info' | 'warn' | 'error' | 'secondary' | 'contrast';
   summary: string;
   detail: string;
 }
@@ -45,7 +58,7 @@ interface Message {
     DecimalPipe,
     SkeletonModule,
     MarkdownModule,
-    PageHelpComponent
+    PageHelpComponent,
   ],
   templateUrl: './cost-of-living.component.html',
   styleUrl: './cost-of-living.component.scss',
@@ -53,41 +66,68 @@ interface Message {
     trigger('tabAnimation', [
       transition(':increment', [
         style({ position: 'relative', overflow: 'hidden' }),
-        query(':enter, :leave', [
-          style({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-          })
-        ], { optional: true }),
-        query(':enter', [style({ left: '100%', opacity: 0 })], { optional: true }),
+        query(
+          ':enter, :leave',
+          [
+            style({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+            }),
+          ],
+          { optional: true },
+        ),
+        query(':enter', [style({ left: '100%', opacity: 0 })], {
+          optional: true,
+        }),
         group([
-          query(':leave', [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))], { optional: true }),
-          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
-        ])
+          query(
+            ':leave',
+            [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))],
+            { optional: true },
+          ),
+          query(
+            ':enter',
+            [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))],
+            { optional: true },
+          ),
+        ]),
       ]),
       transition(':decrement', [
         style({ position: 'relative', overflow: 'hidden' }),
-        query(':enter, :leave', [
-          style({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-          })
-        ], { optional: true }),
-        query(':enter', [style({ left: '-100%', opacity: 0 })], { optional: true }),
+        query(
+          ':enter, :leave',
+          [
+            style({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+            }),
+          ],
+          { optional: true },
+        ),
+        query(':enter', [style({ left: '-100%', opacity: 0 })], {
+          optional: true,
+        }),
         group([
-          query(':leave', [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))], { optional: true }),
-          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
-        ])
-      ])
-    ])
-  ]
+          query(
+            ':leave',
+            [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))],
+            { optional: true },
+          ),
+          query(
+            ':enter',
+            [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))],
+            { optional: true },
+          ),
+        ]),
+      ]),
+    ]),
+  ],
 })
 export class CostOfLivingComponent implements OnInit {
-
   // Signals for state
   loading = signal(false);
   activeTab = signal(0);
@@ -112,13 +152,15 @@ export class CostOfLivingComponent implements OnInit {
     const data = this.data();
     if (!data || !data.realized.by_category) return [];
 
-    const colors = this.generateColors(Object.keys(data.realized.by_category).length);
-    
+    const colors = this.generateColors(
+      Object.keys(data.realized.by_category).length,
+    );
+
     return Object.entries(data.realized.by_category)
       .map(([category, value], index) => ({
         category,
         value,
-        color: colors[index]
+        color: colors[index],
       }))
       .sort((a, b) => b.value - a.value);
   });
@@ -138,14 +180,22 @@ export class CostOfLivingComponent implements OnInit {
   protected readonly Infinity = Infinity;
 
   subscriptionService = inject(SubscriptionService);
-  canAccess = computed(() => this.subscriptionService.canAccess('cost_of_living'));
+  canAccess = computed(() =>
+    this.subscriptionService.canAccess('cost_of_living'),
+  );
   canUseAi = computed(() => this.subscriptionService.canAccess('ai_advisor'));
-  canUsePremium = computed(() => this.subscriptionService.canAccess('subscription_hunter'));
+  canUsePremium = computed(() =>
+    this.subscriptionService.canAccess('subscription_hunter'),
+  );
 
   // Computed Financial Metrics
   totalMonthlyCost = computed(() => this.data()?.total_estimated_monthly || 0);
-  savingsCapacity = computed(() => Math.max(0, this.income() - this.totalMonthlyCost()));
-  savingsRate = computed(() => this.income() > 0 ? (this.savingsCapacity() / this.income()) * 100 : 0);
+  savingsCapacity = computed(() =>
+    Math.max(0, this.income() - this.totalMonthlyCost()),
+  );
+  savingsRate = computed(() =>
+    this.income() > 0 ? (this.savingsCapacity() / this.income()) * 100 : 0,
+  );
 
   // FIRE Number (25x annual cost)
   fireNumber = computed(() => this.totalMonthlyCost() * 12 * 25);
@@ -166,7 +216,11 @@ export class CostOfLivingComponent implements OnInit {
     this.router.navigate(['/pricing']);
   }
 
-  constructor(private analysisService: AnalysisService, private aiService: AIService) { // Inject AIService
+  constructor(
+    private analysisService: AnalysisService,
+    private aiService: AIService,
+  ) {
+    // Inject AIService
     // Effect to update breakdown chart when data changes
     effect(() => {
       const d = this.data();
@@ -201,15 +255,17 @@ export class CostOfLivingComponent implements OnInit {
     const today = new Date();
 
     // Load Income from Dashboard (Current Month)
-    this.dashboardService.getSummary(today.getMonth() + 1, today.getFullYear()).subscribe({
-      next: (res) => this.income.set(res.income_month),
-      error: (err) => console.error(err)
-    });
+    this.dashboardService
+      .getSummary(today.getMonth() + 1, today.getFullYear())
+      .subscribe({
+        next: (res) => this.income.set(res.income_month),
+        error: (err) => console.error(err),
+      });
 
     // Load Averages
     this.analysisService.getMonthlyAverages().subscribe({
       next: (res) => this.data.set(res),
-      error: (err) => console.error(err)
+      error: (err) => console.error(err),
     });
 
     // Load Inflation
@@ -218,160 +274,175 @@ export class CostOfLivingComponent implements OnInit {
         this.inflation.set(res);
         this.inflationRate.set(res.rate);
         if (res.is_fallback) {
-          this.inflationMessages = [{ severity: 'warn', summary: 'Atenção', detail: res.message }];
+          this.inflationMessages = [
+            { severity: 'warn', summary: 'Atenção', detail: res.message },
+          ];
         }
       },
-      error: (err) => console.error(err)
+      error: (err) => console.error(err),
     });
 
     // Load Anomalies
     this.analysisService.getAnomalies().subscribe({
       next: (res) => this.anomalies.set(res),
-      error: (err) => console.error(err)
+      error: (err) => console.error(err),
     });
 
     // Load Subscriptions (Premium only)
     if (this.canUsePremium()) {
       this.analysisService.getSubscriptions().subscribe({
         next: (res) => this.subscriptions.set(res),
-        error: (err) => console.error(err)
+        error: (err) => console.error(err),
       });
     }
 
     this.loading.set(false);
   }
- analyzeWithAi() {
- const d = this.data();
- if (!d || d.total_estimated_monthly === 0) return;
+  analyzeWithAi() {
+    const d = this.data();
+    if (!d || d.total_estimated_monthly === 0) return;
 
- this.aiLoading.set(true);
- // Calling AI Service
- this.aiService.analyzeCostOfLiving(d).subscribe({
- next: (res: { analysis: string }) => {
- this.aiAnalysis.set(res.analysis);
- this.aiLoading.set(false);
- },
- error: (err: any) => {
- console.error(err);
- this.aiLoading.set(false);
- }
- });
- }
+    this.aiLoading.set(true);
+    // Calling AI Service
+    this.aiService.analyzeCostOfLiving(d).subscribe({
+      next: (res: { analysis: string }) => {
+        this.aiAnalysis.set(res.analysis);
+        this.aiLoading.set(false);
+      },
+      error: (err: any) => {
+        console.error(err);
+        this.aiLoading.set(false);
+      },
+    });
+  }
 
- selectCategory(category: string | null) {
-   if (this.selectedCategory() === category) {
-     this.selectedCategory.set(null);
-   } else {
-     this.selectedCategory.set(category);
-   }
- }
+  selectCategory(category: string | null) {
+    if (this.selectedCategory() === category) {
+      this.selectedCategory.set(null);
+    } else {
+      this.selectedCategory.set(category);
+    }
+  }
 
- initBreakdownChart(data: MonthlyAverageResponse) {
-   const categories = Object.keys(data.realized.by_category);
-   const values = Object.values(data.realized.by_category);
-   const colors = this.generateColors(categories.length);
+  initBreakdownChart(data: MonthlyAverageResponse) {
+    const categories = Object.keys(data.realized.by_category);
+    const values = Object.values(data.realized.by_category);
+    const colors = this.generateColors(categories.length);
 
-   this.breakdownChartData.set({
-     labels: categories,
-     datasets: [
-       {
-         data: values,
-         backgroundColor: colors,
-         hoverBackgroundColor: colors
-       }
-     ]
-   });
+    this.breakdownChartData.set({
+      labels: categories,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: colors,
+          hoverBackgroundColor: colors,
+        },
+      ],
+    });
 
-   const documentStyle = getComputedStyle(document.documentElement);
-   const textColor = documentStyle.getPropertyValue('--text-color');
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
 
-   this.breakdownChartOptions.set({
-     plugins: {
-       legend: {
-         position: 'right',
-         labels: {
-           usePointStyle: true,
-           color: textColor
-         }
-       }
-     },
-     onClick: (event: any, elements: any) => {
-       if (elements && elements.length > 0) {
-         const index = elements[0].index;
-         const category = this.breakdownChartData().labels[index];
-         this.selectCategory(category);
-       } else {
-         this.selectCategory(null);
-       }
-     }
-   });
- }
- updateProjectionChart() {
- const base = this.baseMonthlyCost();
- const rate = this.inflationRate() / 100;
- const years = this.projectionYears();
+    this.breakdownChartOptions.set({
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            usePointStyle: true,
+            color: textColor,
+          },
+        },
+      },
+      onClick: (event: any, elements: any) => {
+        if (elements && elements.length > 0) {
+          const index = elements[0].index;
+          const category = this.breakdownChartData().labels[index];
+          this.selectCategory(category);
+        } else {
+          this.selectCategory(null);
+        }
+      },
+    });
+  }
+  updateProjectionChart() {
+    const base = this.baseMonthlyCost();
+    const rate = this.inflationRate() / 100;
+    const years = this.projectionYears();
 
- const labels = [];
- const values = [];
+    const labels = [];
+    const values = [];
 
- let current = base;
- for (let i = 0; i <= years; i++) {
- labels.push(`Ano ${i}`);
- values.push(current);
- current = current * (1 + rate);
- }
+    let current = base;
+    for (let i = 0; i <= years; i++) {
+      labels.push(`Ano ${i}`);
+      values.push(current);
+      current = current * (1 + rate);
+    }
 
- this.projectionChartData.set({
- labels: labels,
- datasets: [
- {
- label: 'Custo Mensal Projetado',
- data: values,
- fill: true,
- borderColor: '#3b82f6',
- backgroundColor: 'rgba(59, 130, 246, 0.2)',
- tension: 0.4
- }
- ]
- });
+    this.projectionChartData.set({
+      labels: labels,
+      datasets: [
+        {
+          label: 'Custo Mensal Projetado',
+          data: values,
+          fill: true,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          tension: 0.4,
+        },
+      ],
+    });
 
- const documentStyle = getComputedStyle(document.documentElement);
- const textColor = documentStyle.getPropertyValue('--text-color');
- const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
- const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
+    const textColorSecondary = documentStyle.getPropertyValue(
+      '--text-color-secondary',
+    );
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
 
- this.projectionChartOptions.set({
- plugins: {
- legend: {
- labels: { color: textColor }
- }
- },
- scales: {
- y: {
- ticks: { color: textColorSecondary },
- grid: { color: surfaceBorder }
- },
- x: {
- ticks: { color: textColorSecondary },
- grid: { color: surfaceBorder }
- }
- }
- });
- }
+    this.projectionChartOptions.set({
+      plugins: {
+        legend: {
+          labels: { color: textColor },
+        },
+      },
+      scales: {
+        y: {
+          ticks: { color: textColorSecondary },
+          grid: { color: surfaceBorder },
+        },
+        x: {
+          ticks: { color: textColorSecondary },
+          grid: { color: surfaceBorder },
+        },
+      },
+    });
+  }
 
- getYearlyProjection(yearOffset: number): number {
- const base = this.baseMonthlyCost();
- const rate = this.inflationRate() / 100;
- return base * Math.pow(1 + rate, yearOffset);
- }
+  getYearlyProjection(yearOffset: number): number {
+    const base = this.baseMonthlyCost();
+    const rate = this.inflationRate() / 100;
+    return base * Math.pow(1 + rate, yearOffset);
+  }
 
- generateColors(count: number): string[] {
- // Simple palette generation or preset
- const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#64748b'];
- const result = [];
- for(let i=0; i<count; i++) {
- result.push(colors[i % colors.length]);
- }
- return result;
- }
+  generateColors(count: number): string[] {
+    // Simple palette generation or preset
+    const colors = [
+      '#3b82f6',
+      '#ef4444',
+      '#10b981',
+      '#f59e0b',
+      '#8b5cf6',
+      '#ec4899',
+      '#6366f1',
+      '#14b8a6',
+      '#f97316',
+      '#64748b',
+    ];
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      result.push(colors[i % colors.length]);
+    }
+    return result;
+  }
 }

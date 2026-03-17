@@ -5,10 +5,10 @@ import { ToastModule } from 'primeng/toast';
 
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
+import { TooltipModule } from 'primeng/tooltip';
 
 // Componentes
 // Componentes
-
 
 import { AuthService } from '../../services/auth.service';
 import { UserPreferenceService } from '../../services/user-preference.service';
@@ -18,60 +18,72 @@ import { CalculatorComponent } from '../shared/calculator/calculator.component';
 import { routeTransitionAnimations } from '../../route-animations';
 
 @Component({
- selector: 'app-home',
- standalone: true,
- imports: [
- CommonModule,
- ToastModule,
- 
- RouterModule,
- ButtonModule,
- ButtonModule,
- DrawerModule,
- CalculatorComponent
- ],
- templateUrl: './home.html',
- animations: [routeTransitionAnimations]
+  selector: 'app-home',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ToastModule,
+    TooltipModule,
+    RouterModule,
+    ButtonModule,
+    DrawerModule,
+    CalculatorComponent,
+  ],
+  templateUrl: './home.html',
+  animations: [routeTransitionAnimations],
 })
 export class Home {
- authService = inject(AuthService);
- userPreferenceService = inject(UserPreferenceService);
- pwaService = inject(PwaService);
- subscriptionService = inject(SubscriptionService);
- private contexts = inject(ChildrenOutletContexts);
+  authService = inject(AuthService);
+  userPreferenceService = inject(UserPreferenceService);
+  pwaService = inject(PwaService);
+  subscriptionService = inject(SubscriptionService);
+  private contexts = inject(ChildrenOutletContexts);
 
- sidebarVisible = signal(false);
- calculatorVisible = signal(false);
- moreMenuVisible = signal(false);
- currentYear = new Date().getFullYear();
+  sidebarVisible = signal(false);
+  sidebarCollapsed = signal(localStorage.getItem('sidebarCollapsed') === 'true');
+  calculatorVisible = signal(false);
+  moreMenuVisible = signal(false);
+  currentYear = new Date().getFullYear();
 
- firstName = computed(() => {
- const user = this.authService.currentUser();
- return user?.displayName?.split(' ')[0] || 'Usuário';
- });
+  firstName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.displayName?.split(' ')[0] || 'Usuário';
+  });
 
- logout() {
- this.authService.logout();
- }
+  logout() {
+    this.authService.logout();
+  }
 
- toggleSidebar() {
- this.sidebarVisible.update(v => !v);
- }
+  toggleSidebar() {
+    this.sidebarVisible.update((v) => !v);
+  }
 
- closeSidebar() {
- this.sidebarVisible.set(false);
- }
+  toggleSidebarCollapse() {
+    this.sidebarCollapsed.update((v) => {
+      const newVal = !v;
+      localStorage.setItem('sidebarCollapsed', String(newVal));
+      return newVal;
+    });
+  }
 
- toggleCalculator() {
- this.calculatorVisible.update(v => !v);
- this.closeSidebar();
- }
+  closeSidebar() {
+    this.sidebarVisible.set(false);
+  }
 
- toggleMoreMenu() {
- this.moreMenuVisible.update(v => !v);
- }
+  toggleCalculator() {
+    this.calculatorVisible.update((v) => !v);
+    this.closeSidebar();
+  }
 
- getRouteAnimationData() {
- return this.contexts.getContext('primary')?.route?.snapshot?.data?.['animation'] || this.contexts.getContext('primary')?.route?.snapshot?.url?.[0]?.path;
- }
+  toggleMoreMenu() {
+    this.moreMenuVisible.update((v) => !v);
+  }
+
+  getRouteAnimationData() {
+    return (
+      this.contexts.getContext('primary')?.route?.snapshot?.data?.[
+        'animation'
+      ] || this.contexts.getContext('primary')?.route?.snapshot?.url?.[0]?.path
+    );
+  }
 }

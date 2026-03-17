@@ -65,16 +65,23 @@ export class EmailVerification implements OnInit {
 
       // Fallback 3: window.location.hash (alguns fluxos de redirect usam hash)
       if (!actionCode && window.location.hash.includes('oobCode=')) {
-        const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.hash.replace('#', ''));
+        const hashParams = new URLSearchParams(
+          window.location.hash.split('?')[1] ||
+            window.location.hash.replace('#', ''),
+        );
         actionCode = hashParams.get('oobCode');
-        if (actionCode) console.log('EmailVerification: Código encontrado no HASH.');
+        if (actionCode)
+          console.log('EmailVerification: Código encontrado no HASH.');
       }
 
       // Fallback 4: Raw URL string search (Último recurso se tudo falhar e o search sumiu mas o href ainda tem)
       if (!actionCode && window.location.href.includes('oobCode=')) {
         const match = window.location.href.match(/[?&]oobCode=([^&#]+)/);
         actionCode = match ? match[1] : null;
-        if (actionCode) console.log('EmailVerification: Código encontrado via Regex no HREF.');
+        if (actionCode)
+          console.log(
+            'EmailVerification: Código encontrado via Regex no HREF.',
+          );
       }
 
       if (actionCode) {
@@ -85,9 +92,13 @@ export class EmailVerification implements OnInit {
         // Aguardamos 6 segundos (paciência extra) antes de desistir
         setTimeout(() => {
           if (this.status() === 'loading') {
-            console.log('EmailVerification: Código ausente após timeout final.');
+            console.log(
+              'EmailVerification: Código ausente após timeout final.',
+            );
             this.status.set('error');
-            this.errorMessage.set('Código de verificação não encontrado na URL.');
+            this.errorMessage.set(
+              'Código de verificação não encontrado na URL.',
+            );
           }
         }, 6000);
       }
@@ -136,10 +147,14 @@ export class EmailVerification implements OnInit {
     } else {
       // Se não tem código, o "Tentar Novamente" pode significar "Tentar detectar de novo" ou "Ir para login"
       // Vamos apenas logar por enquanto para diagnóstico
-      console.log('EmailVerification: Tentativa de re-verificação sem código na URL.');
+      console.log(
+        'EmailVerification: Tentativa de re-verificação sem código na URL.',
+      );
       if (this.isLoggedIn()) {
         this.status.set('error');
-        this.errorMessage.set('Não encontramos o código na URL. Deseja que enviemos um novo e-mail?');
+        this.errorMessage.set(
+          'Não encontramos o código na URL. Deseja que enviemos um novo e-mail?',
+        );
       } else {
         this.status.set('error');
         this.errorMessage.set('Código de verificação não encontrado na URL.');
@@ -158,11 +173,15 @@ export class EmailVerification implements OnInit {
       const { sendEmailVerification } = await import('firebase/auth');
       await sendEmailVerification(user);
       this.status.set('error'); // Volta para o estado de erro mas com mensagem de sucesso
-      this.errorMessage.set('Um novo e-mail foi enviado! Verifique sua caixa de entrada.');
+      this.errorMessage.set(
+        'Um novo e-mail foi enviado! Verifique sua caixa de entrada.',
+      );
     } catch (error: any) {
       console.error('EmailVerification: Erro ao reenviar e-mail', error);
       this.status.set('error');
-      this.errorMessage.set('Erro ao reenviar e-mail. Tente novamente em instantes.');
+      this.errorMessage.set(
+        'Erro ao reenviar e-mail. Tente novamente em instantes.',
+      );
     }
   }
 

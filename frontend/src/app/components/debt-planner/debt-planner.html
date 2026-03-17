@@ -62,17 +62,17 @@
       <p-tabpanels [@tabAnimation]="activeIndex()">
         <!-- TAB 1: GERENCIAR DÍVIDAS -->
         <p-tabpanel [value]="0">
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-xl font-semibold text-emphasis"
-                >Lista de Dívidas</span
-              >
-              <p-button
-                label="Nova Dívida"
-                icon="pi pi-plus"
-                (onClick)="openNewDebt()"
-                styleClass="p-button-sm p-button-accent"
-              ></p-button>
-            </div>
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xl font-semibold text-emphasis"
+              >Lista de Dívidas</span
+            >
+            <p-button
+              label="Nova Dívida"
+              icon="pi pi-plus"
+              (onClick)="openNewDebt()"
+              styleClass="p-button-sm p-button-accent"
+            ></p-button>
+          </div>
 
           <!-- DEBT DETAILS & EQUITY CARD -->
           @if (selectedDebtForDetails(); as debt) {
@@ -684,11 +684,13 @@
               </ng-template>
             </p-table>
           }
-      </p-tabpanel>
+        </p-tabpanel>
 
         <!-- TAB 2: PLANO DE PAGAMENTO -->
         <p-tabpanel [value]="1">
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in-up">
+          <div
+            class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in-up"
+          >
             <div class="col-span-12 md:col-span-4">
               <div
                 class="bg-surface-card organic-shape elegant-shadow border-none p-6 h-full flex flex-col gap-6"
@@ -908,7 +910,9 @@
 
         <!-- TAB 3: FINANCIAMENTO (MCMV) -->
         <p-tabpanel [value]="2">
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in-up">
+          <div
+            class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in-up"
+          >
             <div class="col-span-12 md:col-span-5">
               <div
                 class="bg-surface-card organic-shape elegant-shadow border-none p-6 lg:p-8 h-full flex flex-col gap-6"

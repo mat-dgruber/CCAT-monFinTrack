@@ -1,0 +1,50 @@
+.side-panel {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Custom transitions for form mode toggle */
+.form-content {
+  will-change: transform, opacity, scale;
+}
+
+/* Password visibility toggle button styling */
+::ng-deep {
+  .p-inputtext,
+  .p-password-input {
+    border-radius: 1rem !important; /* rounded-2xl */
+  }
+
+  .p-password .p-icon-field {
+    width: 100%;
+  }
+
+  .custom-dialog {
+    .p-dialog-header {
+      padding: 1.5rem 1.5rem 0 1.5rem;
+      border-top-left-radius: 1.5rem;
+      border-top-right-radius: 1.5rem;
+    }
+
+    .p-dialog-content {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+      border-bottom-left-radius: 1.5rem;
+      border-bottom-right-radius: 1.5rem;
+    }
+  }
+}
+
+/* Input focus ring improvements */
+.p-inputtext:focus,
+.p-password-input:focus {
+  box-shadow:
+    0 0 0 2px var(--surface-ground),
+    0 0 0 4px var(--primary-500) !important;
+  border-color: var(--primary-500) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .form-container {
+    background-color: var(--surface-ground);
+  }
+}

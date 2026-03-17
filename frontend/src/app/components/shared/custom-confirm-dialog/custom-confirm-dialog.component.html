@@ -1,46 +1,52 @@
 @if (confirmService.isOpen()) {
-<div 
-  class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all"
-  @backdropAnimation>
-  
-  <div 
-    class="bg-[var(--surface-card)] text-[var(--text-color)] w-full max-w-[420px] rounded-2xl shadow-xl p-6 border border-[var(--surface-border)]"
-    @dialogAnimation>
-    
-    <!-- Header / Icon -->
-    <div class="text-center">
-      <div [class]="iconClass">
-        <i [class]="confirmService.options().icon" class="text-3xl"></i>
+  <div
+    class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all"
+    @backdropAnimation
+  >
+    <div
+      class="bg-[var(--surface-card)] text-[var(--text-color)] w-full max-w-[420px] rounded-2xl shadow-xl p-6 border border-[var(--surface-border)]"
+      @dialogAnimation
+    >
+      <!-- Header / Icon -->
+      <div class="text-center">
+        <div [class]="iconClass">
+          <i [class]="confirmService.options().icon" class="text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-3 font-display">
+          {{ confirmService.options().header }}
+        </h3>
+        <p class="text-[var(--text-color-secondary)] mb-8 leading-relaxed">
+          {{ confirmService.options().message }}
+        </p>
       </div>
-      <h3 class="text-xl font-bold mb-3 font-display">
-        {{ confirmService.options().header }}
-      </h3>
-      <p class="text-[var(--text-color-secondary)] mb-8 leading-relaxed">
-        {{ confirmService.options().message }}
-      </p>
-    </div>
 
-    <!-- Footer / Buttons -->
-    <div class="flex flex-col sm:flex-row gap-3">
-      <!-- Reject Button -->
-      <p-button 
-        [label]="confirmService.options().rejectLabel || 'Não'" 
-        severity="secondary" 
-        [text]="true"
-        (onClick)="confirmService.reject()"
-        styleClass="w-full sm:w-auto p-button-rounded order-2 sm:order-1 {{ confirmService.options().rejectButtonStyleClass }}">
-      </p-button>
+      <!-- Footer / Buttons -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <!-- Reject Button -->
+        <p-button
+          [label]="confirmService.options().rejectLabel || 'Não'"
+          severity="secondary"
+          [text]="true"
+          (onClick)="confirmService.reject()"
+          styleClass="w-full sm:w-auto p-button-rounded order-2 sm:order-1 {{
+            confirmService.options().rejectButtonStyleClass
+          }}"
+        >
+        </p-button>
 
-      <span class="hidden sm:block flex-1"></span>
+        <span class="hidden sm:block flex-1"></span>
 
-      <!-- Accept Button -->
-      <p-button 
-        [label]="confirmService.options().acceptLabel || 'Sim'"
-        [severity]="buttonSeverity"
-        (onClick)="confirmService.accept()"
-        styleClass="w-full sm:w-auto p-button-rounded font-semibold order-1 sm:order-2 {{ confirmService.options().acceptButtonStyleClass }}">
-      </p-button>
+        <!-- Accept Button -->
+        <p-button
+          [label]="confirmService.options().acceptLabel || 'Sim'"
+          [severity]="buttonSeverity"
+          (onClick)="confirmService.accept()"
+          styleClass="w-full sm:w-auto p-button-rounded font-semibold order-1 sm:order-2 {{
+            confirmService.options().acceptButtonStyleClass
+          }}"
+        >
+        </p-button>
+      </div>
     </div>
   </div>
-</div>
 }

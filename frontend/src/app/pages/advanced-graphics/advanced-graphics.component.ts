@@ -35,24 +35,26 @@ import { TransactionService } from '../../services/transaction.service';
     TooltipModule,
   ],
   template: `
-    <div class="p-4 md:p-8 min-h-screen bg-surface-ground/20" #dashboardGrid>
+    <div class="p-4 md:p-10 min-h-screen bg-surface-ground/20" #dashboardGrid>
       <!-- Standard Header Section -->
-      <div class="page-header mb-8">
+      <div class="page-header mb-12">
         <div class="page-title-group">
-          <h1 class="page-title">Gráficos Avançados</h1>
-          <p class="page-description">
+          <h1 class="page-title text-4xl font-black tracking-tight mb-2 text-emphasis">
+            Gráficos Avançados
+          </h1>
+          <p class="page-description text-lg text-secondary/80">
             Visualize seus dados financeiros com gráficos interativos e
-            detalhados.
+            detalhados de alta performance.
           </p>
         </div>
         <div class="page-actions w-full md:w-auto">
           <p-button
             (onClick)="addChart()"
-            styleClass="bg-primary hover:bg-primary-dark text-white border-none shadow-lg shadow-primary/20 transition-all duration-300 transform hover:scale-105 active:scale-95 rounded-xl px-6 py-3"
+            styleClass="bg-primary hover:bg-primary-600 text-white border-none shadow-2xl shadow-primary/30 transition-all duration-500 transform hover:-translate-y-1 active:scale-95 rounded-2xl px-8 py-4 font-black"
           >
             <ng-template pTemplate="content">
-              <i class="pi pi-plus mr-2 font-bold"></i>
-              <span class="font-bold tracking-wide">Adicionar Gráfico</span>
+              <i class="pi pi-plus-circle mr-3 text-xl"></i>
+              <span class="">Novo Gráfico</span>
             </ng-template>
           </p-button>
         </div>
@@ -60,32 +62,41 @@ import { TransactionService } from '../../services/transaction.service';
 
       <!-- Glassmorphic Global Toolbar -->
       <div
-        class="backdrop-blur-lg bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl mb-8 relative overflow-hidden"
+        class="backdrop-blur-2xl bg-surface-card/60 border border-white/20 dark:border-white/5 rounded-[2.5rem] p-8 shadow-2xl shadow-surface-900/5 mb-12 relative overflow-hidden group"
       >
+        <!-- Background Glow Decoration -->
         <div
-          class="flex flex-col xl:flex-row xl:items-center justify-between gap-6"
+          class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-1000"
+        ></div>
+
+        <div
+          class="flex flex-col xl:flex-row xl:items-center justify-between gap-8 relative z-10"
         >
           <!-- Left Side: Controls -->
           <div
-            class="flex flex-col lg:flex-row gap-6 lg:items-center w-full xl:w-auto"
+            class="flex flex-col lg:flex-row gap-8 lg:items-center w-full xl:w-auto"
           >
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-4 shrink-0">
               <div
-                class="w-8 h-8 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-surface-600"
+                class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner"
               >
-                <i class="pi pi-filter"></i>
+                <i class="pi pi-sliders-h text-xl"></i>
               </div>
-              <span
-                class="font-bold text-surface-900 tracking-tight uppercase text-xs"
-                >Filtros Globais</span
-              >
+              <div class="flex flex-col">
+                <span class="font-black text-emphasis tracking-tighter uppercase text-xs"
+                  >Filtros Globais</span
+                >
+                <span class="text-[10px] text-secondary font-medium tracking-wide"
+                  >Sincronizar todos os widgets</span
+                >
+              </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full xl:w-auto">
+            <div class="flex flex-wrap gap-6 w-full xl:w-auto">
               <!-- Período -->
-              <div class="flex flex-col gap-1.5 min-w-[140px]">
+              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
                 <label
-                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
+                  class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
                   >Período</label
                 >
                 <p-select
@@ -93,8 +104,7 @@ import { TransactionService } from '../../services/transaction.service';
                   [(ngModel)]="globalDatePreset"
                   optionLabel="label"
                   optionValue="value"
-                  size="small"
-                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  styleClass="w-full !bg-surface-ground/50 !border-surface-border !rounded-2xl transition-all hover:!border-primary/50 hover:!shadow-lg hover:!shadow-primary/5"
                   appendTo="body"
                   panelStyleClass="premium-dropdown-panel"
                 >
@@ -102,30 +112,29 @@ import { TransactionService } from '../../services/transaction.service';
               </div>
 
               <!-- Tipo de Gráfico -->
-              <div class="flex flex-col gap-1.5 min-w-[140px]">
+              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
                 <label
-                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
-                  >Gráfico</label
+                  class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
+                  >Estilo</label
                 >
                 <p-select
                   [options]="chartTypes"
                   [(ngModel)]="globalType"
                   optionLabel="label"
                   optionValue="value"
-                  size="small"
-                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  styleClass="w-full !bg-surface-ground/50 !border-surface-border !rounded-2xl transition-all hover:!border-primary/50 hover:!shadow-lg hover:!shadow-primary/5"
                   appendTo="body"
                   panelStyleClass="premium-dropdown-panel"
                 >
                   <ng-template pTemplate="item" let-item>
-                    <div class="flex items-center justify-between w-full gap-2">
-                      <span class="text-sm font-medium">{{ item.label }}</span>
+                    <div class="flex items-center justify-between w-full gap-3 py-1">
+                      <span class="text-sm font-semibold">{{ item.label }}</span>
                       <span
                         *ngIf="
                           item.pro &&
                           !subscriptionService.canAccess('monthly_report')
                         "
-                        class="text-[9px] uppercase font-black text-white bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 rounded-full shadow-sm"
+                        class="text-[9px] uppercase font-black text-white bg-gradient-to-br from-amber-400 to-orange-600 px-2.5 py-1 rounded-lg shadow-sm"
                         >Pro</span
                       >
                     </div>
@@ -134,18 +143,17 @@ import { TransactionService } from '../../services/transaction.service';
               </div>
 
               <!-- Filtro de Valores -->
-              <div class="flex flex-col gap-1.5 min-w-[140px]">
+              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
                 <label
-                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
-                  >Valores</label
+                  class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
+                  >Fluxo</label
                 >
                 <p-select
                   [options]="valueFilterOptions"
                   [(ngModel)]="globalValueFilter"
                   optionLabel="label"
                   optionValue="value"
-                  size="small"
-                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  styleClass="w-full !bg-surface-ground/50 !border-surface-border !rounded-2xl transition-all hover:!border-primary/50 hover:!shadow-lg hover:!shadow-primary/5"
                   appendTo="body"
                   panelStyleClass="premium-dropdown-panel"
                 >
@@ -153,18 +161,17 @@ import { TransactionService } from '../../services/transaction.service';
               </div>
 
               <!-- Agrupamento -->
-              <div class="flex flex-col gap-1.5 min-w-[140px]">
+              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
                 <label
-                  class="text-[10px] font-bold text-surface-500 uppercase tracking-wider ml-1"
-                  >Agrupamento</label
+                  class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
+                  >Dimensão</label
                 >
                 <p-select
                   [options]="groupingOptions"
                   [(ngModel)]="globalGroupBy"
                   optionLabel="label"
                   optionValue="value"
-                  size="small"
-                  styleClass="w-full !bg-surface-50/50 dark:!bg-surface-900/30 !border-surface-200 dark:!border-surface-700 !rounded-xl transition-all hover:!border-primary/50 overflow-hidden"
+                  styleClass="w-full !bg-surface-ground/50 !border-surface-border !rounded-2xl transition-all hover:!border-primary/50 hover:!shadow-lg hover:!shadow-primary/5"
                   appendTo="body"
                   panelStyleClass="premium-dropdown-panel"
                 >
@@ -173,42 +180,34 @@ import { TransactionService } from '../../services/transaction.service';
             </div>
 
             <p-button
-              label="Atualizar Dashboard"
+              label="Sincronizar"
               icon="pi pi-sync"
-              size="small"
               (onClick)="applyGlobalFilters()"
-              styleClass="w-full lg:w-auto px-6 py-2.5 bg-surface-900 dark:bg-surface-50 text-white dark:text-surface-900 rounded-xl font-bold text-sm transition-all hover:shadow-lg hover:-translate-y-0.5"
+              styleClass="w-full lg:w-auto px-8 py-3.5 bg-surface-900 dark:bg-surface-50 text-white dark:text-surface-900 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-surface-900/20 hover:-translate-y-1 active:translate-y-0"
             >
             </p-button>
           </div>
 
           <!-- Right Side: Export & Pro -->
           <div
-            class="flex flex-row items-center gap-3 w-full xl:w-auto xl:border-l xl:border-surface-200 xl:dark:border-surface-700 xl:pl-6"
+            class="flex flex-row items-center gap-4 w-full xl:w-auto xl:border-l xl:border-surface-border xl:pl-8"
           >
             <p-button
-              label="Exportar"
               icon="pi pi-download"
-              size="small"
-              severity="secondary"
+              pTooltip="Exportar Dados (CSV)"
+              tooltipPosition="top"
               (onClick)="exportAllCSV()"
               [disabled]="!subscriptionService.canAccess('monthly_report')"
-              [pTooltip]="
-                !subscriptionService.canAccess('monthly_report')
-                  ? 'Exclusivo para membros PRO'
-                  : ''
-              "
-              styleClass="flex-1 xl:flex-none px-5 py-2.5 rounded-xl font-bold border-surface-200 transition-all hover:bg-surface-100"
+              styleClass="flex-1 xl:flex-none w-14 h-14 rounded-2xl bg-surface-ground border border-surface-border hover:bg-surface-hover text-emphasis transition-all duration-300"
             >
             </p-button>
 
             <p-button
               *ngIf="!subscriptionService.canAccess('monthly_report')"
-              label="Desbloquear PRO"
+              label="Upgrade para PRO"
               icon="pi pi-sparkles"
-              size="small"
               (onClick)="navigateToPricing()"
-              styleClass="flex-1 xl:flex-none px-5 py-2.5 bg-gradient-to-br from-amber-400 to-orange-500 text-white border-none rounded-xl font-bold shadow-md shadow-orange-500/20 transition-all hover:shadow-lg hover:-translate-y-0.5"
+              styleClass="flex-1 xl:flex-none px-8 py-4 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 text-white border-none rounded-2xl font-black shadow-xl shadow-orange-500/30 transition-all hover:shadow-2xl hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 text-sm tracking-tight"
             >
             </p-button>
           </div>
@@ -216,14 +215,14 @@ import { TransactionService } from '../../services/transaction.service';
       </div>
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-10">
         @for (widget of widgets(); track widget.id; let i = $index) {
           <div
-            class="group/widget transition-all duration-500"
+            class="group/widget transition-all duration-700"
             [ngClass]="{
               'md:col-span-1': !widget.colSpan || widget.colSpan === 1,
               'md:col-span-2': widget.colSpan === 2,
-              'opacity-40 scale-95': draggedIndex === i,
+              'opacity-30 scale-[0.98] blur-sm': draggedIndex === i,
             }"
             [draggable]="draggedIndex === i || hoveredIndex === i"
             (dragstart)="onDragStart(i)"
@@ -231,23 +230,23 @@ import { TransactionService } from '../../services/transaction.service';
             (drop)="onDrop(i)"
             (dragend)="onDragEnd()"
           >
-            <div class="h-[520px] relative">
+            <div class="h-[550px] relative">
               <!-- Animated Drag Handle -->
               <div
-                class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-surface-900 dark:bg-surface-50 rounded-full shadow-lg cursor-grab active:cursor-grabbing z-50 opacity-0 group-hover/widget:opacity-100 -translate-y-2 group-hover/widget:translate-y-0 transition-all duration-300 flex items-center gap-2"
+                class="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-2 bg-surface-900 dark:bg-surface-50 rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing z-50 opacity-0 group-hover/widget:opacity-100 -translate-y-4 group-hover/widget:translate-y-0 transition-all duration-500 flex items-center gap-3"
                 title="Arraste para organizar"
                 (mouseenter)="hoveredIndex = i"
                 (mouseleave)="hoveredIndex = null"
               >
-                <i class="pi pi-grip-vertical text-[10px] text-surface-400"></i>
+                <i class="pi pi-arrows-alt text-xs text-primary"></i>
                 <span
-                  class="text-[9px] font-black uppercase tracking-widest text-surface-400"
-                  >Organizar</span
+                  class="text-[10px] font-black uppercase tracking-[0.2em] text-surface-400"
+                  >Mover</span
                 >
               </div>
 
               <div
-                class="h-full rounded-[2rem] overflow-hidden shadow-2xl shadow-surface-900/10 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-card transition-transform duration-300 group-hover/widget:-translate-y-1"
+                class="h-full rounded-[3rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-surface-border bg-white dark:bg-surface-card transition-all duration-500 group-hover/widget:shadow-[0_40px_80px_rgba(0,0,0,0.12)] group-hover/widget:-translate-y-2"
               >
                 <app-chart-widget
                   [widgetConfig]="widget"
@@ -264,25 +263,27 @@ import { TransactionService } from '../../services/transaction.service';
       <!-- Empty State -->
       @if (widgets().length === 0) {
         <div
-          class="flex flex-col items-center justify-center p-20 bg-white/40 dark:bg-surface-card/40 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-surface-300 dark:border-surface-700 animate-in fade-in zoom-in duration-500"
+          class="flex flex-col items-center justify-center p-24 bg-surface-card/40 backdrop-blur-md rounded-[4rem] border-4 border-dashed border-surface-border animate-in fade-in zoom-in duration-1000"
         >
-          <div
-            class="w-20 h-20 bg-surface-100 dark:bg-surface-800 rounded-3xl flex items-center justify-center mb-6 text-surface-400"
-          >
-            <i class="pi pi-chart-bar text-4xl"></i>
+          <div class="relative mb-10">
+            <div class="absolute inset-0 bg-primary blur-[80px] opacity-20 rounded-full animate-pulse"></div>
+            <div
+              class="relative w-28 h-28 bg-surface-ground rounded-[2.5rem] flex items-center justify-center text-primary shadow-2xl"
+            >
+              <i class="pi pi-chart-line text-5xl"></i>
+            </div>
           </div>
-          <h2 class="text-2xl font-bold text-surface-900 mb-2">
-            Sua análise começa aqui
+          <h2 class="text-4xl font-black text-emphasis mb-4 tracking-tighter">
+            Sua jornada analítica começa aqui
           </h2>
-          <p class="text-surface-600 mb-8 max-w-sm text-center">
-            Nenhum gráfico disponível. Comece adicionando um novo widget para
-            visualizar seus dados.
+          <p class="text-secondary text-lg mb-12 max-w-md text-center leading-relaxed">
+            Não há dados sendo exibidos agora. Adicione seu primeiro gráfico para transformar números em decisões inteligentes.
           </p>
           <p-button
             label="Criar meu primeiro gráfico"
-            icon="pi pi-plus"
+            icon="pi pi-plus-circle"
             (onClick)="addChart()"
-            styleClass="bg-primary text-white border-none rounded-xl px-8 py-3 font-bold shadow-lg shadow-primary/20"
+            styleClass="bg-primary hover:bg-primary-600 text-white border-none rounded-2xl px-12 py-5 font-black text-lg shadow-2xl shadow-primary/40 transition-all duration-500 hover:-translate-y-2 active:translate-y-0"
           ></p-button>
         </div>
       }
@@ -302,20 +303,20 @@ export class AdvancedGraphicsComponent {
   widgets = signal<DashboardWidget[]>([
     {
       id: '1',
-      type: 'doughnut',
-      datePreset: 'this-year',
-      groupBy: 'category',
+      type: 'bar',
+      datePreset: 'last-month',
+      groupBy: 'date',
       valueFilter: 'expense',
       showSummary: false,
       colSpan: 1,
     },
     {
       id: '2',
-      type: 'bar',
-      datePreset: 'last-month',
-      groupBy: 'date',
+      type: 'doughnut',
+      datePreset: 'this-year',
+      groupBy: 'category',
       valueFilter: 'both',
-      showSummary: true,
+      showSummary: false,
       colSpan: 1,
     },
   ]);

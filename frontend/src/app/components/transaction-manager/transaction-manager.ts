@@ -75,7 +75,7 @@ import { PageHelpComponent } from '../page-help/page-help';
 
     InputNumberModule,
     PageHelpComponent,
-    CommonModule
+    CommonModule,
   ],
   templateUrl: './transaction-manager.html',
   styleUrl: './transaction-manager.scss',
@@ -524,7 +524,9 @@ export class TransactionManager implements OnInit, AfterViewInit {
 
       return {
         ...t,
-        dateGroup: t.dateGroup || (isNaN(d.getTime()) ? 'Invalid Date' : d.toISOString().split('T')[0]),
+        dateGroup:
+          t.dateGroup ||
+          (isNaN(d.getTime()) ? 'Invalid Date' : d.toISOString().split('T')[0]),
         isNewYear,
         isNewMonth,
         yearLabel: isNewYear ? year.toString() : undefined,
@@ -532,7 +534,6 @@ export class TransactionManager implements OnInit, AfterViewInit {
       };
     });
   });
-
 
   private getMonthName(monthIndex: number): string {
     const months = [

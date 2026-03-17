@@ -74,6 +74,8 @@ export class AnalysisService {
   }
 
   getSubscriptions(): Observable<SubscriptionCandidate[]> {
-    return this.http.get<SubscriptionCandidate[]>(`${this.apiUrl}/subscriptions`);
+    return this.http.get<SubscriptionCandidate[]>(
+      `${this.apiUrl}/subscriptions`,
+    );
   }
 }

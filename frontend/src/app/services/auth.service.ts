@@ -2,7 +2,13 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { User, UserCredential } from 'firebase/auth';
-import { from, switchMap, ReplaySubject, firstValueFrom, BehaviorSubject } from 'rxjs';
+import {
+  from,
+  switchMap,
+  ReplaySubject,
+  firstValueFrom,
+  BehaviorSubject,
+} from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { environment } from '../../environments/environment';
 import { FirebaseWrapperService } from './firebase-wrapper.service';
@@ -38,14 +44,16 @@ export class AuthService {
       this._isAuthResolved.next(true);
     });
 
-    // Safety timeout: se o Firebase não responder em 3s, marcamos como resolvido
-    // Diminuído para 3s para falhar mais rápido e evitar o timeout do Interceptor (10s)
+    // Safety timeout: se o Firebase não responder em 10s, marcamos como resolvido
+    // Aumentado para 10s para dar mais tempo ao Firebase em conexões lentas,
+    // mas ainda emitindo null para destravar guards e interceptors.
     setTimeout(() => {
       if (!this._isAuthResolved.value) {
         console.warn('AuthService: Auth resolution safety timeout reached.');
+        this.authStateSubject.next(null); // Destrava quem está esperando authState$
         this._isAuthResolved.next(true);
       }
-    }, 3000);
+    }, 10000);
 
     // Verifica a sessão periodicamente se houver duração configurada
     if (environment.sessionDuration > 0) {
@@ -68,7 +76,7 @@ export class AuthService {
   }
 
   // 1. Cria a conta
-  async register(email: string, pass: string, name: string) {
+  async register(email: string, pass: string, name: string, phone?: string) {
     const credential =
       await this.firebaseWrapper.createUserWithEmailAndPassword(email, pass);
 
@@ -77,6 +85,9 @@ export class AuthService {
         await this.firebaseWrapper.updateProfile(credential.user, {
           displayName: name,
         });
+
+        // Opcional: Salvar telefone no backend ou Firestore se necessário futuramente
+        // if (phone) { ... }
 
         // Chamada ao backend para enviar e-mail personalizado
         await firstValueFrom(
@@ -88,12 +99,18 @@ export class AuthService {
         await this.firebaseWrapper.signOut();
       } catch (error: any) {
         // Se falhar o backend, deletamos o usuário no firebase para permitir retry
-        const errorMsg = error.error?.detail || error.message || 'Erro desconhecido';
-        console.error(`Falha no processo de registro (backend): ${errorMsg}. Removendo usuário do Firebase para permitir nova tentativa...`);
+        const errorMsg =
+          error.error?.detail || error.message || 'Erro desconhecido';
+        console.error(
+          `Falha no processo de registro (backend): ${errorMsg}. Removendo usuário do Firebase para permitir nova tentativa...`,
+        );
         try {
           await this.firebaseWrapper.deleteUser(credential.user);
         } catch (deleteError) {
-          console.error('Erro ao remover usuário órfão do Firebase:', deleteError);
+          console.error(
+            'Erro ao remover usuário órfão do Firebase:',
+            deleteError,
+          );
         }
         throw error;
       }
@@ -110,9 +127,11 @@ export class AuthService {
     // 5. Verificação de Segurança no Login: Impedir acesso se e-mail não estiver verificado
     if (!credential.user.emailVerified) {
       await this.firebaseWrapper.signOut();
-      throw new Error('E-mail não verificado. Verifique sua caixa de entrada antes de acessar o sistema.');
+      throw new Error(
+        'E-mail não verificado. Verifique sua caixa de entrada antes de acessar o sistema.',
+      );
     }
-    
+
     return credential;
   }
 
@@ -127,7 +146,6 @@ export class AuthService {
       this.http.post(`${environment.apiUrl}/auth/reset-password`, { email }),
     );
   }
-
 
   async deleteAccount() {
     const user = this.firebaseWrapper.getAuth().currentUser;

@@ -5,7 +5,11 @@ import {
   LOCALE_ID,
   isDevMode,
 } from '@angular/core';
-import { provideRouter, TitleStrategy } from '@angular/router';
+import {
+  provideRouter,
+  TitleStrategy,
+  withInMemoryScrolling,
+} from '@angular/router';
 import { CustomTitleStrategy } from './strategies/custom-title-strategy';
 // Mantemos o Async para performance no Angular 20
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -33,7 +37,13 @@ import { provideServiceWorker } from '@angular/service-worker';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withInMemoryScrolling({
+        anchorScrolling: 'enabled',
+        scrollPositionRestoration: 'enabled',
+      }),
+    ),
     { provide: TitleStrategy, useClass: CustomTitleStrategy },
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([jwtInterceptor])),

@@ -5,7 +5,7 @@
   class="inline-flex items-center justify-center p-2 text-secondary hover:text-primary hover:bg-accent-bg rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
   title="Ajuda e Documentação"
 >
-  <span class="material-symbols-outlined !text-2xl">help</span>
+  <i class="pi pi-question-circle !text-2xl"></i>
 </button>
 
 <!-- Backdrop Overlay -->
@@ -28,7 +28,7 @@
   >
     <div class="flex items-center gap-3">
       <div class="p-2 bg-accent-bg text-primary rounded-lg">
-        <span class="material-symbols-outlined !text-xl">menu_book</span>
+        <i class="pi pi-book !text-xl"></i>
       </div>
       <h2 class="text-xl font-bold text-color m-0 font-serif">{{ title() }}</h2>
     </div>
@@ -38,7 +38,7 @@
       class="p-2 text-secondary hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-colors focus:outline-none"
       title="Fechar manual"
     >
-      <span class="material-symbols-outlined !text-xl">close</span>
+      <i class="pi pi-times !text-xl"></i>
     </button>
   </div>
 
@@ -50,14 +50,12 @@
         <div
           class="bg-orange-500/10 border border-orange-500/20 rounded-xl-organic p-6 flex flex-col items-center justify-center text-center mt-8 animate-shake"
         >
-          <span class="material-symbols-outlined !text-4xl text-orange-500 mb-3"
-            >warning</span
-          >
-          <h3 class="text-lg font-bold text-color mb-2">
-            Manual indisponível
-          </h3>
+          <i class="pi pi-exclamation-triangle !text-4xl text-orange-500 mb-3"></i>
+          <h3 class="text-lg font-bold text-color mb-2">Manual indisponível</h3>
           <p class="text-secondary text-sm">
-            Não foi possível carregar a documentação (<code>{{ document() }}</code
+            Não foi possível carregar a documentação (<code>{{
+              document()
+            }}</code
             >). Verifique se o arquivo Markdown foi criado na pasta pública
             corretamente.
           </p>
@@ -69,12 +67,7 @@
         [src]="documentUrl()"
         (load)="onLoad($event)"
         (error)="onError($event)"
-        class="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none 
-               prose-headings:text-color prose-headings:font-bold prose-headings:font-serif
-               prose-h1:text-2xl prose-h1:border-b prose-h1:border-surface-border prose-h1:pb-2 prose-h1:mt-0 
-               prose-a:text-primary prose-a:no-underline hover:prose-a:underline 
-               prose-blockquote:border-l-4 prose-blockquote:border-primary/50 prose-blockquote:bg-accent-bg prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:not-italic prose-blockquote:rounded-r-lg 
-               [&_.markdown-alert-warning]:border-l-4 [&_.markdown-alert-warning]:border-amber-400 [&_.markdown-alert-warning]:bg-amber-500/10 [&_.markdown-alert-warning]:text-color [&_.markdown-alert-warning]:p-4 [&_.markdown-alert-warning]:my-4 [&_.markdown-alert-warning]:rounded-r-lg [&_.markdown-alert-warning_p]:m-0"
+        class="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none prose-headings:text-color prose-headings:font-bold prose-headings:font-serif prose-h1:text-2xl prose-h1:border-b prose-h1:border-surface-border prose-h1:pb-2 prose-h1:mt-0 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-primary/50 prose-blockquote:bg-accent-bg prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:not-italic prose-blockquote:rounded-r-lg [&_.markdown-alert-warning]:border-l-4 [&_.markdown-alert-warning]:border-amber-400 [&_.markdown-alert-warning]:bg-amber-500/10 [&_.markdown-alert-warning]:text-color [&_.markdown-alert-warning]:p-4 [&_.markdown-alert-warning]:my-4 [&_.markdown-alert-warning]:rounded-r-lg [&_.markdown-alert-warning_p]:m-0"
       ></markdown>
     </div>
   </div>

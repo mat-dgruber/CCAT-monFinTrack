@@ -18,10 +18,16 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     filter((resolved) => resolved === true),
     take(1),
     timeout(10000), // 10 segundos de segurança
-    switchMap(() => authService.authState$.pipe(
-      take(1),
-      switchMap((user) => {
-        if (user) {
+    switchMap(() =>
+      authService.authState$.pipe(
+        take(1),
+        switchMap((user) => {
+          if (!user) {
+            // Se não há usuário, prosseguimos sem token (requisições públicas)
+            return next(req);
+          }
+
+          // Se há usuário, tentamos obter o token
           return from(user.getIdToken()).pipe(
             switchMap((token) => {
               const clonedReq = req.clone({
@@ -29,21 +35,42 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
                   Authorization: `Bearer ${token}`,
                 },
               });
+              // Executa a requisição autenticada
               return next(clonedReq);
             }),
-            catchError((err) => {
-              console.error('Erro ao obter token do Firebase:', err);
+            catchError((tokenErr) => {
+              // ERRO AO OBTER TOKEN (Firebase error)
+              console.error(
+                'JWT Interceptor: Erro ao obter token do Firebase:',
+                tokenErr,
+              );
+              // Nesse caso específico de erro no token, podemos tentar prosseguir sem ele
+              // ou rethrow. Como o app depende do token para rotas privadas,
+              // prosseguir sem ele causará 401 no backend, o que é o comportamento correto.
               return next(req);
-            })
+            }),
           );
-        }
-        return next(req);
-      }),
-    )),
+        }),
+      ),
+    ),
     catchError((err) => {
-      // Se der timeout ou erro na resolução do Auth, prosseguimos sem token para não travar o app
-      console.error('JWT Interceptor: Auth resolution timed out or failed. Proceeding without token.', err);
+      // Este catchError captura:
+      // 1. Timeout na resolução do Auth (10s)
+      // 2. Erros na cadeia de streams antes do next(clonedReq)
+
+      // IMPORTANTE: Se o erro for um HttpErrorResponse vindo do next(clonedReq),
+      // ele NÃO deve ser capturado aqui se quisermos que o componente trate o erro.
+      // No RxJS, se o erro acontece dentro de um switchMap/next(), este catchError externo PODE capturar.
+
+      if (err.name === 'TimeoutError') {
+        console.error(
+          'JWT Interceptor: Auth resolution timed out (10s). Proceeding without token.',
+        );
+      } else {
+        console.error('JWT Interceptor: Unexpected error in auth chain:', err);
+      }
+
       return next(req);
-    })
+    }),
   );
 };

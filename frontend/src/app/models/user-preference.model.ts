@@ -4,6 +4,7 @@ export interface UserPreference {
   theme: 'light' | 'dark' | 'system' | 'capycro' | 'high-contrast';
   notifications_enabled: boolean;
   profile_image_url?: string;
+  phone?: string;
   birthday?: string; // ISO string
   timezone?: string;
   version: number;
@@ -29,6 +30,7 @@ export interface UserPreferenceCreate {
   theme?: 'light' | 'dark' | 'system' | 'capycro' | 'high-contrast';
   notifications_enabled?: boolean;
   profile_image_url?: string;
+  phone?: string;
   birthday?: string;
   timezone?: string;
 

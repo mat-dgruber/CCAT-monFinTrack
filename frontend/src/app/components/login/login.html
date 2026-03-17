@@ -1,155 +1,445 @@
-<div class="min-h-screen bg-surface-hover flex items-center justify-center p-4">
- <p-card [style]="{ width: '100%', maxWidth: '450px' }" styleClass="shadow-lg border-none">
- <div class="text-center mb-6">
- <img src="assets/logo-ccat.png" alt="Logo" class="h-32 mb-4 mx-auto" />
- <h2 class="text-2xl font-bold text-color">monFinTrack</h2>
- <p class="text-secondary">
- {{
- isRegisterMode()
- ? "Crie sua conta grátis"
- : "Faça login para continuar"
- }}
- </p>
- </div>
+<p-toast key="main-toast"></p-toast>
 
- <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
- @if (isRegisterMode()) {
- <div class="flex flex-col gap-2">
- <label for="name" class="font-semibold text-secondary">Nome Completo</label>
- <input pInputText id="name" formControlName="name" placeholder="Seu nome" class="w-full" />
- </div>
- }
+<div class="min-h-screen w-full flex overflow-hidden bg-surface-ground">
+  <!-- Side Panel (Visual) - Hidden on mobile -->
+  <div
+    class="side-panel hidden lg:flex flex-col justify-between w-1/2 bg-slate-900 p-12 relative overflow-hidden"
+  >
+    <!-- Background patterns -->
+    <div
+      class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/10 blur-[120px] rounded-full"
+    ></div>
+    <div
+      class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-orange-500/5 blur-[100px] rounded-full"
+    ></div>
 
- <div class="flex flex-col gap-2">
- <label for="email" class="font-semibold text-secondary">Email</label>
- <input pInputText id="email" formControlName="email" placeholder="seu@email.com" class="w-full" />
- </div>
+    <div
+      class="relative z-10 flex items-center gap-3 cursor-pointer"
+      routerLink="/"
+    >
+      <img
+        src="assets/logo-ccat.png"
+        alt="monFinTrack Logo"
+        class="w-12 h-12 object-contain"
+      />
+      <span class="text-2xl font-bold font-serif text-white tracking-tight"
+        >monFinTrack</span
+      >
+    </div>
 
- <div class="flex flex-col gap-2">
- <label for="password" class="font-semibold text-secondary">Senha</label>
- <p-password id="password" formControlName="password" [feedback]="false" [toggleMask]="true" placeholder="******"
- styleClass="w-full" inputStyleClass="w-full">
- </p-password>
+    <div class="relative z-10 max-w-lg">
+      <h2 class="text-4xl font-extrabold text-white mb-6 leading-tight">
+        Sua jornada para a
+        <span class="text-primary-400 italic">liberdade financeira</span> começa
+        aqui.
+      </h2>
+      <p class="text-slate-400 text-lg leading-relaxed mb-8">
+        Organize seus gastos, analise suas faturas e receba insights proativos
+        da nossa IA. Junte-se a milhares de usuários que já domaram seus leões
+        financeiros.
+      </p>
 
- @if (showPasswordRequirements) {
- <div [@slideFade] class="overflow-hidden">
- <div class="bg-surface-ground p-3 rounded-lg border border-surface-border mt-2 text-xs shadow-sm transition-all">
- <p class="font-bold mb-2 text-secondary">Sua senha deve ter:</p>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3 text-slate-300">
+          <i class="pi pi-check-circle text-primary-400"></i>
+          <span>Scanner de Recibos Inteligente</span>
+        </div>
+        <div class="flex items-center gap-3 text-slate-300">
+          <i class="pi pi-check-circle text-primary-400"></i>
+          <span>Advisor Financeiro 24/7</span>
+        </div>
+        <div class="flex items-center gap-3 text-slate-300">
+          <i class="pi pi-check-circle text-primary-400"></i>
+          <span>Segurança de Nível Bancário</span>
+        </div>
+      </div>
+    </div>
 
- <ul class="flex flex-col gap-1">
- <li [class.text-green-600]="hasMinLength" [class.text-gray-400]="!hasMinLength"
- class="flex items-center gap-2 transition-colors duration-300">
- <i class="pi" [class.pi-check-circle]="hasMinLength" [class.pi-circle]="!hasMinLength"></i>
- Pelo menos 8 caracteres
- </li>
- <li [class.text-green-600]="hasUpper" [class.text-gray-400]="!hasUpper"
- class="flex items-center gap-2 transition-colors duration-300">
- <i class="pi" [class.pi-check-circle]="hasUpper" [class.pi-circle]="!hasUpper"></i>
- Letra Maiúscula
- </li>
- <li [class.text-green-600]="hasLower" [class.text-gray-400]="!hasLower"
- class="flex items-center gap-2 transition-colors duration-300">
- <i class="pi" [class.pi-check-circle]="hasLower" [class.pi-circle]="!hasLower"></i>
- Letra Minúscula
- </li>
- <li [class.text-green-600]="hasNumber" [class.text-gray-400]="!hasNumber"
- class="flex items-center gap-2 transition-colors duration-300">
- <i class="pi" [class.pi-check-circle]="hasNumber" [class.pi-circle]="!hasNumber"></i>
- Número
- </li>
- <li [class.text-green-600]="hasSpecial" [class.text-gray-400]="!hasSpecial"
- class="flex items-center gap-2 transition-colors duration-300">
- <i class="pi" [class.pi-check-circle]="hasSpecial" [class.pi-circle]="!hasSpecial"></i>
- Caractere Especial (@$!%*?&)
- </li>
- </ul>
- </div>
- </div>
- }
- </div>
+    <div class="relative z-10 text-slate-500 text-sm">
+      © {{ currentYear }} monFinTrack. Todos os direitos reservados.
+    </div>
+  </div>
 
- @if (isRegisterMode()) {
- <div class="flex flex-col gap-2">
- <label for="confirm" class="font-semibold text-secondary">Confirmar Senha</label>
- <p-password id="confirm" formControlName="confirmPassword" [feedback]="false" [toggleMask]="true"
- placeholder="Repita a senha" styleClass="w-full" inputStyleClass="w-full" [ngClass]="{
- 'ng-invalid ng-dirty':
- form.hasError('mismatch') && form.get('confirmPassword')?.dirty
- }">
- </p-password>
+  <!-- Form Container -->
+  <div
+    class="form-container w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 md:p-20 relative bg-surface-ground"
+  >
+    <div class="w-full max-w-md">
+      <!-- Mobile Logo -->
+      <div
+        class="flex lg:hidden items-center justify-center gap-3 mb-12 animate-item opacity-0"
+      >
+        <img src="assets/logo-ccat.png" alt="Logo" class="w-10 h-10" />
+        <span class="text-2xl font-bold font-serif text-emphasis"
+          >monFinTrack</span
+        >
+      </div>
 
- @if (form.hasError('mismatch') && form.get('confirmPassword')?.dirty) {
- <small class="text-red-500 block animate-pulse">
- As senhas não conferem.
- </small>
- }
- </div>
+      <div class="form-content">
+        <div class="mb-10 animate-item opacity-0">
+          <h1 class="text-3xl font-extrabold text-color mb-2">
+            {{ isRegisterMode() ? "Crie sua conta" : "Bem-vindo de volta" }}
+          </h1>
+          <p class="text-secondary">
+            {{
+              isRegisterMode()
+                ? "Comece sua organização financeira hoje mesmo."
+                : "Sentimos sua falta! Faça login para continuar."
+            }}
+          </p>
+        </div>
 
- <div class="flex items-center mt-2">
- <p-checkbox formControlName="termsAccepted" [binary]="true" inputId="terms"></p-checkbox>
- <label for="terms" class="ml-2 text-sm text-secondary">
- Li e aceito os <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Termos</a> e <a
- href="/privacy-policy" target="_blank" class="text-blue-600 hover:underline">Política de Privacidade</a>.
- </label>
- </div>
- } @if (!isRegisterMode()) {
- <div class="flex justify-end">
- <a (click)="showForgotPassword.set(true)"
- class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">
- Esqueceu a senha?
- </a>
- </div>
- }
+        <!-- Social Login Buttons (Placeholder UI) -->
+        <div
+          class="flex flex-col sm:flex-row gap-4 mb-8 animate-item opacity-0"
+        >
+          <button
+            disabled
+            class="flex-1 flex items-center justify-center gap-3 bg-surface-card border border-surface-border py-3 px-4 rounded-2xl opacity-60 cursor-not-allowed transition-all font-semibold text-color"
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              class="w-5 h-5"
+              alt="Google"
+            />
+            <span>Google</span>
+          </button>
+          <button
+            disabled
+            class="flex-1 flex items-center justify-center gap-3 bg-surface-card border border-surface-border py-3 px-4 rounded-2xl opacity-60 cursor-not-allowed transition-all font-semibold text-color"
+          >
+            <i class="pi pi-apple text-xl"></i>
+            <span>Apple</span>
+          </button>
+        </div>
 
- <p-button [label]="isRegisterMode() ? 'Criar Conta' : 'Entrar'" [loading]="isLoading()" type="submit"
- styleClass="w-full mt-2" [disabled]="form.invalid || (isRegisterMode() && !isPasswordStrong)">
- </p-button>
- </form>
+        <div class="flex items-center gap-4 mb-8 animate-item opacity-0">
+          <div class="h-px flex-1 bg-surface-border"></div>
+          <span
+            class="text-xs text-secondary uppercase tracking-widest font-bold"
+            >Ou via e-mail</span
+          >
+          <div class="h-px flex-1 bg-surface-border"></div>
+        </div>
 
- <div class="text-center mt-6">
- <span class="text-secondary text-sm">
- {{ isRegisterMode() ? "Já tem uma conta?" : "Não tem conta ainda?" }}
- </span>
- <a (click)="toggleMode()"
- class="text-blue-600 font-bold text-sm cursor-pointer hover:underline ml-1 transition-colors">
- {{ isRegisterMode() ? "Fazer Login" : "Cadastre-se" }}
- </a>
- </div>
- </p-card>
+        <form
+          [formGroup]="form"
+          (ngSubmit)="onSubmit()"
+          class="flex flex-col gap-5"
+        >
+          @if (isRegisterMode()) {
+            <div class="flex flex-col gap-2 animate-item opacity-0">
+              <label
+                for="name"
+                class="text-sm font-bold text-secondary uppercase tracking-tighter"
+                >Nome Completo</label
+              >
+              <input
+                pInputText
+                id="name"
+                formControlName="name"
+                placeholder="Ex: Matheus Diniz"
+                class="w-full rounded-2xl py-3 px-4"
+              />
+            </div>
+
+            <div class="flex flex-col gap-2 animate-item opacity-0">
+              <label
+                for="phone"
+                class="text-sm font-bold text-secondary uppercase tracking-tighter"
+                >Telefone / WhatsApp</label
+              >
+              <input
+                pInputText
+                id="phone"
+                formControlName="phone"
+                placeholder="(00) 00000-0000"
+                class="w-full rounded-2xl py-3 px-4"
+              />
+            </div>
+          }
+
+          <div class="flex flex-col gap-2 animate-item opacity-0">
+            <label
+              for="email"
+              class="text-sm font-bold text-secondary uppercase tracking-tighter"
+              >E-mail</label
+            >
+            <input
+              pInputText
+              id="email"
+              formControlName="email"
+              placeholder="seu@email.com"
+              class="w-full rounded-2xl py-3 px-4"
+            />
+          </div>
+
+          <div class="flex flex-col gap-2 animate-item opacity-0">
+            <div class="flex justify-between items-center">
+              <label
+                for="password"
+                class="text-sm font-bold text-secondary uppercase tracking-tighter"
+                >Senha</label
+              >
+              @if (!isRegisterMode()) {
+                <a
+                  (click)="showForgotPassword.set(true)"
+                  class="text-xs font-bold text-primary-500 hover:text-primary-600 cursor-pointer transition-colors"
+                >
+                  Esqueceu a senha?
+                </a>
+              }
+            </div>
+            <p-password
+              id="password"
+              formControlName="password"
+              [feedback]="false"
+              [toggleMask]="true"
+              placeholder="••••••••"
+              styleClass="w-full"
+              inputStyleClass="w-full rounded-2xl py-3 px-4"
+            >
+            </p-password>
+
+            @if (showPasswordRequirements) {
+              <div [@slideFade] class="overflow-hidden">
+                <div
+                  class="bg-surface-card p-4 rounded-2xl border border-surface-border mt-2 text-xs shadow-sm"
+                >
+                  <p class="font-bold mb-2 text-secondary">
+                    Requisitos de segurança:
+                  </p>
+                  <ul class="flex flex-col gap-1.5">
+                    <li
+                      [class.text-green-500]="hasMinLength"
+                      [class.text-gray-400]="!hasMinLength"
+                      class="flex items-center gap-2"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-check-circle]="hasMinLength"
+                        [class.pi-circle]="!hasMinLength"
+                      ></i>
+                      Mínimo 8 caracteres
+                    </li>
+                    <li
+                      [class.text-green-500]="hasUpper && hasLower"
+                      [class.text-gray-400]="!(hasUpper && hasLower)"
+                      class="flex items-center gap-2"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-check-circle]="hasUpper && hasLower"
+                        [class.pi-circle]="!(hasUpper && hasLower)"
+                      ></i>
+                      Maiúsculas e minúsculas
+                    </li>
+                    <li
+                      [class.text-green-500]="hasNumber && hasSpecial"
+                      [class.text-gray-400]="!(hasNumber && hasSpecial)"
+                      class="flex items-center gap-2"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-check-circle]="hasNumber && hasSpecial"
+                        [class.pi-circle]="!(hasNumber && hasSpecial)"
+                      ></i>
+                      Números e símbolos (@$!%*?&)
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (isRegisterMode()) {
+            <div class="flex flex-col gap-2 animate-item opacity-0">
+              <label
+                for="confirm"
+                class="text-sm font-bold text-secondary uppercase tracking-tighter"
+                >Confirmar Senha</label
+              >
+              <p-password
+                id="confirm"
+                formControlName="confirmPassword"
+                [feedback]="false"
+                [toggleMask]="true"
+                placeholder="Repita a senha"
+                styleClass="w-full"
+                inputStyleClass="w-full rounded-2xl py-3 px-4"
+                [ngClass]="{
+                  'ng-invalid ng-dirty':
+                    form.hasError('mismatch') &&
+                    form.get('confirmPassword')?.dirty,
+                }"
+              >
+              </p-password>
+              @if (
+                form.hasError("mismatch") && form.get("confirmPassword")?.dirty
+              ) {
+                <small class="text-red-500 font-bold"
+                  >As senhas não conferem.</small
+                >
+              }
+            </div>
+
+            <div class="flex items-start mt-2 animate-item opacity-0">
+              <p-checkbox
+                formControlName="termsAccepted"
+                [binary]="true"
+                inputId="terms"
+              ></p-checkbox>
+              <label
+                for="terms"
+                class="ml-3 text-xs text-secondary leading-relaxed"
+              >
+                Eu li e concordo com os
+                <a
+                  routerLink="/terms"
+                  target="_blank"
+                  (click)="$event.stopPropagation()"
+                  class="text-primary-500 font-bold hover:underline"
+                  >Termos de Uso</a
+                >
+                e a
+                <a
+                  routerLink="/privacy-policy"
+                  target="_blank"
+                  (click)="$event.stopPropagation()"
+                  class="text-primary-500 font-bold hover:underline"
+                  >Política de Privacidade</a
+                >.
+              </label>
+            </div>
+          }
+
+          <p-button
+            [label]="
+              isRegisterMode()
+                ? 'Criar minha conta grátis'
+                : 'Entrar na plataforma'
+            "
+            [loading]="isLoading()"
+            type="submit"
+            styleClass="w-full rounded-2xl py-4 font-bold shadow-xl shadow-primary-500/20 mt-4 animate-item opacity-0"
+            [disabled]="form.invalid || (isRegisterMode() && !isPasswordStrong)"
+          >
+          </p-button>
+        </form>
+
+        <div class="text-center mt-10 animate-item opacity-0">
+          <span class="text-secondary text-sm">
+            {{
+              isRegisterMode() ? "Já possui uma conta?" : "Ainda não tem conta?"
+            }}
+          </span>
+          <a
+            (click)="toggleMode()"
+            class="text-primary-500 font-bold text-sm cursor-pointer hover:text-primary-600 ml-2 transition-colors"
+          >
+            {{ isRegisterMode() ? "Fazer Login" : "Cadastre-se gratuitamente" }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<p-dialog header="Redefinir Senha" [modal]="true" [visible]="showForgotPassword()" (visibleChange)="showForgotPassword.set($event)" [style]="{ width: '25rem' }">
- <div class="flex flex-col gap-4 pt-2">
- <p class="text-secondary text-sm">
- Digite seu e-mail abaixo. Enviaremos um link para você criar uma nova
- senha.
- </p>
+<!-- Dialogs stay mostly the same but with improved styling -->
+<p-dialog
+  header="Redefinir Senha"
+  [modal]="true"
+  [visible]="showForgotPassword()"
+  (visibleChange)="showForgotPassword.set($event)"
+  [style]="{ width: '28rem' }"
+  styleClass="custom-dialog"
+>
+  <div class="flex flex-col gap-6 pt-4">
+    <div class="flex items-center gap-4 bg-primary-500/10 p-4 rounded-xl">
+      <i class="pi pi-info-circle text-primary-500 text-2xl"></i>
+      <p class="text-secondary text-sm leading-relaxed">
+        Enviaremos um link de recuperação para o seu e-mail. Certifique-se de
+        verificar a pasta de spam.
+      </p>
+    </div>
 
- <div class="flex flex-col gap-2">
- <label for="resetEmail" class="font-semibold text-color">E-mail</label>
- <input pInputText id="resetEmail" [(ngModel)]="resetEmail" [ngModelOptions]="{ standalone: true }"
- placeholder="seu@email.com" class="w-full" />
- </div>
+    <div class="flex flex-col gap-2">
+      <label for="resetEmail" class="text-xs font-bold text-secondary uppercase"
+        >E-mail cadastrado</label
+      >
+      <input
+        pInputText
+        id="resetEmail"
+        [(ngModel)]="resetEmail"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="seu@email.com"
+        class="w-full rounded-2xl py-3"
+      />
+    </div>
 
- <div class="flex justify-end gap-2 mt-2">
- <p-button label="Cancelar" severity="secondary" (onClick)="showForgotPassword.set(false)"></p-button>
- <p-button label="Enviar Link" (onClick)="sendResetLink()" [loading]="isLoading()"></p-button>
- </div>
- </div>
+    <div class="flex justify-end gap-3 mt-2">
+      <p-button
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="showForgotPassword.set(false)"
+      ></p-button>
+      <p-button
+        label="Enviar Link de Recuperação"
+        (onClick)="sendResetLink()"
+        [loading]="isLoading()"
+        styleClass="rounded-2xl px-6"
+      ></p-button>
+    </div>
+  </div>
 </p-dialog>
-<p-dialog header="Verificação em Duas Etapas" [visible]="showMfaDialog()" (visibleChange)="showMfaDialog.set($event)" [modal]="true" [style]="{width: '400px'}"
- [closable]="false">
- <div class="flex flex-col items-center gap-4">
- <p>Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
 
- <div class="flex flex-col gap-2 w-full">
-  <input pInputText id="loginMfaToken" [ngModel]="mfaToken()" (ngModelChange)="mfaToken.set($event)" class="w-full text-center text-xl tracking-widest"
-  maxlength="6" placeholder="000000" (keyup.enter)="verifyMfaLogin()">
- </div>
+<p-dialog
+  header="Verificação em Duas Etapas"
+  [visible]="showMfaDialog()"
+  (visibleChange)="showMfaDialog.set($event)"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="false"
+>
+  <div class="flex flex-col items-center gap-6 py-4">
+    <div
+      class="w-16 h-16 bg-primary-500/10 rounded-full flex items-center justify-center mb-2"
+    >
+      <i class="pi pi-shield text-primary-500 text-3xl"></i>
+    </div>
+    <p class="text-center text-secondary leading-relaxed">
+      Para sua segurança, digite o código de 6 dígitos do seu app autenticador.
+    </p>
 
- <div class="flex justify-end gap-2 w-full mt-4">
- <p-button label="Verificar" (onClick)="verifyMfaLogin()" [loading]="isLoading()"
- [disabled]="mfaToken().length !== 6"></p-button>
- </div>
- </div>
+    <div class="w-full">
+      <input
+        pInputText
+        id="loginMfaToken"
+        [ngModel]="mfaToken()"
+        (ngModelChange)="mfaToken.set($event)"
+        class="w-full text-center text-3xl tracking-[0.5em] font-mono py-4 rounded-2xl border-2 border-primary-500/30"
+        maxlength="6"
+        placeholder="000000"
+        (keyup.enter)="verifyMfaLogin()"
+      />
+    </div>
+
+    <div class="flex flex-col gap-3 w-full mt-4">
+      <p-button
+        label="Verificar Código"
+        (onClick)="verifyMfaLogin()"
+        [loading]="isLoading()"
+        [disabled]="mfaToken().length !== 6"
+        styleClass="w-full rounded-2xl py-3"
+      ></p-button>
+      <p-button
+        label="Voltar para Login"
+        [text]="true"
+        severity="secondary"
+        (onClick)="showMfaDialog.set(false)"
+        styleClass="w-full"
+      ></p-button>
+    </div>
+  </div>
 </p-dialog>

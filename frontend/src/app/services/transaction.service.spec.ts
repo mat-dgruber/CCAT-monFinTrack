@@ -77,7 +77,10 @@ describe('TransactionService', () => {
       expect(trans).toEqual(responseTrans);
     });
 
-    const req = httpMock.expectOne((req) => req.url === `${apiUrl}/${id}` && req.params.get('scope') === 'single');
+    const req = httpMock.expectOne(
+      (req) =>
+        req.url === `${apiUrl}/${id}` && req.params.get('scope') === 'single',
+    );
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(updateData);
     req.flush(responseTrans);
@@ -88,7 +91,10 @@ describe('TransactionService', () => {
 
     service.deleteTransaction(id).subscribe();
 
-    const req = httpMock.expectOne((req) => req.url === `${apiUrl}/${id}` && req.params.get('scope') === 'all');
+    const req = httpMock.expectOne(
+      (req) =>
+        req.url === `${apiUrl}/${id}` && req.params.get('scope') === 'all',
+    );
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });

@@ -8,7 +8,14 @@ import {
   effect,
   ElementRef,
 } from '@angular/core';
-import { trigger, transition, style, animate, query, group } from '@angular/animations';
+import {
+  trigger,
+  transition,
+  style,
+  animate,
+  query,
+  group,
+} from '@angular/animations';
 import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
@@ -69,7 +76,7 @@ import { PageHelpComponent } from '../page-help/page-help';
     TagModule,
     TabsModule,
     ProgressBarModule,
-    
+
     DatePickerModule,
     ToastModule,
     TooltipModule,
@@ -87,7 +94,7 @@ import { PageHelpComponent } from '../page-help/page-help';
     InputIconModule,
     CurrencyPipe,
     PageHelpComponent,
-    CommonModule
+    CommonModule,
   ],
   providers: [MessageService],
   templateUrl: './subscriptions-dashboard.component.html',
@@ -96,38 +103,66 @@ import { PageHelpComponent } from '../page-help/page-help';
     trigger('tabAnimation', [
       transition(':increment', [
         style({ position: 'relative', overflow: 'hidden' }),
-        query(':enter, :leave', [
-          style({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-          })
-        ], { optional: true }),
-        query(':enter', [style({ left: '100%', opacity: 0 })], { optional: true }),
+        query(
+          ':enter, :leave',
+          [
+            style({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+            }),
+          ],
+          { optional: true },
+        ),
+        query(':enter', [style({ left: '100%', opacity: 0 })], {
+          optional: true,
+        }),
         group([
-          query(':leave', [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))], { optional: true }),
-          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
-        ])
+          query(
+            ':leave',
+            [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))],
+            { optional: true },
+          ),
+          query(
+            ':enter',
+            [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))],
+            { optional: true },
+          ),
+        ]),
       ]),
       transition(':decrement', [
         style({ position: 'relative', overflow: 'hidden' }),
-        query(':enter, :leave', [
-          style({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-          })
-        ], { optional: true }),
-        query(':enter', [style({ left: '-100%', opacity: 0 })], { optional: true }),
+        query(
+          ':enter, :leave',
+          [
+            style({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+            }),
+          ],
+          { optional: true },
+        ),
+        query(':enter', [style({ left: '-100%', opacity: 0 })], {
+          optional: true,
+        }),
         group([
-          query(':leave', [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))], { optional: true }),
-          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
-        ])
-      ])
-    ])
-  ]
+          query(
+            ':leave',
+            [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))],
+            { optional: true },
+          ),
+          query(
+            ':enter',
+            [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))],
+            { optional: true },
+          ),
+        ]),
+      ]),
+    ]),
+  ],
 })
 export class SubscriptionsDashboardComponent implements OnInit {
   private recurrenceService = inject(RecurrenceService);

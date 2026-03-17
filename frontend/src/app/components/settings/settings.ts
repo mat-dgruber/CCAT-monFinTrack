@@ -47,7 +47,7 @@ import { PwaService } from '../../services/pwa.service';
     InputNumberModule,
     ToggleSwitchModule,
     ToastModule,
-    
+
     SelectModule,
     DatePickerModule,
     TagModule,
@@ -89,13 +89,13 @@ export class Settings {
 
   displayName = signal('');
   email = signal('');
+  phone = signal('');
 
   mfaEnabled = signal(false);
   showMfaSetupDialog = signal(false);
   mfaSecret = signal('');
   qrCodeUrl = signal('');
   mfaToken = signal('');
-
 
   // Profile
   birthday = signal<Date | null>(null);
@@ -152,6 +152,7 @@ export class Settings {
       if (prefs) {
         this.selectedTheme.set(prefs.theme);
         if (prefs.birthday) this.birthday.set(new Date(prefs.birthday));
+        if (prefs.phone) this.phone.set(prefs.phone);
 
         // Notifications & Privacy
         this.emailDigestEnabled.set(!!prefs.email_digest_enabled);
@@ -309,10 +310,11 @@ export class Settings {
         await this.auth.updateProfileData(this.displayName());
       }
 
-      // 2. Update Preferences (Birthday)
+      // 2. Update Preferences (Birthday, Phone)
       if (this.preferences) {
         const updates: any = {};
         if (this.birthday()) updates.birthday = this.birthday()?.toISOString();
+        if (this.phone()) updates.phone = this.phone();
 
         if (Object.keys(updates).length > 0) {
           this.preferenceService.updatePreferences(updates).subscribe();
@@ -387,7 +389,6 @@ export class Settings {
       });
     }
   }
-
 
   async sendPasswordReset() {
     if (this.email()) {
@@ -489,7 +490,9 @@ export class Settings {
   }
 
   handleImageError() {
-    console.warn('Settings: Falha ao carregar imagem de perfil. Usando iniciais.');
+    console.warn(
+      'Settings: Falha ao carregar imagem de perfil. Usando iniciais.',
+    );
     if (this.preferences) {
       // Local overwrite to force initial fallback in current session
       this.preferences.profile_image_url = undefined;

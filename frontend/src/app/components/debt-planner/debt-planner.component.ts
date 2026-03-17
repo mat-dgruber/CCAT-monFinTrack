@@ -6,7 +6,14 @@ import {
   computed,
   effect,
 } from '@angular/core';
-import { trigger, transition, style, animate, query, group } from '@angular/animations';
+import {
+  trigger,
+  transition,
+  style,
+  animate,
+  query,
+  group,
+} from '@angular/animations';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import {
@@ -114,38 +121,66 @@ import {
     trigger('tabAnimation', [
       transition(':increment', [
         style({ position: 'relative', overflow: 'hidden' }),
-        query(':enter, :leave', [
-          style({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-          })
-        ], { optional: true }),
-        query(':enter', [style({ left: '100%', opacity: 0 })], { optional: true }),
+        query(
+          ':enter, :leave',
+          [
+            style({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+            }),
+          ],
+          { optional: true },
+        ),
+        query(':enter', [style({ left: '100%', opacity: 0 })], {
+          optional: true,
+        }),
         group([
-          query(':leave', [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))], { optional: true }),
-          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
-        ])
+          query(
+            ':leave',
+            [animate('300ms ease-out', style({ left: '-100%', opacity: 0 }))],
+            { optional: true },
+          ),
+          query(
+            ':enter',
+            [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))],
+            { optional: true },
+          ),
+        ]),
       ]),
       transition(':decrement', [
         style({ position: 'relative', overflow: 'hidden' }),
-        query(':enter, :leave', [
-          style({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-          })
-        ], { optional: true }),
-        query(':enter', [style({ left: '-100%', opacity: 0 })], { optional: true }),
+        query(
+          ':enter, :leave',
+          [
+            style({
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+            }),
+          ],
+          { optional: true },
+        ),
+        query(':enter', [style({ left: '-100%', opacity: 0 })], {
+          optional: true,
+        }),
         group([
-          query(':leave', [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))], { optional: true }),
-          query(':enter', [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))], { optional: true })
-        ])
-      ])
-    ])
-  ]
+          query(
+            ':leave',
+            [animate('300ms ease-out', style({ left: '100%', opacity: 0 }))],
+            { optional: true },
+          ),
+          query(
+            ':enter',
+            [animate('300ms ease-out', style({ left: '0%', opacity: 1 }))],
+            { optional: true },
+          ),
+        ]),
+      ]),
+    ]),
+  ],
 })
 export class DebtPlannerComponent implements OnInit {
   private debtService = inject(DebtService);
@@ -1250,29 +1285,38 @@ export class DebtPlannerComponent implements OnInit {
     const monthlyRate = isMonthly ? rate : Math.pow(1 + rate, 1 / 12) - 1;
     const system = debt.amortization_system;
 
-    const extra = (this.extraAmortizationAmount || 0) + (this.useFGTS ? (this.fgtsAmount || 0) : 0);
+    const extra =
+      (this.extraAmortizationAmount || 0) +
+      (this.useFGTS ? this.fgtsAmount || 0 : 0);
     const newBalance = balance - extra;
 
     const table = [];
-    
+
     const originalInstallments = debt.remaining_installments || 1;
     let originalPMT = 0;
     if (system === AmortizationSystem.PRICE) {
-      originalPMT = (balance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -originalInstallments));
+      originalPMT =
+        (balance * monthlyRate) /
+        (1 - Math.pow(1 + monthlyRate, -originalInstallments));
     } else {
-      originalPMT = (balance / originalInstallments) + (balance * monthlyRate);
+      originalPMT = balance / originalInstallments + balance * monthlyRate;
     }
 
-    const newInstallments = res.reduce_term?.new_installments || originalInstallments;
+    const newInstallments =
+      res.reduce_term?.new_installments || originalInstallments;
     let newPMT = 0;
     if (system === AmortizationSystem.PRICE) {
-      newPMT = (newBalance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -newInstallments));
+      newPMT =
+        (newBalance * monthlyRate) /
+        (1 - Math.pow(1 + monthlyRate, -newInstallments));
     } else {
-      newPMT = (newBalance / newInstallments) + (newBalance * monthlyRate);
+      newPMT = newBalance / newInstallments + newBalance * monthlyRate;
     }
 
     const checkpoints = [1, 12, 24, 60, originalInstallments];
-    const uniqueCheckpoints = [...new Set(checkpoints.filter(c => c <= originalInstallments))].sort((a, b) => a - b);
+    const uniqueCheckpoints = [
+      ...new Set(checkpoints.filter((c) => c <= originalInstallments)),
+    ].sort((a, b) => a - b);
 
     for (const m of uniqueCheckpoints) {
       const isAfterNew = m > newInstallments;
@@ -1281,7 +1325,7 @@ export class DebtPlannerComponent implements OnInit {
         month: m,
         originalPMT: originalPMT,
         newPMT: isAfterNew ? 0 : newPMT,
-        status: isAfterNew ? 'ELIMINADA' : 'ATIVA'
+        status: isAfterNew ? 'ELIMINADA' : 'ATIVA',
       });
     }
 

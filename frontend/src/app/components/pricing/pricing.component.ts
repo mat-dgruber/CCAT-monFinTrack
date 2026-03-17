@@ -8,6 +8,21 @@ import { ToggleButtonModule } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionService } from '../../services/subscription.service';
 import { Router } from '@angular/router';
+import {
+  LucideAngularModule,
+  Check,
+  Zap,
+  Star,
+  Plus,
+  Rocket,
+  ShieldCheck,
+  MessagesSquare,
+  Sparkles,
+  TrendingUp,
+  Crown,
+} from 'lucide-angular';
+import * as AnimeJS from 'animejs';
+const anime: any = (AnimeJS as any).default ?? AnimeJS;
 
 @Component({
   selector: 'app-pricing',
@@ -19,16 +34,28 @@ import { Router } from '@angular/router';
     TagModule,
     ToggleButtonModule,
     FormsModule,
+    LucideAngularModule,
   ],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss',
 })
 export class PricingComponent {
+  readonly Check = Check;
+  readonly Zap = Zap;
+  readonly Star = Star;
+  readonly Plus = Plus;
+  readonly Rocket = Rocket;
+  readonly ShieldCheck = ShieldCheck;
+  readonly MessagesSquare = MessagesSquare;
+  readonly Sparkles = Sparkles;
+  readonly TrendingUp = TrendingUp;
+  readonly Crown = Crown;
+
   private paymentService = inject(PaymentService);
   private subscriptionService = inject(SubscriptionService);
   private router = inject(Router);
 
-  isAnnual = signal(false);
+  isAnnual = signal(true);
   loading = signal<string | null>(null);
 
   // Expose current tier to disable buttons
@@ -38,23 +65,60 @@ export class PricingComponent {
     free: [
       'Gestão de Transações Ilimitada',
       'Contas e Categorias Personalizáveis',
-      'Dashboard de Recorrências Básico',
+      'Dashboard Financeiro Essencial',
+      'Controle Manual de Gastos',
     ],
     pro: [
-      'Relatórios Mensais Detalhados',
-      'Chat com IA (Advisor Standard)',
-      'Gestão de Cartão de Crédito',
-      'Importação Inteligente (OFX/Excel)',
-      'Scanner de Recibos',
-      'Análise de Custo de Vida',
+      'Classificação Automática por IA',
+      'Até 50 scans/chats de IA por dia',
+      'Relatórios Mensais Inteligentes',
+      'Importação de OFX/Excel/CSV',
+      'Gestão Completa de Cartões',
+      'Advisor Financeiro Pessoal (IA)',
     ],
     premium: [
-      'Advisor com IA Avançada',
-      'Análise de Sentimento Financeiro',
-      'Caçador de Assinaturas (IA)',
-      'Modo Roast (Análise Sem Filtro)',
+      'Até 500 interações de IA por dia',
+      'Análise Proativa de Custo de Vida',
+      'Detector de Anomalias e Gastos Fantasmas',
+      'Caçador de Assinaturas Esquecidas',
+      'Modelos de IA de Alta Performance',
+      'Modo Roast (Análise Sarcástica de Gastos)',
     ],
   };
+
+  onCardMove(e: MouseEvent) {
+    const card = e.currentTarget as HTMLElement;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = (y - centerY) / 25;
+    const rotateY = (centerX - x) / 25;
+
+    anime({
+      targets: card,
+      rotateX: rotateX,
+      rotateY: rotateY,
+      scale: 1.02,
+      duration: 400,
+      easing: 'easeOutQuad',
+    });
+  }
+
+  onCardLeave(e: MouseEvent) {
+    const card = e.currentTarget as HTMLElement;
+    anime({
+      targets: card,
+      rotateX: 0,
+      rotateY: 0,
+      scale: 1,
+      duration: 600,
+      easing: 'easeOutElastic(1, .8)',
+    });
+  }
 
   async subscribe(plan: 'pro' | 'premium') {
     if (this.currentTier() === plan) return;

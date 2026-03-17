@@ -108,7 +108,9 @@ export class DebtService {
       .set('rate_monthly', rateMonthly.toString())
       .set('installment', installment.toString())
       .set('count', count.toString());
-    return this.http.get(`${this.apiUrl}/simulation/anticipate-multiple`, { params });
+    return this.http.get(`${this.apiUrl}/simulation/anticipate-multiple`, {
+      params,
+    });
   }
 
   /**
@@ -117,8 +119,8 @@ export class DebtService {
    */
   simulateRevolving(
     balance: number,
-    rateMonthly: number,         // em %, ex: 15.5
-    minimumPct: number = 15,     // em %, ex: 15
+    rateMonthly: number, // em %, ex: 15.5
+    minimumPct: number = 15, // em %, ex: 15
     fixedPayment: number = 0,
   ): Observable<any> {
     const params = new HttpParams()

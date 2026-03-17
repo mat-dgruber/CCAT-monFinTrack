@@ -40,7 +40,9 @@ describe('SubscriptionsDashboardComponent', () => {
     ]);
     const catSpy = jasmine.createSpyObj('CategoryService', ['getCategories']);
     const accSpy = jasmine.createSpyObj('AccountService', ['getAccounts']);
-    const confirmSpy = jasmine.createSpyObj('CustomConfirmService', ['confirm']);
+    const confirmSpy = jasmine.createSpyObj('CustomConfirmService', [
+      'confirm',
+    ]);
     const msgSpy = jasmine.createSpyObj('MessageService', ['add']);
     const aiSpy = jasmine.createSpyObj('AIService', [
       'getSubscriptionSuggestions',

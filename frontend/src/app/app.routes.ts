@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { Home } from './components/home/home';
-import { Login } from './components/login/login'; // Import login
+import { Login } from './components/login/login';
 import { EmailVerification } from './components/email-verification/email-verification';
 import { Terms } from './components/legal/terms/terms';
 import { PrivacyPolicy } from './components/legal/privacy-policy/privacy-policy';
@@ -14,22 +14,35 @@ import { TransactionManager } from './components/transaction-manager/transaction
 import { AdvancedGraphicsComponent } from './pages/advanced-graphics/advanced-graphics.component';
 import { FinancialCalendarComponent } from './components/financial-calendar/financial-calendar.component';
 import { SubscriptionsDashboardComponent } from './components/subscriptions-dashboard/subscriptions-dashboard.component';
-import { authGuard } from './guards/auth.guard'; // Import guard
+import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest-guard';
+import { LandingPage } from './components/landing-page/landing-page';
 
 export const routes: Routes = [
   {
+    path: '',
+    component: LandingPage,
+    canActivate: [guestGuard],
+    title: 'monFinTrack - Seu Assistente Financeiro com IA',
+    data: {
+      description:
+        'Organize suas finanças com o poder da Inteligência Artificial. Controle gastos, analise dívidas e receba insights personalizados.',
+    },
+  },
+  {
     path: 'login',
     component: Login,
-    title: 'Login',
+    canActivate: [guestGuard],
+    title: 'Login - monFinTrack',
     data: {
       description:
         'Acesse sua conta no monFinTrack e retome o controle das suas finanças.',
     },
   },
   {
-    path: '',
+    path: 'app',
     component: Home,
-    canActivate: [authGuard], // Protect the home shell
+    canActivate: [authGuard],
     children: [
       {
         path: '',
@@ -226,6 +239,18 @@ export const routes: Routes = [
         'Precisa de ajuda? Entre em contato com o suporte do monFinTrack.',
     },
   },
-  { path: 'transaction', redirectTo: 'transactions' },
+  { path: 'dashboard', redirectTo: 'app/dashboard', pathMatch: 'full' },
+  { path: 'transactions', redirectTo: 'app/transactions', pathMatch: 'full' },
+  { path: 'subscriptions', redirectTo: 'app/subscriptions', pathMatch: 'full' },
+  { path: 'debt-planner', redirectTo: 'app/debt-planner', pathMatch: 'full' },
+  { path: 'accounts', redirectTo: 'app/accounts', pathMatch: 'full' },
+  { path: 'categories', redirectTo: 'app/categories', pathMatch: 'full' },
+  { path: 'budgets', redirectTo: 'app/budgets', pathMatch: 'full' },
+  { path: 'invoices', redirectTo: 'app/invoices', pathMatch: 'full' },
+  { path: 'settings', redirectTo: 'app/settings', pathMatch: 'full' },
+  { path: 'cost-of-living', redirectTo: 'app/cost-of-living', pathMatch: 'full' },
+  { path: 'advanced-graphics', redirectTo: 'app/advanced-graphics', pathMatch: 'full' },
+  { path: 'pricing', redirectTo: 'app/pricing', pathMatch: 'full' },
+  { path: 'transaction', redirectTo: 'app/transactions' },
   { path: '**', redirectTo: '' },
 ];

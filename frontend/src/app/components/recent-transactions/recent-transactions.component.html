@@ -1,86 +1,135 @@
 <div class="w-full">
- @if (!compact) {
- <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
- <div>
- <h2 class="text-2xl font-bold text-color">Transações Recentes</h2>
- <p class="text-secondary">Últimas movimentações financeiras realizadas.</p>
- </div>
- <p-button label="Nova Transação" icon="pi pi-plus" (onClick)="openNewTransaction()"></p-button>
- </div>
- }
+  @if (!compact) {
+    <div
+      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+    >
+      <div>
+        <h2 class="text-2xl font-bold text-color">Transações Recentes</h2>
+        <p class="text-secondary">
+          Últimas movimentações financeiras realizadas.
+        </p>
+      </div>
+      <p-button
+        label="Nova Transação"
+        icon="pi pi-plus"
+        (onClick)="openNewTransaction()"
+      ></p-button>
+    </div>
+  }
 
- <div [class]="compact ? '' : 'bg-surface-card rounded-xl shadow-sm border border-surface-border p-6'">
- <div class="flex flex-col gap-6">
- @if (loading()) {
- @for (i of [1,2]; track i) {
- <div>
- <p-skeleton width="100px" styleClass="mb-3"></p-skeleton>
- <div class="flex flex-col gap-2">
- @for (j of [1,2]; track j) {
- <div class="flex items-center justify-between p-3 rounded-lg border border-gray-50 ">
- <div class="flex items-center gap-3">
- <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
- <div>
- <p-skeleton width="150px" styleClass="mb-2"></p-skeleton>
- <p-skeleton width="100px" height="0.8rem"></p-skeleton>
- </div>
- </div>
- <p-skeleton width="80px"></p-skeleton>
- </div>
- }
- </div>
- </div>
- }
- } @else {
- @for (group of groupedTransactions(); track group.date) {
- <div>
- <div class="text-sm font-medium text-secondary mb-3 uppercase tracking-wider pl-2 border-l-4 border-blue-100">
- {{ group.date }}
- </div>
+  <div
+    [class]="
+      compact
+        ? ''
+        : 'bg-surface-card rounded-xl shadow-sm border border-surface-border p-6'
+    "
+  >
+    <div class="flex flex-col gap-6">
+      @if (loading()) {
+        @for (i of [1, 2]; track i) {
+          <div>
+            <p-skeleton width="100px" styleClass="mb-3"></p-skeleton>
+            <div class="flex flex-col gap-2">
+              @for (j of [1, 2]; track j) {
+                <div
+                  class="flex items-center justify-between p-3 rounded-lg border border-gray-50"
+                >
+                  <div class="flex items-center gap-3">
+                    <p-skeleton shape="circle" size="2.5rem"></p-skeleton>
+                    <div>
+                      <p-skeleton width="150px" styleClass="mb-2"></p-skeleton>
+                      <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+                    </div>
+                  </div>
+                  <p-skeleton width="80px"></p-skeleton>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        @for (group of groupedTransactions(); track group.date) {
+          <div>
+            <div
+              class="text-sm font-medium text-secondary mb-3 uppercase tracking-wider pl-2 border-l-4 border-blue-100"
+            >
+              {{ group.date }}
+            </div>
 
- <div class="flex flex-col gap-2">
- @for (t of group.transactions; track t.id) {
- <div
- class="group flex items-center justify-between p-3 rounded-lg hover:bg-surface-ground dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-transparent hover:border-surface-border dark:hover:border-gray-600"
- (click)="editTransaction($event, t)">
- <!-- Left: Icon + Info -->
- <div class="flex items-center gap-3">
- <div class="w-10 h-10 rounded-full flex items-center justify-center bg-opacity-10"
- [style.backgroundColor]="t.category.color + '20'">
- <i [class]="t.category.icon" [style.color]="t.category.color"></i>
- </div>
+            <div class="flex flex-col gap-2">
+              @for (t of group.transactions; track t.id) {
+                <div
+                  class="group flex items-center justify-between p-3 rounded-lg hover:bg-surface-ground dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-transparent hover:border-surface-border dark:hover:border-gray-600"
+                  (click)="editTransaction($event, t)"
+                >
+                  <!-- Left: Icon + Info -->
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-10 h-10 rounded-full flex items-center justify-center bg-opacity-10"
+                      [style.backgroundColor]="t.category.color + '20'"
+                    >
+                      <i
+                        [class]="t.category.icon"
+                        [style.color]="t.category.color"
+                      ></i>
+                    </div>
 
- <div class="flex flex-col">
- <span class="font-medium text-color" [pTooltip]="t.description">
- {{ (t.title || '').split(' | REF:')[0] }}
- </span>
- <span class="text-xs text-secondary">{{ t.category.name }} •
- {{ t.payment_method | paymentFormat }}</span>
- </div>
- </div>
+                    <div class="flex flex-col">
+                      <span
+                        class="font-medium text-color"
+                        [pTooltip]="t.description"
+                      >
+                        {{ (t.title || "").split(" | REF:")[0] }}
+                      </span>
+                      <span class="text-xs text-secondary"
+                        >{{ t.category.name }} •
+                        {{ t.payment_method | paymentFormat }}</span
+                      >
+                    </div>
+                  </div>
 
- <!-- Right: Amount + Arrow -->
- <div class="flex items-center gap-4 shrink-0 text-right">
- <span class="font-bold whitespace-nowrap"
- [class]="(t.category.is_hidden || t.category.name === 'Fatura Cartão') ? 'text-secondary font-bold' : (t.type === 'expense' ? 'text-red-500' : 'text-green-500')">
- {{ (t.category.is_hidden || t.category.name === 'Fatura Cartão') ? '-' : (t.type === 'expense' ? "-" : "+") }}
- {{ t.amount | currency : "BRL" }}
- </span>
+                  <!-- Right: Amount + Arrow -->
+                  <div class="flex items-center gap-4 shrink-0 text-right">
+                    <span
+                      class="font-bold whitespace-nowrap"
+                      [class]="
+                        t.category.is_hidden ||
+                        t.category.name === 'Fatura Cartão'
+                          ? 'text-secondary font-bold'
+                          : t.type === 'expense'
+                            ? 'text-red-500'
+                            : 'text-green-500'
+                      "
+                    >
+                      {{
+                        t.category.is_hidden ||
+                        t.category.name === "Fatura Cartão"
+                          ? "-"
+                          : t.type === "expense"
+                            ? "-"
+                            : "+"
+                      }}
+                      {{ t.amount | currency: "BRL" }}
+                    </span>
 
- <i class="pi pi-chevron-right text-gray-300 group-hover:text-secondary transition-colors"></i>
- </div>
- </div>
- }
- </div>
- </div>
- } @empty {
- <div class="text-center text-secondary py-8 italic">
- Nenhuma transação recente.
- </div>
- }
- }
- </div>
- </div>
+                    <i
+                      class="pi pi-chevron-right text-gray-300 group-hover:text-secondary transition-colors"
+                    ></i>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="text-center text-secondary py-8 italic">
+            Nenhuma transação recente.
+          </div>
+        }
+      }
+    </div>
+  </div>
 
- <app-transaction-form (save)="loadRecentTransactions()"></app-transaction-form>
+  <app-transaction-form
+    (save)="loadRecentTransactions()"
+  ></app-transaction-form>
 </div>

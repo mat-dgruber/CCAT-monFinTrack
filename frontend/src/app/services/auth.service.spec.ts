@@ -1,6 +1,9 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { AuthService } from './auth.service';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { FirebaseWrapperService } from './firebase-wrapper.service';
 import { Router } from '@angular/router';
 import { User, UserCredential } from 'firebase/auth';
@@ -61,7 +64,7 @@ describe('AuthService', () => {
 
     // Trigger login
     callback(mockUser);
-    
+
     // AuthService calls setupUser() which does a POST /api/users/setup
     const req = httpMock.expectOne(`${environment.apiUrl}/users/setup`);
     expect(req.request.method).toBe('POST');
@@ -79,7 +82,11 @@ describe('AuthService', () => {
   }));
 
   it('should register a new user', fakeAsync(() => {
-    const mockUser = { uid: 'new', emailVerified: false, email: 'test@test.com' } as User;
+    const mockUser = {
+      uid: 'new',
+      emailVerified: false,
+      email: 'test@test.com',
+    } as User;
     const mockCredential = { user: mockUser } as UserCredential;
     firebaseWrapperSpy.createUserWithEmailAndPassword.and.resolveTo(
       mockCredential,
@@ -88,7 +95,9 @@ describe('AuthService', () => {
     firebaseWrapperSpy.signOut.and.resolveTo();
 
     let result: any;
-    service.register('test@test.com', 'pass', 'Test User').then(res => result = res);
+    service
+      .register('test@test.com', 'pass', 'Test User')
+      .then((res) => (result = res));
 
     tick(); // Wait for createUserWithEmailAndPassword and updateProfile
 
@@ -109,7 +118,9 @@ describe('AuthService', () => {
   }));
 
   it('should login a user', async () => {
-    const mockCredential = { user: { uid: '123', emailVerified: true } } as UserCredential;
+    const mockCredential = {
+      user: { uid: '123', emailVerified: true },
+    } as UserCredential;
     firebaseWrapperSpy.signInWithEmailAndPassword.and.resolveTo(mockCredential);
 
     const result = await service.login('test@test.com', 'pass');
@@ -122,11 +133,15 @@ describe('AuthService', () => {
   });
 
   it('should throw error if email not verified on login', async () => {
-    const mockCredential = { user: { uid: '123', emailVerified: false } } as UserCredential;
+    const mockCredential = {
+      user: { uid: '123', emailVerified: false },
+    } as UserCredential;
     firebaseWrapperSpy.signInWithEmailAndPassword.and.resolveTo(mockCredential);
     firebaseWrapperSpy.signOut.and.resolveTo();
 
-    await expectAsync(service.login('test@test.com', 'pass')).toBeRejectedWithError(/E-mail não verificado/);
+    await expectAsync(
+      service.login('test@test.com', 'pass'),
+    ).toBeRejectedWithError(/E-mail não verificado/);
     expect(firebaseWrapperSpy.signOut).toHaveBeenCalled();
   });
 
