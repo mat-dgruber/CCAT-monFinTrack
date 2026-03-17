@@ -99,53 +99,82 @@
           </div>
 
           <div
-            class="flex flex-wrap justify-between items-end text-sm mb-2 gap-1"
+            class="flex flex-wrap justify-between items-end text-sm mb-4 gap-2"
           >
             <div class="flex flex-col min-w-0">
               <span
-                class="text-[10px] text-secondary uppercase tracking-wider font-medium"
-                >Gasto</span
+                class="text-[10px] text-secondary uppercase tracking-widest font-bold"
+                >Gasto Atual</span
               >
               <strong
                 [class.text-red-500]="b.is_over_budget"
-                [class.dark:text-red-400]="b.is_over_budget"
-                class="text-color text-base truncate"
+                class="text-color text-xl font-extrabold tracking-tight truncate"
               >
                 {{ b.spent | currency: "BRL" }}
               </strong>
             </div>
             <div class="flex flex-col items-end shrink-0">
               <span
-                class="text-[10px] text-secondary uppercase tracking-wider font-medium"
+                class="text-[10px] text-secondary uppercase tracking-widest font-bold"
                 >Meta</span
               >
-              <strong class="text-color opacity-70 font-medium text-sm">
+              <strong class="text-color opacity-60 font-bold text-sm">
                 {{ b.amount | currency: "BRL" }}
               </strong>
             </div>
           </div>
 
           <div class="relative pt-1">
-            <div
-              class="overflow-hidden h-2.5 mb-1 text-xs flex rounded bg-surface-hover dark:bg-gray-700"
-            >
+            <div class="flex justify-between items-center mb-2">
+              <span
+                class="text-[10px] font-bold uppercase tracking-tighter"
+                [style.color]="getProgressColor(b.percentage || 0)"
+              >
+                @if (b.percentage! >= 100) {
+                  <i class="pi pi-exclamation-circle mr-1"></i> Limite Excedido
+                } @else if (b.percentage! >= 80) {
+                  <i class="pi pi-info-circle mr-1"></i> Próximo ao Limite
+                } @else {
+                  <i class="pi pi-check-circle mr-1"></i> Dentro da Meta
+                }
+              </span>
               <div
-                [style.width.%]="b.percentage! > 100 ? 100 : b.percentage"
-                [class.over-budget-progress]="b.percentage! > 100"
-                [style.backgroundColor]="getProgressColor(b.percentage || 0)"
-                class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500"
-              ></div>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-[10px] text-secondary font-medium uppercase">{{
-                b.percentage! > 100 ? "Limite Excedido" : "Uso do Orçamento"
-              }}</span>
-              <div
-                class="text-xs font-bold"
+                class="text-xs font-black"
                 [style.color]="getProgressColor(b.percentage || 0)"
               >
                 {{ b.percentage | number: "1.0-0" }}%
               </div>
+            </div>
+
+            <div
+              class="overflow-hidden h-3 mb-3 flex rounded-full bg-surface-hover shadow-inner"
+            >
+              <div
+                [style.width.%]="b.percentage! > 100 ? 100 : b.percentage"
+                [class.animate-pulse]="b.percentage! > 100"
+                [style.backgroundColor]="getProgressColor(b.percentage || 0)"
+                class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-700 ease-out"
+              ></div>
+            </div>
+
+            <div
+              class="flex justify-between items-center p-2 rounded-lg bg-surface-ground/50 border border-surface-border/30"
+            >
+              @if (b.percentage! < 100) {
+                <span class="text-[10px] text-secondary uppercase font-bold"
+                  >Restante</span
+                >
+                <span class="text-xs font-bold text-green-600">{{
+                  b.amount - b.spent | currency: "BRL"
+                }}</span>
+              } @else {
+                <span class="text-[10px] text-red-500 uppercase font-bold"
+                  >Excedido em</span
+                >
+                <span class="text-xs font-bold text-red-600">{{
+                  b.spent - b.amount | currency: "BRL"
+                }}</span>
+              }
             </div>
           </div>
         </div>

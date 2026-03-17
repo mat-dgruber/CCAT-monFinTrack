@@ -16,13 +16,15 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select'; // Novo Dropdown (v18+)
-import { MessageService } from 'primeng/api';
+import { MessageService, MenuItem } from 'primeng/api';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePickerModule } from 'primeng/datepicker';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { MenuModule } from 'primeng/menu';
+import { TagModule } from 'primeng/tag';
 
 // Serviços e Modelos
 import { AccountService } from '../../services/account.service';
@@ -57,6 +59,8 @@ import { PageHelpComponent } from '../page-help/page-help';
     IconFieldModule,
     InputIconModule,
     PageHelpComponent,
+    MenuModule,
+    TagModule,
   ],
   templateUrl: './account-manager.html',
   styleUrl: './account-manager.scss',
@@ -190,6 +194,49 @@ export class AccountManager implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  // --- Métodos de UI ---
+
+  getAccountTypeSeverity(type: string): any {
+    switch (type) {
+      case 'checking':
+        return 'success';
+      case 'savings':
+        return 'info';
+      case 'credit_card':
+        return 'danger';
+      case 'investment':
+        return 'warn';
+      default:
+        return 'secondary';
+    }
+  }
+
+  getAccountMenuItems(acc: Account, event: Event): MenuItem[] {
+    return [
+      {
+        label: 'Ações da Conta',
+        items: [
+          {
+            label: 'Editar Conta',
+            icon: 'pi pi-pencil',
+            command: () => this.editAccount(event, acc),
+          },
+          {
+            label: 'Transferir Saldo',
+            icon: 'pi pi-arrow-right-arrow-left',
+            command: () => this.openTransfer(event, acc),
+          },
+          {
+            label: 'Excluir Conta',
+            icon: 'pi pi-trash',
+            className: 'text-red-600',
+            command: () => this.deleteAccount(event, acc.id!),
+          },
+        ],
+      },
+    ];
   }
 
   // Abrir modal para Nova Conta

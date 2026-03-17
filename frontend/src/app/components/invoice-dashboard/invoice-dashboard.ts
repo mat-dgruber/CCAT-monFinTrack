@@ -77,9 +77,46 @@ export class InvoiceDashboard implements OnInit {
   paymentVisible = signal(false);
   selectedInvoice = signal<InvoiceSummary | null>(null);
   accounts = signal<Account[]>([]);
-  selectedAccount: string | null = null;
+  selectedAccount = signal<string | null>(null); // Transformado em signal
   paymentDate: Date = new Date();
   paymentLoading = signal(false);
+
+  selectedAccountBalance = computed(() => {
+    const accId = this.selectedAccount();
+    if (!accId) return null;
+    return this.accounts().find((a) => a.id === accId)?.balance || 0;
+  });
+
+  getDaysRemaining(dueDateStr: string): { days: number; text: string } {
+    const dueDate = new Date(dueDateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return { days: 0, text: 'Vence hoje!' };
+    if (diffDays === 1) return { days: 1, text: 'Vence amanhã' };
+    if (diffDays < 0)
+      return { days: diffDays, text: `Atrasada há ${Math.abs(diffDays)} dias` };
+    return { days: diffDays, text: `Vence em ${diffDays} dias` };
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'open':
+        return '#22c55e'; // Green
+      case 'closed':
+        return '#3b82f6'; // Blue
+      case 'overdue':
+        return '#ef4444'; // Red
+      case 'paid':
+        return '#10b981'; // Teal
+      default:
+        return '#6b7280'; // Gray
+    }
+  }
 
   constructor() {
     effect(() => {
@@ -128,7 +165,7 @@ export class InvoiceDashboard implements OnInit {
   openPaymentDialog(invoice: InvoiceSummary) {
     this.selectedInvoice.set(invoice);
     this.paymentDate = new Date();
-    this.selectedAccount = null; // Reset selection
+    this.selectedAccount.set(null); // Reset selection
 
     // Tentar auto-selecionar a conta "mãe" se possível, mas aqui invoice.account_id é a conta do cartão.
     // Se a conta do cartão for "Nubank", e houver uma conta "Nubank" (checking), talvez seja a mesma?
@@ -140,14 +177,14 @@ export class InvoiceDashboard implements OnInit {
       (a) => a.id === invoice.account_id,
     );
     if (motherAccount) {
-      this.selectedAccount = motherAccount.id!;
+      this.selectedAccount.set(motherAccount.id!);
     }
 
     this.paymentVisible.set(true);
   }
 
   confirmPayment() {
-    if (!this.selectedAccount || !this.selectedInvoice()) {
+    if (!this.selectedAccount() || !this.selectedInvoice()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Atenção',
@@ -163,7 +200,7 @@ export class InvoiceDashboard implements OnInit {
       .payInvoice({
         credit_card_id: inv.credit_card_id,
         amount: inv.amount,
-        source_account_id: this.selectedAccount,
+        source_account_id: this.selectedAccount()!,
         description: `Pagamento Fatura ${inv.card_name}`,
         payment_date: this.paymentDate.toISOString(),
         month: inv.month,
