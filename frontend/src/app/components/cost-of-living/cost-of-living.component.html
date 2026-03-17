@@ -68,97 +68,105 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Average Realized (Variable) -->
         <div
-          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border hover:border-nav-active-text transition-colors"
+          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border hover:border-primary/50 transition-all hover:shadow-md group"
         >
           <div class="flex justify-between items-start mb-4">
-            <span class="text-secondary font-medium text-sm"
+            <span class="text-secondary font-black text-[10px] uppercase tracking-widest"
               >Custo Variável <br />(Média)</span
             >
             <div
-              class="bg-nav-active/10 w-10 h-10 flex items-center justify-center rounded-xl"
+              class="bg-primary/10 w-10 h-10 flex items-center justify-center rounded-xl group-hover:scale-110 transition-transform"
             >
-              <i class="pi pi-wallet text-nav-active-text"></i>
+              <i class="pi pi-wallet text-primary text-sm"></i>
             </div>
           </div>
-          <div class="text-color font-bold text-2xl mb-1">
+          <div class="text-color font-black text-2xl mb-1 tracking-tighter">
             {{ data()?.realized?.average_total | currency: "BRL" }}
           </div>
-          <span class="text-xs text-secondary"
-            >Baseado nos últimos
-            {{ data()?.range?.months_count | number: "1.0-0" }} meses</span
-          >
+          <div class="flex items-center gap-1.5 mt-2">
+            <span class="text-[10px] font-bold text-secondary tracking-tight opacity-60"
+              >Últimos
+              {{ data()?.range?.months_count | number: "1.0-0" }} meses</span
+            >
+          </div>
         </div>
 
         <!-- Committed Cost (Fixed) -->
         <div
-          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border hover:border-green-500 transition-colors"
+          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border hover:border-emerald-500/50 transition-all hover:shadow-md group"
         >
           <div class="flex justify-between items-start mb-4">
-            <span class="text-secondary font-medium text-sm"
+            <span class="text-secondary font-black text-[10px] uppercase tracking-widest"
               >Custo Fixo <br />(Recorrente)</span
             >
             <div
-              class="bg-green-100 dark:bg-green-900/30 w-10 h-10 flex items-center justify-center rounded-xl"
+              class="bg-emerald-500/10 w-10 h-10 flex items-center justify-center rounded-xl group-hover:scale-110 transition-transform"
             >
-              <i class="pi pi-calendar-times text-green-500"></i>
+              <i class="pi pi-calendar-times text-emerald-500 text-sm"></i>
             </div>
           </div>
-          <div class="text-color font-bold text-2xl mb-1">
+          <div class="text-color font-black text-2xl mb-1 tracking-tighter">
             {{ data()?.committed?.total | currency: "BRL" }}
           </div>
-          <span class="text-xs text-secondary"
-            >Total em assinaturas e contas fixas</span
+          <span class="text-[10px] font-bold text-secondary tracking-tight opacity-60"
+            >Assinaturas e parcelas fixas</span
           >
         </div>
 
         <!-- Savings Capacity -->
         <div
-          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border hover:border-accent transition-colors"
+          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border hover:border-amber-500/50 transition-all hover:shadow-md group"
         >
           <div class="flex justify-between items-start mb-4">
-            <span class="text-secondary font-medium text-sm"
+            <span class="text-secondary font-black text-[10px] uppercase tracking-widest"
               >Capacidade de Poupança</span
             >
             <div
-              class="bg-accent-bg w-10 h-10 flex items-center justify-center rounded-xl"
+              class="bg-amber-500/10 w-10 h-10 flex items-center justify-center rounded-xl group-hover:scale-110 transition-transform"
             >
-              <i class="pi pi-chart-line text-accent"></i>
+              <i class="pi pi-chart-line text-amber-500 text-sm"></i>
             </div>
           </div>
           <div
-            class="text-color font-bold text-2xl mb-1"
-            [class.text-green-500]="savingsRate() > 20"
-            [class.text-orange-500]="savingsRate() <= 10"
+            class="text-color font-black text-2xl mb-1 tracking-tighter"
+            [class.text-emerald-500]="savingsRate() > 20"
+            [class.text-amber-500]="savingsRate() <= 10"
           >
             {{ savingsCapacity() | currency: "BRL" }}
           </div>
-          <div class="flex items-center gap-1">
-            <span
-              class="text-xs font-semibold px-1.5 py-0.5 rounded bg-surface-ground text-color"
-            >
-              {{ savingsRate() | number: "1.0-1" }}% da renda
-            </span>
+          <div class="flex items-center gap-1.5 mt-1">
+            <p-tag
+              [value]="(savingsRate() | number: '1.0-1') + '% da renda'"
+              [severity]="savingsRate() > 20 ? 'success' : 'warn'"
+              [rounded]="true"
+              styleClass="text-[9px] font-black px-2"
+            ></p-tag>
           </div>
         </div>
 
         <!-- Total Estimated Cost -->
         <div
-          class="bg-surface-card p-6 rounded-2xl shadow-sm border border-surface-border bg-gradient-to-br from-surface-card to-nav-active/5"
+          class="p-6 rounded-2xl shadow-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden group"
         >
+          <div class="absolute -right-4 -top-4 opacity-5 rotate-12 transition-transform group-hover:scale-110">
+             <i class="pi pi-bolt text-8xl text-primary"></i>
+          </div>
           <div class="flex justify-between items-start mb-4">
-            <span class="text-secondary font-medium text-sm"
-              >Custo de Vida Estimado</span
+            <span class="text-primary font-black text-[10px] uppercase tracking-widest"
+              >Custo de Vida Total</span
             >
             <div
-              class="bg-primary/10 w-10 h-10 flex items-center justify-center rounded-xl"
+              class="bg-primary w-8 h-8 flex items-center justify-center rounded-lg shadow-sm"
             >
-              <i class="pi pi-bolt text-primary"></i>
+              <i class="pi pi-bolt text-white text-xs"></i>
             </div>
           </div>
-          <div class="text-color font-black text-2xl mb-1">
+          <div class="text-color font-black text-3xl mb-1 tracking-tighter">
             {{ totalMonthlyCost() | currency: "BRL" }}
           </div>
-          <span class="text-xs text-secondary">Total mensal projetado</span>
+          <span class="text-[10px] font-bold text-primary opacity-60"
+            >Mensal projetado</span
+          >
         </div>
       </div>
 
@@ -444,69 +452,74 @@
 
             <!-- FIRE (Financial Independence) -->
             <p-tabpanel [value]="2">
-              <div class="p-6 max-w-4xl mx-auto animate-fade-in-up">
-                <div class="text-center mb-10">
-                  <h2 class="text-2xl font-bold mb-2">
-                    Seu "Número da Liberdade"
-                  </h2>
-                  <p class="text-secondary">
-                    O quanto você precisa investido para viver apenas de
-                    rendimentos.
-                  </p>
+              <div class="p-6 max-w-5xl mx-auto animate-fade-in-up">
+                <div class="text-center mb-12">
+                  <h2 class="text-3xl font-black mb-2 tracking-tighter text-color">Seu "Número da Liberdade"</h2>
+                  <p class="text-secondary font-medium">O quanto você precisa investido para viver apenas de rendimentos passivos.</p>
                 </div>
 
                 <div
-                  class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
+                  class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch"
                 >
                   <div
-                    class="bg-primary/5 p-8 rounded-3xl border-2 border-primary/10 text-center"
+                    class="lg:col-span-3 bg-gradient-to-br from-amber-400/10 via-amber-500/5 to-transparent p-10 rounded-[2.5rem] border border-amber-500/20 text-center relative overflow-hidden shadow-inner group"
                   >
-                    <div class="text-primary text-sm font-bold uppercase mb-2">
-                      Meta de Patrimônio
+                    <div class="absolute -right-10 -bottom-10 opacity-5 rotate-12 transition-transform group-hover:scale-110">
+                       <i class="pi pi-briefcase text-[15rem] text-amber-500"></i>
                     </div>
-                    <div class="text-4xl font-black text-emphasis mb-4">
+                    
+                    <div class="inline-flex items-center gap-2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 shadow-lg shadow-amber-500/20">
+                      <i class="pi pi-star-fill text-[8px]"></i> Patrimônio Alvo <i class="pi pi-star-fill text-[8px]"></i>
+                    </div>
+                    
+                    <div class="text-6xl font-black text-emphasis mb-6 tracking-tighter drop-shadow-sm">
                       {{ fireNumber() | currency: "BRL" }}
                     </div>
-                    <p class="text-xs text-secondary leading-relaxed">
-                      Baseado na Regra dos 4%, este valor permite retiradas
-                      mensais equivalentes ao seu custo de vida atual de
-                      {{ totalMonthlyCost() | currency: "BRL" }} sem esgotar o
-                      capital.
-                    </p>
+                    
+                    <div class="max-w-md mx-auto p-4 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-2xl border border-amber-500/10">
+                       <p class="text-xs text-amber-900/80 dark:text-amber-200/80 leading-relaxed font-medium m-0">
+                        Baseado na <strong>Regra dos 4%</strong>, este capital permite retiradas mensais perpétuas de 
+                        <span class="text-amber-600 dark:text-amber-400 font-bold">{{ totalMonthlyCost() | currency: "BRL" }}</span>,
+                        cobrindo seu custo de vida atual sem reduzir seu patrimônio.
+                      </p>
+                    </div>
                   </div>
 
-                  <div class="space-y-8">
-                    <div>
-                      <h4 class="font-bold mb-4 flex items-center gap-2">
-                        <i class="pi pi-hourglass text-accent"></i>
-                        Horizonte de Tempo
+                  <div class="lg:col-span-2 flex flex-col gap-6">
+                    <div class="p-8 bg-surface-card rounded-[2rem] border border-surface-border shadow-sm flex-1 flex flex-col justify-center">
+                      <h4 class="text-[10px] font-black text-secondary uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <i class="pi pi-hourglass text-primary"></i>
+                        Tempo Restante
                       </h4>
-                      <div class="text-3xl font-bold mb-1">
+                      <div class="text-5xl font-black mb-2 tracking-tighter text-color">
                         @if (yearsToFire() === Infinity) {
                           Indefinido
                         } @else {
-                          {{ yearsToFire() | number: "1.0-1" }} anos
+                          {{ yearsToFire() | number: "1.0-1" }} <span class="text-2xl opacity-40">anos</span>
                         }
                       </div>
-                      <p class="text-sm text-secondary">
-                        Tempo estimado para atingir a meta mantendo sua
-                        capacidade de poupança atual de
-                        {{ savingsCapacity() | currency: "BRL" }}.
+                      <p class="text-xs text-secondary font-medium leading-tight">
+                        Estimativa para atingir a meta poupando 
+                        <span class="text-primary font-bold">{{ savingsCapacity() | currency: "BRL" }}</span> mensais.
                       </p>
                     </div>
 
                     <div
-                      class="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/20"
+                      class="p-6 bg-amber-500/5 rounded-2xl border border-amber-500/20 flex gap-4 items-start"
                     >
-                      <div
-                        class="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1 uppercase tracking-tighter"
-                      >
-                        Dica de Especialista
+                      <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                         <i class="pi pi-lightbulb text-amber-600"></i>
                       </div>
-                      <p class="text-xs text-amber-900 dark:text-amber-300 m-0">
-                        Cada R$ 100,00 que você economiza no seu custo de vida
-                        mensal reduz sua meta de liberdade em R$ 30.000,00.
-                      </p>
+                      <div class="flex flex-col gap-1">
+                        <div
+                          class="text-[10px] font-black text-amber-600 uppercase tracking-widest"
+                        >
+                          Efeito Alavanca
+                        </div>
+                        <p class="text-xs text-amber-900/70 dark:text-amber-200/70 m-0 font-medium leading-snug">
+                          Cada R$ 100,00 reduzidos no seu custo mensal diminuem sua meta de liberdade em <strong>R$ 30.000,00</strong>.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

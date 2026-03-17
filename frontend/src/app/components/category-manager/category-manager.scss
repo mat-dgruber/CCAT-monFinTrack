@@ -1,5 +1,8 @@
 :host ::ng-deep {
   .p-datatable {
+    border-radius: 1.5rem;
+    overflow: hidden;
+
     .p-datatable-header {
       background: var(--surface-card);
       color: var(--text-color);
@@ -34,5 +37,39 @@
     .p-datatable-tbody > tr:not(.p-rowgroup-header):hover {
       background: var(--surface-hover) !important;
     }
+  }
+
+  .p-menu {
+    border-radius: 1rem;
+    padding: 0.5rem;
+    box-shadow: var(--shadow-elegant);
+    border-color: var(--surface-border);
+
+    .p-menu-item {
+      .p-menu-item-link {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        transition: var(--transition-smooth);
+
+        &:hover {
+          background-color: var(--surface-hover);
+        }
+      }
+    }
+  }
+}
+
+.animate-fadein {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

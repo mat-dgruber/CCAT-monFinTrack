@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -9,12 +9,14 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { SelectModule } from 'primeng/select';
-import { MessageService } from 'primeng/api';
+import { MessageService, MenuItem } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { MenuModule } from 'primeng/menu';
+import { TagModule } from 'primeng/tag';
 
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
@@ -26,6 +28,7 @@ import { PageHelpComponent } from '../page-help/page-help';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     ButtonModule,
     DialogModule,
@@ -38,6 +41,8 @@ import { PageHelpComponent } from '../page-help/page-help';
     IconFieldModule,
     InputIconModule,
     PageHelpComponent,
+    MenuModule,
+    TagModule,
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss',
@@ -52,6 +57,7 @@ export class CategoryManager implements OnInit {
   loading = signal(true);
   visible = signal(false);
   editingId = signal<string | null>(null);
+  searchTerm = signal('');
 
   // Computed flat list for the dropdown (only potential parents)
   flatCategories = computed(() => {
@@ -68,9 +74,11 @@ export class CategoryManager implements OnInit {
     return result;
   });
 
-  // Flat list for Row Group Table
+  // Flat list for Row Group Table (Filtered)
   tableData = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
     const result: any[] = [];
+
     // Sort categories by type then name
     const sortedCats = [...this.categories()].sort((a, b) => {
       if (a.type !== b.type) return a.type.localeCompare(b.type);
@@ -78,18 +86,104 @@ export class CategoryManager implements OnInit {
     });
 
     for (const cat of sortedCats) {
-      // Always add parent as a header/placeholder
-      // IMPORTANT: Add 'parent: cat' so that row grouping works and 'row.parent' is not undefined
-      result.push({ ...cat, parent: cat, isPlaceholder: true });
+      const parentMatches = cat.name.toLowerCase().includes(term);
+      const filteredSubs =
+        cat.subcategories?.filter((s) => s.name.toLowerCase().includes(term)) ||
+        [];
 
-      if (cat.subcategories && cat.subcategories.length > 0) {
-        for (const sub of cat.subcategories) {
+      // Se o pai combina OU qualquer filho combina, adicionamos o grupo
+      if (parentMatches || filteredSubs.length > 0) {
+        // Placeholder do header (pai)
+        result.push({ ...cat, parent: cat, isPlaceholder: true });
+
+        // Se o termo de busca estiver vazio ou o pai combinar, mostramos todos os filhos?
+        // Não, mostramos apenas os que combinam (se houver termo) ou todos (se vazio).
+        const subsToShow = term ? filteredSubs : cat.subcategories || [];
+
+        for (const sub of subsToShow) {
           result.push({ ...sub, parent: cat, isPlaceholder: false });
         }
       }
     }
     return result;
   });
+
+  filteredCategories = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    if (!term) return this.categories();
+
+    return this.categories()
+      .map((cat) => {
+        const parentMatches = cat.name.toLowerCase().includes(term);
+        const filteredSubs =
+          cat.subcategories?.filter((s) =>
+            s.name.toLowerCase().includes(term),
+          ) || [];
+
+        if (parentMatches || filteredSubs.length > 0) {
+          return { ...cat, subcategories: filteredSubs };
+        }
+        return null;
+      })
+      .filter((c) => c !== null) as Category[];
+  });
+
+  // --- Métodos de UI ---
+
+  getCategoryTypeSeverity(type: string): any {
+    return type === 'income' ? 'success' : 'danger';
+  }
+
+  getCategoryMenuItems(cat: Category): MenuItem[] {
+    return [
+      {
+        label: 'Ações',
+        items: [
+          {
+            label: 'Editar',
+            icon: 'pi pi-pencil',
+            command: () => this.editCategory(cat),
+          },
+          {
+            label: 'Excluir',
+            icon: 'pi pi-trash',
+            className: 'text-red-600',
+            command: () => this.deleteCategoryForMenu(cat.id!),
+          },
+        ],
+      },
+    ];
+  }
+
+  private deleteCategoryForMenu(id: string) {
+    this.confirmationService.confirm({
+      message: 'Apagar esta categoria?',
+      header: 'Confirmar Exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      accept: () => {
+        this.categoryService.deleteCategory(id).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Categoria Excluída',
+            });
+            this.loadCategories();
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: err.error?.detail || 'Não foi possível excluir',
+            });
+          },
+        });
+      },
+    });
+  }
 
   // LISTA DE ÍCONES PARA O HTML
   icons = ICON_LIST;

@@ -336,6 +336,9 @@ export class CostOfLivingComponent implements OnInit {
           data: values,
           backgroundColor: colors,
           hoverBackgroundColor: colors,
+          borderWidth: 0,
+          borderRadius: 4,
+          spacing: 2,
         },
       ],
     });
@@ -344,12 +347,37 @@ export class CostOfLivingComponent implements OnInit {
     const textColor = documentStyle.getPropertyValue('--text-color');
 
     this.breakdownChartOptions.set({
+      cutout: '70%',
       plugins: {
         legend: {
           position: 'right',
           labels: {
             usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 20,
             color: textColor,
+            font: {
+              size: 11,
+              weight: 'bold',
+            },
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          callbacks: {
+            label: (context: any) => {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce(
+                (a: number, b: number) => a + b,
+                0,
+              );
+              const percentage = ((value / total) * 100).toFixed(1);
+              return ` ${label}: R$ ${value.toLocaleString('pt-BR')} (${percentage}%)`;
+            },
           },
         },
       },
@@ -379,46 +407,57 @@ export class CostOfLivingComponent implements OnInit {
       current = current * (1 + rate);
     }
 
+    const documentStyle = getComputedStyle(document.documentElement);
+    const primaryColor = documentStyle.getPropertyValue('--p-primary-500') || '#3b82f6';
+    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
     this.projectionChartData.set({
       labels: labels,
       datasets: [
         {
           label: 'Custo Mensal Projetado',
           data: values,
-          fill: true,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          fill: 'start',
+          borderColor: primaryColor,
+          backgroundColor: primaryColor + '15',
           tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: primaryColor,
+          borderWidth: 3,
         },
       ],
     });
 
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--text-color');
-    const textColorSecondary = documentStyle.getPropertyValue(
-      '--text-color-secondary',
-    );
-    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-
     this.projectionChartOptions.set({
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: textColor },
+          display: false,
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+          padding: 12,
         },
       },
       scales: {
         y: {
-          ticks: { color: textColorSecondary },
-          grid: { color: surfaceBorder },
+          ticks: {
+            color: textColorSecondary,
+            callback: (value: any) => 'R$ ' + value.toLocaleString('pt-BR'),
+          },
+          grid: { color: surfaceBorder, drawBorder: false },
         },
         x: {
           ticks: { color: textColorSecondary },
-          grid: { color: surfaceBorder },
+          grid: { display: false },
         },
       },
     });
   }
-
   getYearlyProjection(yearOffset: number): number {
     const base = this.baseMonthlyCost();
     const rate = this.inflationRate() / 100;
@@ -426,23 +465,24 @@ export class CostOfLivingComponent implements OnInit {
   }
 
   generateColors(count: number): string[] {
-    // Simple palette generation or preset
-    const colors = [
-      '#3b82f6',
-      '#ef4444',
-      '#10b981',
-      '#f59e0b',
-      '#8b5cf6',
-      '#ec4899',
-      '#6366f1',
-      '#14b8a6',
-      '#f97316',
-      '#64748b',
+    const documentStyle = getComputedStyle(document.documentElement);
+    const baseColors = [
+      '--p-primary-500',
+      '--p-emerald-500',
+      '--p-amber-500',
+      '--p-violet-500',
+      '--p-rose-500',
+      '--p-cyan-500',
+      '--p-orange-500',
+      '--p-indigo-500',
+      '--p-teal-500',
+      '--p-slate-500',
     ];
-    const result = [];
-    for (let i = 0; i < count; i++) {
-      result.push(colors[i % colors.length]);
-    }
-    return result;
+
+    return Array.from({ length: count }, (_, i) => {
+      const varName = baseColors[i % baseColors.length];
+      const color = documentStyle.getPropertyValue(varName).trim();
+      return color || '#ccc';
+    });
   }
 }
