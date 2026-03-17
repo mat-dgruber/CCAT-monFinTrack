@@ -401,15 +401,16 @@
                   </div>
                 </div>
 
-                <div class="h-[400px] mb-8">
+                <div class="relative w-full min-h-[400px] mb-12">
                   <p-chart
                     type="line"
                     [data]="projectionChartData()"
                     [options]="projectionChartOptions()"
+                    height="400px"
                   ></p-chart>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div
                     class="p-4 bg-surface-ground rounded-xl border border-surface-border text-center"
                   >

@@ -434,6 +434,7 @@ export class CostOfLivingComponent implements OnInit {
 
     this.projectionChartOptions.set({
       maintainAspectRatio: false,
+      responsive: true,
       plugins: {
         legend: {
           display: false,

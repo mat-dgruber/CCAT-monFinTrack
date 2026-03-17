@@ -211,7 +211,7 @@ export class CategoryManager implements OnInit {
     this.categoryService.getCategories().subscribe({
       next: (data) => {
         const sorted = data
-          .filter((c) => !c.is_hidden)
+          .filter((c) => !c.is_hidden && c.type !== 'transfer')
           .sort((a, b) => {
             if (a.type !== b.type) return a.type.localeCompare(b.type);
             return a.name.localeCompare(b.name);
