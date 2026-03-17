@@ -16,6 +16,27 @@
         ></p-button>
       </div>
     </div>
+  } @else {
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center"
+        >
+          <i class="pi pi-bullseye text-purple-500 text-lg"></i>
+        </div>
+        <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
+          Metas de Gastos
+        </h3>
+      </div>
+      <button
+        pButton
+        icon="pi pi-arrow-right"
+        [rounded]="true"
+        [text]="true"
+        size="small"
+        routerLink="/budgets"
+      ></button>
+    </div>
   }
 
   <div

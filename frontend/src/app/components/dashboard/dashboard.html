@@ -1,13 +1,11 @@
-<div class="w-full max-w-[1920px] mx-auto p-4 lg:p-6 mb-8">
+<div class="p-2 w-full flex flex-col gap-4 h-full animate-fade-in">
   <!-- Header & Controls -->
   <div class="page-header">
     <div class="page-title-group">
       <h1 class="page-title">Dashboard</h1>
       <p class="page-description">Visão geral da sua saúde financeira.</p>
     </div>
-    <div
-      class="page-actions bg-surface-card p-2 rounded-xl shadow-sm border border-surface-border"
-    >
+    <div class="page-actions">
       <app-page-help document="dashboard.md"></app-page-help>
       <app-month-selector></app-month-selector>
 
@@ -19,7 +17,7 @@
           pTooltip="Gerar Relatório IA"
           tooltipPosition="bottom"
         >
-          <i class="pi pi-file"></i>
+          <i class="pi pi-bolt"></i>
         </button>
       }
     </div>
@@ -29,17 +27,17 @@
     <!-- Skeleton Loading State -->
     <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
       <div
-        class="col-span-12 md:col-span-8 h-48 bg-surface-card organic-shape elegant-shadow border-none p-8"
+        class="col-span-12 md:col-span-8 h-64 bg-surface-card rounded-[2.5rem] shadow-elegant border border-surface-border p-8"
       >
-        <p-skeleton width="40%" height="2rem"></p-skeleton>
+        <p-skeleton width="40%" height="3rem"></p-skeleton>
       </div>
       <div
-        class="col-span-12 md:col-span-4 h-48 bg-surface-card organic-shape elegant-shadow border-none p-8"
+        class="col-span-12 md:col-span-4 h-64 bg-surface-card rounded-[2.5rem] shadow-elegant border border-surface-border p-8"
       >
         <p-skeleton width="60%" height="100%"></p-skeleton>
       </div>
       <div
-        class="col-span-12 h-64 bg-surface-card organic-shape elegant-shadow border-none p-8"
+        class="col-span-12 h-64 bg-surface-card rounded-[2.5rem] shadow-elegant border border-surface-border p-8"
       >
         <p-skeleton width="100%" height="100%"></p-skeleton>
       </div>
@@ -47,75 +45,103 @@
   } @else if (summary(); as data) {
     <!-- Organic Grid -->
     <div
-      class="grid grid-cols-1 md:grid-cols-12 gap-8 grid-flow-row-dense items-start"
+      class="grid grid-cols-1 md:grid-cols-12 gap-6 grid-flow-row-dense items-start"
     >
       <!-- 1. MAIN SUMMARY CARD (Big Impact) -->
       <div
-        class="col-span-12 lg:col-span-8 bg-surface-card organic-shape elegant-shadow border-none p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden group"
+        class="col-span-12 lg:col-span-8 bg-gradient-to-br from-primary/5 to-primary/10 rounded-[2.5rem] shadow-elegant border border-primary/20 p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden group animate-in"
+        style="animation-delay: 0.1s"
       >
         <!-- Decoration -->
         <div
-          class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"
+          class="absolute -right-4 -top-4 opacity-5 rotate-12 transition-transform group-hover:scale-110 pointer-events-none"
+        >
+          <i class="pi pi-wallet text-9xl text-primary"></i>
+        </div>
+        <div
+          class="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"
         ></div>
 
         <div class="relative z-10">
-          <span
-            class="text-secondary font-medium text-sm uppercase tracking-wider"
-            >Saldo Total</span
-          >
+          <div class="flex items-center gap-2 mb-2">
+            <div
+              class="bg-primary w-8 h-8 flex items-center justify-center rounded-lg shadow-sm"
+            >
+              <i class="pi pi-wallet text-white text-xs"></i>
+            </div>
+            <span
+              class="text-primary font-black text-[10px] uppercase tracking-widest"
+              >Saldo Total</span
+            >
+          </div>
           <div
-            class="text-4xl lg:text-5xl font-extrabold text-primary mt-2 tracking-tight"
+            class="text-5xl lg:text-6xl font-black text-color mt-2 tracking-tighter drop-shadow-sm"
           >
             {{ data.total_balance | currency: "BRL" }}
           </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mt-8 relative z-10">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8 relative z-10">
           <!-- Income -->
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2 text-green-600">
+          <div
+            class="bg-surface-card/80 backdrop-blur-sm p-4 rounded-2xl border border-surface-border/50 hover:border-emerald-500/50 transition-all hover:shadow-md flex flex-col gap-2"
+          >
+            <div class="flex items-center gap-2">
               <div
-                class="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center"
+                class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center"
               >
-                <i class="pi pi-arrow-up text-xs"></i>
+                <i class="pi pi-arrow-down-left text-emerald-500 text-sm"></i>
               </div>
-              <span class="font-bold text-sm">Receitas</span>
+              <span
+                class="text-secondary font-black text-[10px] uppercase tracking-widest"
+                >Receitas</span
+              >
             </div>
-            <span class="text-xl font-bold text-color">{{
-              data.income_month | currency: "BRL"
-            }}</span>
+            <span
+              class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums"
+              >{{ data.income_month | currency: "BRL" }}</span
+            >
           </div>
 
           <!-- Expense -->
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2 text-red-500">
+          <div
+            class="bg-surface-card/80 backdrop-blur-sm p-4 rounded-2xl border border-surface-border/50 hover:border-red-500/50 transition-all hover:shadow-md flex flex-col gap-2"
+          >
+            <div class="flex items-center gap-2">
               <div
-                class="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center"
+                class="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center"
               >
-                <i class="pi pi-arrow-down text-xs"></i>
+                <i class="pi pi-arrow-up-right text-red-500 text-sm"></i>
               </div>
-              <span class="font-bold text-sm">Despesas</span>
+              <span
+                class="text-secondary font-black text-[10px] uppercase tracking-widest"
+                >Despesas</span
+              >
             </div>
-            <span class="text-xl font-bold text-color">{{
-              data.expense_month | currency: "BRL"
-            }}</span>
+            <span
+              class="text-xl font-extrabold text-red-600 dark:text-red-400 tabular-nums"
+              >{{ data.expense_month | currency: "BRL" }}</span
+            >
           </div>
 
           <!-- Cost of Living (Optional) -->
           @if (subscriptionService.canAccess("cost_of_living")) {
             <div
-              class="flex flex-col gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+              class="bg-surface-card/80 backdrop-blur-sm p-4 rounded-2xl border border-surface-border/50 hover:border-amber-500/50 transition-all hover:shadow-md cursor-pointer flex flex-col gap-2"
               routerLink="/cost-of-living"
             >
-              <div class="flex items-center gap-2 text-amber-600">
+              <div class="flex items-center gap-2">
                 <div
-                  class="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center"
+                  class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center"
                 >
-                  <i class="pi pi-chart-line text-xs"></i>
+                  <i class="pi pi-chart-line text-amber-500 text-sm"></i>
                 </div>
-                <span class="font-bold text-sm">Custo de Vida</span>
+                <span
+                  class="text-secondary font-black text-[10px] uppercase tracking-widest leading-tight"
+                  >Custo<br />de Vida</span
+                >
               </div>
-              <span class="text-xl font-bold text-color">{{
+              <span class="text-xl font-extrabold text-color tabular-nums">{{
                 costOfLiving() | currency: "BRL"
               }}</span>
             </div>
@@ -125,14 +151,26 @@
 
       <!-- 2. SIDEBAR / RECENT TRANSACTIONS (Tall) -->
       <!-- On Desktop: spans 4 cols (1/3 width) and 2 rows height -->
-      <div class="col-span-12 lg:col-span-4 row-span-2 h-full">
+      <div
+        class="col-span-12 lg:col-span-4 row-span-2 h-full animate-in"
+        style="animation-delay: 0.2s"
+      >
         <div
-          class="bg-surface-card organic-shape elegant-shadow border-none h-full flex flex-col overflow-hidden"
+          class="bg-surface-ground/30 backdrop-blur-md rounded-3xl shadow-elegant border border-surface-border/50 h-full flex flex-col overflow-hidden"
         >
           <div
-            class="p-5 border-b border-surface-border flex justify-between items-center bg-surface-ground/30"
+            class="p-6 border-b border-surface-border/50 flex justify-between items-center"
           >
-            <h3 class="font-bold text-emphasis m-0">Últimas Transações</h3>
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"
+              >
+                <i class="pi pi-list text-primary text-sm"></i>
+              </div>
+              <h3 class="font-black text-emphasis text-lg m-0 tracking-tighter">
+                Últimas Transações
+              </h3>
+            </div>
             <p-button
               icon="pi pi-arrow-right"
               [rounded]="true"
@@ -141,9 +179,7 @@
               routerLink="/transactions"
             ></p-button>
           </div>
-          <div class="flex-1 overflow-y-auto custom-scrollbar p-2">
-            <!-- We need to render the component but ideally it should handle its own scrolling or fit nicely.
- Assuming app-recent-transactions is a list. We wrap it. -->
+          <div class="flex-1 overflow-y-auto custom-scrollbar p-4">
             <app-recent-transactions
               [limit]="6"
               [compact]="true"
@@ -154,25 +190,39 @@
       </div>
 
       <!-- 3. ACCOUNTS SCROLLER -->
-      <div class="col-span-12 lg:col-span-8">
+      <div
+        class="col-span-12 lg:col-span-8 animate-in"
+        style="animation-delay: 0.3s"
+      >
         <!-- Wrapper for Accounts -->
         <app-account-manager></app-account-manager>
       </div>
 
       <!-- 3.5. TITHE SUMMARY (conditional) -->
       @if (tithesEnabled()) {
-        <div class="col-span-12 lg:col-span-8">
+        <div
+          class="col-span-12 lg:col-span-8 animate-in"
+          style="animation-delay: 0.4s"
+        >
           <app-tithe-summary></app-tithe-summary>
         </div>
       }
 
       <!-- 4. CHARTS (Split) -->
       <div
-        class="col-span-12 md:col-span-6 bg-surface-card organic-shape elegant-shadow border-none p-8 flex flex-col"
+        class="col-span-12 md:col-span-6 bg-surface-card rounded-3xl shadow-elegant border border-surface-border p-8 flex flex-col animate-in"
+        style="animation-delay: 0.5s"
       >
-        <h3 class="font-bold text-emphasis mb-6 flex items-center gap-2">
-          <i class="pi pi-pie-chart text-primary"></i> Despesas por Categoria
-        </h3>
+        <div class="flex items-center gap-3 mb-6">
+          <div
+            class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
+          >
+            <i class="pi pi-pie-chart text-primary text-lg"></i>
+          </div>
+          <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
+            Despesas por Categoria
+          </h3>
+        </div>
         <div
           class="flex-1 min-h-[250px] flex items-center justify-center relative"
         >
@@ -184,20 +234,34 @@
               class="w-full h-full"
             ></p-chart>
           } @else {
-            <div class="text-center text-gray-400">
-              <i class="pi pi-chart-pie text-4xl mb-2 opacity-50"></i>
-              <p>Sem dados.</p>
+            <div
+              class="text-center text-secondary flex flex-col items-center justify-center gap-2"
+            >
+              <div
+                class="w-16 h-16 rounded-full bg-surface-ground flex items-center justify-center shadow-inner mb-2"
+              >
+                <i class="pi pi-chart-pie text-2xl text-primary/30"></i>
+              </div>
+              <p class="font-bold">Sem dados de despesas.</p>
             </div>
           }
         </div>
       </div>
 
       <div
-        class="col-span-12 md:col-span-6 bg-surface-card organic-shape elegant-shadow border-none p-8 flex flex-col"
+        class="col-span-12 md:col-span-6 bg-surface-card rounded-3xl shadow-elegant border border-surface-border p-8 flex flex-col animate-in"
+        style="animation-delay: 0.6s"
       >
-        <h3 class="font-bold text-emphasis mb-6 flex items-center gap-2">
-          <i class="pi pi-chart-bar text-green-500"></i> Fluxo de Caixa
-        </h3>
+        <div class="flex items-center gap-3 mb-6">
+          <div
+            class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"
+          >
+            <i class="pi pi-chart-bar text-emerald-500 text-lg"></i>
+          </div>
+          <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
+            Fluxo de Caixa
+          </h3>
+        </div>
         <div
           class="flex-1 min-h-[250px] flex items-center justify-center relative"
         >
@@ -209,9 +273,15 @@
               class="w-full h-full"
             ></p-chart>
           } @else {
-            <div class="text-center text-gray-400">
-              <i class="pi pi-chart-bar text-4xl mb-2 opacity-50"></i>
-              <p>Sem dados.</p>
+            <div
+              class="text-center text-secondary flex flex-col items-center justify-center gap-2"
+            >
+              <div
+                class="w-16 h-16 rounded-full bg-surface-ground flex items-center justify-center shadow-inner mb-2"
+              >
+                <i class="pi pi-chart-bar text-2xl text-primary/30"></i>
+              </div>
+              <p class="font-bold">Sem dados de evolução.</p>
             </div>
           }
         </div>
@@ -220,15 +290,23 @@
       <!-- 5. WIDGETS (Invoices & Budgets) -->
       @if (subscriptionService.canAccess("credit_card_mgmt")) {
         <div
-          class="col-span-12 lg:col-span-12 xl:col-span-6 bg-surface-card organic-shape elegant-shadow border-none p-8"
+          class="col-span-12 lg:col-span-12 xl:col-span-6 bg-surface-card rounded-3xl shadow-elegant border border-surface-border p-8 animate-in"
+          style="animation-delay: 0.7s"
         >
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-emphasis flex items-center gap-2">
-              <i class="pi pi-credit-card text-orange-500"></i> Faturas
-            </h3>
+          <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center"
+              >
+                <i class="pi pi-credit-card text-orange-500 text-lg"></i>
+              </div>
+              <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
+                Faturas
+              </h3>
+            </div>
             <button
               pButton
-              icon="pi pi-external-link"
+              icon="pi pi-arrow-right"
               [rounded]="true"
               [text]="true"
               size="small"
@@ -242,9 +320,10 @@
       <div
         [class]="
           subscriptionService.canAccess('credit_card_mgmt')
-            ? 'col-span-12 lg:col-span-12 xl:col-span-6'
-            : 'col-span-12'
+            ? 'col-span-12 lg:col-span-12 xl:col-span-6 animate-in'
+            : 'col-span-12 animate-in'
         "
+        style="animation-delay: 0.8s"
       >
         <app-budget-manager [isWidget]="true"></app-budget-manager>
       </div>

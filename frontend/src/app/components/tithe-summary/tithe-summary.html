@@ -1,7 +1,7 @@
 @if (loading()) {
   <!-- Skeleton Loading -->
   <div
-    class="bg-surface-card rounded-2xl p-5 shadow-sm border border-surface-border"
+    class="bg-surface-card rounded-3xl p-5 shadow-elegant border border-surface-border"
   >
     <div class="flex items-center gap-3 mb-4">
       <p-skeleton width="1.5rem" height="1.5rem" shape="circle"></p-skeleton>
@@ -15,7 +15,7 @@
   </div>
 } @else if (pendingCount() > 0) {
   <div
-    class="bg-surface-card rounded-2xl shadow-sm border border-surface-border overflow-hidden"
+    class="bg-surface-card rounded-3xl shadow-elegant border border-surface-border overflow-hidden"
   >
     <!-- Header -->
     <div class="p-5 border-b border-surface-border bg-surface-ground/30">
