@@ -1,34 +1,69 @@
-#app/schemas/debt.py
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+# app/schemas/debt.py
 from datetime import date
-from app.models.debt import DebtType, InterestPeriod, AmortizationSystem, CardBrand, IndexerType, DebtStatus
+from typing import List, Optional
+
 from app.core.validators import sanitize_html
+from app.models.debt import (
+    AmortizationSystem,
+    CardBrand,
+    DebtStatus,
+    DebtType,
+    IndexerType,
+    InterestPeriod,
+)
+from pydantic import BaseModel, Field, field_validator
+
 
 class DebtBase(BaseModel):
-    name: str = Field(default="Nova Dívida", min_length=2, description="Nome da dívida (ex: Nubank, Financiamento Casa)")
+    name: str = Field(
+        default="Nova Dívida",
+        min_length=2,
+        description="Nome da dívida (ex: Nubank, Financiamento Casa)",
+    )
     debt_type: DebtType = Field(default=DebtType.OTHER, description="Tipo da dívida")
-    status: DebtStatus = Field(default=DebtStatus.ON_TIME, description="Status da dívida")
+    status: DebtStatus = Field(
+        default=DebtStatus.ON_TIME, description="Status da dívida"
+    )
 
     total_amount: float = Field(default=0.0, ge=0, description="Saldo Devedor Atual")
-    original_amount: Optional[float] = Field(default=0.0, ge=0, description="Valor Original")
-    
+    original_amount: Optional[float] = Field(
+        default=0.0, ge=0, description="Valor Original"
+    )
+
     interest_rate: float = Field(default=0.0, ge=0, description="Taxa de Juros (%)")
-    interest_period: InterestPeriod = Field(default=InterestPeriod.MONTHLY, description="Período da taxa")
-    
-    cet: Optional[float] = Field(default=0.0, ge=0, description="Custo Efetivo Total (%)")
-    
-    minimum_payment: Optional[float] = Field(default=0.0, ge=0, description="Encargo Mensal / Mínimo")
-    due_day: Optional[int] = Field(default=None, ge=1, le=31, description="Dia do vencimento")
-    closing_day: Optional[int] = Field(default=None, ge=1, le=31, description="Dia de fechamento")
-    
-    remaining_installments: Optional[int] = Field(default=None, ge=0, description="Parcelas restantes")
+    interest_period: InterestPeriod = Field(
+        default=InterestPeriod.MONTHLY, description="Período da taxa"
+    )
+
+    cet: Optional[float] = Field(
+        default=0.0, ge=0, description="Custo Efetivo Total (%)"
+    )
+
+    minimum_payment: Optional[float] = Field(
+        default=0.0, ge=0, description="Encargo Mensal / Mínimo"
+    )
+    due_day: Optional[int] = Field(
+        default=None, ge=1, le=31, description="Dia do vencimento"
+    )
+    closing_day: Optional[int] = Field(
+        default=None, ge=1, le=31, description="Dia de fechamento"
+    )
+
+    remaining_installments: Optional[int] = Field(
+        default=None, ge=0, description="Parcelas restantes"
+    )
     category_id: Optional[str] = Field(default=None, description="Categoria vinculada")
-    
+
     # --- Universal Fields ---
-    creditor_institution: Optional[str] = Field(default=None, description="Instituição Credora (Banco/Financiatória)")
-    contract_date: Optional[date] = Field(default=None, description="Data de contratação da dívida")
-    next_due_date: Optional[date] = Field(default=None, description="Data do próximo vencimento")
+    creditor_institution: Optional[str] = Field(
+        default=None, description="Instituição Credora (Banco/Financiatória)"
+    )
+    contract_date: Optional[date] = Field(
+        default=None, description="Data de contratação da dívida"
+    )
+    next_due_date: Optional[date] = Field(
+        default=None, description="Data do próximo vencimento"
+    )
     observations: Optional[str] = Field(default=None, description="Observações livres")
 
     # --- Advanced Fields ---
@@ -36,7 +71,7 @@ class DebtBase(BaseModel):
     card_limit: Optional[float] = Field(default=None, ge=0)
     contract_number: Optional[str] = Field(default=None)
     allow_early_amortization: bool = Field(default=True)
-    
+
     indexer: Optional[IndexerType] = Field(default=None)
     insurance_value: Optional[float] = Field(default=None, ge=0)
     administration_fee: Optional[float] = Field(default=None, ge=0)
@@ -45,14 +80,14 @@ class DebtBase(BaseModel):
     fgts_usage_interval: Optional[int] = Field(default=24)
     last_fgts_usage_date: Optional[date] = Field(default=None)
     estimated_fgts_balance: Optional[float] = Field(default=0.0, ge=0)
-    
+
     is_under_construction: bool = Field(default=False)
     construction_end_date: Optional[date] = Field(default=None)
     total_installments: Optional[int] = Field(default=None, ge=1)
     installments_paid: Optional[int] = Field(default=0, ge=0)
     subsidy_amount: Optional[float] = Field(default=0, ge=0)
     subsidy_expiration_date: Optional[date] = Field(default=None)
-    
+
     daily_interest_rate: Optional[float] = Field(default=None, ge=0)
     days_used_in_month: Optional[int] = Field(default=0, ge=0, le=31)
 
@@ -96,14 +131,19 @@ class DebtBase(BaseModel):
     blocks_fgts_withdrawal: Optional[bool] = Field(default=False)
 
     contract_file_path: Optional[str] = Field(default=None)
-    amortization_system: Optional[AmortizationSystem] = Field(default=AmortizationSystem.NONE)
+    amortization_system: Optional[AmortizationSystem] = Field(
+        default=AmortizationSystem.NONE
+    )
     is_subsidized: bool = Field(default=False)
-    report: Optional[str] = Field(default=None, description="Relatório de análise gerado pela IA")
+    report: Optional[str] = Field(
+        default=None, description="Relatório de análise gerado pela IA"
+    )
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def clean_name(cls, v):
         return sanitize_html(v)
+
 
 class DebtCreate(DebtBase):
     # Enforce required fields for new debts
@@ -111,6 +151,7 @@ class DebtCreate(DebtBase):
     total_amount: float = Field(..., ge=0)
     interest_rate: float = Field(..., ge=0)
     debt_type: DebtType = Field(..., description="Tipo da dívida")
+
 
 class DebtUpdate(BaseModel):
     name: Optional[str] = None
@@ -129,7 +170,7 @@ class DebtUpdate(BaseModel):
     contract_file_path: Optional[str] = None
     amortization_system: Optional[AmortizationSystem] = None
     is_subsidized: Optional[bool] = None
-    
+
     card_brand: Optional[CardBrand] = None
     card_limit: Optional[float] = None
     contract_number: Optional[str] = None
@@ -188,12 +229,14 @@ class DebtUpdate(BaseModel):
     consigned_end_year: Optional[int] = None
     blocks_fgts_withdrawal: Optional[bool] = None
 
+
 class DebtStats(BaseModel):
     priority_score: float
     priority_label: str
     total_interest_remaining: float
     months_remaining: int
     monthly_rate: float
+
 
 class Debt(DebtBase):
     id: str
@@ -204,17 +247,20 @@ class Debt(DebtBase):
     class Config:
         from_attributes = True
 
+
 # --- Payment Plan Schemas ---
+
 
 class PaymentStep(BaseModel):
     month_index: int
-    date: str # YYYY-MM-DD
+    date: str  # YYYY-MM-DD
     payment_amount: float
     interest_paid: float
     principal_paid: float
     remaining_balance: float
     debt_id: str
     debt_name: str
+
 
 class DebtPayoffSummary(BaseModel):
     debt_id: str
@@ -223,8 +269,9 @@ class DebtPayoffSummary(BaseModel):
     payoff_months: int
     payoff_date: str
 
+
 class PaymentPlan(BaseModel):
-    strategy: str # 'snowball' or 'avalanche'
+    strategy: str  # 'snowball' or 'avalanche'
     monthly_budget: float
     total_interest_paid: float
     total_months: int

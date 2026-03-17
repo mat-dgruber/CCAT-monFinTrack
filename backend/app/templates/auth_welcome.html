@@ -1,135 +1,152 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bem-vindo(a) - MonFinTrack</title>
     <style>
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4eee0;
-            margin: 0;
-            padding: 0;
-            color: #3e3a35;
-        }
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background-color: #f8f4e8;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12);
-        }
-        .header {
-            background-color: #5d8a8c; /* Petróleo como fundo para dar peso/destaque */
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .logo {
-            max-width: 150px;
-            height: auto;
-            /* Supondo uma versão clara da logo se o fundo é escuro, ou aplicar filtro white via css style inlining se possível */
-        }
-        h1 {
-            color: #ffffff;
-            font-size: 28px;
-            margin-top: 20px;
-            margin-bottom: 0;
-            font-family: 'Playfair Display', serif;
-        }
-        .content {
-            padding: 30px 40px 40px 40px;
-            text-align: center;
-        }
-        p {
-            color: #7a6b5d;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        .highlight {
-            color: #593e2b;
-            font-weight: 600;
-        }
-        .feature-box {
-            background-color: rgba(93, 138, 140, 0.1); /* Container leve Azul Petróleo */
-            border-radius: 1rem;
-            padding: 20px;
-            margin-bottom: 25px;
-            text-align: left;
-        }
-        .feature-box h4 {
-            color: #4a6e70;
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        .feature-box ul {
-            margin: 0;
-            padding-left: 20px;
-            color: #7a6b5d;
-            font-size: 14px;
-        }
-        .feature-box li {
-            margin-bottom: 8px;
-        }
-        .button {
-            display: inline-block;
-            background-color: #5d8a8c;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            text-decoration: none;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 16px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 12px rgba(93, 138, 140, 0.3);
-        }
-        .footer {
-            background-color: #ece5d5;
-            color: #7a6b5d;
-            text-align: center;
-            padding: 20px;
-            font-size: 13px;
-            border-bottom-left-radius: 1.5rem;
-            border-bottom-right-radius: 1.5rem;
-        }
-        .footer a {
-            color: #5d8a8c;
-            text-decoration: none;
-        }
-        a.button {
-            color: #ffffff;
-        }
+      body {
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4eee0;
+        margin: 0;
+        padding: 0;
+        color: #3e3a35;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #f8f4e8;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12);
+      }
+      .header {
+        background-color: #5d8a8c; /* Petróleo como fundo para dar peso/destaque */
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .logo {
+        max-width: 150px;
+        height: auto;
+        /* Supondo uma versão clara da logo se o fundo é escuro, ou aplicar filtro white via css style inlining se possível */
+      }
+      h1 {
+        color: #ffffff;
+        font-size: 28px;
+        margin-top: 20px;
+        margin-bottom: 0;
+        font-family: "Playfair Display", serif;
+      }
+      .content {
+        padding: 30px 40px 40px 40px;
+        text-align: center;
+      }
+      p {
+        color: #7a6b5d;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+      }
+      .highlight {
+        color: #593e2b;
+        font-weight: 600;
+      }
+      .feature-box {
+        background-color: rgba(
+          93,
+          138,
+          140,
+          0.1
+        ); /* Container leve Azul Petróleo */
+        border-radius: 1rem;
+        padding: 20px;
+        margin-bottom: 25px;
+        text-align: left;
+      }
+      .feature-box h4 {
+        color: #4a6e70;
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+      .feature-box ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #7a6b5d;
+        font-size: 14px;
+      }
+      .feature-box li {
+        margin-bottom: 8px;
+      }
+      .button {
+        display: inline-block;
+        background-color: #5d8a8c;
+        color: #ffffff !important;
+        padding: 14px 28px;
+        text-decoration: none;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 16px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(93, 138, 140, 0.3);
+      }
+      .footer {
+        background-color: #ece5d5;
+        color: #7a6b5d;
+        text-align: center;
+        padding: 20px;
+        font-size: 13px;
+        border-bottom-left-radius: 1.5rem;
+        border-bottom-right-radius: 1.5rem;
+      }
+      .footer a {
+        color: #5d8a8c;
+        text-decoration: none;
+      }
+      a.button {
+        color: #ffffff;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <!-- A preferência é por um logo que fique visível no fundo azul-petróleo. Caso não tenha versão clear, ajuste o background_color do .header -->
-             <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo">
-            <h1>Bem-vindo(a)!</h1>
+      <div class="header">
+        <!-- A preferência é por um logo que fique visível no fundo azul-petróleo. Caso não tenha versão clear, ajuste o background_color do .header -->
+        <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo" />
+        <h1>Bem-vindo(a)!</h1>
+      </div>
+      <div class="content">
+        <p>
+          Olá <span class="highlight">{{ name or 'Usuário' }}</span>, que
+          alegria ter você aqui!
+        </p>
+        <p>
+          Sua conta no <strong>MonFinTrack</strong> acaba de ser criada com
+          sucesso. Nosso objetivo é transformar de vez a maneira como você
+          organiza suas finanças e visualiza seu progresso.
+        </p>
+
+        <div class="feature-box">
+          <h4>Por onde começar?</h4>
+          <ul>
+            <li>Cadastre suas primeiras receitas e despesas.</li>
+            <li>Defina limites inteligentes com o Controle de Orçamentos.</li>
+            <li>
+              Acompanhe seu fluxo em nossos relatórios de gráficos avançados.
+            </li>
+          </ul>
         </div>
-        <div class="content">            
-            <p>Olá <span class="highlight">{{ name or 'Usuário' }}</span>, que alegria ter você aqui!</p>
-            <p>Sua conta no <strong>MonFinTrack</strong> acaba de ser criada com sucesso. Nosso objetivo é transformar de vez a maneira como você organiza suas finanças e visualiza seu progresso.</p>
-            
-            <div class="feature-box">
-                <h4>Por onde começar?</h4>
-                <ul>
-                    <li>Cadastre suas primeiras receitas e despesas.</li>
-                    <li>Defina limites inteligentes com o Controle de Orçamentos.</li>
-                    <li>Acompanhe seu fluxo em nossos relatórios de gráficos avançados.</li>
-                </ul>
-            </div>
-            
-            <a href="{{ action_url }}" class="button">Ir para o Dashboard</a>
-        </div>
-        <div class="footer">
-            <p>Dúvidas? Responda este e-mail ou visite nossa <a href="https://monfintrack.com.br/ajuda">Central de Ajuda</a>.</p>
-            <p>&copy; 2026 MonFinTrack. Organização com elegância.</p>
-        </div>
+
+        <a href="{{ action_url }}" class="button">Ir para o Dashboard</a>
+      </div>
+      <div class="footer">
+        <p>
+          Dúvidas? Responda este e-mail ou visite nossa
+          <a href="https://monfintrack.com.br/ajuda">Central de Ajuda</a>.
+        </p>
+        <p>&copy; 2026 MonFinTrack. Organização com elegância.</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

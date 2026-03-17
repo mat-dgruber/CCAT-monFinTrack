@@ -12,11 +12,8 @@ prefs_ref = db.collection("user_preferences").document(user_id)
 doc = prefs_ref.get()
 
 if doc.exists:
-    current_version = doc.to_dict().get('version', 0)
-    prefs_ref.update({
-        "subscription_tier": "free",
-        "version": current_version + 1
-    })
+    current_version = doc.to_dict().get("version", 0)
+    prefs_ref.update({"subscription_tier": "free", "version": current_version + 1})
     print(f"User {user_id} tier updated to 'free' (version {current_version + 1})")
 else:
     print(f"Preferences for user {user_id} not found.")

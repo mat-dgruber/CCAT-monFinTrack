@@ -1,115 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sua alteração de E-mail - MonFinTrack</title>
     <style>
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4eee0;
-            margin: 0;
-            padding: 0;
-            color: #3e3a35;
-        }
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background-color: #f8f4e8;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12);
-        }
-        .header {
-            background-color: #f8f4e8;
-            padding: 30px 20px 10px 20px;
-            text-align: center;
-        }
-        .logo {
-            max-width: 150px;
-            height: auto;
-        }
-        .content {
-            padding: 20px 40px 30px 40px;
-            text-align: center;
-        }
-        h2 {
-            color: #3e3a35;
-            font-size: 22px;
-            margin-bottom: 15px;
-            font-family: 'Playfair Display', serif;
-        }
-        p {
-            color: #7a6b5d;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        .highlight-email {
-            font-weight: 600;
-            color: #4a6e70; /* Verde/Azul Escuro */
-            background-color: rgba(93, 138, 140, 0.15);
-            padding: 4px 8px;
-            border-radius: 6px;
-            display: inline-block;
-        }
-        .button {
-            display: inline-block;
-            background-color: #5d8a8c;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            text-decoration: none;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 16px;
-            margin-top: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(93, 138, 140, 0.3);
-        }
-        .alert-row {
-            border-top: 1px solid #e6dccb;
-            padding-top: 20px;
-            font-size: 13px;
-        }
-        .footer {
-            background-color: #ece5d5;
-            color: #7a6b5d;
-            text-align: center;
-            padding: 20px;
-            font-size: 12px;
-            border-bottom-left-radius: 1.5rem;
-            border-bottom-right-radius: 1.5rem;
-        }
-        a.button {
-            color: #ffffff;
-        }
+      body {
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4eee0;
+        margin: 0;
+        padding: 0;
+        color: #3e3a35;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background-color: #f8f4e8;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px -10px rgba(89, 62, 43, 0.12);
+      }
+      .header {
+        background-color: #f8f4e8;
+        padding: 30px 20px 10px 20px;
+        text-align: center;
+      }
+      .logo {
+        max-width: 150px;
+        height: auto;
+      }
+      .content {
+        padding: 20px 40px 30px 40px;
+        text-align: center;
+      }
+      h2 {
+        color: #3e3a35;
+        font-size: 22px;
+        margin-bottom: 15px;
+        font-family: "Playfair Display", serif;
+      }
+      p {
+        color: #7a6b5d;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+      }
+      .highlight-email {
+        font-weight: 600;
+        color: #4a6e70; /* Verde/Azul Escuro */
+        background-color: rgba(93, 138, 140, 0.15);
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-block;
+      }
+      .button {
+        display: inline-block;
+        background-color: #5d8a8c;
+        color: #ffffff !important;
+        padding: 14px 28px;
+        text-decoration: none;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 16px;
+        margin-top: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(93, 138, 140, 0.3);
+      }
+      .alert-row {
+        border-top: 1px solid #e6dccb;
+        padding-top: 20px;
+        font-size: 13px;
+      }
+      .footer {
+        background-color: #ece5d5;
+        color: #7a6b5d;
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        border-bottom-left-radius: 1.5rem;
+        border-bottom-right-radius: 1.5rem;
+      }
+      a.button {
+        color: #ffffff;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo">
-        </div>
-        <div class="content">
-            <h2>Seu e-mail para login foi alterado</h2>
-            
-            <p>Olá, {{ name }}</p>
-            
-            <p style="margin-bottom: 15px;">Seu e-mail para fazer login no app {{ app_name | default("MonFinTrack") }} foi alterado para:</p>
-            <div class="highlight-email">{{ new_email }}</div>
-            
-            <p style="margin-top: 25px; margin-bottom: 10px;">Se você não solicitou a alteração do seu e-mail de login, clique neste link para redefini-lo.</p>
-            
-            <a href="{{ action_url }}" class="button">Redefinir meu e-mail</a>
-            
-            <p style="margin-top: 25px;">Obrigado,<br><strong>Equipe do app {{ app_name | default("MonFinTrack") }}</strong></p>
-            
-        </div>
-        <div class="footer">
-            <p>Enviado por: <strong>Equipe monFinTrack da CapyCro. AvecTech</strong></p>
-            <p>De: noreply@monfintrack.com.br</p>
-            <p>&copy; 2026 MonFinTrack - Proteção e Transparência Financeira.</p>
-        </div>
+      <div class="header">
+        <img src="{{ logo_url }}" alt="MonFinTrack Logo" class="logo" />
+      </div>
+      <div class="content">
+        <h2>Seu e-mail para login foi alterado</h2>
+
+        <p>Olá, {{ name }}</p>
+
+        <p style="margin-bottom: 15px">
+          Seu e-mail para fazer login no app {{ app_name |
+          default("MonFinTrack") }} foi alterado para:
+        </p>
+        <div class="highlight-email">{{ new_email }}</div>
+
+        <p style="margin-top: 25px; margin-bottom: 10px">
+          Se você não solicitou a alteração do seu e-mail de login, clique neste
+          link para redefini-lo.
+        </p>
+
+        <a href="{{ action_url }}" class="button">Redefinir meu e-mail</a>
+
+        <p style="margin-top: 25px">
+          Obrigado,<br /><strong
+            >Equipe do app {{ app_name | default("MonFinTrack") }}</strong
+          >
+        </p>
+      </div>
+      <div class="footer">
+        <p>
+          Enviado por: <strong>Equipe monFinTrack da CapyCro. AvecTech</strong>
+        </p>
+        <p>De: noreply@monfintrack.com.br</p>
+        <p>&copy; 2026 MonFinTrack - Proteção e Transparência Financeira.</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

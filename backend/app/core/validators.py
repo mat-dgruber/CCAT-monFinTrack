@@ -1,5 +1,6 @@
 import bleach
 
+
 def sanitize_html(value: str) -> str:
     """
     Remove qualquer tag HTML ou script de uma string.

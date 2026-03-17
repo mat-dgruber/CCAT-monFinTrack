@@ -1,10 +1,10 @@
-from app.core.database import get_db
-from fastapi import HTTPException
 import logging
 import os
 
 import stripe
+from app.core.database import get_db
 from dotenv import load_dotenv
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -40,11 +40,11 @@ class StripeService:
         price_id = self.prices.get(plan)
         if not price_id:
             logger.error(
-                f"❌ Plan '{plan}' not found in configuration. Available: {list(self.prices.keys())}"
+                f"❌ Plano '{plan}' não encontrado na configuração. Disponíveis: {list(self.prices.keys())}"
             )
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid plan or missing configuration for: {plan}",
+                detail=f"Plano inválido ou configuração ausente para: {plan}",
             )
         return price_id
 
@@ -78,11 +78,11 @@ class StripeService:
             return stripe_customer_id
         except Exception as exc:
             logger.error(
-                f"❌ Stripe Customer creation failed for user {user_id}: {exc}"
+                f"❌ Erro ao criar cliente Stripe para o usuário {user_id}: {exc}"
             )
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to create Stripe customer: {str(exc)}",
+                detail=f"Falha ao criar cliente no gateway de pagamento: {str(exc)}",
             ) from exc
 
     def create_checkout_session(
@@ -90,16 +90,28 @@ class StripeService:
     ):
         try:
             if not stripe.api_key:
-                logger.error("❌ STRIPE_SECRET_KEY is MISSING! Payment will fail.")
+                logger.error("❌ STRIPE_SECRET_KEY não está configurado!")
                 raise HTTPException(
-                    status_code=500, detail="Stripe configuration error"
+                    status_code=500,
+                    detail="Erro de configuração no servidor de pagamentos.",
+                )
+
+            # Pre-flight check: User must exist in DB
+            user_ref = self.db.collection("users").document(user_id)
+            if not user_ref.get().exists:
+                logger.error(
+                    f"❌ User '{user_id}' not found in Firestore. Setup might have failed."
+                )
+                raise HTTPException(
+                    status_code=404,
+                    detail="Usuário não encontrado no banco de dados. Tente fazer logout e login novamente.",
                 )
 
             stripe_customer_id = self._get_or_create_customer(user_id)
             price_id = self._get_price_id(plan)
 
             logger.info(
-                f"Creating checkout session for user={user_id}, plan={plan}, customer={stripe_customer_id}"
+                f"Criando sessão de checkout para usuário={user_id}, plano={plan}, cliente={stripe_customer_id}"
             )
 
             checkout_session = stripe.checkout.Session.create(
@@ -119,38 +131,65 @@ class StripeService:
                 subscription_data={"metadata": {"user_id": user_id, "plan": plan}},
             )
             return {"sessionId": checkout_session["id"], "url": checkout_session["url"]}
+        except stripe.error.StripeError as e:
+            logger.error(f"❌ Stripe Error in create_checkout_session: {e}")
+            raise HTTPException(status_code=400, detail=f"Erro no Stripe: {str(e)}") from e
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"❌ Unhandled error in create_checkout_session: {e}")
-            raise HTTPException(status_code=500, detail=str(e)) from e
+            logger.error(
+                f"❌ Erro não tratado em create_checkout_session para o usuário {user_id}: {e}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro interno ao criar sessão de checkout: {str(e)}",
+            ) from e
 
     def create_portal_session(self, user_id: str, return_url: str):
         try:
             user_ref = self.db.collection("users").document(user_id)
             user_doc = user_ref.get()
             if not user_doc.exists:
-                raise HTTPException(status_code=404, detail="User not found")
+                logger.error(f"❌ Portal Session: User '{user_id}' not found.")
+                raise HTTPException(
+                    status_code=404, detail="Dados do usuário não encontrados."
+                )
 
             user_data = user_doc.to_dict()
             stripe_customer_id = user_data.get("stripe_customer_id")
 
             if not stripe_customer_id:
+                logger.warning(
+                    f"⚠️ Portal Session: User '{user_id}' has no Stripe Customer ID."
+                )
                 raise HTTPException(
-                    status_code=400, detail="User does not have a Stripe Customer ID"
+                    status_code=400,
+                    detail="Você ainda não possui uma assinatura ativa ou histórico de pagamentos.",
                 )
 
             portal_session = stripe.billing_portal.Session.create(
                 customer=stripe_customer_id,
                 return_url=return_url,
             )
-            logger.info(f"Created portal session for customer {stripe_customer_id}")
+            logger.info(f"Sessão do portal criada para o cliente {stripe_customer_id}")
             return {"url": portal_session["url"]}
+        except stripe.error.StripeError as e:
+            logger.error(
+                f"❌ Stripe Error in create_portal_session for customer {stripe_customer_id}: {e}"
+            )
+            raise HTTPException(
+                status_code=400, detail=f"Erro no portal de pagamentos: {str(e)}"
+            ) from e
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"❌ Error creating portal session for user {user_id}: {e}")
-            raise HTTPException(status_code=500, detail=str(e)) from e
+            logger.error(
+                f"❌ Erro ao criar sessão do portal para o usuário {user_id}: {e}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro interno ao abrir portal do cliente: {str(e)}",
+            ) from e
 
     async def handle_webhook(self, payload: bytes, sig_header: str):
         try:
@@ -194,7 +233,7 @@ class StripeService:
                 },
                 merge=True,
             )
-            logger.info(f"Linked user {user_id} to customer {customer_id}")
+            logger.info(f"Usuário {user_id} vinculado ao cliente {customer_id}")
 
         # Checkout completed means payment was successful.
         # Retrieve the updated subscription to ensure we capture the 'active' status and update the tier correctly.
@@ -204,7 +243,7 @@ class StripeService:
                 await self._handle_subscription_updated(subscription)
             except Exception:
                 logger.error(
-                    f"Failed to retrieve subscription {subscription_id} after checkout"
+                    f"Falha ao recuperar assinatura {subscription_id} após o checkout"
                 )
 
     async def _handle_subscription_updated(self, subscription):
@@ -217,14 +256,14 @@ class StripeService:
             items_data = subscription.get("items", {}).get("data", [])
             if not items_data:
                 logger.warning(
-                    f"Subscription for customer {customer_id} has no items, defaulting to free"
+                    f"Assinatura do cliente {customer_id} não possui itens, definindo como 'free'"
                 )
                 tier = "free"
             else:
                 plan_id = items_data[0]["price"]["id"]
                 tier = self._infer_tier_from_price(plan_id)
         except (KeyError, IndexError, TypeError) as e:
-            logger.error(f"Failed to extract price from subscription: {e}")
+            logger.error(f"Falha ao extrair preço da assinatura: {e}")
             tier = "free"
 
         # Find user by customer_id
@@ -260,7 +299,7 @@ class StripeService:
                 )
 
             logger.info(
-                f"Updated subscription for customer {customer_id} to tier={effective_tier} status={status}"
+                f"Assinatura atualizada para o cliente {customer_id}: nível={effective_tier}, status={status}"
             )
 
     async def _handle_subscription_deleted(self, subscription):
@@ -289,7 +328,7 @@ class StripeService:
                     merge=True,
                 )
 
-            logger.info(f"Canceled subscription for customer {customer_id}")
+            logger.info(f"Assinatura cancelada para o cliente {customer_id}")
 
     def _infer_tier_from_price(self, price_id: str) -> str:
         # Invert the config map

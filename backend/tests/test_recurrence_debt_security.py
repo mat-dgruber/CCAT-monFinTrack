@@ -212,9 +212,9 @@ class TestInvoiceServiceSecurity:
 
     def test_pay_invoice_requires_source_account(self):
         """Invoice payment without source_account_id must fail."""
-        with patch("app.services.invoice.account_service") as mock_acc, patch(
+        with patch("app.services.invoice.account_service"), patch(
             "app.services.invoice.transaction_service"
-        ) as mock_tx:
+        ):
 
             from app.services.invoice import pay_invoice
 
@@ -234,7 +234,7 @@ class TestInvoiceServiceSecurity:
 
     def test_pay_invoice_prevents_duplicate_payment(self):
         """Double-paying the same invoice must be blocked."""
-        with patch("app.services.invoice.account_service") as mock_acc, patch(
+        with patch("app.services.invoice.account_service"), patch(
             "app.services.invoice.transaction_service"
         ) as mock_tx:
 

@@ -1,6 +1,7 @@
 import asyncio
 import sys
 
+import pytest
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,6 +12,7 @@ from app.services.email_service import email_service
 from firebase_admin import auth
 
 
+@pytest.mark.anyio
 async def test():
     print("Starting test...", file=sys.stderr)
     try:
@@ -38,7 +40,7 @@ async def test():
             },
         )
         print("Template length:", len(html_content), file=sys.stderr)
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()

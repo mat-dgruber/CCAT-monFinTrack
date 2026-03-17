@@ -47,8 +47,6 @@ class TestMFAEncryption:
             test_key = Fernet.generate_key()
             mock_env.return_value = test_key
 
-            from importlib import reload
-
             from app.services import mfa as mfa_module
 
             service = mfa_module.MFAService()

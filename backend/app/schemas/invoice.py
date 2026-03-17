@@ -1,12 +1,15 @@
+from datetime import date
+from typing import Optional
+
 from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime, date
+
 
 class InvoiceStatus(str):
-    OPEN = "open"       # Fatura Aberta (Antes do fechamento)
-    CLOSED = "closed"   # Fatura Fechada (Entre fechamento e vencimento)
-    PAID = "paid"       # Fatura Paga 
-    OVERDUE = "overdue" # Fatura Atrasada
+    OPEN = "open"  # Fatura Aberta (Antes do fechamento)
+    CLOSED = "closed"  # Fatura Fechada (Entre fechamento e vencimento)
+    PAID = "paid"  # Fatura Paga
+    OVERDUE = "overdue"  # Fatura Atrasada
+
 
 class InvoiceSummary(BaseModel):
     account_id: str
@@ -17,7 +20,7 @@ class InvoiceSummary(BaseModel):
     status: str
     due_date: date
     closing_date: date
-    
+
     # Metadados visuais
     card_name: str
     card_brand: str

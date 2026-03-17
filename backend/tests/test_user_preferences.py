@@ -99,7 +99,7 @@ def test_update_preferences():
 
 def test_upload_avatar():
     """Avatar upload calls storage service and returns signed URL."""
-    with patch("app.services.storage_service.storage_service") as mock_storage_service:
+    with patch("app.services.user_preference.storage_service") as mock_storage_service:
         mock_storage_service.upload_file.return_value = (
             "https://storage.googleapis.com/profile_images/test_user.jpg?signed=true"
         )

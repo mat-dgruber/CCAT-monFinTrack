@@ -1,16 +1,18 @@
 import asyncio
 import sys
 
+import pytest
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from app.api.routers.auth import APP_URL, LOGO_URL, "http://localhost:4200", or
+from app.api.routers.auth import APP_URL, LOGO_URL
 from app.core.database import get_db
 from app.services.email_service import email_service
 from firebase_admin import auth
 
 
+@pytest.mark.anyio
 async def test():
     print("Starting test...", file=sys.stderr)
     try:
@@ -18,7 +20,7 @@ async def test():
         print("DB initialized.", file=sys.stderr)
 
         action_code_settings = auth.ActionCodeSettings(
-            url=f"{APP_URL or "http://localhost:4200"}/login",
+            url=f"{APP_URL}/login",
             handle_code_in_app=True,
         )
         

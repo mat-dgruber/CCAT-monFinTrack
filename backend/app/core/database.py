@@ -16,7 +16,7 @@ load_dotenv()
 def get_db():
     # If we are testing, return a mock unless we really want real DB
     is_testing = "PYTEST_CURRENT_TEST" in os.environ or os.getenv("TESTING") == "True"
-    
+
     if is_testing:
         # Check if already initialized to return real one if someone initialized it manually
         if firebase_admin._apps:
@@ -62,7 +62,7 @@ def get_db():
                 # No entanto, se o app for importado em build-time (como por alguns linters),
                 # podemos não querer crashar. Mas aqui é runtime.
                 pass
-            
+
             # Se chegamos aqui, o apps continua vazio.
             # Se tentarmos usar auth/firestore depois, vai dar erro de "App does not exist".
 

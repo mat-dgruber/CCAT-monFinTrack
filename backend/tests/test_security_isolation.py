@@ -5,17 +5,11 @@ Focuses on account, transaction, subscription tier, and Stripe data isolation.
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from app.schemas.account import Account, AccountCreate, AccountType
 from app.schemas.category import Category
-from app.schemas.transaction import (
-    PaymentMethod,
-    TransactionCreate,
-    TransactionStatus,
-    TransactionType,
-)
 from app.services import account as account_service
 from app.services import category as category_service
 from app.services import transaction as transaction_service
@@ -373,7 +367,7 @@ class TestSubscriptionSecurity:
                     "url": "https://checkout.stripe.com/test",
                 },
             ) as mock_create:
-                result = service.create_checkout_session(
+                service.create_checkout_session(
                     user_id=USER_A,
                     plan="pro_monthly",
                     success_url="https://app.test/success",

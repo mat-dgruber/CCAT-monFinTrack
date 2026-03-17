@@ -9,7 +9,7 @@ from firebase_admin import auth
 logger = get_logger(__name__)
 router = APIRouter()
 
-APP_URL = os.getenv("APP_URL", "https://monfintrack.com.br").rstrip('/')
+APP_URL = os.getenv("APP_URL", "https://monfintrack.com.br").rstrip("/")
 LOGO_URL = "https://monfintrack.com.br/assets/logo-ccat.png"
 
 
@@ -38,20 +38,25 @@ async def request_password_reset(
             handle_code_in_app=True,
         )
 
-        firebase_link = auth.generate_password_reset_link(request.email, action_code_settings)
+        firebase_link = auth.generate_password_reset_link(
+            request.email, action_code_settings
+        )
 
         # Extract oobCode for a direct link to our themed reset page
-        from urllib.parse import urlparse, parse_qs
+        from urllib.parse import parse_qs, urlparse
+
         parsed_url = urlparse(firebase_link)
         params = parse_qs(parsed_url.query)
-        oob_code = params.get('oobCode', [None])[0]
+        oob_code = params.get("oobCode", [None])[0]
 
         if oob_code:
             link = f"{APP_URL}/reset-password/?oobCode={oob_code}"
             logger.info(f"Direct password reset link generated for {request.email}")
         else:
             link = firebase_link
-            logger.warning(f"Failed to parse oobCode for password reset link ({request.email})")
+            logger.warning(
+                f"Failed to parse oobCode for password reset link ({request.email})"
+            )
 
         # Render and Send Email
         html_content = email_service.render_template(
@@ -99,7 +104,9 @@ async def request_email_verification(
             logger.warning(
                 f"Verification email requested for non-existent user: {request.email}"
             )
-            raise HTTPException(status_code=404, detail="Usuário não encontrado") from err
+            raise HTTPException(
+                status_code=404, detail="Usuário não encontrado"
+            ) from err
 
         # Generate Firebase Verification Link
         try:
@@ -113,10 +120,11 @@ async def request_email_verification(
             )
             # Extract oobCode and use a DIRECT link to our app to bypass Firebase UI
             # and prevent parameter stripping during redirects.
-            from urllib.parse import urlparse, parse_qs
+            from urllib.parse import parse_qs, urlparse
+
             parsed_url = urlparse(firebase_link)
             params = parse_qs(parsed_url.query)
-            oob_code = params.get('oobCode', [None])[0]
+            oob_code = params.get("oobCode", [None])[0]
             if oob_code:
                 # Direct link to our themed verification page
                 link = f"{APP_URL}/verify-email/?oobCode={oob_code}"
@@ -124,7 +132,9 @@ async def request_email_verification(
             else:
                 # Fallback to the original link if parsing fails for some reason
                 link = firebase_link
-                logger.warning(f"Failed to parse oobCode from link for {request.email}, using Firebase default link.")
+                logger.warning(
+                    f"Failed to parse oobCode from link for {request.email}, using Firebase default link."
+                )
 
         except Exception as e:
             logger.error(f"Error generating verification link for {request.email}: {e}")

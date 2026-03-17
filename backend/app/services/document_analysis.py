@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict
 
 from app.core.logger import get_logger
+from app.services.ai_service import _call_with_retry
 from app.services.user_preference import get_preferences
 from google import genai
 
@@ -90,7 +91,6 @@ class DocumentAnalysisService:
 
             # Centralized call with retry (importing the function here if needed or moving it to a core utility)
             # For now, let's use a local implementation of retry to avoid circular imports if shared
-            from app.services.ai_service import _call_with_retry
 
             config = types.GenerateContentConfig(
                 response_mime_type="application/json",

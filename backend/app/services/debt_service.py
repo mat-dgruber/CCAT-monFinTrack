@@ -1,14 +1,13 @@
-#app/services/debt_service.py
+# app/services/debt_service.py
 from datetime import date, datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.core.database import get_db
-from app.models.debt import DebtType, InterestPeriod
+from app.models.debt import InterestPeriod
 from app.schemas.debt import (
     Debt,
     DebtCreate,
     DebtPayoffSummary,
-    DebtStats,
     DebtUpdate,
     PaymentPlan,
     PaymentStep,
@@ -44,8 +43,9 @@ def create_debt(user_id: str, debt_in: DebtCreate) -> Debt:
     check_tier_eligibility(user_id)
     db = get_db()
 
-    # Converte para dict. Pydantic v2 model_dump mantém objetos date/datetime originais.
-    data = debt_in.model_dump()
+    # Converte para dict usando mode='json' para garantir que objetos date/datetime
+    # sejam serializados como strings ISO antes de irem para o Firestore.
+    data = debt_in.model_dump(mode="json")
 
     # Log dos dados para depuração de 500 errors
     service_logger.info("Tentando criar dívida para usuário %s: %s", user_id, data)
@@ -53,12 +53,6 @@ def create_debt(user_id: str, debt_in: DebtCreate) -> Debt:
     # Prepara metadados
     data["user_id"] = user_id
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-
-    # Firestore serialization helper: converte date objects para strings ISO
-    # Alguns ambientes/configurações do SDK podem falhar com date puro (querem datetime ou str)
-    for key, value in data.items():
-        if isinstance(value, date) and not isinstance(value, datetime):
-            data[key] = value.isoformat()
 
     try:
         update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
@@ -87,7 +81,7 @@ def list_debts(user_id: str) -> List[Debt]:
         try:
             stats = DebtCalculatorService.calculate_debt_stats(debt_obj)
             debt_obj.stats = stats
-        except Exception as e:
+        except Exception:
             # Silent fail for stats, don't break the whole list
             pass
         debts.append(debt_obj)
@@ -99,16 +93,16 @@ def get_debt(user_id: str, debt_id: str) -> Debt:
     doc = db.collection(COLLECTION_NAME).document(debt_id).get()
     if not doc.exists or doc.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Debt not found")
-    
+
     d_dict = doc.to_dict()
     debt_obj = Debt(id=doc.id, **d_dict)
     # Calculate stats
     try:
         stats = DebtCalculatorService.calculate_debt_stats(debt_obj)
         debt_obj.stats = stats
-    except Exception as e:
+    except Exception:
         pass
-    
+
     return debt_obj
 
 
@@ -121,7 +115,8 @@ def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
     if not doc.exists or doc.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Debt not found")
 
-    data = debt_in.model_dump(exclude_unset=True)
+    # Serialize to JSON mode to ensure dates are strings for Firestore
+    data = debt_in.model_dump(exclude_unset=True, mode="json")
     doc_ref.update(data)
 
     return get_debt(user_id, debt_id)
@@ -352,7 +347,7 @@ def generate_payment_plan(
                     )
                 )
                 d["current_payment"] = 0  # Reset
-        
+
         month_idx += 1
 
     # Summaries

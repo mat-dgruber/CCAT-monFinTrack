@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
-from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.database import get_db
 from app.core.date_utils import get_month_range
@@ -23,6 +22,7 @@ from app.services.analysis_service import analysis_service
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from google.cloud import firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 logger = get_logger(__name__)
 COLLECTION_NAME = "transactions"

@@ -1,7 +1,7 @@
-#app/services/debt_calculator_service.py
+# app/services/debt_calculator_service.py
 import math
 from datetime import date, datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from dateutil.relativedelta import relativedelta
 
@@ -174,7 +174,7 @@ class DebtCalculatorService:
     @staticmethod
     def simulate_revolving(
         balance: float,
-        rate_monthly: float,      # já em decimal, ex: 0.15
+        rate_monthly: float,  # já em decimal, ex: 0.15
         minimum_pct: float = 0.15,
         fixed_payment: float = 0.0,
     ) -> Dict[str, Any]:
@@ -182,6 +182,7 @@ class DebtCalculatorService:
         Projeta rotativo/cheque especial pagando mínimo vs valor fixo.
         """
         from datetime import date
+
         from dateutil.relativedelta import relativedelta
 
         MAX_MONTHS = 600
@@ -196,15 +197,18 @@ class DebtCalculatorService:
 
         while saldo > 0.01 and mes < MAX_MONTHS:
             mes += 1
-            saldo *= (1 + rate_monthly)
+            saldo *= 1 + rate_monthly
             pagamento = max(saldo * minimum_pct, 10.0)
             pagamento = min(pagamento, saldo)
             saldo -= pagamento
             total_pago_min += pagamento
 
-            if mes == 6:  s6 = round(saldo, 2)
-            if mes == 12: s12 = round(saldo, 2)
-            if mes == 24: s24 = round(saldo, 2)
+            if mes == 6:
+                s6 = round(saldo, 2)
+            if mes == 12:
+                s12 = round(saldo, 2)
+            if mes == 24:
+                s24 = round(saldo, 2)
             if data_dobra is None and saldo >= balance * 2:
                 data_dobra = (today + relativedelta(months=mes)).isoformat()
 
@@ -217,14 +221,16 @@ class DebtCalculatorService:
         if valor_fixo > 0:
             while saldo_fixo > 0.01 and meses_fixo < MAX_MONTHS:
                 meses_fixo += 1
-                saldo_fixo *= (1 + rate_monthly)
+                saldo_fixo *= 1 + rate_monthly
                 pag = min(valor_fixo, saldo_fixo)
                 saldo_fixo -= pag
                 total_pago_fixo += pag
                 if saldo_fixo <= 0:
                     break
 
-        juros_total_fixo = total_pago_fixo - balance if total_pago_fixo > balance else 0.0
+        juros_total_fixo = (
+            total_pago_fixo - balance if total_pago_fixo > balance else 0.0
+        )
 
         return {
             "balance": round(balance, 2),
@@ -236,7 +242,9 @@ class DebtCalculatorService:
                 "balance_12_months": s12,
                 "balance_24_months": s24,
                 "doubling_date": data_dobra,
-                "total_paid_12m": round(total_pago_min if mes >= 12 else total_pago_min, 2),
+                "total_paid_12m": round(
+                    total_pago_min if mes >= 12 else total_pago_min, 2
+                ),
             },
             "paying_fixed": {
                 "fixed_amount": round(valor_fixo, 2),
@@ -284,14 +292,21 @@ class DebtCalculatorService:
 
         if debt.debt_type in [DebtType.CREDIT_CARD_ROTATING, DebtType.OVERDRAFT]:
             # Para rotativo, projetamos 12 meses pagando o mínimo (ou 15%)
-            proj = DebtCalculatorService.simulate_revolving(debt.total_amount, rate_monthly, 0.15)
-            total_interest_remaining = proj["paying_minimum"]["total_paid_12m"] - debt.total_amount
+            proj = DebtCalculatorService.simulate_revolving(
+                debt.total_amount, rate_monthly, 0.15
+            )
+            total_interest_remaining = (
+                proj["paying_minimum"]["total_paid_12m"] - debt.total_amount
+            )
             months_remaining = 12
         else:
             # Para financiamentos/empréstimos fixos
             # Se temos parcelas restantes e valor da parcela
             n = debt.remaining_installments or (
-                debt.total_installments - debt.installments_paid if (debt.total_installments and debt.installments_paid) else 0)
+                debt.total_installments - debt.installments_paid
+                if (debt.total_installments and debt.installments_paid)
+                else 0
+            )
             pmt = debt.minimum_payment or 0.0
 
             if n > 0 and pmt > 0:
@@ -301,7 +316,9 @@ class DebtCalculatorService:
             elif rate_monthly > 0 and debt.total_amount > 0 and pmt > 0:
                 # Tenta calcular n se não tivermos
                 try:
-                    n_calc = -math.log(1 - (debt.total_amount * rate_monthly / pmt)) / math.log(1 + rate_monthly)
+                    n_calc = -math.log(
+                        1 - (debt.total_amount * rate_monthly / pmt)
+                    ) / math.log(1 + rate_monthly)
                     total_interest_remaining = (n_calc * pmt) - debt.total_amount
                     months_remaining = round(n_calc)
                 except:
@@ -312,5 +329,5 @@ class DebtCalculatorService:
             "priority_label": priority_label,
             "total_interest_remaining": round(max(0, total_interest_remaining), 2),
             "months_remaining": months_remaining,
-            "monthly_rate": round(rate_monthly * 100, 4)
+            "monthly_rate": round(rate_monthly * 100, 4),
         }

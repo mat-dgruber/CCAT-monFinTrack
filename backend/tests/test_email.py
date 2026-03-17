@@ -1,9 +1,11 @@
 import asyncio
 
+import pytest
 from app.api.routers.auth import LOGO_URL
 from app.services.email_service import email_service
 
 
+@pytest.mark.anyio
 async def test():
     try:
         html_content = email_service.render_template(
@@ -26,7 +28,7 @@ async def test():
         print(
             "Email sent (or queued for background task successfully if you run via API)."
         )
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()

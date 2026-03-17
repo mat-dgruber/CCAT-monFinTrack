@@ -3,8 +3,6 @@ Security Tests: XSS Prevention & Input Sanitization
 Tests that user input is properly sanitized to prevent XSS attacks.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 

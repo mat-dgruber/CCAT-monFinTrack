@@ -334,7 +334,8 @@ def skip_recurrence(
 
 
 from app.api import analysis, mfa_routes
-from app.api.routers import invoices, users, auth as auth_router
+from app.api.routers import auth as auth_router
+from app.api.routers import invoices, users
 
 router.include_router(mfa_routes.router, prefix="/mfa", tags=["MFA"])
 router.include_router(

@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 from typing import List, Optional
-from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.database import get_db
 from app.core.logger import get_logger
 from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
 from fastapi import HTTPException
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 logger = get_logger(__name__)
 
@@ -164,7 +164,10 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
         raise HTTPException(status_code=404, detail="Recurrence not found")
 
     doc_ref.update(
-        {"active": False, "cancellation_date": datetime.now(timezone.utc).date().isoformat()}
+        {
+            "active": False,
+            "cancellation_date": datetime.now(timezone.utc).date().isoformat(),
+        }
     )
 
     updated_doc = doc_ref.get()

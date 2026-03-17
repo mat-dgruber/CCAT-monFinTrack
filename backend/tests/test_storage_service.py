@@ -41,13 +41,14 @@ def test_upload_file_local(storage_service_local, tmp_path):
     filename = "test.txt"
     folder = "test_folder"
     content_type = "text/plain"
+    user_id = "user_123"
 
-    url = storage_service_local.upload_file(content, filename, folder, content_type)
+    url = storage_service_local.upload_file(content, filename, folder, content_type, user_id)
 
-    assert url == f"/static/{folder}/{filename}"
+    assert url == f"users/{user_id}/{folder}/{filename}"
 
     # Verify file exists
-    saved_file = tmp_path / folder / filename
+    saved_file = tmp_path / "users" / user_id / folder / filename
     assert saved_file.exists()
     assert saved_file.read_bytes() == content
 
@@ -65,10 +66,11 @@ def test_upload_file_cloud(mock_bucket_func, storage_service_cloud):
     filename = "cloud.txt"
     folder = "cloud_folder"
     content_type = "text/plain"
+    user_id = "user_123"
 
-    url = storage_service_cloud.upload_file(content, filename, folder, content_type)
+    url = storage_service_cloud.upload_file(content, filename, folder, content_type, user_id)
 
-    assert url == "https://signed-url.com"
+    assert url == f"users/{user_id}/{folder}/{filename}"
     mock_blob.upload_from_string.assert_called_once_with(
         content, content_type=content_type
     )

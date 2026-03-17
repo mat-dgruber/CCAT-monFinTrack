@@ -1,3 +1,16 @@
+import os
+
+from app.api.calculator import router as calculator_router
+from app.api.debts import router as debt_router
+from app.api.indicators import router as indicators_router
+from app.api.jobs import router as jobs_router
+from app.api.resources import router as resources_router
+from app.api.routers import ai, analysis, attachments, import_transactions, stripe
+from app.api.routes import router as api_router
+from app.core.database import get_db
+from app.core.limiter import limiter
+from app.core.logger import get_logger
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -5,19 +18,6 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-
-from app.api.calculator import router as calculator_router
-from app.api.debts import router as debt_router
-from app.api.indicators import router as indicators_router
-from app.api.jobs import router as jobs_router
-from app.api.resources import router as resources_router
-from app.api.routes import router as api_router
-from app.api.routers import ai, analysis, attachments, import_transactions, stripe
-from app.core.database import get_db
-from app.core.limiter import limiter
-from app.core.logger import get_logger
-from dotenv import load_dotenv
-import os
 
 load_dotenv()
 

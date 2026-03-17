@@ -10,7 +10,7 @@ import sys
 def get_logger(name: str = "monfintrack") -> logging.Logger:
     """
     Retorna um logger configurado para o módulo especificado.
-    
+
     Usage:
         from app.core.logger import get_logger
         logger = get_logger(__name__)

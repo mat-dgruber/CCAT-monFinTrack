@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from app.schemas.budget import BudgetCreate
-from app.schemas.category import Category, CategoryType
+from app.schemas.category import Category
 from app.services import budget as budget_service
 
 

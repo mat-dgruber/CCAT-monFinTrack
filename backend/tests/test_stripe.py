@@ -1,5 +1,3 @@
-import os
-
 from dotenv import load_dotenv
 
 load_dotenv(".env")
@@ -15,7 +13,7 @@ def test_stripe():
             user_id="test_user_123", plan="pro_monthly", success_url=url, cancel_url=url
         )
         print("Success:", res)
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()

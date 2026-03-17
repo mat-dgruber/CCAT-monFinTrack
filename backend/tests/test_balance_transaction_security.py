@@ -4,7 +4,7 @@ Tests that account balances cannot be manipulated and
 transactions enforce proper user ownership.
 """
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -26,7 +26,9 @@ class TestBalanceUpdateSecurity:
                 "user_id": "user_A",
                 "balance": 1000.0,
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_acc_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_acc_doc
+            )
 
             from app.services.transaction import _update_account_balance
 
@@ -48,7 +50,9 @@ class TestBalanceUpdateSecurity:
                 "user_id": "user_A",
                 "balance": 1000.0,
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_acc_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_acc_doc
+            )
 
             from app.services.transaction import _update_account_balance
 
@@ -71,7 +75,9 @@ class TestBalanceUpdateSecurity:
                 "user_id": "user_A",
                 "balance": 1000.0,
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_acc_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_acc_doc
+            )
 
             from app.services.transaction import _update_account_balance
 
@@ -93,7 +99,9 @@ class TestBalanceUpdateSecurity:
                 "user_id": "user_A",
                 "balance": 1000.0,
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_acc_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_acc_doc
+            )
 
             from app.services.transaction import _update_account_balance
 
@@ -115,11 +123,15 @@ class TestBalanceUpdateSecurity:
                 "user_id": "user_A",
                 "balance": 700.0,
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_acc_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_acc_doc
+            )
 
             from app.services.transaction import _update_account_balance
 
-            _update_account_balance(mock_db, "acc_123", 300.0, "expense", "user_A", revert=True)
+            _update_account_balance(
+                mock_db, "acc_123", 300.0, "expense", "user_A", revert=True
+            )
 
             mock_db.collection.return_value.document.return_value.update.assert_called_once_with(
                 {"balance": 1000.0}
@@ -137,7 +149,9 @@ class TestBalanceUpdateSecurity:
                 "user_id": "user_A",
                 "balance": 2000.0,
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_acc_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_acc_doc
+            )
 
             from app.services.transaction import _update_account_balance
 
@@ -167,8 +181,9 @@ class TestTransactionDeletion:
 
     def test_delete_transaction_wrong_user_fails(self):
         """Deleting another user's transaction must fail."""
-        with patch("app.services.transaction.get_db") as mock_get_db, \
-             patch("app.services.transaction.analysis_service"):
+        with patch("app.services.transaction.get_db") as mock_get_db, patch(
+            "app.services.transaction.analysis_service"
+        ):
             mock_db = MagicMock()
             mock_get_db.return_value = mock_db
 
@@ -180,7 +195,9 @@ class TestTransactionDeletion:
                 "type": "expense",
                 "account_id": "acc1",
             }
-            mock_db.collection.return_value.document.return_value.get.return_value = mock_doc
+            mock_db.collection.return_value.document.return_value.get.return_value = (
+                mock_doc
+            )
 
             from app.services.transaction import delete_transaction
 

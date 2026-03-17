@@ -10,9 +10,7 @@ from app.schemas.transaction import (
     TransactionStatus,
     TransactionType,
 )
-from app.services import recurrence as recurrence_service
 from app.services import transaction as transaction_service
-from google.cloud import firestore
 
 logger = get_logger(__name__)
 

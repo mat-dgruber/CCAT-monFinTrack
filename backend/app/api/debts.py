@@ -1,4 +1,4 @@
-#app/api/debs.py
+# app/api/debs.py
 from typing import List
 
 from app.core.security import get_current_user
@@ -159,14 +159,12 @@ def simulate_revolving_credit(
 
 
 @router.get("/alerts/{debt_id}")
-def get_debt_alerts(
-    debt_id: str,
-    current_user: dict = Depends(get_current_user)
-):
+def get_debt_alerts(debt_id: str, current_user: dict = Depends(get_current_user)):
     """
     Retorna alertas específicos para uma dívida (IPVA, seguro, gravame, FGTS, subsídio...).
     """
     from app.services.debt_alert_service import DebtAlertService
+
     debt = get_debt(current_user["uid"], debt_id)
     return DebtAlertService.get_alerts(debt)
 
