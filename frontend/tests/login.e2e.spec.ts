@@ -32,6 +32,8 @@ test.describe('Authentication', () => {
     await page.getByRole('button', { name: /entrar/i }).click();
 
     // specific error message locator might vary, checking for a generic toast or error text
-    await expect(page.locator('.p-toast-message-error, .error-message')).toBeVisible();
+    await expect(
+      page.locator('.p-toast-message-error, .error-message'),
+    ).toBeVisible();
   });
 });

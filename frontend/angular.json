@@ -20,9 +20,7 @@
             "browser": "src/main.ts",
             "index": "src/index.html",
             "outputPath": "dist/frontend",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -33,9 +31,7 @@
               "src/assets",
               "src/firebase-messaging-sw.js"
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -86,10 +82,7 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -100,9 +93,7 @@
               "src/assets",
               "src/firebase-messaging-sw.js"
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
+            "styles": ["src/styles.scss"],
             "karmaConfig": "karma.conf.js"
           }
         }

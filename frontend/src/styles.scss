@@ -324,6 +324,10 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   height: 100%;
@@ -672,7 +676,6 @@ h2 {
     }
   }
 }
-
 
 /* Drawer/Sidebar Styles */
 .p-drawer,
