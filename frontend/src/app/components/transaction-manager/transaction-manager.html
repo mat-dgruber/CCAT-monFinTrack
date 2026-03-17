@@ -825,9 +825,13 @@
 
     <!-- Right Sidebar Stats -->
     <div
-      class="w-80 bg-surface-card border-l border-surface-border p-6 flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0 rounded-xl"
+      class="w-80 glass-panel p-6 flex-col gap-6 overflow-y-auto hidden xl:flex shrink-0 rounded-2xl animate-in"
+      style="animation-delay: 0.2s"
     >
-      <h3 class="text-lg font-bold text-color">Resumo</h3>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-xl font-extrabold text-color tracking-tighter">Resumo</h3>
+        <i class="pi pi-chart-bar text-primary opacity-50"></i>
+      </div>
 
       @if (loading()) {
         <div class="space-y-4">
@@ -849,108 +853,102 @@
             <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
             <p-skeleton width="150px" height="2rem"></p-skeleton>
           </div>
-          <div
-            class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30"
-          >
-            <p-skeleton width="100px" styleClass="mb-2"></p-skeleton>
-            <p-skeleton width="150px" height="2rem"></p-skeleton>
-          </div>
-          <div class="border-t border-surface-border my-2"></div>
-          <div class="space-y-3">
-            <div class="flex justify-between items-center">
-              <p-skeleton width="100px"></p-skeleton
-              ><p-skeleton width="80px"></p-skeleton>
-            </div>
-            <div class="flex justify-between items-center">
-              <p-skeleton width="100px"></p-skeleton
-              ><p-skeleton width="80px"></p-skeleton>
-            </div>
-            <div class="flex justify-between items-center">
-              <p-skeleton width="100px"></p-skeleton
-              ><p-skeleton width="80px"></p-skeleton>
-            </div>
-            <div class="flex justify-between items-center">
-              <p-skeleton width="100px"></p-skeleton
-              ><p-skeleton width="80px"></p-skeleton>
-            </div>
-          </div>
         </div>
       } @else if (stats(); as s) {
-        <div class="space-y-4">
-          <div
-            class="p-4 bg-surface-ground /50 rounded-xl border border-surface-border dark:border-gray-600"
-          >
-            <div class="text-sm text-secondary mb-1">Total de Transações</div>
-            <div class="text-2xl font-bold text-color">
-              {{ s.totalTransactions }}
-            </div>
-          </div>
-
-          <div
-            class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/30"
-          >
-            <div class="text-sm text-red-600 dark:text-red-400 mb-1">
-              Total Despesas
-            </div>
-            <div class="text-2xl font-bold text-red-700 dark:text-red-400">
-              {{ s.totalExpense | currency: "BRL" }}
-            </div>
-          </div>
-
-          <div
-            class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/30"
-          >
-            <div class="text-sm text-green-600 dark:text-green-400 mb-1">
-              Total Receitas
-            </div>
-            <div class="text-2xl font-bold text-green-700 dark:text-green-400">
-              {{ s.totalIncome | currency: "BRL" }}
-            </div>
-          </div>
-
-          <div
-            class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30"
-          >
-            <div class="text-sm text-blue-600 dark:text-blue-400 mb-1">
-              Saldo do Período
-            </div>
-            <div class="text-2xl font-bold text-blue-700 dark:text-blue-400">
-              {{ s.net | currency: "BRL" }}
-            </div>
-          </div>
-
-          <div class="border-t border-surface-border my-2"></div>
-
+        <div class="space-y-5">
+          <!-- Main Stats Cards -->
           <div class="space-y-3">
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-secondary">Maior Despesa</span>
-              <span class="font-medium text-color">{{
-                s.maxExpense | currency: "BRL"
-              }}</span>
+            <div class="p-5 bg-surface-ground/40 rounded-3xl border border-surface-border/50 group hover:border-primary/30 transition-all">
+              <div class="flex justify-between items-start mb-1">
+                <span class="text-xs font-bold text-secondary uppercase tracking-widest">Receitas</span>
+                <i class="pi pi-arrow-down-left text-emerald-500"></i>
+              </div>
+              <div class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {{ s.totalIncome | currency: "BRL" }}
+              </div>
             </div>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-secondary">Média (Valor)</span>
-              <span class="font-medium text-color">{{
-                s.avgTx | currency: "BRL"
-              }}</span>
+
+            <div class="p-5 bg-surface-ground/40 rounded-3xl border border-surface-border/50 group hover:border-red-500/30 transition-all">
+              <div class="flex justify-between items-start mb-1">
+                <span class="text-xs font-bold text-secondary uppercase tracking-widest">Despesas</span>
+                <i class="pi pi-arrow-up-right text-red-500"></i>
+              </div>
+              <div class="text-2xl font-extrabold text-red-600 dark:text-red-400 tabular-nums">
+                {{ s.totalExpense | currency: "BRL" }}
+              </div>
             </div>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-secondary">Primeira Data</span>
-              <span class="font-medium text-color">{{
-                s.firstDate | date: "dd/MM/yy"
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-secondary">Última Data</span>
-              <span class="font-medium text-color">{{
-                s.lastDate | date: "dd/MM/yy"
-              }}</span>
+
+            <div class="p-5 bg-primary/5 rounded-3xl border border-primary/20 group hover:border-primary/50 transition-all">
+              <div class="flex justify-between items-start mb-1">
+                <span class="text-xs font-bold text-primary uppercase tracking-widest">Saldo</span>
+                <i class="pi pi-wallet text-primary"></i>
+              </div>
+              <div class="text-2xl font-extrabold text-primary tabular-nums">
+                {{ s.net | currency: "BRL" }}
+              </div>
             </div>
           </div>
-        </div>
-      } @else {
-        <div class="text-center text-secondary py-10">
-          Sem dados para o filtro selecionado.
+
+          <!-- Financial Health -->
+          <div class="py-4 border-y border-surface-border/50">
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-xs font-bold text-secondary uppercase tracking-widest">Saúde do Período</span>
+              <span class="text-sm font-extrabold" [class.text-red-500]="s.healthRatio > 100">
+                {{ s.healthRatio | number:'1.0-0' }}%
+              </span>
+            </div>
+            <div class="h-2 w-full bg-surface-ground rounded-full overflow-hidden border border-surface-border/30">
+              <div
+                class="h-full transition-all duration-1000"
+                [style.width.%]="s.healthRatio > 100 ? 100 : s.healthRatio"
+                [style.backgroundColor]="s.healthRatio > 100 ? '#ef4444' : s.healthRatio > 70 ? '#f59e0b' : 'var(--primary-color)'"
+              ></div>
+            </div>
+            <p class="text-[10px] text-secondary mt-2 leading-relaxed">
+              {{ s.healthRatio > 100 ? '⚠️ Alerta: Você gastou mais do que recebeu.' : s.healthRatio > 70 ? '🤔 Atenção: Seus gastos estão próximos da sua receita.' : '✅ Parabéns: Suas finanças estão saudáveis!' }}
+            </p>
+          </div>
+
+          <!-- Secondary Stats -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between group cursor-help">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                  <i class="pi pi-bolt text-orange-500 text-xs"></i>
+                </div>
+                <span class="text-sm font-medium text-secondary">Maior Gasto</span>
+              </div>
+              <span class="text-sm font-bold tabular-nums">{{ s.maxExpense | currency: "BRL" }}</span>
+            </div>
+
+            <div class="flex items-center justify-between group cursor-help">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <i class="pi pi-percentage text-blue-500 text-xs"></i>
+                </div>
+                <span class="text-sm font-medium text-secondary">Média</span>
+              </div>
+              <span class="text-sm font-bold tabular-nums">{{ s.avgTx | currency: "BRL" }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 mt-4 pt-4 border-t border-surface-border/50">
+            <p-button
+              label="Exportar CSV"
+              icon="pi pi-file-excel"
+              severity="secondary"
+              [outlined]="true"
+              styleClass="w-full text-xs font-bold py-3"
+              (onClick)="exportCSV()"
+            ></p-button>
+
+            <button
+              class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-extrabold text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <i class="pi pi-sparkles text-xs"></i>
+              INSIGHTS DA IA
+            </button>
+          </div>
         </div>
       }
     </div>

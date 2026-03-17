@@ -351,6 +351,31 @@ export class TransactionManager implements OnInit, AfterViewInit {
     const avg =
       list.length > 0 ? (totalIncome + totalExpense) / list.length : 0;
 
+    // Health Ratio & Color
+    const healthRatio = totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0;
+    let healthColor = 'primary';
+    if (healthRatio > 100) healthColor = 'red-500';
+    else if (healthRatio > 70) healthColor = 'orange-500';
+
+    // Simple Trend (mocking daily data from last 7 days for sparkline)
+    // In a real app, this would be grouped by day in the loop
+    const last7Days = new Date();
+    last7Days.setDate(last7Days.getDate() - 7);
+    const dailyData = list
+      .filter((t) => new Date(t.date) >= last7Days)
+      .reduce((acc: any, t) => {
+        const d = new Date(t.date).toISOString().split('T')[0];
+        if (!acc[d]) acc[d] = { income: 0, expense: 0 };
+        if (t.type === 'income') acc[d].income += t.amount;
+        if (t.type === 'expense') acc[d].expense += t.amount;
+        return acc;
+      }, {});
+
+    const trendPoints = Object.values(dailyData).map((d: any) => ({
+      income: d.income,
+      expense: d.expense,
+    }));
+
     return {
       totalTransactions,
       totalIncome,
@@ -361,6 +386,9 @@ export class TransactionManager implements OnInit, AfterViewInit {
       avgTx: avg,
       firstDate: minDate,
       lastDate: maxDate,
+      healthRatio,
+      healthColor,
+      trendPoints,
     };
   });
 
