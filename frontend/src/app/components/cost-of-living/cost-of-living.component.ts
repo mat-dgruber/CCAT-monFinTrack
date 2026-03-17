@@ -10,6 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TagModule } from 'primeng/tag';
 import { MarkdownModule } from 'ngx-markdown';
 import {
   trigger,
@@ -57,6 +58,7 @@ interface Message {
     CurrencyPipe,
     DecimalPipe,
     SkeletonModule,
+    TagModule,
     MarkdownModule,
     PageHelpComponent,
   ],
