@@ -1,78 +1,93 @@
 # Termos de Uso e Política de Privacidade - monFinTrack
 
-**Última atualização:** 26 de Novembro de 2025
+**Última atualização:** 17 de Março de 2026
 
-Bem-vindo ao **monFinTrack**. Este documento unificado estabelece os Termos de Uso e a Política de Privacidade que regem o relacionamento entre você (usuário) e o monFinTrack, baseando-se nas melhores práticas de gerenciamento, segurança e governança de dados.
+Bem-vindo ao **monFinTrack**. Este documento unificado estabelece os Termos de Uso e a Política de Privacidade que regem o relacionamento entre você (usuário) e o monFinTrack, baseando-se nas melhores práticas de gerenciamento, segurança, governança de dados e no uso ético de Inteligência Artificial.
 
 ---
 
 ## PARTE I: TERMOS DE USO
 
 ### 1. Aceitação dos Termos
-Ao acessar e utilizar o monFinTrack, você concorda com estes termos. Se não concordar com qualquer parte, você não deve utilizar o serviço.
 
-### 2. Descrição do Serviço (Modelagem e Análise de Dados)
-O monFinTrack é uma ferramenta de gestão financeira pessoal que permite:
-*   **Estruturação:** Cadastro de contas, categorias e subcategorias.
-*   **Modelagem:** Registro de transações (receitas e despesas) e orçamentos.
-*   **Análise:** Visualização de dashboards, gráficos de evolução e progresso de metas.
+Ao acessar, criar uma conta e utilizar o monFinTrack (em seus planos gratuitos ou pagos), você concorda integralmente com estes termos. Se não concordar com qualquer parte, você não deve utilizar o serviço.
 
-**Isenção de Responsabilidade (Data Quality):** O serviço fornece ferramentas para organização de dados. A precisão, qualidade e veracidade dos dados inseridos são de total responsabilidade do usuário. O monFinTrack não oferece consultoria financeira, contábil ou jurídica.
+### 2. Descrição do Serviço
 
-### 3. Armazenamento e Disponibilidade (Storage & Retrieval)
-*   **Armazenamento:** Seus dados são armazenados em infraestrutura de nuvem segura (ex: Google Cloud Platform/Firebase), utilizando estruturas de banco de dados NoSQL para alta performance.
-*   **Disponibilidade:** Esforçamo-nos para manter o serviço disponível 99% do tempo. No entanto, interrupções para manutenção, migração de dados ou falhas de provedores terceiros podem ocorrer.
-*   **Recuperação:** O usuário tem acesso contínuo aos seus dados enquanto sua conta estiver ativa.
+O monFinTrack é uma plataforma de gestão financeira pessoal e análise de dados que permite:
 
-### 4. Responsabilidades do Usuário
-*   Manter a confidencialidade de suas credenciais de acesso (Segurança).
-*   Garantir que os dados inseridos não violem leis vigentes.
-*   Não tentar realizar engenharia reversa ou explorar vulnerabilidades na estrutura de dados da aplicação.
+- **Estruturação:** Cadastro de contas, categorias e subcategorias.
+- **Modelagem:** Registro de transações (receitas e despesas), faturas de cartão e orçamentos.
+- **Análise Tradicional:** Visualização de dashboards, gráficos de evolução e progresso de metas.
+- **Análise por Inteligência Artificial:** Extração automatizada de dados de recibos (Scanner) e análises de comportamento financeiro ("Advisor" / "Modo Roast").
+
+### 3. Inteligência Artificial e Isenção de Responsabilidade
+
+Nossa plataforma utiliza modelos avançados de Inteligência Artificial (Google Gemini) para automatizar e analisar dados.
+
+- **Aviso Legal:** A IA do monFinTrack atua apenas como uma ferramenta analítica de apoio. **Nenhum insight, conselho ou "Modo Roast" gerado pelo sistema constitui ou substitui a orientação de um contador, advogado ou consultor financeiro certificado.**
+- **Precisão:** O monFinTrack não garante 100% de exatidão na extração de dados via Scanner ou nas análises geradas. É de total responsabilidade do usuário revisar, validar e aprovar os dados antes de salvá-los no banco de dados.
+
+### 4. Assinaturas e Pagamentos (Stripe)
+
+- **Processamento de Pagamentos:** O monFinTrack utiliza a infraestrutura da **Stripe** para o processamento seguro de assinaturas (planos Pro e Premium).
+- **Isenção de Armazenamento:** Nós não coletamos, não processamos e **não armazenamos os números completos do seu cartão de crédito** ou código CVV em nossos servidores.
+- **Cancelamento:** Assinaturas podem ser canceladas a qualquer momento. O acesso Premium permanecerá ativo até o fim do ciclo de faturamento atual. Não há reembolsos pró-rata.
+
+### 5. Ética e Proibições
+
+O usuário compromete-se a usar a plataforma de forma ética e estritamente legal. É proibido:
+
+- Utilizar a plataforma para controle de recursos provenientes de crimes, corrupção ou lavagem de dinheiro.
+- Fazer upload de documentos, recibos ou imagens ilícitas, abusivas ou que contenham malware no serviço de Scanner/Storage.
+- Realizar engenharia reversa, abusar dos limites da API da IA (DDoS) ou explorar vulnerabilidades de software.
+
+O monFinTrack reserva-se o direito de banir imediatamente contas que violem estas regras.
 
 ---
 
 ## PARTE II: POLÍTICA DE PRIVACIDADE
 
-Esta política explica como tratamos seus dados sob a ótica da Lei Geral de Proteção de Dados (LGPD).
+Esta política explica como tratamos seus dados em rigorosa conformidade com a **Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)** do Brasil.
 
 ### 1. Coleta e Estrutura de Dados
-Coletamos apenas os dados necessários para o funcionamento do sistema:
-*   **Dados de Identificação:** E-mail e ID de usuário (para autenticação e governança).
-*   **Dados Financeiros:** Transações, valores, datas, descrições, categorias e orçamentos.
-*   **Metadados:** Logs de acesso e timestamps para auditoria e segurança.
 
-### 2. Segurança de Dados
+Coletamos apenas os dados essenciais para o fornecimento do SaaS:
+
+- **Dados de Identidade:** Nome, E-mail e ID de autenticação (Firebase Auth).
+- **Dados Financeiros:** Valores, descrições, categorias, orçamentos, dados básicos de dívidas e imagens de recibos.
+- **Metadados:** Logs técnicos de acesso para segurança e controle de _rate limits_ (limite de uso da IA).
+
+### 2. Tratamento de Dados por Inteligência Artificial (Google Gemini)
+
+- **Processamento Efêmero:** Textos e imagens (recibos) são enviados à API Corporativa do Google Gemini exclusivamente para extração e processamento no momento da requisição.
+- **Zero Treinamento:** Conforme as políticas de APIs corporativas do Google Cloud, **seus dados pessoais e financeiros não são utilizados para treinar modelos de Inteligência Artificial públicos.**
+
+### 3. Segurança de Dados
+
 Aplicamos rigorosos padrões de segurança:
-*   **Criptografia:** Dados sensíveis são transmitidos via HTTPS (TLS/SSL).
-*   **Controle de Acesso:** O acesso ao banco de dados é estritamente segregado; um usuário não pode acessar os dados financeiros de outro (`user_id` isolation).
-*   **Autenticação:** Utilizamos provedores robustos para gerenciamento de identidade.
 
-### 3. Uso e Análise de Dados
-Utilizamos seus dados para:
-*   Fornecer os dashboards e relatórios de evolução financeira.
-*   Melhorar a usabilidade e performance do sistema.
-*   **Não vendemos seus dados pessoais ou financeiros para terceiros.**
+- **Criptografia:** Dados em trânsito são protegidos via HTTPS (TLS/SSL).
+- **Isolamento (Multitenancy):** A arquitetura do banco de dados (Firestore) garante regras de segurança rígidas, onde cada usuário só possui permissão de leitura/escrita em documentos que contenham seu próprio `user_id`.
 
-### 4. Integração e Compartilhamento de Dados
-*   **Infraestrutura:** Seus dados residem em servidores de terceiros (provedores de nuvem) que seguem normas internacionais de segurança (ISO 27001).
-*   **Integração:** O sistema atualmente não compartilha dados automaticamente com bancos ou outras instituições financeiras sem sua ação explícita.
+### 4. Venda e Compartilhamento
 
-### 5. Migração e Portabilidade (Data Migration)
-Você tem o direito de:
-*   **Exportar:** Solicitar uma cópia dos seus dados em formato estruturado (ex: JSON ou CSV) para migração.
-*   **Excluir:** Solicitar a exclusão completa de sua conta e dados associados.
+- **Não vendemos, alugamos ou comercializamos seus dados sob nenhuma hipótese para bancos, seguradoras ou anunciantes.**
+- Compartilhamos dados apenas com infraestruturas essenciais para o funcionamento do app (Google Cloud/Firebase para hospedagem e banco de dados; Stripe para pagamentos).
 
-### 6. Governança e Direitos do Titular (LGPD)
-Em conformidade com a governança de dados, garantimos seus direitos de:
-*   Confirmar a existência de tratamento de dados.
-*   Acessar seus dados.
-*   Corrigir dados incompletos ou desatualizados.
-*   Revogar o consentimento de uso a qualquer momento (implicando no término do serviço).
+### 5. Seus Direitos (LGPD)
 
-### 7. Alterações na Governança
-Podemos atualizar esta política para refletir mudanças na estrutura, segurança ou legislação. Notificaremos sobre alterações significativas através da plataforma.
+O monFinTrack garante o pleno exercício dos seus direitos como titular:
+
+- **Acesso e Correção:** Você pode ver e alterar todos os seus dados pelo aplicativo.
+- **Portabilidade:** Exportar suas transações a qualquer momento.
+- **Direito ao Esquecimento:** Você pode solicitar ou executar a exclusão total da sua conta via painel de configurações. Esta ação apagará permanentemente seu registro no Auth, todos os seus documentos no Firestore e arquivos no Storage, sem chance de recuperação.
+
+### 6. Atualizações
+
+Esta política pode ser atualizada periodicamente. Mudanças substanciais que afetem o uso dos seus dados serão comunicadas na plataforma.
 
 ---
 
-**Contato**
-Para questões sobre qualidade, segurança ou governança dos seus dados, entre em contato pelo e-mail: `[INSERIR SEU EMAIL AQUI]`
+**Contato e Encarregado de Dados (DPO)**
+Para exercer seus direitos da LGPD, relatar vulnerabilidades ou tirar dúvidas sobre pagamentos, entre em contato através da Central de Ajuda na plataforma ou via e-mail (se aplicável).
