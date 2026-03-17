@@ -353,12 +353,12 @@
                     <!-- Year Separator -->
                     <div
                       *ngIf="t.isNewYear"
-                      class="flex items-center gap-4 mt-4 mb-2"
+                      class="flex items-center gap-4 mt-8 mb-4"
                     >
                       <div
                         class="h-px bg-gray-300 dark:bg-gray-600 flex-1"
                       ></div>
-                      <span class="text-2xl font-bold text-secondary">{{
+                      <span class="text-3xl font-extrabold text-secondary tracking-tighter">{{
                         t.yearLabel
                       }}</span>
                       <div
@@ -369,21 +369,21 @@
                     <!-- Month Separator -->
                     <div
                       *ngIf="t.isNewMonth"
-                      class="flex items-center gap-2 mt-2 mb-1"
+                      class="flex items-center gap-3 mt-4 mb-2"
                     >
                       <span
-                        class="text-xl font-bold text-nav-active-text capitalize"
+                        class="text-xl font-extrabold text-nav-active-text capitalize tracking-tight"
                         >{{ t.monthLabel }}</span
                       >
                       <div
-                        class="h-px bg-blue-100 dark:bg-blue-900/30 flex-1"
+                        class="h-px bg-primary/20 flex-1"
                       ></div>
                     </div>
 
                     <!-- Day Header -->
                     <div class="flex items-center gap-2 font-bold text-color">
-                      <div class="w-1 h-6 bg-accent rounded-full"></div>
-                      <span class="text-lg uppercase">{{
+                      <div class="timeline-accent"></div>
+                      <span class="text-sm font-extrabold uppercase tracking-widest text-secondary/80">{{
                         t.date | date: "dd MMM" : "" : "pt-BR"
                       }}</span>
                     </div>
@@ -527,12 +527,18 @@
                 </td>
                 <td class="hidden lg:table-cell">
                   <div class="flex items-center gap-2">
-                    <p-tag
-                      [severity]="t.status === 'paid' ? 'success' : 'warn'"
-                      [value]="t.status === 'paid' ? 'Pago' : 'Pendente'"
-                      [rounded]="true"
-                      styleClass="text-[10px] font-bold px-2"
-                    ></p-tag>
+                    <div
+                      class="status-pill"
+                      [class.paid]="t.status === 'paid'"
+                      [class.pending]="t.status === 'pending'"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-check-circle]="t.status === 'paid'"
+                        [class.pi-clock]="t.status === 'pending'"
+                      ></i>
+                      {{ t.status === "paid" ? "Pago" : "Pendente" }}
+                    </div>
 
                     @if (
                       t.type === "income" &&
