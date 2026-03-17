@@ -184,6 +184,15 @@ export class TransactionManager implements OnInit, AfterViewInit {
   loading = signal(false);
   selectedDatePreset = signal<string | null>(null);
 
+  quickFilter = signal<string>('all');
+  quickFilterOptions = [
+    { label: 'Todos', value: 'all', icon: 'pi pi-list' },
+    { label: 'Pendentes', value: 'pending', icon: 'pi pi-clock' },
+    { label: 'Hoje', value: 'today', icon: 'pi pi-calendar' },
+    { label: 'Receitas', value: 'income', icon: 'pi pi-arrow-down' },
+    { label: 'Despesas', value: 'expense', icon: 'pi pi-arrow-up' },
+  ];
+
   datePresets = [
     { label: 'Todos', value: 'all' },
     { label: 'Esse Mês', value: 'this-month' },
@@ -489,7 +498,23 @@ export class TransactionManager implements OnInit, AfterViewInit {
   }
 
   transactions = computed(() => {
-    const data = this.rawTransactions();
+    let data = this.rawTransactions();
+    const filter = this.quickFilter();
+
+    if (filter !== 'all') {
+      if (filter === 'pending') {
+        data = data.filter((t) => t.status === 'pending');
+      } else if (filter === 'income' || filter === 'expense') {
+        data = data.filter((t) => t.type === filter);
+      } else if (filter === 'today') {
+        const today = new Date().toISOString().split('T')[0];
+        data = data.filter((t) => {
+          const d = new Date(t.date).toISOString().split('T')[0];
+          return d === today;
+        });
+      }
+    }
+
     const field = this.currentSortField() as keyof Transaction;
     const order = this.currentSortOrder();
 

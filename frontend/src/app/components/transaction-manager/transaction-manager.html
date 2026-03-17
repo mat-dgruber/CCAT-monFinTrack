@@ -39,6 +39,22 @@
     </div>
   </div>
 
+  <!-- Quick Filters -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+    @for (opt of quickFilterOptions; track opt.value) {
+      <button
+        (click)="quickFilter.set(opt.value)"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border-2 shadow-sm"
+        [class]="quickFilter() === opt.value
+          ? 'bg-primary text-primary-text border-primary'
+          : 'bg-surface-card text-secondary border-surface-border hover:border-primary/50'"
+      >
+        <i [class]="opt.icon" class="text-xs"></i>
+        {{ opt.label }}
+      </button>
+    }
+  </div>
+
   <div class="flex flex-col md:flex-row gap-6 h-full min-h-0">
     <!-- Main Content Column -->
     <div class="flex-1 flex flex-col gap-4 overflow-hidden min-h-0">
