@@ -1,0 +1,671 @@
+<p-toast></p-toast>
+<div class="flex flex-col min-h-screen pt-[100px] relative overflow-hidden">
+  <!-- Background Ambient Blobs (Global/Hero) -->
+  <div
+    class="ambient-blob blob-teal w-[600px] h-[600px] -top-40 -left-40 animate-blob opacity-20"
+  ></div>
+  <div
+    class="ambient-blob blob-orange w-[500px] h-[500px] top-1/4 -right-20 animate-blob [animation-delay:-5s] opacity-10"
+  ></div>
+  <!-- Navbar -->
+  <nav
+    [class.py-3]="isScrolled"
+    [class.py-5]="!isScrolled"
+    [class.bg-surface-ground/70]="isScrolled"
+    [class.bg-surface-ground/30]="!isScrolled"
+    [class.shadow-lg]="isScrolled"
+    class="fixed top-0 left-0 z-[100] w-full px-6 backdrop-blur-xl border-b border-surface-border/50 flex justify-between items-center transition-all duration-500 ease-in-out"
+  >
+    <div class="flex items-center gap-3 cursor-pointer" [routerLink]="['/']">
+      <img
+        src="assets/logo-ccat.png"
+        alt="monFinTrack Logo"
+        class="w-10 h-10 object-contain"
+      />
+      <span class="text-xl font-bold font-serif text-emphasis tracking-tight"
+        >monFinTrack</span
+      >
+    </div>
+
+    <div class="flex items-center gap-4">
+      <a
+        routerLink="/login"
+        class="text-sm font-semibold text-secondary hover:text-color transition-colors"
+        aria-label="Entrar na sua conta"
+        >Entrar</a
+      >
+      <p-button
+        label="Criar Conta"
+        [routerLink]="['/login']"
+        styleClass="p-button-sm organic-shape font-bold"
+        ariaLabel="Criar uma nova conta gratuita"
+      ></p-button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header
+    class="relative px-6 py-24 md:py-32 flex flex-col items-center text-center overflow-hidden"
+    style="perspective: 1000px"
+  >
+    <div class="absolute inset-0 hero-gradient -z-10"></div>
+
+    <div
+      class="hero-badge opacity-0 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-600 dark:text-primary-400 text-sm font-bold mb-8"
+    >
+      <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+      <span>O futuro do controle financeiro chegou</span>
+    </div>
+
+    <h1
+      class="hero-title opacity-0 text-5xl md:text-7xl font-extrabold text-color mb-6 max-w-4xl text-balance leading-tight"
+    >
+      Sua vida financeira guiada por
+      <span class="text-primary-500 italic">Inteligência Artificial</span>
+    </h1>
+
+    <p
+      class="hero-p opacity-0 text-lg md:text-xl text-secondary max-w-2xl mb-12 text-balance leading-relaxed"
+    >
+      Esqueça as planilhas manuais. Deixe que nossa IA organize seus gastos,
+      analise suas dívidas e ofereça insights reais para você prosperar.
+    </p>
+
+    <div
+      class="hero-btns opacity-0 flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
+    >
+      <p-button
+        label="Começar Gratuitamente"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        [routerLink]="['/login']"
+        (mouseenter)="onBtnEnter($event)"
+        (mouseleave)="onBtnLeave($event)"
+        (mousemove)="onMagneticMove($event)"
+        (mouseleave)="onMagneticLeave($event)"
+        styleClass="p-button-lg organic-shape font-bold px-10 py-4 shadow-xl shadow-primary-500/20"
+        ariaLabel="Começar a usar o monFinTrack gratuitamente"
+      ></p-button>
+      <p-button
+        label="Ver Planos"
+        [routerLink]="['/']"
+        fragment="pricing"
+        (mouseenter)="onBtnEnter($event)"
+        (mouseleave)="onBtnLeave($event)"
+        (mousemove)="onMagneticMove($event)"
+        (mouseleave)="onMagneticLeave($event)"
+        styleClass="p-button-lg p-button-outlined organic-shape font-bold px-10 py-4"
+        ariaLabel="Ver planos e preços do monFinTrack"
+      ></p-button>
+    </div>
+
+    <!-- Floating UI Preview (Abstract) -->
+    <div class="hero-preview opacity-0 mt-20 w-full max-w-5xl relative">
+      <div
+        class="bg-surface-card/70 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-surface-border/50 animate-float"
+      >
+        <div
+          class="bg-surface-ground rounded-xl p-8 overflow-hidden min-h-[300px] flex flex-col gap-6"
+        >
+          <div
+            class="flex justify-between items-center border-b border-surface-border pb-4"
+          >
+            <div class="w-32 h-6 bg-surface-hover rounded-full"></div>
+            <div class="flex gap-2">
+              <div class="w-8 h-8 rounded-full bg-surface-hover"></div>
+              <div class="w-8 h-8 rounded-full bg-surface-hover"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              class="h-40 bg-primary-500/5 border border-primary-500/10 rounded-xl p-4 flex flex-col justify-between"
+            >
+              <lucide-angular
+                [img]="TrendingDown"
+                class="text-primary-500 w-8 h-8"
+              ></lucide-angular>
+              <div class="h-4 w-1/2 bg-primary-500/20 rounded"></div>
+            </div>
+            <div
+              class="h-40 bg-orange-500/5 border border-orange-500/10 rounded-xl p-4 flex flex-col justify-between"
+            >
+              <lucide-angular
+                [img]="ScanLine"
+                class="text-orange-500 w-8 h-8"
+              ></lucide-angular>
+              <div class="h-4 w-2/3 bg-orange-500/20 rounded"></div>
+            </div>
+            <div
+              class="h-40 bg-purple-500/5 border border-purple-500/10 rounded-xl p-4 flex flex-col justify-between"
+            >
+              <lucide-angular
+                [img]="BrainCircuit"
+                class="text-purple-500 w-8 h-8"
+              ></lucide-angular>
+              <div class="h-4 w-1/3 bg-purple-500/20 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Social Proof / Stats -->
+  <section
+    data-anime="stats-section"
+    class="py-12 border-y border-surface-border bg-surface-card/50"
+  >
+    <div
+      class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+    >
+      <div class="stat-item opacity-0">
+        <p class="text-3xl font-bold text-emphasis">
+          <span class="stat-value" data-target="100">0</span>%
+        </p>
+        <p class="text-secondary text-sm">Privado e Seguro</p>
+      </div>
+      <div class="stat-item opacity-0">
+        <p class="text-3xl font-bold text-emphasis">
+          <span class="stat-value" data-target="8">0</span>+
+        </p>
+        <p class="text-secondary text-sm">Modelos de IA</p>
+      </div>
+      <div class="stat-item opacity-0">
+        <p class="text-3xl font-bold text-emphasis">
+          <span class="stat-value" data-target="24">0</span>/7
+        </p>
+        <p class="text-secondary text-sm">Análise Contínua</p>
+      </div>
+      <div class="stat-item opacity-0">
+        <p class="text-3xl font-bold text-emphasis">
+          <span class="stat-value" data-start="20" data-target="0">20</span>h
+        </p>
+        <p class="text-secondary text-sm">Gasto com Planilhas</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section
+    id="features"
+    class="py-24 px-6 max-w-7xl mx-auto w-full relative"
+    style="perspective: 1000px"
+  >
+    <!-- Features Highlight Blobs for Glass Effect -->
+    <div
+      class="ambient-blob blob-primary w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.05] animate-blob"
+    ></div>
+    <div
+      class="ambient-blob blob-teal w-[400px] h-[400px] top-20 left-1/3 animate-blob opacity-[0.08] [animation-delay:-2s]"
+    ></div>
+    <div
+      class="ambient-blob blob-orange w-[300px] h-[300px] bottom-20 right-1/4 animate-blob opacity-[0.08] [animation-delay:-8s]"
+    ></div>
+    <div
+      class="ambient-blob blob-purple w-[500px] h-[500px] top-1/2 right-0 animate-blob opacity-[0.06] [animation-delay:-12s]"
+    ></div>
+    <div data-anime="reveal-up" class="opacity-0 text-center mb-20">
+      <h2 class="text-4xl font-bold text-emphasis mb-4">
+        Mais do que apenas um extrato
+      </h2>
+      <p class="text-secondary max-w-xl mx-auto italic">
+        O monFinTrack entende o contexto do seu dinheiro, não apenas os números.
+      </p>
+    </div>
+
+    <div
+      data-anime="stagger-features"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+    >
+      @for (feat of features; track feat.title) {
+        <div
+          (mousemove)="onCardMove($event)"
+          (mouseleave)="onCardLeave($event)"
+          class="feature-card opacity-0 bg-surface-card/40 backdrop-blur-2xl p-8 rounded-3xl border border-surface-border/50 transition-all hover:shadow-2xl hover:-translate-y-2 group"
+        >
+          <div
+            class="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 {{
+              feat.bg
+            }}"
+          >
+            <lucide-angular
+              [img]="feat.icon"
+              class="w-6 h-6 {{ feat.color }}"
+            ></lucide-angular>
+          </div>
+          <h3 class="text-xl font-bold text-color mb-3">{{ feat.title }}</h3>
+          <p class="text-secondary text-sm leading-relaxed">
+            {{ feat.description }}
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- AI Deep Dive -->
+  <section
+    id="ai-advisor"
+    data-anime="ai-section"
+    class="py-24 bg-slate-900 dark:bg-slate-950 text-white overflow-hidden relative"
+  >
+    <div
+      class="ambient-blob blob-primary w-[600px] h-[600px] top-0 right-0 animate-blob opacity-20"
+    ></div>
+    <div
+      class="ambient-blob blob-purple w-[400px] h-[400px] bottom-0 left-0 animate-blob [animation-delay:-10s] opacity-10"
+    ></div>
+
+    <div
+      class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+    >
+      <div class="ai-content opacity-0 relative z-10">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="relative">
+            <div
+              class="absolute inset-0 bg-primary-500 blur-xl opacity-20 ai-logo-glow rounded-full"
+            ></div>
+            <img
+              src="assets/logo-ccat.png"
+              alt="Logotipo monFinTrack - Assistente de Inteligência Artificial"
+              class="w-12 h-12 object-contain relative z-10"
+            />
+          </div>
+          <div
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-primary-400 text-xs font-bold"
+          >
+            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+            <span>EXCLUSIVO PREMIUM</span>
+          </div>
+        </div>
+        <h2 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+          Advisor IA: O mentor que você sempre quis.
+        </h2>
+        <p class="text-slate-400 text-lg mb-8 leading-relaxed">
+          Ative o
+          <span class="text-primary-400 font-bold italic">Modo Roast</span> para
+          uma análise ácida e direta sobre seus desperdícios, ou peça conselhos
+          estratégicos para quitar dívidas usando o método Avalanche. Nossa IA
+          não apenas lê seus dados, ela cria estratégias para sua liberdade.
+        </p>
+
+        <ul class="flex flex-col gap-4 mb-10">
+          <li class="flex items-center gap-3">
+            <div class="p-1 rounded-full bg-primary-500/20 text-primary-400">
+              <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+            </div>
+            <span
+              >Caçador de Assinaturas: "Aqueles R$ 19,90 que você
+              esqueceu."</span
+            >
+          </li>
+          <li class="flex items-center gap-3">
+            <div class="p-1 rounded-full bg-primary-500/20 text-primary-400">
+              <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+            </div>
+            <span
+              >Detecção de Anomalias: Gastos fora do comum alertados na
+              hora.</span
+            >
+          </li>
+        </ul>
+
+        <p-button
+          label="Quero meu Advisor"
+          [routerLink]="['/login']"
+          (mouseenter)="onBtnEnter($event)"
+          (mouseleave)="onBtnLeave($event)"
+          styleClass="p-button-lg organic-shape font-bold px-8"
+          ariaLabel="Ativar Advisor Inteligente"
+        ></p-button>
+      </div>
+
+      <div class="ai-visual opacity-0 relative z-10">
+        <div
+          class="bg-slate-800/50 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-2xl"
+        >
+          <div class="flex flex-col gap-4">
+            <div class="ai-bubble opacity-0 flex gap-3">
+              <div
+                class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center shrink-0"
+              >
+                <lucide-angular
+                  [img]="BrainCircuit"
+                  class="w-4 h-4 text-white"
+                ></lucide-angular>
+              </div>
+              <div class="bg-white/10 rounded-2xl p-4 text-sm text-slate-200">
+                <span
+                  class="ai-bubble-text"
+                  data-text="Notei que você gastou 40% mais em 'Fast Food' este mês em comparação à sua média. Isso pode adiar sua meta de 'Viagem' em 2 meses. Quer rever o orçamento?"
+                ></span>
+              </div>
+            </div>
+            <div class="ai-bubble opacity-0 flex gap-3 flex-row-reverse">
+              <div
+                class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center shrink-0"
+              >
+                <lucide-angular
+                  [img]="Sparkles"
+                  class="w-4 h-4 text-white"
+                ></lucide-angular>
+              </div>
+              <div
+                class="bg-primary-500/20 border border-primary-500/30 rounded-2xl p-4 text-sm text-primary-100"
+              >
+                <span
+                  class="ai-bubble-text"
+                  data-text="Putz, a IA tem razão. Vou reduzir os pedidos essa semana!"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-24 bg-surface-ground">
+    <div data-anime="reveal-up" class="opacity-0 text-center mb-16">
+      <h2 class="text-4xl font-bold text-emphasis mb-4">
+        Planos que crescem com você
+      </h2>
+      <p class="text-secondary max-w-xl mx-auto">
+        Comece grátis hoje e desbloqueie o poder da IA conforme sua necessidade.
+      </p>
+    </div>
+    <app-pricing></app-pricing>
+  </section>
+
+  <!-- FAQ Preview (Optional, helpful for SEO) -->
+  <section
+    id="faq"
+    class="py-24 px-6 bg-surface-card border-t border-surface-border"
+  >
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl font-bold text-emphasis mb-12 text-center">
+        Perguntas Frequentes
+      </h2>
+      <div class="grid gap-6">
+        @for (faq of faqs; track faq.question; let i = $index) {
+          <div
+            data-anime="reveal-up"
+            class="opacity-0 bg-surface-ground/50 backdrop-blur-sm border border-surface-border/50 rounded-3xl overflow-hidden transition-all duration-500"
+            [class.border-primary-500/40]="activeFaqIndex === i"
+            [class.bg-surface-ground]="activeFaqIndex === i"
+            [class.shadow-2xl]="activeFaqIndex === i"
+            [class.shadow-primary-500/5]="activeFaqIndex === i"
+          >
+            <button
+              (click)="toggleFaq(i)"
+              class="w-full flex items-center justify-between p-7 text-left hover:bg-surface-hover/50 transition-all duration-300"
+              [attr.aria-expanded]="activeFaqIndex === i"
+              [attr.aria-controls]="'faq-answer-' + i"
+              aria-label="Ver resposta para: {{ faq.question }}"
+            >
+              <h3
+                class="text-xl font-bold text-emphasis tracking-tight"
+                [class.text-primary-500]="activeFaqIndex === i"
+              >
+                {{ faq.question }}
+              </h3>
+              <div
+                class="w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center transition-all duration-500"
+                [class.bg-primary-500/10]="activeFaqIndex === i"
+                [class.text-primary-500]="activeFaqIndex === i"
+                [class.rotate-180]="activeFaqIndex === i"
+              >
+                <i class="pi pi-chevron-down text-xs"></i>
+              </div>
+            </button>
+
+            <div
+              id="faq-answer-{{ i }}"
+              class="faq-content-wrapper overflow-hidden h-0 opacity-0"
+              role="region"
+            >
+              <div
+                class="px-8 pb-10 pt-2 text-secondary text-lg leading-relaxed border-t border-surface-border/20"
+              >
+                <div class="max-w-3xl">
+                  {{ faq.answer }}
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section
+    data-anime="reveal-up"
+    class="opacity-0 py-40 px-6 text-center cta-premium-bg text-white relative"
+  >
+    <!-- Decorative Blobs -->
+    <div
+      class="ambient-blob blob-teal w-[600px] h-[600px] -top-1/2 -left-20 animate-blob opacity-20"
+    ></div>
+    <div
+      class="ambient-blob blob-orange w-[600px] h-[600px] -bottom-1/2 -right-20 animate-blob [animation-delay:-7s] opacity-20"
+    ></div>
+
+    <div class="relative z-10 max-w-4xl mx-auto">
+      <h2
+        class="text-4xl md:text-6xl font-extrabold mb-8 text-white leading-tight"
+      >
+        Pronto para domar seu
+        <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500"
+          >leão financeiro?</span
+        >
+      </h2>
+      <p class="text-slate-300 text-xl mb-12 max-w-2xl mx-auto">
+        Junte-se a milhares de usuários que transformaram suas finanças com a
+        inteligência do monFinTrack.
+      </p>
+      <div
+        class="inline-block p-1 rounded-full bg-gradient-to-r from-orange-500/30 to-pink-500/30 backdrop-blur-md"
+      >
+        <p-button
+          label="Criar minha conta agora"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          [routerLink]="['/login']"
+          styleClass="premium-cta-btn pulse-animation"
+          ariaLabel="Criar conta e domar leão financeiro agora"
+        ></p-button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer
+    class="pt-20 pb-10 px-6 bg-surface-card border-t border-surface-border"
+  >
+    <div
+      class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16"
+    >
+      <!-- Col 1: Brand -->
+      <div class="flex flex-col gap-6">
+        <div class="flex items-center gap-3">
+          <img
+            src="assets/logo-ccat.png"
+            alt="monFinTrack Logo"
+            class="w-10 h-10 object-contain"
+          />
+          <span
+            class="text-xl font-bold font-serif text-emphasis tracking-tight"
+            >monFinTrack</span
+          >
+        </div>
+        <p class="text-secondary text-sm leading-relaxed">
+          Sua saúde financeira levada a sério com o poder da Inteligência
+          Artificial. Organize, analise e prospere.
+        </p>
+        <div class="flex gap-4">
+          <a
+            href="https://instagram.com/monfintrack"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-secondary hover:text-primary-500 transition-colors"
+            aria-label="Siga o monFinTrack no Instagram"
+            ><lucide-angular [img]="Instagram" class="w-5 h-5"></lucide-angular
+          ></a>
+          <a
+            href="https://twitter.com/monfintrack"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-secondary hover:text-primary-500 transition-colors"
+            aria-label="Siga o monFinTrack no Twitter"
+            ><lucide-angular [img]="Twitter" class="w-5 h-5"></lucide-angular
+          ></a>
+          <a
+            href="https://linkedin.com/company/monfintrack"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-secondary hover:text-primary-500 transition-colors"
+            aria-label="Acompanhe o monFinTrack no LinkedIn"
+            ><lucide-angular [img]="Linkedin" class="w-5 h-5"></lucide-angular
+          ></a>
+          <a
+            href="https://github.com/CCAT/monfintrack"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-secondary hover:text-primary-500 transition-colors"
+            aria-label="Veja o código do monFinTrack no GitHub"
+            ><lucide-angular [img]="Github" class="w-5 h-5"></lucide-angular
+          ></a>
+        </div>
+      </div>
+
+      <!-- Col 2: Plataforma -->
+      <div class="flex flex-col gap-4">
+        <h4 class="font-bold text-emphasis uppercase text-xs tracking-widest">
+          Plataforma
+        </h4>
+        <ul class="flex flex-col gap-3 text-sm text-secondary">
+          <li>
+            <a
+              routerLink="/login"
+              class="hover:text-primary-500 transition-colors"
+              >Dashboard Financeiro</a
+            >
+          </li>
+          <li>
+            <a
+              [routerLink]="['/']"
+              fragment="features"
+              class="hover:text-primary-500 transition-colors"
+              >Scanner de Recibos</a
+            >
+          </li>
+          <li>
+            <a
+              [routerLink]="['/']"
+              fragment="pricing"
+              class="hover:text-primary-500 transition-colors"
+              >Planos e Preços</a
+            >
+          </li>
+          <li>
+            <a
+              [routerLink]="['/']"
+              fragment="ai-advisor"
+              class="hover:text-primary-500 transition-colors"
+              >Advisor IA</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Suporte -->
+      <div class="flex flex-col gap-4">
+        <h4 class="font-bold text-emphasis uppercase text-xs tracking-widest">
+          Suporte
+        </h4>
+        <ul class="flex flex-col gap-3 text-sm text-secondary">
+          <li>
+            <a
+              [routerLink]="['/']"
+              fragment="faq"
+              class="hover:text-primary-500 transition-colors"
+              >Central de Ajuda</a
+            >
+          </li>
+          <li>
+            <a
+              routerLink="/contact"
+              class="hover:text-primary-500 transition-colors"
+              >Fale Conosco</a
+            >
+          </li>
+          <li>
+            <a
+              href="javascript:void(0)"
+              (click)="checkStatus($event)"
+              class="hover:text-primary-500 transition-colors"
+              >Status do Sistema</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Legal & Security -->
+      <div class="flex flex-col gap-4">
+        <h4 class="font-bold text-emphasis uppercase text-xs tracking-widest">
+          Segurança
+        </h4>
+        <ul class="flex flex-col gap-3 text-sm text-secondary mb-4">
+          <li>
+            <a
+              routerLink="/terms"
+              class="hover:text-primary-500 transition-colors"
+              >Termos de Uso</a
+            >
+          </li>
+          <li>
+            <a
+              routerLink="/privacy-policy"
+              class="hover:text-primary-500 transition-colors"
+              >Política de Privacidade</a
+            >
+          </li>
+        </ul>
+        <div
+          class="bg-surface-ground p-4 rounded-xl border border-surface-border flex items-center gap-3"
+        >
+          <lucide-angular
+            [img]="Lock"
+            class="text-green-500 w-5 h-5"
+          ></lucide-angular>
+          <div
+            class="text-[10px] text-secondary leading-tight uppercase font-bold"
+          >
+            Pagamentos 100% seguros processados via Stripe
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div
+      class="max-w-7xl mx-auto pt-8 border-t border-surface-border flex flex-col md:flex-row justify-between items-center gap-6"
+    >
+      <p class="text-xs text-gray-400">
+        © {{ currentYear }} monFinTrack. Todos os direitos reservados. Feito com
+        Inteligência por CCAT.
+      </p>
+      <div
+        class="flex items-center gap-6 opacity-50 grayscale hover:grayscale-0 transition-all"
+      >
+        <lucide-angular [img]="CreditCard" class="w-6 h-6"></lucide-angular>
+        <span class="text-xs font-black tracking-tighter">STRIPE</span>
+        <span class="text-xs font-black tracking-tighter uppercase"
+          >SSL SECURE</span
+        >
+      </div>
+    </div>
+  </footer>
+</div>
