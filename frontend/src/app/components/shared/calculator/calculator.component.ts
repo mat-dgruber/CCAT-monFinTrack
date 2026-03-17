@@ -5,15 +5,26 @@ import {
   AfterViewInit,
   OnDestroy,
   signal,
+  computed,
   Output,
   EventEmitter,
+  HostListener,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SubscriptionService } from '../../../services/subscription.service';
+import { CalculatorService } from '../../../services/calculator.service';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+
+export type CalculatorMode = 'arithmetic' | 'financial';
 
 @Component({
   selector: 'app-calculator',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, TagModule, ButtonModule, TooltipModule],
   templateUrl: './calculator.component.html',
   styleUrls: ['./calculator.component.scss'],
 })
@@ -23,10 +34,44 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
 
   @Output() close = new EventEmitter<void>();
 
+  private subService = inject(SubscriptionService);
+  private calcService = inject(CalculatorService);
+
   display = signal('0');
   currentInput = '';
   previousInput = '';
   operator: string | null = null;
+  mode = signal<CalculatorMode>('arithmetic');
+
+  // History / Tape
+  history = signal<string[]>([]);
+  showHistory = signal(false);
+
+  // Financial Form
+  financialData = {
+    balance: 0,
+    rate: 0,
+    installment: 0,
+    extra: 0,
+    type: 'amortization' as 'amortization' | 'present_value',
+    dueDate: '',
+  };
+  financialResult = signal<any>(null);
+  loading = signal(false);
+
+  // Subscriptions
+  canUseFinancial = computed(() =>
+    this.subService.canAccess('calculator_financial'),
+  );
+  canUseHistory = computed(() =>
+    this.subService.canAccess('calculator_history'),
+  );
+  financialBadge = computed(() =>
+    this.subService.getFeatureBadge('calculator_financial'),
+  );
+  historyBadge = computed(() =>
+    this.subService.getFeatureBadge('calculator_history'),
+  );
 
   // Dragging state
   private isDragging = false;
@@ -43,6 +88,52 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     this.initDrag();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (this.mode() === 'financial') return;
+
+    const key = event.key;
+    if (/[0-9]/.test(key)) {
+      this.appendNumber(key);
+    } else if (key === '.') {
+      this.appendNumber('.');
+    } else if (['+', '-', '*', '/'].includes(key)) {
+      this.setOperator(key);
+    } else if (key === 'Enter' || key === '=') {
+      this.calculate();
+    } else if (key === 'Escape' || key === 'c' || key === 'C') {
+      this.clear();
+    } else if (key === 'Backspace') {
+      this.backspace();
+    }
+  }
+
+  backspace() {
+    if (this.currentInput.length > 0) {
+      this.currentInput = this.currentInput.slice(0, -1);
+      this.display.set(this.currentInput || '0');
+    }
+  }
+
+  setMode(newMode: CalculatorMode) {
+    if (newMode === 'financial' && !this.canUseFinancial()) {
+      // Could show a toast or message here
+      return;
+    }
+    this.mode.set(newMode);
+  }
+
+  toggleHistory() {
+    if (!this.canUseHistory()) return;
+    this.showHistory.update((v) => !v);
+  }
+
+  copyResult() {
+    const val = this.display();
+    navigator.clipboard.writeText(val);
+    // Simple visual feedback could be added here
   }
 
   ngOnDestroy() {
@@ -118,10 +209,57 @@ export class CalculatorComponent implements AfterViewInit, OnDestroy {
         return;
     }
 
+    const entry = `${prev} ${this.operator} ${current} = ${calculation}`;
+    this.addToHistory(entry);
+
     this.currentInput = calculation.toString();
     this.operator = null;
     this.previousInput = '';
     this.display.set(this.currentInput);
+  }
+
+  private addToHistory(entry: string) {
+    if (!this.canUseHistory()) return;
+    const currentHistory = this.history();
+    this.history.set([entry, ...currentHistory].slice(0, 20));
+  }
+
+  // --- Financial Logic ---
+
+  runFinancial() {
+    if (!this.canUseFinancial()) return;
+    this.loading.set(true);
+
+    if (this.financialData.type === 'amortization') {
+      this.calcService
+        .simulateAmortization({
+          balance: this.financialData.balance,
+          rate_monthly: this.financialData.rate,
+          installment: this.financialData.installment,
+          extra_amount: this.financialData.extra,
+        })
+        .subscribe({
+          next: (res) => {
+            this.financialResult.set(res);
+            this.loading.set(false);
+          },
+          error: () => this.loading.set(false),
+        });
+    } else {
+      this.calcService
+        .calculatePresentValue({
+          parcel_value: this.financialData.installment,
+          monthly_interest_rate: this.financialData.rate,
+          due_date: this.financialData.dueDate,
+        })
+        .subscribe({
+          next: (res) => {
+            this.financialResult.set(res);
+            this.loading.set(false);
+          },
+          error: () => this.loading.set(false),
+        });
+    }
   }
 
   // Explicit % button handler if we want single-operand % (like converting 50 to 0.5)

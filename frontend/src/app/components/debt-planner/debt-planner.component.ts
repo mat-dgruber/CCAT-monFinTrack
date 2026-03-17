@@ -23,7 +23,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MarkdownModule } from 'ngx-markdown';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -40,6 +40,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
+import { MenuModule } from 'primeng/menu';
 
 import { DividerModule } from 'primeng/divider';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -113,6 +114,7 @@ import {
     SliderModule,
     ToggleSwitchModule,
     MarkdownModule,
+    MenuModule,
   ],
   providers: [MessageService],
   templateUrl: './debt-planner.html',
@@ -485,6 +487,71 @@ export class DebtPlannerComponent implements OnInit {
     installmentCount: 1,
   };
   agreementResult: any = null;
+
+  // --- Métodos de UI ---
+
+  getPrioritySeverity(score: number): any {
+    if (score > 70) return 'danger';
+    if (score > 40) return 'warn';
+    return 'success';
+  }
+
+  getPriorityColor(score: number): string {
+    if (score > 70) return '#ef4444'; // Red
+    if (score > 40) return '#f59e0b'; // Amber
+    return '#22c55e'; // Green
+  }
+
+  getDebtMenuItems(debt: Debt): MenuItem[] {
+    const items: MenuItem[] = [
+      {
+        label: 'Ações Básicas',
+        items: [
+          {
+            label: 'Ver Detalhes',
+            icon: 'pi pi-eye',
+            command: () => this.viewDebtDetails(debt),
+          },
+          {
+            label: 'Editar Dívida',
+            icon: 'pi pi-pencil',
+            command: () => this.editDebt(debt),
+          },
+        ],
+      },
+      {
+        label: 'Simuladores',
+        items: [
+          {
+            label: 'Simular Antecipação',
+            icon: 'pi pi-calculator',
+            command: () => this.openCalculator(debt),
+          },
+        ],
+      },
+    ];
+
+    if (debt.status === DebtStatus.OVERDUE || debt.status === DebtStatus.NEGOTIATION) {
+      (items[1].items as MenuItem[]).push({
+        label: 'Simular Acordo',
+        icon: 'pi pi-handshake',
+        command: () => this.openAgreement(debt),
+      });
+    }
+
+    (items as any).push({
+      separator: true
+    });
+
+    items.push({
+      label: 'Excluir',
+      icon: 'pi pi-trash',
+      className: 'text-red-600',
+      command: () => this.deleteDebt(debt.id),
+    });
+
+    return items;
+  }
 
   ngOnInit() {
     this.loadDebts();

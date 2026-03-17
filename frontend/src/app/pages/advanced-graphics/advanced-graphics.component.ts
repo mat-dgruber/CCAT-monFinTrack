@@ -39,7 +39,9 @@ import { TransactionService } from '../../services/transaction.service';
       <!-- Standard Header Section -->
       <div class="page-header mb-12">
         <div class="page-title-group">
-          <h1 class="page-title text-4xl font-black tracking-tight mb-2 text-emphasis">
+          <h1
+            class="page-title text-4xl font-black tracking-tight mb-2 text-emphasis"
+          >
             Gráficos Avançados
           </h1>
           <p class="page-description text-lg text-secondary/80">
@@ -50,7 +52,7 @@ import { TransactionService } from '../../services/transaction.service';
         <div class="page-actions w-full md:w-auto">
           <p-button
             (onClick)="addChart()"
-            styleClass="bg-primary hover:bg-primary-600 text-white border-none shadow-2xl shadow-primary/30 transition-all duration-500 transform hover:-translate-y-1 active:scale-95 rounded-2xl px-8 py-4 font-black"
+            styleClass="bg-primary hover:bg-primary-600 text-white border-none shadow-2xl shadow-primary transition-all duration-500 transform hover:-translate-y-1 active:scale-95 rounded-2xl px-8 py-4 font-black"
           >
             <ng-template pTemplate="content">
               <i class="pi pi-plus-circle mr-3 text-xl"></i>
@@ -83,10 +85,12 @@ import { TransactionService } from '../../services/transaction.service';
                 <i class="pi pi-sliders-h text-xl"></i>
               </div>
               <div class="flex flex-col">
-                <span class="font-black text-emphasis tracking-tighter uppercase text-xs"
+                <span
+                  class="font-black text-emphasis tracking-tighter uppercase text-xs"
                   >Filtros Globais</span
                 >
-                <span class="text-[10px] text-secondary font-medium tracking-wide"
+                <span
+                  class="text-[10px] text-secondary font-medium tracking-wide"
                   >Sincronizar todos os widgets</span
                 >
               </div>
@@ -94,7 +98,9 @@ import { TransactionService } from '../../services/transaction.service';
 
             <div class="flex flex-wrap gap-6 w-full xl:w-auto">
               <!-- Período -->
-              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
+              <div
+                class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none"
+              >
                 <label
                   class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
                   >Período</label
@@ -112,7 +118,9 @@ import { TransactionService } from '../../services/transaction.service';
               </div>
 
               <!-- Tipo de Gráfico -->
-              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
+              <div
+                class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none"
+              >
                 <label
                   class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
                   >Estilo</label
@@ -127,8 +135,12 @@ import { TransactionService } from '../../services/transaction.service';
                   panelStyleClass="premium-dropdown-panel"
                 >
                   <ng-template pTemplate="item" let-item>
-                    <div class="flex items-center justify-between w-full gap-3 py-1">
-                      <span class="text-sm font-semibold">{{ item.label }}</span>
+                    <div
+                      class="flex items-center justify-between w-full gap-3 py-1"
+                    >
+                      <span class="text-sm font-semibold">{{
+                        item.label
+                      }}</span>
                       <span
                         *ngIf="
                           item.pro &&
@@ -143,7 +155,9 @@ import { TransactionService } from '../../services/transaction.service';
               </div>
 
               <!-- Filtro de Valores -->
-              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
+              <div
+                class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none"
+              >
                 <label
                   class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
                   >Fluxo</label
@@ -161,7 +175,9 @@ import { TransactionService } from '../../services/transaction.service';
               </div>
 
               <!-- Agrupamento -->
-              <div class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none">
+              <div
+                class="flex flex-col gap-2 min-w-[160px] flex-1 sm:flex-none"
+              >
                 <label
                   class="text-[10px] font-black text-secondary uppercase tracking-[0.1em] ml-1 opacity-70"
                   >Dimensão</label
@@ -266,7 +282,9 @@ import { TransactionService } from '../../services/transaction.service';
           class="flex flex-col items-center justify-center p-24 bg-surface-card/40 backdrop-blur-md rounded-[4rem] border-4 border-dashed border-surface-border animate-in fade-in zoom-in duration-1000"
         >
           <div class="relative mb-10">
-            <div class="absolute inset-0 bg-primary blur-[80px] opacity-20 rounded-full animate-pulse"></div>
+            <div
+              class="absolute inset-0 bg-primary blur-[80px] opacity-20 rounded-full animate-pulse"
+            ></div>
             <div
               class="relative w-28 h-28 bg-surface-ground rounded-[2.5rem] flex items-center justify-center text-primary shadow-2xl"
             >
@@ -276,8 +294,11 @@ import { TransactionService } from '../../services/transaction.service';
           <h2 class="text-4xl font-black text-emphasis mb-4 tracking-tighter">
             Sua jornada analítica começa aqui
           </h2>
-          <p class="text-secondary text-lg mb-12 max-w-md text-center leading-relaxed">
-            Não há dados sendo exibidos agora. Adicione seu primeiro gráfico para transformar números em decisões inteligentes.
+          <p
+            class="text-secondary text-lg mb-12 max-w-md text-center leading-relaxed"
+          >
+            Não há dados sendo exibidos agora. Adicione seu primeiro gráfico
+            para transformar números em decisões inteligentes.
           </p>
           <p-button
             label="Criar meu primeiro gráfico"

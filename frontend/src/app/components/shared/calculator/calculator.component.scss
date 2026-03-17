@@ -1,42 +1,91 @@
 .calculator-window {
   /* Initial positioning handled by fixed + top/right in HTML, moved by transform */
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 0.2s;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &:active {
-    box-shadow: 0 15px 50px -10px rgba(0, 0, 0, 0.4);
+  &:hover {
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
   }
 }
 
 .btn-calc {
-  @apply h-10 w-full rounded-lg font-medium text-sm transition-all duration-100 flex items-center justify-center;
-  @apply bg-surface-card text-color border border-surface-border shadow-sm;
+  background-color: color-mix(in srgb, var(--surface-card), transparent 60%);
+  @apply h-11 w-full rounded-xl font-bold text-xs transition-all duration-200 flex items-center justify-center;
+  @apply text-color shadow-sm;
+  border: 1px solid color-mix(in srgb, white, transparent 80%);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
   &:hover {
-    @apply bg-surface-ground dark:bg-slate-600 transform -translate-y-[1px];
+    background-color: color-mix(
+      in srgb,
+      var(--surface-ground),
+      transparent 40%
+    );
+    @apply -translate-y-[2px];
+    border-color: color-mix(in srgb, var(--primary-color), transparent 70%);
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   &:active {
-    @apply bg-surface-hover dark:bg-slate-500 transform translate-y-[1px] shadow-inner;
+    background-color: color-mix(in srgb, var(--surface-hover), transparent 20%);
+    @apply translate-y-[1px];
+    border-color: color-mix(in srgb, var(--primary-color), transparent 50%);
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   }
 }
 
 .btn-operator {
-  @apply bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800;
+  background-color: color-mix(in srgb, var(--primary-color), transparent 85%);
+  @apply text-primary font-black text-sm;
+  border: 1px solid color-mix(in srgb, var(--primary-color), transparent 60%);
 
   &:hover {
-    @apply bg-blue-100 dark:bg-blue-900/50;
+    background-color: color-mix(in srgb, var(--primary-color), transparent 75%);
+    border-color: color-mix(in srgb, var(--primary-color), transparent 40%);
   }
 }
 
 .btn-action {
-  @apply bg-surface-hover dark:bg-slate-600 text-secondary;
+  background-color: color-mix(in srgb, var(--surface-hover), transparent 40%);
+  @apply text-secondary;
+  border: 1px solid color-mix(in srgb, white, transparent 80%);
 }
 
 .btn-equals {
-  @apply bg-blue-600 text-white border-blue-600 shadow-blue-200 dark:shadow-none;
+  @apply bg-primary text-white shadow-lg font-black text-sm;
+  border: 1px solid color-mix(in srgb, white, transparent 70%);
 
   &:hover {
-    @apply bg-blue-700 border-blue-700;
+    background-color: color-mix(in srgb, var(--primary-color), transparent 5%);
+    @apply -translate-y-[2px] shadow-primary;
+    border-color: color-mix(in srgb, white, transparent 50%);
   }
+}
+
+/* History Tape Styling */
+.scroll-bar {
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-surface-border rounded-full;
+  }
+}
+
+/* Keypad Grid spacing */
+.grid {
+  grid-template-rows: repeat(5, 1fr);
+}
+
+.form-group {
+  @apply flex flex-col gap-1;
 }

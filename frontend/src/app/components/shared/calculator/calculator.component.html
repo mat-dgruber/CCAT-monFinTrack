@@ -1,62 +1,278 @@
 <div
   #calculatorWindow
-  class="calculator-window shadow-2xl rounded-xl overflow-hidden bg-surface-card border border-surface-border w-64 fixed top-20 right-20 z-50"
+  class="calculator-window shadow-2xl rounded-2xl overflow-hidden bg-surface-card/80 backdrop-blur-xl border border-surface-border w-72 fixed top-20 right-20 z-50 transition-all duration-300"
 >
   <!-- Header / Drag Handle -->
   <div
     #dragHandle
-    class="drag-handle bg-surface-hover p-2 flex items-center justify-between cursor-move select-none border-b border-surface-border"
+    class="drag-handle bg-surface-hover/50 p-3 flex items-center justify-between cursor-move select-none border-b border-surface-border"
   >
     <div class="flex items-center gap-2">
-      <i class="pi pi-calculator text-secondary"></i>
-      <span class="text-xs font-bold text-secondary uppercase tracking-wider"
+      <i class="pi pi-calculator text-primary"></i>
+      <span
+        class="text-[10px] font-bold text-secondary uppercase tracking-widest"
         >Calculadora</span
       >
     </div>
+    <div class="flex items-center gap-1">
+      <button
+        (click)="copyResult()"
+        class="p-1.5 hover:bg-surface-hover rounded-lg transition-colors cursor-pointer"
+        pTooltip="Copiar Resultado"
+        tooltipPosition="bottom"
+      >
+        <i class="pi pi-copy text-secondary text-[10px]"></i>
+      </button>
+      <button
+        (click)="close.emit()"
+        class="p-1.5 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+      >
+        <i class="pi pi-times text-secondary text-[10px]"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex border-b border-surface-border bg-surface-card/40">
     <button
-      (click)="close.emit()"
-      class="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-md transition-colors cursor-pointer"
-      type="button"
+      (click)="setMode('arithmetic')"
+      class="flex-1 py-2 text-[10px] font-bold uppercase transition-all"
+      [class.text-primary]="mode() === 'arithmetic'"
+      [class.border-b-2]="mode() === 'arithmetic'"
+      [class.border-primary]="mode() === 'arithmetic'"
+      [class.text-secondary]="mode() !== 'arithmetic'"
     >
-      <i class="pi pi-times text-secondary text-xs"></i>
+      Aritmética
+    </button>
+    <button
+      (click)="setMode('financial')"
+      class="flex-1 py-2 text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1 relative"
+      [class.text-primary]="mode() === 'financial'"
+      [class.border-b-2]="mode() === 'financial'"
+      [class.border-primary]="mode() === 'financial'"
+      [class.text-secondary]="mode() !== 'financial'"
+      [class.opacity-50]="!canUseFinancial()"
+    >
+      Financeira
+      <p-tag
+        *ngIf="financialBadge()"
+        [value]="financialBadge()!.label"
+        [severity]="financialBadge()!.severity"
+        styleClass="text-[8px] px-1 py-0"
+      ></p-tag>
     </button>
   </div>
 
-  <!-- Display -->
-  <div class="p-3 bg-surface-ground text-right">
-    <div class="text-xs text-gray-400 min-h-[1rem]">
-      {{ previousInput }} {{ operator }}
-    </div>
+  <!-- ARITHMETIC MODE -->
+  <ng-container *ngIf="mode() === 'arithmetic'">
+    <!-- History Tape (PRO) -->
     <div
-      class="text-2xl font-mono font-bold text-color dark:text-gray-100 truncate tracking-widest"
+      *ngIf="showHistory()"
+      class="bg-surface-ground/50 border-b border-surface-border max-h-32 overflow-y-auto p-2 scroll-bar"
     >
-      {{ display() }}
+      <div
+        *ngFor="let item of history()"
+        class="text-[10px] text-secondary font-mono mb-1 last:mb-0 border-b border-surface-border/30 pb-1"
+      >
+        {{ item }}
+      </div>
+      <div
+        *ngIf="history().length === 0"
+        class="text-[10px] text-secondary text-center italic py-2"
+      >
+        Nenhum histórico disponível
+      </div>
     </div>
-  </div>
 
-  <!-- Keypad -->
-  <div class="grid grid-cols-4 gap-1 p-2 bg-surface-hover">
-    <button (click)="clear()" class="col-span-2 btn-calc btn-action">C</button>
-    <button (click)="handlePercentage()" class="btn-calc btn-action">%</button>
-    <button (click)="setOperator('/')" class="btn-calc btn-operator">÷</button>
+    <!-- Display -->
+    <div class="p-4 bg-surface-ground/30 text-right relative group">
+      <!-- History Toggle (PRO) -->
+      <button
+        *ngIf="canUseHistory()"
+        (click)="toggleHistory()"
+        class="absolute left-3 top-3 p-1.5 rounded-lg bg-surface-hover/50 hover:bg-primary/20 text-primary transition-all shadow-sm z-10"
+        pTooltip="Ver Histórico"
+        tooltipPosition="right"
+      >
+        <i
+          class="pi text-[10px]"
+          [ngClass]="showHistory() ? 'pi-chevron-up' : 'pi-book'"
+        ></i>
+      </button>
 
-    <button (click)="appendNumber('7')" class="btn-calc">7</button>
-    <button (click)="appendNumber('8')" class="btn-calc">8</button>
-    <button (click)="appendNumber('9')" class="btn-calc">9</button>
-    <button (click)="setOperator('*')" class="btn-calc btn-operator">×</button>
+      <div class="text-[10px] text-secondary/60 min-h-[1rem] font-mono">
+        {{ previousInput }} {{ operator }}
+      </div>
+      <div
+        class="text-3xl font-mono font-bold text-color truncate tracking-tight"
+      >
+        {{ display() }}
+      </div>
+    </div>
 
-    <button (click)="appendNumber('4')" class="btn-calc">4</button>
-    <button (click)="appendNumber('5')" class="btn-calc">5</button>
-    <button (click)="appendNumber('6')" class="btn-calc">6</button>
-    <button (click)="setOperator('-')" class="btn-calc btn-operator">-</button>
+    <!-- Keypad -->
+    <div class="grid grid-cols-4 gap-1.5 p-3 bg-surface-hover/20">
+      <button (click)="clear()" class="col-span-2 btn-calc btn-action">
+        C
+      </button>
+      <button (click)="handlePercentage()" class="btn-calc btn-action">
+        %
+      </button>
+      <button (click)="setOperator('/')" class="btn-calc btn-operator">
+        ÷
+      </button>
 
-    <button (click)="appendNumber('1')" class="btn-calc">1</button>
-    <button (click)="appendNumber('2')" class="btn-calc">2</button>
-    <button (click)="appendNumber('3')" class="btn-calc">3</button>
-    <button (click)="setOperator('+')" class="btn-calc btn-operator">+</button>
+      <button (click)="appendNumber('7')" class="btn-calc">7</button>
+      <button (click)="appendNumber('8')" class="btn-calc">8</button>
+      <button (click)="appendNumber('9')" class="btn-calc">9</button>
+      <button (click)="setOperator('*')" class="btn-calc btn-operator">
+        ×
+      </button>
 
-    <button (click)="appendNumber('0')" class="col-span-2 btn-calc">0</button>
-    <button (click)="appendNumber('.')" class="btn-calc">.</button>
-    <button (click)="calculate()" class="btn-calc btn-equals">=</button>
-  </div>
+      <button (click)="appendNumber('4')" class="btn-calc">4</button>
+      <button (click)="appendNumber('5')" class="btn-calc">5</button>
+      <button (click)="appendNumber('6')" class="btn-calc">6</button>
+      <button (click)="setOperator('-')" class="btn-calc btn-operator">
+        -
+      </button>
+
+      <button (click)="appendNumber('1')" class="btn-calc">1</button>
+      <button (click)="appendNumber('2')" class="btn-calc">2</button>
+      <button (click)="appendNumber('3')" class="btn-calc">3</button>
+      <button (click)="setOperator('+')" class="btn-calc btn-operator">
+        +
+      </button>
+
+      <button (click)="appendNumber('0')" class="col-span-2 btn-calc">0</button>
+      <button (click)="appendNumber('.')" class="btn-calc">.</button>
+      <button (click)="calculate()" class="btn-calc btn-equals">=</button>
+    </div>
+  </ng-container>
+
+  <!-- FINANCIAL MODE (PREMIUM) -->
+  <ng-container *ngIf="mode() === 'financial'">
+    <div class="p-4 flex flex-col gap-3">
+      <div class="flex gap-1 bg-surface-hover/40 p-1 rounded-lg">
+        <button
+          (click)="financialData.type = 'amortization'"
+          class="flex-1 py-1 text-[9px] font-bold rounded"
+          [class.bg-surface-card]="financialData.type === 'amortization'"
+          [class.shadow-sm]="financialData.type === 'amortization'"
+        >
+          AMORTIZAÇÃO
+        </button>
+        <button
+          (click)="financialData.type = 'present_value'"
+          class="flex-1 py-1 text-[9px] font-bold rounded"
+          [class.bg-surface-card]="financialData.type === 'present_value'"
+          [class.shadow-sm]="financialData.type === 'present_value'"
+        >
+          ANTECIPAÇÃO
+        </button>
+      </div>
+
+      <!-- Inputs -->
+      <div class="space-y-2">
+        <div *ngIf="financialData.type === 'amortization'" class="form-group">
+          <label class="text-[9px] uppercase text-secondary font-bold"
+            >Saldo Devedor</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="financialData.balance"
+            class="w-full bg-surface-hover/50 border border-surface-border rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary"
+          />
+        </div>
+        <div class="form-group">
+          <label class="text-[9px] uppercase text-secondary font-bold"
+            >Valor Parcela</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="financialData.installment"
+            class="w-full bg-surface-hover/50 border border-surface-border rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary"
+          />
+        </div>
+        <div class="form-group">
+          <label class="text-[9px] uppercase text-secondary font-bold"
+            >Taxa Mensal (%)</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="financialData.rate"
+            class="w-full bg-surface-hover/50 border border-surface-border rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary"
+          />
+        </div>
+        <div *ngIf="financialData.type === 'amortization'" class="form-group">
+          <label class="text-[9px] uppercase text-secondary font-bold"
+            >Valor Extra</label
+          >
+          <input
+            type="number"
+            [(ngModel)]="financialData.extra"
+            class="w-full bg-surface-hover/50 border border-surface-border rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary"
+          />
+        </div>
+        <div *ngIf="financialData.type === 'present_value'" class="form-group">
+          <label class="text-[9px] uppercase text-secondary font-bold"
+            >Data Vencimento</label
+          >
+          <input
+            type="date"
+            [(ngModel)]="financialData.dueDate"
+            class="w-full bg-surface-hover/50 border border-surface-border rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary"
+          />
+        </div>
+      </div>
+
+      <button
+        (click)="runFinancial()"
+        [disabled]="loading()"
+        class="w-full bg-primary text-white py-2 rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+      >
+        <i class="pi pi-spin pi-spinner text-[10px]" *ngIf="loading()"></i>
+        {{ loading() ? "CALCULANDO..." : "CALCULAR" }}
+      </button>
+
+      <!-- Results -->
+      <div
+        *ngIf="financialResult()"
+        class="mt-2 p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-1 animate-in fade-in slide-in-from-bottom-2"
+      >
+        <div *ngIf="financialData.type === 'amortization'">
+          <div class="flex justify-between text-[10px]">
+            <span class="text-secondary">Meses Salvos</span>
+            <span class="font-bold text-primary"
+              >{{ financialResult().reduce_term.months_saved }} meses</span
+            >
+          </div>
+          <div class="flex justify-between text-[10px]">
+            <span class="text-secondary">Economia Juros</span>
+            <span class="font-bold text-green-500"
+              >R$
+              {{
+                financialResult().reduce_term.interest_saved | number: "1.2-2"
+              }}</span
+            >
+          </div>
+        </div>
+        <div *ngIf="financialData.type === 'present_value'">
+          <div class="flex justify-between text-[10px]">
+            <span class="text-secondary">Valor com Desconto</span>
+            <span class="font-bold text-primary"
+              >R$
+              {{ financialResult().discounted_amount | number: "1.2-2" }}</span
+            >
+          </div>
+          <div class="flex justify-between text-[10px]">
+            <span class="text-secondary">Economia</span>
+            <span class="font-bold text-green-500"
+              >R$
+              {{ financialResult().discount_obtained | number: "1.2-2" }}</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
 </div>
