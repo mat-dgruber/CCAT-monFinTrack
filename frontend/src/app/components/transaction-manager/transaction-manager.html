@@ -379,36 +379,36 @@
           </ng-template>
           <ng-template pTemplate="body" let-t>
             @if (loading()) {
+              <!-- Skeleton Loading (Refined) -->
               <tr>
                 <td>
-                  <div class="flex flex-col gap-1">
-                    <p-skeleton width="150px"></p-skeleton>
-                    <p-skeleton width="100px" height="0.8rem"></p-skeleton>
+                  <div class="flex flex-col gap-2">
+                    <p-skeleton width="150px" height="1.2rem"></p-skeleton>
+                    <p-skeleton width="100px" height="0.6rem"></p-skeleton>
                   </div>
                 </td>
                 <td class="text-right">
                   <div class="flex justify-end">
-                    <p-skeleton width="80px"></p-skeleton>
+                    <p-skeleton width="80px" height="1.5rem"></p-skeleton>
                   </div>
                 </td>
                 <td class="hidden lg:table-cell">
                   <div class="flex items-center gap-2">
                     <p-skeleton shape="circle" size="2rem"></p-skeleton>
-                    <p-skeleton width="100px"></p-skeleton>
+                    <p-skeleton width="80px"></p-skeleton>
                   </div>
                 </td>
                 <td class="hidden md:table-cell">
-                  <p-skeleton width="80px"></p-skeleton>
+                  <p-skeleton width="70px"></p-skeleton>
                 </td>
                 <td class="hidden xl:table-cell">
-                  <p-skeleton width="80px"></p-skeleton>
+                  <p-skeleton width="60px" borderRadius="8px"></p-skeleton>
                 </td>
                 <td class="hidden lg:table-cell">
-                  <p-skeleton width="60px" borderRadius="16px"></p-skeleton>
+                  <p-skeleton width="80px" borderRadius="16px" height="1.5rem"></p-skeleton>
                 </td>
                 <td>
                   <div class="flex justify-end gap-1">
-                    <p-skeleton shape="circle" size="2rem"></p-skeleton>
                     <p-skeleton shape="circle" size="2rem"></p-skeleton>
                     <p-skeleton shape="circle" size="2rem"></p-skeleton>
                   </div>
@@ -416,19 +416,43 @@
               </tr>
             } @else {
               <tr
-                class="hover:bg-surface-hover/50 dark:hover:bg-slate-700/30 transition-all border-b border-surface-border/50 group cursor-pointer"
+                class="group cursor-pointer"
+                [style.--hover-glow]="(t.category?.color || '#888') + '20'"
                 (dblclick)="editTransaction(t)"
               >
                 <td>
                   <div class="flex flex-col">
                     <span
-                      class="font-bold text-color group-hover:text-primary transition-colors"
+                      class="font-extrabold text-color group-hover:text-primary transition-colors tracking-tight"
                     >
                       {{ t.title }}
                     </span>
-                    <span class="text-xs text-secondary mt-0.5">
-                      {{ t.payment_method | paymentFormat }}
-                    </span>
+                    <div class="flex items-center gap-2 mt-1">
+                      <!-- Payment Method Icon -->
+                      <div class="payment-icon" [ngClass]="{
+                        'pix': t.payment_method === 'pix',
+                        'card': t.payment_method === 'credit_card' || t.payment_method === 'debit_card',
+                        'cash': t.payment_method === 'cash',
+                        'transfer': t.payment_method === 'bank_transfer',
+                        'other': t.payment_method === 'other'
+                      }">
+                        <i class="pi" [ngClass]="{
+                          'pi-id-card': t.payment_method === 'pix',
+                          'pi-credit-card': t.payment_method === 'credit_card' || t.payment_method === 'debit_card',
+                          'pi-money-bill': t.payment_method === 'cash',
+                          'pi-arrow-right-arrow-left': t.payment_method === 'bank_transfer',
+                          'pi-ellipsis-h': t.payment_method === 'other'
+                        }"></i>
+                      </div>
+                      <span class="text-[10px] text-secondary/70 font-medium uppercase tracking-tighter">
+                        {{ t.payment_method | paymentFormat }}
+                      </span>
+                    </div>
+                    @if (t.description) {
+                      <span class="text-[10px] italic text-secondary/50 mt-1 line-clamp-1 max-w-[200px]">
+                        {{ t.description }}
+                      </span>
+                    }
                   </div>
                 </td>
                 <td class="text-right">
@@ -439,13 +463,13 @@
                         t.category?.name === 'Fatura Cartão'
                           ? 'text-secondary font-bold text-lg'
                           : t.type === 'expense'
-                            ? 'text-red-600 dark:text-red-400 font-extrabold text-lg'
+                            ? 'text-red-600 dark:text-red-400 font-black text-lg'
                             : t.type === 'transfer'
                               ? 'text-secondary font-bold text-lg'
-                              : 'text-green-600 dark:text-green-400 font-extrabold text-lg'
+                              : 'text-emerald-600 dark:text-emerald-400 font-black text-lg'
                       "
                     >
-                      <span class="text-sm opacity-70 mr-0.5">
+                      <span class="text-xs opacity-50 mr-0.5 tabular-nums">
                         {{
                           t.category?.is_hidden ||
                           t.category?.name === "Fatura Cartão"
@@ -459,9 +483,9 @@
                     </span>
                     @if (t.is_auto_pay) {
                       <span
-                        class="text-[10px] text-accent font-medium mt-1 flex items-center gap-1"
+                        class="text-[9px] text-accent font-black mt-0.5 flex items-center gap-1 bg-accent/5 px-1.5 py-0.5 rounded-md border border-accent/10"
                       >
-                        <i class="pi pi-sync text-[8px]"></i> AUTO
+                        <i class="pi pi-sync text-[8px] animate-spin-slow"></i> AUTO
                       </span>
                     }
                   </div>
@@ -470,13 +494,9 @@
                   <div class="flex items-center gap-3">
                     @if (t.type !== "transfer") {
                       <div
-                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                        [style.backgroundColor]="
-                          (t.category?.color || '#888') + '15'
-                        "
-                        [style.border]="
-                          '1px solid ' + (t.category?.color || '#888') + '30'
-                        "
+                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border"
+                        [style.backgroundColor]="(t.category?.color || '#888') + '10'"
+                        [style.borderColor]="(t.category?.color || '#888') + '30'"
                       >
                         <i
                           [class]="t.category?.icon || 'pi pi-tag'"
@@ -484,36 +504,38 @@
                           class="text-lg"
                         ></i>
                       </div>
-                      <span class="text-sm font-semibold text-color">{{
-                        t.category?.name || "Sem Categoria"
-                      }}</span>
+                      <div class="flex flex-col">
+                        <span class="text-sm font-bold text-color tracking-tight">{{
+                          t.category?.name || "Sem Categoria"
+                        }}</span>
+                      </div>
                     } @else {
                       <div
                         class="w-10 h-10 rounded-xl flex items-center justify-center bg-surface-hover dark:bg-gray-700 text-secondary border border-surface-border"
                       >
                         <i class="pi pi-arrow-right-arrow-left"></i>
                       </div>
-                      <span class="text-sm font-semibold text-secondary"
+                      <span class="text-sm font-bold text-secondary tracking-tight"
                         >Transferência</span
                       >
                     }
                   </div>
                 </td>
                 <td
-                  class="text-secondary text-sm font-medium hidden md:table-cell"
+                  class="text-secondary/80 text-[11px] font-bold hidden md:table-cell"
                 >
                   {{ t.date | date: "dd/MM/yyyy" }}
                 </td>
                 <td class="hidden xl:table-cell">
-                  <div class="flex items-center gap-2 text-sm text-secondary">
-                    <i class="pi pi-wallet text-xs"></i>
+                  <div class="account-pill" [pTooltip]="t.account?.name">
+                    <i class="pi pi-wallet text-[9px]"></i>
                     {{ t.account ? t.account.name : "Conta" }}
                   </div>
                 </td>
                 <td class="hidden lg:table-cell">
                   <div class="flex items-center gap-2">
                     <div
-                      class="status-pill"
+                      class="status-pill shadow-sm"
                       [class.paid]="t.status === 'paid'"
                       [class.pending]="t.status === 'pending'"
                     >

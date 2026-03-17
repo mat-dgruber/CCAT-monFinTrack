@@ -31,19 +31,76 @@
   .p-datatable-tbody > tr {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent !important;
+    position: relative;
+
+    /* Zebra Striping sutil */
+    &:nth-child(even) {
+      background: rgba(var(--primary-color-rgb, 59, 130, 246), 0.015) !important;
+    }
 
     &:hover {
       cursor: pointer;
       background: var(--surface-hover) !important;
       transform: translateY(-2px);
-      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+      box-shadow: 0 10px 30px -10px var(--hover-glow, rgba(0, 0, 0, 0.1));
+      
+      /* Glow effect overlay */
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        box-shadow: inset 4px 0 0 0 var(--hover-glow);
+        pointer-events: none;
+      }
     }
 
     > td {
       padding: 1.25rem 1.5rem !important;
       border-bottom: 1px solid
-        rgba(var(--surface-border-rgb, 229, 231, 235), 0.5) !important;
+        rgba(var(--surface-border-rgb, 229, 231, 235), 0.3) !important;
     }
+
+    /* Destaque da coluna ordenada */
+    &.p-highlight-column td.p-sorted-column {
+      @apply font-black text-color;
+      background: rgba(var(--primary-color-rgb), 0.02) !important;
+    }
+  }
+
+  /* Estilo para a coluna ordenada (PrimeNG aplica classes automaticamente) */
+  .p-datatable-thead > tr > th.p-highlight {
+    color: var(--primary-color) !important;
+    .p-sort-icon {
+      color: var(--primary-color) !important;
+    }
+  }
+
+  .p-datatable-tbody > tr > td.p-sorted-column {
+    background: rgba(var(--primary-color-rgb), 0.01) !important;
+  }
+
+  /* Account Badge refined */
+  .account-pill {
+    @apply px-2 py-0.5 rounded-md text-[10px] font-bold bg-surface-ground border border-surface-border text-secondary flex items-center gap-1.5 w-fit shadow-sm transition-all;
+    
+    &:hover {
+      border-color: rgba(var(--primary-color-rgb), 0.3);
+      color: var(--primary-color);
+      transform: scale(1.05);
+    }
+  }
+
+  /* Payment Method Icons */
+  .payment-icon {
+    @apply w-5 h-5 rounded-md flex items-center justify-center text-[10px] shadow-sm;
+    border: 1px solid var(--surface-border);
+    
+    &.pix { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+    &.card { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+    &.cash { background: rgba(16, 185, 129, 0.1); color: #059669; }
+    &.transfer { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+    &.other { background: rgba(107, 114, 128, 0.1); color: #4b5563; }
   }
 
   /* Group Headers (Timeline) */

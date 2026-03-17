@@ -15,7 +15,9 @@ export type Feature =
   | 'receipt_scanner'
   | 'ai_advisor'
   | 'invoices'
-  | 'debts';
+  | 'debts'
+  | 'calculator_financial'
+  | 'calculator_history';
 
 @Injectable({
   providedIn: 'root',
@@ -56,6 +58,9 @@ export class SubscriptionService {
       // - chat
       // - recurring_dashboard
       // - invoices
+      if (feature === 'calculator_history') return true;
+      if (feature === 'calculator_financial') return false;
+      return true;
     }
 
     // Premium Access (Everything)
@@ -83,6 +88,10 @@ export class SubscriptionService {
     if (feature === 'roast_mode') return { label: 'PREMIUM', severity: 'warn' };
     if (feature === 'subscription_hunter')
       return { label: 'PREMIUM', severity: 'warn' };
+    if (feature === 'calculator_financial')
+      return { label: 'PREMIUM', severity: 'warn' };
+
+    if (feature === 'calculator_history') return { label: 'PRO', severity: 'info' };
 
     return null;
   }
