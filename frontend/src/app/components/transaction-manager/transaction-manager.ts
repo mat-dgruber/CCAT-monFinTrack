@@ -140,6 +140,9 @@ export class TransactionManager implements OnInit, AfterViewInit {
 
   // Mobile Filters
   mobileFilterVisible = signal(false);
+  mobileTransactionActionsVisible = signal(false);
+  selectedTransactionForActions = signal<Transaction | null>(null);
+
   mobileCategoryFilter = signal<Category | null>(null);
   mobileAccountFilter = signal<Account | null>(null);
   mobileTitleFilter = signal<string>('');
@@ -604,6 +607,11 @@ export class TransactionManager implements OnInit, AfterViewInit {
       'Dezembro',
     ];
     return months[monthIndex];
+  }
+
+  openTransactionActions(t: Transaction) {
+    this.selectedTransactionForActions.set(t);
+    this.mobileTransactionActionsVisible.set(true);
   }
 
   openNew() {

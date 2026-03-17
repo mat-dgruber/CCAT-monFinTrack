@@ -641,7 +641,7 @@
         @if (loading()) {
           @for (i of [1, 2, 3, 4, 5]; track i) {
             <div
-              class="bg-surface-card p-4 rounded-xl shadow-sm border border-surface-border flex flex-col gap-3"
+              class="bg-surface-card p-4 rounded-3xl shadow-sm border border-surface-border flex flex-col gap-3"
             >
               <div class="flex justify-between items-start">
                 <div class="flex items-center gap-3">
@@ -653,34 +653,14 @@
                 </div>
                 <p-skeleton width="80px"></p-skeleton>
               </div>
-              <div
-                class="flex justify-between items-center pt-2 border-t border-gray-50"
-              >
-                <div class="flex items-center gap-2">
-                  <p-skeleton
-                    width="60px"
-                    height="1.5rem"
-                    borderRadius="16px"
-                  ></p-skeleton>
-                  <p-skeleton
-                    width="60px"
-                    height="1.5rem"
-                    borderRadius="16px"
-                  ></p-skeleton>
-                </div>
-                <div class="flex gap-1">
-                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
-                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
-                  <p-skeleton shape="circle" size="2rem"></p-skeleton>
-                </div>
-              </div>
             </div>
           }
         } @else {
           @for (t of currentViewTransactions(); track t.id; let i = $index) {
             <div
-              class="mobile-card bg-surface-card p-5 rounded-3xl shadow-elegant border border-surface-border flex flex-col gap-4 animate-in"
+              class="mobile-card bg-surface-card p-5 rounded-3xl shadow-elegant border border-surface-border flex flex-col gap-4 animate-in active:scale-[0.98] transition-all"
               [style.animation-delay]="i * 0.05 + 0.2 + 's'"
+              (click)="openTransactionActions(t)"
             >
               <div class="flex justify-between items-start">
                 <div class="flex items-center gap-4">
@@ -709,8 +689,8 @@
                     >
                       {{ t.title }}
                     </div>
-                    <div class="text-xs text-secondary mt-1 font-medium">
-                      {{ t.date | date: "dd MMM, yyyy" }} •
+                    <div class="text-[10px] text-secondary mt-1 font-bold uppercase tracking-wider">
+                      {{ t.date | date: "dd MMM" : "" : "pt-BR" }} •
                       {{
                         t.type === "transfer"
                           ? "Transferência"
@@ -722,6 +702,7 @@
 
                 <div class="flex flex-col items-end">
                   <span
+                    class="tabular-nums"
                     [class]="
                       t.category.is_hidden ||
                       t.category.name === 'Fatura Cartão'
@@ -762,53 +743,20 @@
                   >
                     {{ t.account ? t.account.name : "Conta" }}
                   </span>
-                  <p-tag
-                    [severity]="t.status === 'paid' ? 'success' : 'warn'"
-                    [value]="t.status === 'paid' ? 'Pago' : 'Pendente'"
-                    [rounded]="true"
-                    styleClass="text-[10px] font-bold px-2 py-0.5"
-                  ></p-tag>
-
-                  @if (
-                    t.type === "income" &&
-                    t.tithe_status &&
-                    t.tithe_status !== "NONE"
-                  ) {
+                  <div
+                    class="status-pill !scale-90"
+                    [class.paid]="t.status === 'paid'"
+                    [class.pending]="t.status === 'pending'"
+                  >
                     <i
                       class="pi"
-                      [class.pi-check-circle]="t.tithe_status === 'PAID'"
-                      [class.pi-clock]="t.tithe_status === 'PENDING'"
-                      [class.text-green-500]="t.tithe_status === 'PAID'"
-                      [class.text-orange-500]="t.tithe_status === 'PENDING'"
+                      [class.pi-check-circle]="t.status === 'paid'"
+                      [class.pi-clock]="t.status === 'pending'"
                     ></i>
-                  }
+                    {{ t.status === "paid" ? "Pago" : "Pendente" }}
+                  </div>
                 </div>
-                <div class="flex gap-2">
-                  <button
-                    (click)="toggleStatus($event, t)"
-                    class="w-10 h-10 rounded-xl flex items-center justify-center bg-surface-card border border-surface-border shadow-sm text-secondary active:scale-95 transition-all"
-                  >
-                    <i
-                      [class]="
-                        t.status === 'paid'
-                          ? 'pi pi-clock text-orange-500'
-                          : 'pi pi-check text-green-500'
-                      "
-                    ></i>
-                  </button>
-                  <button
-                    (click)="editTransaction(t)"
-                    class="w-10 h-10 rounded-xl flex items-center justify-center bg-surface-card border border-surface-border shadow-sm text-blue-500 active:scale-95 transition-all"
-                  >
-                    <i class="pi pi-pencil"></i>
-                  </button>
-                  <button
-                    (click)="deleteTransaction($event, t)"
-                    class="w-10 h-10 rounded-xl flex items-center justify-center bg-surface-card border border-surface-border shadow-sm text-red-500 active:scale-95 transition-all"
-                  >
-                    <i class="pi pi-trash"></i>
-                  </button>
-                </div>
+                <i class="pi pi-ellipsis-h text-secondary/50"></i>
               </div>
             </div>
           } @empty {
@@ -955,6 +903,62 @@
   </div>
 
   <app-transaction-form (save)="onDateRangeChange()"></app-transaction-form>
+
+  <!-- Mobile Transaction Actions Bottom Sheet -->
+  <p-drawer
+    [(visible)]="mobileTransactionActionsVisible"
+    [modal]="true"
+    position="bottom"
+    styleClass="!h-auto !rounded-t-[32px]"
+    [header]="selectedTransactionForActions()?.title || 'Ações'"
+  >
+    <ng-template pTemplate="content">
+      <div class="flex flex-col gap-3 pb-8" *ngIf="selectedTransactionForActions() as t">
+        <div class="flex items-center justify-between p-4 bg-surface-ground/50 rounded-2xl mb-2">
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-secondary uppercase tracking-widest">Valor</span>
+            <span class="text-xl font-extrabold" [class.text-red-500]="t.type === 'expense'" [class.text-emerald-500]="t.type === 'income'">
+              {{ t.amount | currency: 'BRL' }}
+            </span>
+          </div>
+          <div class="status-pill" [class.paid]="t.status === 'paid'" [class.pending]="t.status === 'pending'">
+             <i class="pi" [class.pi-check-circle]="t.status === 'paid'" [class.pi-clock]="t.status === 'pending'"></i>
+             {{ t.status === 'paid' ? 'Pago' : 'Pendente' }}
+          </div>
+        </div>
+
+        <button
+          (click)="toggleStatus($event, t); mobileTransactionActionsVisible.set(false)"
+          class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-surface-card border border-surface-border font-bold active:bg-surface-hover transition-all"
+        >
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-600">
+            <i class="pi pi-check"></i>
+          </div>
+          {{ t.status === 'paid' ? 'Marcar como Pendente' : 'Marcar como Pago' }}
+        </button>
+
+        <button
+          (click)="editTransaction(t); mobileTransactionActionsVisible.set(false)"
+          class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-surface-card border border-surface-border font-bold active:bg-surface-hover transition-all"
+        >
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-600">
+            <i class="pi pi-pencil"></i>
+          </div>
+          Editar Transação
+        </button>
+
+        <button
+          (click)="deleteTransaction($event, t); mobileTransactionActionsVisible.set(false)"
+          class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-red-500/5 border border-red-500/20 text-red-600 font-bold active:bg-red-500/10 transition-all"
+        >
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10">
+            <i class="pi pi-trash"></i>
+          </div>
+          Excluir Transação
+        </button>
+      </div>
+    </ng-template>
+  </p-drawer>
 
   <!-- Mobile Filter Drawer -->
   <p-drawer
