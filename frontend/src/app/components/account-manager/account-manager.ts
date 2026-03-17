@@ -213,7 +213,7 @@ export class AccountManager implements OnInit {
     }
   }
 
-  getAccountMenuItems(acc: Account, event: Event): MenuItem[] {
+  getAccountMenuItems(acc: Account): MenuItem[] {
     return [
       {
         label: 'Ações da Conta',
@@ -221,18 +221,62 @@ export class AccountManager implements OnInit {
           {
             label: 'Editar Conta',
             icon: 'pi pi-pencil',
-            command: () => this.editAccount(event, acc),
+            command: () => {
+              this.editingId.set(acc.id!);
+              if (acc.credit_cards) {
+                this.currentCards.set([...acc.credit_cards]);
+              } else {
+                this.currentCards.set([]);
+              }
+              const dataToPatch = {
+                name: acc.name,
+                type: acc.type,
+                balance: acc.balance,
+                icon: acc.icon || 'pi pi-wallet',
+                color: acc.color || '#3b82f6',
+              };
+              this.form.patchValue(dataToPatch);
+              this.visible.set(true);
+            },
           },
           {
             label: 'Transferir Saldo',
             icon: 'pi pi-arrow-right-arrow-left',
-            command: () => this.openTransfer(event, acc),
+            command: () => {
+              this.sourceAccount.set(acc);
+              this.transferForm.reset({
+                destination_account_id: '',
+                amount: 0,
+                date: new Date(),
+                payment_method: 'bank_transfer',
+              });
+              this.transferVisible.set(true);
+            },
           },
           {
             label: 'Excluir Conta',
             icon: 'pi pi-trash',
             className: 'text-red-600',
-            command: () => this.deleteAccount(event, acc.id!),
+            command: () => {
+              this.confirmationService.confirm({
+                message: `Tem certeza que deseja excluir a conta '${acc.name}'?`,
+                header: 'Confirmar Exclusão',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Excluir',
+                rejectLabel: 'Cancelar',
+                acceptButtonStyleClass: 'p-button-danger',
+                rejectButtonStyleClass: 'p-button-text p-button-secondary',
+                accept: () => {
+                  this.accountService.deleteAccount(acc.id!).subscribe(() => {
+                    this.messageService.add({
+                      severity: 'success',
+                      summary: 'Conta Excluída',
+                    });
+                    this.refreshService.triggerRefresh();
+                  });
+                },
+              });
+            },
           },
         ],
       },

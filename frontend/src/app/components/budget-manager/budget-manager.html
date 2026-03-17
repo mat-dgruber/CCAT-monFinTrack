@@ -165,14 +165,14 @@
                   >Restante</span
                 >
                 <span class="text-xs font-bold text-green-600">{{
-                  b.amount - b.spent | currency: "BRL"
+                  b.amount! - b.spent! | currency: "BRL"
                 }}</span>
               } @else {
                 <span class="text-[10px] text-red-500 uppercase font-bold"
                   >Excedido em</span
                 >
                 <span class="text-xs font-bold text-red-600">{{
-                  b.spent - b.amount | currency: "BRL"
+                  b.spent! - b.amount! | currency: "BRL"
                 }}</span>
               }
             </div>
