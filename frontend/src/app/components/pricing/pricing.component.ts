@@ -8,6 +8,8 @@ import { ToggleButtonModule } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionService } from '../../services/subscription.service';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 import {
   LucideAngularModule,
   Check,
@@ -35,7 +37,9 @@ const anime: any = (AnimeJS as any).default ?? AnimeJS;
     ToggleButtonModule,
     FormsModule,
     LucideAngularModule,
+    ToastModule,
   ],
+  providers: [MessageService],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss',
 })
@@ -53,6 +57,7 @@ export class PricingComponent {
 
   private paymentService = inject(PaymentService);
   private subscriptionService = inject(SubscriptionService);
+  private messageService = inject(MessageService);
   private router = inject(Router);
 
   isAnnual = signal(true);
@@ -137,12 +142,28 @@ export class PricingComponent {
       },
       error: (err) => {
         console.error('Error creating session', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro de Conexão',
+          detail:
+            'Não foi possível iniciar o checkout. Verifique sua conexão ou tente novamente mais tarde.',
+        });
         this.loading.set(null);
       },
     });
   }
 
   manageSubscription() {
+    // Não abre portal se o usuário nunca teve assinatura
+    if (this.currentTier() === 'free') {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Sem assinatura ativa',
+        detail: 'Você não possui uma assinatura para gerenciar.',
+      });
+      return;
+    }
+
     this.loading.set('manage');
     this.paymentService.createPortalSession().subscribe({
       next: (res) => {
@@ -150,6 +171,11 @@ export class PricingComponent {
       },
       error: (err) => {
         console.error('Error opening portal', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Acesso Negado',
+          detail: 'Não foi possível carregar o portal de gerenciamento.',
+        });
         this.loading.set(null);
       },
     });
