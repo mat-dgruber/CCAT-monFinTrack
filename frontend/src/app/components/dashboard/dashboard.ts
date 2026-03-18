@@ -179,7 +179,7 @@ export class Dashboard implements OnInit {
       message:
         'Deseja gerar o relatório mensal com nosso Assistente IA? (Isso pode levar alguns segundos)',
       header: 'Confirmar Geração',
-      icon: 'pi pi-sparkles',
+      icon: 'pi pi-magic-stick',
       acceptLabel: 'Gerar Relatório',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-outlined p-button-success',

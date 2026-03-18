@@ -75,7 +75,7 @@
             >
           </div>
           <div
-            class="text-5xl lg:text-6xl font-black text-color mt-2 tracking-tighter drop-shadow-sm"
+            class="text-5xl lg:text-6xl font-black text-primary mt-2 tracking-tighter drop-shadow-sm"
           >
             {{ data.total_balance | currency: "BRL" }}
           </div>
@@ -128,9 +128,9 @@
           @if (subscriptionService.canAccess("cost_of_living")) {
             <div
               class="bg-surface-card/80 backdrop-blur-sm p-4 rounded-2xl border border-surface-border/50 hover:border-amber-500/50 transition-all hover:shadow-md cursor-pointer flex flex-col gap-2"
-              routerLink="/cost-of-living"
+              routerLink="/app/cost-of-living"
             >
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 text-amber-600">
                 <div
                   class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center"
                 >
@@ -141,10 +141,10 @@
                   >Custo<br />de Vida</span
                 >
               </div>
-              <span class="text-xl font-extrabold text-color tabular-nums">{{
+              <span class="text-xl font-extrabold text-amber-600 dark:text-amber-400 tabular-nums">{{
                 costOfLiving() | currency: "BRL"
               }}</span>
-            </div>
+              </div>
           }
         </div>
       </div>
@@ -161,13 +161,13 @@
           <div
             class="p-6 border-b border-surface-border/50 flex justify-between items-center"
           >
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
               <div
-                class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"
+                class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center"
               >
-                <i class="pi pi-list text-primary text-sm"></i>
+                <i class="pi pi-list text-blue-600 dark:text-blue-400 text-lg"></i>
               </div>
-              <h3 class="font-black text-emphasis text-lg m-0 tracking-tighter">
+              <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
                 Últimas Transações
               </h3>
             </div>
@@ -176,7 +176,7 @@
               [rounded]="true"
               [text]="true"
               size="small"
-              routerLink="/transactions"
+              routerLink="/app/transactions"
             ></p-button>
           </div>
           <div class="flex-1 overflow-y-auto custom-scrollbar p-4">
@@ -195,7 +195,7 @@
         style="animation-delay: 0.3s"
       >
         <!-- Wrapper for Accounts -->
-        <app-account-manager></app-account-manager>
+        <app-account-manager [isWidget]="true"></app-account-manager>
       </div>
 
       <!-- 3.5. TITHE SUMMARY (conditional) -->
@@ -215,9 +215,9 @@
       >
         <div class="flex items-center gap-3 mb-6">
           <div
-            class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"
+            class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center"
           >
-            <i class="pi pi-pie-chart text-primary text-lg"></i>
+            <i class="pi pi-chart-pie text-blue-600 dark:text-blue-400 text-lg"></i>
           </div>
           <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
             Despesas por Categoria
@@ -254,9 +254,9 @@
       >
         <div class="flex items-center gap-3 mb-6">
           <div
-            class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"
+            class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"
           >
-            <i class="pi pi-chart-bar text-emerald-500 text-lg"></i>
+            <i class="pi pi-chart-bar text-emerald-600 dark:text-emerald-400 text-lg"></i>
           </div>
           <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
             Fluxo de Caixa
@@ -296,22 +296,21 @@
           <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-3">
               <div
-                class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center"
+                class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center"
               >
-                <i class="pi pi-credit-card text-orange-500 text-lg"></i>
+                <i class="pi pi-credit-card text-orange-600 dark:text-orange-400 text-lg"></i>
               </div>
               <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
                 Faturas
               </h3>
             </div>
-            <button
-              pButton
+            <p-button
               icon="pi pi-arrow-right"
               [rounded]="true"
               [text]="true"
               size="small"
-              routerLink="/invoices"
-            ></button>
+              routerLink="/app/invoices"
+            ></p-button>
           </div>
           <app-invoice-dashboard [isWidget]="true"></app-invoice-dashboard>
         </div>

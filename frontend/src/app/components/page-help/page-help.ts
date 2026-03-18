@@ -1,11 +1,13 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MarkdownModule } from 'ngx-markdown';
+import { DrawerModule } from 'primeng/drawer';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-page-help',
   standalone: true,
-  imports: [CommonModule, MarkdownModule],
+  imports: [CommonModule, MarkdownModule, DrawerModule, ButtonModule],
   templateUrl: './page-help.html',
 })
 export class PageHelpComponent {
@@ -22,14 +24,10 @@ export class PageHelpComponent {
 
   openDrawer() {
     this.isOpen.set(true);
-    document.body.style.overflow = 'hidden'; // Evita scroll do fundo
   }
 
   closeDrawer() {
     this.isOpen.set(false);
-    setTimeout(() => {
-      document.body.style.overflow = '';
-    }, 300);
   }
 
   onLoad(event: any) {

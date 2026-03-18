@@ -342,7 +342,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
       icon: MapPin,
       title: 'Custo de Vida',
       description:
-        'Descubra quanto você gasta por localidade e analise o impacto geográfico nas suas finanças.',
+        'Entenda o quanto você precisa para conseguir sua independência financeira.',
       color: 'text-cyan-500',
       bg: 'bg-cyan-500/10',
     },

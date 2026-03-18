@@ -8,47 +8,33 @@
   <i class="pi pi-question-circle !text-2xl"></i>
 </button>
 
-<!-- Backdrop Overlay -->
-@if (isOpen()) {
-  <div
-    class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[900] transition-opacity duration-300"
-    (click)="closeDrawer()"
-  ></div>
-}
-
 <!-- Slide-over Drawer -->
-<div
-  class="fixed inset-y-0 right-0 z-[1000] w-full max-w-2xl bg-surface-overlay shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col border-l border-surface-border translate-x-full"
-  [class.translate-x-full]="!isOpen()"
-  [class.translate-x-0]="isOpen()"
+<p-drawer
+  [visible]="isOpen()"
+  (visibleChange)="isOpen.set($event)"
+  position="right"
+  [modal]="true"
+  appendTo="body"
+  [style]="{ width: '100%', maxWidth: '40rem' }"
+  styleClass="page-help-drawer"
 >
-  <!-- Cabecalho do Drawer -->
-  <div
-    class="flex items-center justify-between px-6 py-4 border-b border-surface-border bg-surface-overlay"
-  >
+  <!-- Cabecalho Customizado via Template -->
+  <ng-template pTemplate="header">
     <div class="flex items-center gap-3">
       <div class="p-2 bg-accent-bg text-primary rounded-lg">
         <i class="pi pi-book !text-xl"></i>
       </div>
       <h2 class="text-xl font-bold text-color m-0 font-serif">{{ title() }}</h2>
     </div>
-
-    <button
-      (click)="closeDrawer()"
-      class="p-2 text-secondary hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-colors focus:outline-none"
-      title="Fechar manual"
-    >
-      <i class="pi pi-times !text-xl"></i>
-    </button>
-  </div>
+  </ng-template>
 
   <!-- Corpo do Markdown (Scrollable) -->
-  <div class="flex-1 overflow-y-auto w-full relative bg-surface-ground">
-    <div class="px-8 py-6 pb-24 min-h-full">
+  <div class="flex-1 overflow-y-auto w-full relative bg-surface-ground h-full">
+    <div class="px-4 py-6 md:px-8 pb-24 min-h-full">
       <!-- Tratamento de Erro -->
       @if (hasError()) {
         <div
-          class="bg-orange-500/10 border border-orange-500/20 rounded-xl-organic p-6 flex flex-col items-center justify-center text-center mt-8 animate-shake"
+          class="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 flex flex-col items-center justify-center text-center mt-8 animate-shake"
         >
           <i class="pi pi-exclamation-triangle !text-4xl text-orange-500 mb-3"></i>
           <h3 class="text-lg font-bold text-color mb-2">Manual indisponível</h3>
@@ -67,8 +53,8 @@
         [src]="documentUrl()"
         (load)="onLoad($event)"
         (error)="onError($event)"
-        class="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none prose-headings:text-color prose-headings:font-bold prose-headings:font-serif prose-h1:text-2xl prose-h1:border-b prose-h1:border-surface-border prose-h1:pb-2 prose-h1:mt-0 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-primary/50 prose-blockquote:bg-accent-bg prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:not-italic prose-blockquote:rounded-r-lg [&_.markdown-alert-warning]:border-l-4 [&_.markdown-alert-warning]:border-amber-400 [&_.markdown-alert-warning]:bg-amber-500/10 [&_.markdown-alert-warning]:text-color [&_.markdown-alert-warning]:p-4 [&_.markdown-alert-warning]:my-4 [&_.markdown-alert-warning]:rounded-r-lg [&_.markdown-alert-warning_p]:m-0"
+        class="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none prose-headings:text-color prose-headings:font-bold prose-headings:font-serif prose-h1:text-2xl prose-h1:border-b prose-h1:border-surface-border prose-h1:pb-2 prose-h1:mt-0 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-primary/50 prose-blockquote:bg-accent-bg prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:not-italic prose-blockquote:rounded-r-lg [&_.markdown-alert-warning]:border-l-4 [&_.markdown-alert-warning]:border-amber-400 [&_.markdown-alert-warning]:bg-amber-500/10 [&_.markdown-alert-warning]:text-color [&_.markdown-alert-warning_p]:m-0"
       ></markdown>
     </div>
   </div>
-</div>
+</p-drawer>
