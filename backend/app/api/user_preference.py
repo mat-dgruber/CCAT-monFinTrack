@@ -1,3 +1,4 @@
+from app.core.logger import get_logger
 from app.core.security import get_current_user
 from app.schemas.user_preference import UserPreference, UserPreferenceCreate
 from app.services import user_preference as preference_service
@@ -9,7 +10,16 @@ router = APIRouter()
 @router.get("", response_model=UserPreference)
 def get_my_preferences(current_user: dict = Depends(get_current_user)):
     user_id = current_user["uid"]
-    return preference_service.get_preferences(user_id)
+    import time
+    logger = get_logger(__name__)
+    start_time = time.time()
+    prefs = preference_service.get_preferences(user_id)
+    duration = time.time() - start_time
+    if duration > 1.0:  # Log as warning if takes more than 1s
+        logger.warning(f"PERF: get_preferences for {user_id} took {duration:.2f}s")
+    else:
+        logger.info(f"PERF: get_preferences for {user_id} took {duration:.2f}s")
+    return prefs
 
 
 @router.put("", response_model=UserPreference)

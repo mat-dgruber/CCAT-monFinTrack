@@ -26,6 +26,14 @@
     transition: opacity 0.3s ease;
   }
 
+  button,
+  p-button {
+    transform: translateZ(40px);
+    pointer-events: auto;
+    position: relative;
+    z-index: 50;
+  }
+
   &:hover::before {
     opacity: 1;
   }

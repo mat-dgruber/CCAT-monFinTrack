@@ -100,8 +100,8 @@ export class PricingComponent {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const rotateX = (y - centerY) / 25;
-    const rotateY = (centerX - x) / 25;
+    const rotateX = (y - centerY) / 40;
+    const rotateY = (centerX - x) / 40;
 
     anime({
       targets: card,
