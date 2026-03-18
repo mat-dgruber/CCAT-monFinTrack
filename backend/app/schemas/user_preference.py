@@ -9,6 +9,7 @@ class UserPreferenceBase(BaseModel):
     theme: Optional[str] = "light"  # light, dark
     notifications_enabled: Optional[bool] = True
     profile_image_url: Optional[str] = None
+    phone: Optional[str] = None
     birthday: Optional[datetime] = None
     timezone: Optional[str] = "Europe/Paris"
 
