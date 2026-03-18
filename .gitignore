@@ -70,3 +70,5 @@ llms.txt
 /.agent
 *.txt
 .firebase/
+.superpowers/
+docs/superpowers/
