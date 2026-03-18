@@ -1,11 +1,13 @@
 // Custom Premium Styles for Pricing Section
 .pricing-card {
-  transition: transform 0.3s ease, shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    shadow 0.3s ease;
   position: relative;
   z-index: 1;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: -1px;
     background: linear-gradient(
@@ -27,8 +29,6 @@
     z-index: 100 !important;
     cursor: pointer !important;
   }
-}
-
   &:hover::before {
     opacity: 1;
   }
@@ -36,7 +36,7 @@
 
 .premium-card {
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     background: linear-gradient(
@@ -106,9 +106,15 @@
 }
 
 @keyframes shine {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes fadeSlideIn {

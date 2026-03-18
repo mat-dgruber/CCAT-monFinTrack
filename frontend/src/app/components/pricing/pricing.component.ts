@@ -23,8 +23,6 @@ import {
   TrendingUp,
   Crown,
 } from 'lucide-angular';
-import * as AnimeJS from 'animejs';
-const anime: any = (AnimeJS as any).default ?? AnimeJS;
 
 @Component({
   selector: 'app-pricing',
@@ -90,40 +88,6 @@ export class PricingComponent {
       'Modo Roast (Análise Sarcástica de Gastos)',
     ],
   };
-
-  onCardMove(e: MouseEvent) {
-    const card = e.currentTarget as HTMLElement;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateX = (y - centerY) / 40;
-    const rotateY = (centerX - x) / 40;
-
-    anime({
-      targets: card,
-      rotateX: rotateX,
-      rotateY: rotateY,
-      scale: 1.02,
-      duration: 400,
-      easing: 'easeOutQuad',
-    });
-  }
-
-  onCardLeave(e: MouseEvent) {
-    const card = e.currentTarget as HTMLElement;
-    anime({
-      targets: card,
-      rotateX: 0,
-      rotateY: 0,
-      scale: 1,
-      duration: 600,
-      easing: 'easeOutElastic(1, .8)',
-    });
-  }
 
   async subscribe(plan: 'pro' | 'premium') {
     if (this.currentTier() === plan) return;
