@@ -258,7 +258,7 @@
 
         @if (form.get("mode")?.value === "installments") {
           <div class="flex flex-col gap-4">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="flex flex-col gap-2">
                 <label class="font-semibold text-xs">Parcelas</label>
                 <p-inputNumber
@@ -271,7 +271,8 @@
                   incrementButtonClass="p-button-secondary"
                   incrementButtonIcon="pi pi-plus"
                   decrementButtonIcon="pi pi-minus"
-                  inputStyleClass="text-center"
+                  styleClass="w-full"
+                  inputStyleClass="w-full text-center"
                 ></p-inputNumber>
               </div>
               <div class="flex flex-col gap-2">
@@ -283,6 +284,8 @@
                   [minFractionDigits]="2"
                   suffix="%"
                   placeholder="0,00%"
+                  styleClass="w-full"
+                  inputStyleClass="w-full"
                 ></p-inputNumber>
               </div>
             </div>
