@@ -35,12 +35,11 @@ def get_db():
                 logger.info("Usando credenciais do arquivo: %s", cred_path)
                 cred = credentials.Certificate(cred_path)
             elif json_creds:
+                logger.info("Usando credenciais da variável FIREBASE_CREDENTIALS_JSON")
                 cred_dict = json.loads(json_creds)
                 cred = credentials.Certificate(cred_dict)
-                logger.info("Usando credenciais da variável FIREBASE_CREDENTIALS_JSON")
             else:
                 logger.info("Tentando Application Default Credentials (ADC)...")
-                # Se não houver arquivo nem JSON, tenta ADC. Se falhar aqui, lança exceção.
                 cred = credentials.ApplicationDefault()
 
             firebase_admin.initialize_app(
@@ -51,28 +50,19 @@ def get_db():
                     )
                 },
             )
-            logger.info("Conexão com Firebase inicializada com sucesso!")
+            logger.info("✅ Conexão com Firebase inicializada com sucesso!")
         except Exception as e:
-            logger.error("ERRO CRÍTICO: Não foi possível inicializar o Firebase: %s", e)
-            # Em produção/dev real, queremos que o app falhe se o Firebase não estiver OK
-            # mas vamos permitir o boot para que logs apareçam, porém as rotas vão falhar.
-            # Retornar o erro original ou None para forçar erro posterior
+            logger.error("❌ ERRO CRÍTICO: Não foi possível inicializar o Firebase: %s", e, exc_info=True)
+            # Em produção, queremos saber exatamente o que falhou
             if not is_testing:
-                # Se não estamos testando, o erro deve ser visível
-                # No entanto, se o app for importado em build-time (como por alguns linters),
-                # podemos não querer crashar. Mas aqui é runtime.
+                # Mantemos o erro para ser capturado no get_db
                 pass
 
-            # Se chegamos aqui, o apps continua vazio.
-            # Se tentarmos usar auth/firestore depois, vai dar erro de "App does not exist".
-
     try:
+        if not firebase_admin._apps:
+             raise Exception("Firebase Admin SDK não foi inicializado (sem apps).")
         return firestore.client()
     except Exception as e:
         if not is_testing:
-            logger.error("Erro ao obter cliente do Firestore: %s", e)
+            logger.error("❌ Erro ao obter cliente do Firestore: %s", e, exc_info=True)
         return MagicMock() if is_testing else None
-
-
-# db global instance
-db = get_db()
