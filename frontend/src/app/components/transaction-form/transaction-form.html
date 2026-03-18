@@ -1,6 +1,7 @@
 <p-dialog
   [modal]="true"
   [(visible)]="visible"
+  (onHide)="onCloseDialog()"
   [style]="{ width: '36rem', maxHeight: '90vh' }"
   [breakpoints]="{ '960px': '75vw', '640px': '95vw' }"
   [draggable]="false"
@@ -715,7 +716,7 @@
           label="Cancelar"
           [text]="true"
           severity="secondary"
-          (onClick)="visible.set(false)"
+          (onClick)="onCloseDialog()"
         ></p-button>
         <p-button
           label="Salvar Transação"

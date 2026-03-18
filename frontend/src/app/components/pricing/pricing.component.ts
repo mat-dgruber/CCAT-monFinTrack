@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PaymentService } from '../../services/payment.service';
 import { ButtonModule } from 'primeng/button';
@@ -7,9 +7,11 @@ import { TagModule } from 'primeng/tag';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionService } from '../../services/subscription.service';
+import { UserPreferenceService } from '../../services/user-preference.service';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
 import {
   LucideAngularModule,
   Check,
@@ -41,7 +43,7 @@ import {
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss',
 })
-export class PricingComponent {
+export class PricingComponent implements OnInit {
   readonly Check = Check;
   readonly Zap = Zap;
   readonly Star = Star;
@@ -55,14 +57,78 @@ export class PricingComponent {
 
   private paymentService = inject(PaymentService);
   private subscriptionService = inject(SubscriptionService);
+  private preferenceService = inject(UserPreferenceService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private firebaseService = inject(FirebaseWrapperService);
 
   isAnnual = signal(true);
   loading = signal<string | null>(null);
+  paymentPending = signal<string | null>(null);
 
   // Expose current tier to disable buttons
   currentTier = this.subscriptionService.currentTier;
+
+  private readonly PAYMENT_PENDING_KEY = 'payment_pending';
+
+  ngOnInit() {
+    const pending = localStorage.getItem(this.PAYMENT_PENDING_KEY);
+    if (!pending) return;
+
+    if (this.currentTier() !== 'free') {
+      // Tier already updated — just clean up
+      localStorage.removeItem(this.PAYMENT_PENDING_KEY);
+      return;
+    }
+
+    // Payment is pending, start polling the backend
+    this.paymentPending.set(pending);
+    this.pollForTierUpdate(1);
+  }
+
+  private pollForTierUpdate(attempt: number) {
+    const MAX_ATTEMPTS = 12;
+    const RETRY_DELAY = 2000; // 2s between checks — 24s total window
+
+    setTimeout(() => {
+      // Fetch fresh preferences from backend (bypass version cache)
+      this.preferenceService.fetchPreferences(true).subscribe({
+        next: (prefs) => {
+          if (prefs?.subscription_tier !== 'free') {
+            // Webhook landed — tier updated
+            this.paymentPending.set(null);
+            localStorage.removeItem(this.PAYMENT_PENDING_KEY);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Assinatura Ativa!',
+              detail: `Parabéns! Seu plano ${prefs.subscription_tier?.toUpperCase()} está liberado.`,
+              life: 6000,
+            });
+          } else if (attempt < MAX_ATTEMPTS) {
+            this.pollForTierUpdate(attempt + 1);
+          } else {
+            // Timed out — hide the spinner but KEEP the localStorage flag
+            // so next time the user opens this page it will poll again
+            this.paymentPending.set(null);
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Pagamento em processamento',
+              detail:
+                'Seu pagamento foi confirmado. Os recursos serão liberados assim que o processamento for concluído.',
+              life: 10000,
+            });
+          }
+        },
+        error: () => {
+          if (attempt < MAX_ATTEMPTS) {
+            this.pollForTierUpdate(attempt + 1);
+          } else {
+            this.paymentPending.set(null);
+          }
+        },
+      });
+    }, RETRY_DELAY);
+  }
 
   features = {
     free: [
@@ -99,9 +165,16 @@ export class PricingComponent {
       | 'premium_monthly'
       | 'premium_yearly';
 
+    this.firebaseService.logEvent('begin_checkout', {
+      plan_id: planId,
+      plan_name: plan,
+      billing_interval: interval
+    });
+
     this.loading.set(plan);
     this.paymentService.createCheckoutSession(planId).subscribe({
       next: (res) => {
+        localStorage.setItem(this.PAYMENT_PENDING_KEY, planId);
         window.location.href = res.url;
       },
       error: (err) => {

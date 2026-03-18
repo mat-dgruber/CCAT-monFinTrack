@@ -358,6 +358,8 @@ export class TransactionForm implements OnInit {
       }
 
       this.isScanning.set(true);
+      const scanTrace = this.firebaseService.startTrace('ai_receipt_scan_duration');
+      
       this.messageService.add({
         severity: 'info',
         summary: 'Processando...',
@@ -367,6 +369,11 @@ export class TransactionForm implements OnInit {
 
       this.aiService.scanReceipt(file).subscribe({
         next: (data) => {
+          scanTrace.stop();
+          this.firebaseService.logEvent('ai_scan_success', {
+            content_type: file.content_type,
+            file_size: file.size
+          });
           const patch: any = {};
           if (data.title) patch.title = data.title;
           if (data.amount) patch.amount = data.amount;
@@ -405,7 +412,11 @@ export class TransactionForm implements OnInit {
           this.isScanning.set(false);
         },
         error: (err) => {
+          scanTrace.stop();
           console.error('Scan Error', err);
+          this.firebaseService.logEvent('ai_scan_error', {
+            error_message: err.message || 'unknown'
+          });
           this.messageService.add({
             severity: 'error',
             summary: 'Erro',
@@ -767,6 +778,11 @@ export class TransactionForm implements OnInit {
       } else {
         this.transactionService.createTransaction(payload).subscribe({
           next: (res: any) => {
+            this.firebaseService.logEvent('transaction_create_success', {
+              category: formValue.category?.name,
+              type: formValue.type,
+              amount: formValue.amount
+            });
             this.messageService.add({
               severity: 'success',
               summary: 'Sucesso',
@@ -823,6 +839,17 @@ export class TransactionForm implements OnInit {
     this.form.reset();
     this.save.emit();
     this.refreshService.triggerRefresh();
+  }
+
+  onCloseDialog() {
+    if (this.form.dirty && !this.form.pristine) {
+      this.firebaseService.logEvent('transaction_form_abandoned', {
+        type: this.form.get('type')?.value,
+        mode: this.form.get('mode')?.value,
+        fields_filled: Object.keys(this.form.controls).filter(k => this.form.get(k)?.value).length
+      });
+    }
+    this.visible.set(false);
   }
 
   confirmDelete() {

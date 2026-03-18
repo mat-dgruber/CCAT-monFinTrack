@@ -220,8 +220,9 @@
 
       <div class="mt-8">
         <p-button
-          [label]="currentTier() === 'pro' ? 'Gerenciar' : 'Quero ser Pro'"
+          [label]="paymentPending() ? 'Processando...' : (currentTier() === 'pro' ? 'Gerenciar' : 'Quero ser Pro')"
           [loading]="loading() === 'pro'"
+          [disabled]="!!paymentPending()"
           styleClass="w-full h-14 organic-shape font-black text-lg p-button-primary"
           [style.border-radius]="'1.5rem'"
           (onClick)="
@@ -340,10 +341,9 @@
 
         <div class="mt-8">
           <p-button
-            [label]="
-              currentTier() === 'premium' ? 'Gerenciar' : 'Ativar Poder Total'
-            "
+            [label]="paymentPending() ? 'Processando...' : (currentTier() === 'premium' ? 'Gerenciar' : 'Ativar Poder Total')"
             [loading]="loading() === 'premium'"
+            [disabled]="!!paymentPending()"
             styleClass="w-full h-14 organic-shape font-black text-lg gradient-button border-0"
             [style.border-radius]="'1.5rem'"
             (onClick)="

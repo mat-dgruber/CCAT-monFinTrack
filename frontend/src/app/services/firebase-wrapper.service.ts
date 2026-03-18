@@ -13,6 +13,14 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import {
+  getAnalytics,
+  logEvent,
+  setUserId,
+  setUserProperties,
+  Analytics,
+} from 'firebase/analytics';
+import { trace, PerformanceTrace } from 'firebase/performance';
+import {
   getStorage,
   ref,
   uploadBytes,
@@ -30,9 +38,34 @@ export class FirebaseWrapperService {
   private app = initializeApp(environment.firebaseConfig);
   private auth: Auth = getAuth(this.app);
   private storage: FirebaseStorage = getStorage(this.app);
+  private analytics: Analytics = getAnalytics(this.app);
+  private performance = null;
 
   getAuth(): Auth {
     return this.auth;
+  }
+
+  // --- Analytics Methods ---
+
+  logEvent(eventName: string, params?: { [key: string]: any }) {
+    logEvent(this.analytics, eventName, params);
+  }
+
+  identifyUser(userId: string | null) {
+    setUserId(this.analytics, userId);
+  }
+
+  setProperties(properties: { [key: string]: any }) {
+    setUserProperties(this.analytics, properties);
+  }
+
+  // --- Performance Traces ---
+
+  startTrace(traceName: string): PerformanceTrace {
+    if (!this.performance) return { stop: () => {} } as any;
+    const t = trace(this.performance, traceName);
+    t.start();
+    return t;
   }
 
   onAuthStateChanged(nextOrObserver: (user: User | null) => void): void {

@@ -7,12 +7,14 @@ import {
 } from '../models/user-preference.model';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { FirebaseWrapperService } from './firebase-wrapper.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserPreferenceService {
   private authService = inject(AuthService);
+  private firebaseService = inject(FirebaseWrapperService);
   private apiUrl = `${environment.apiUrl}/preferences`;
   private preferencesSubject = new BehaviorSubject<UserPreference | null>(null);
   preferences$ = this.preferencesSubject.asObservable();
@@ -68,12 +70,12 @@ export class UserPreferenceService {
     this.applyTheme('system');
   }
 
-  fetchPreferences(): Observable<UserPreference> {
+  fetchPreferences(forceRefresh = false): Observable<UserPreference> {
     return this.http.get<UserPreference>(this.apiUrl).pipe(
       tap((prefs) => {
         const current = this.preferencesSubject.value;
-        // Update if remote version is newer or no local data
-        if (!current || prefs.version > current.version) {
+        // Update if forced, no local data, or remote version is newer
+        if (forceRefresh || !current || prefs.version > current.version) {
           this.updateLocalState(prefs);
         }
       }),
@@ -134,21 +136,44 @@ export class UserPreferenceService {
     if (!path) return null;
     if (path.startsWith('http')) return path;
 
-    // Construct absolute URL from environment.apiUrl
-    // environment.apiUrl is like 'http://localhost:8000/api'
-    const baseUrl = environment.apiUrl.replace('/api', '');
+    // Normalize path: ensure it correctly points to our secure attachments endpoint
+    let cleanPath = path;
+    if (!cleanPath.startsWith('/api/attachments')) {
+      if (cleanPath.startsWith('users/')) {
+        cleanPath = '/api/attachments/' + cleanPath;
+      } else if (cleanPath.startsWith('/users/')) {
+        cleanPath = '/api/attachments' + cleanPath;
+      } else if (!cleanPath.startsWith('/')) {
+        cleanPath = '/' + cleanPath;
+      }
+    }
 
-    // Ensure path starts with / for joining and baseUrl doesn't end with /
-    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    // environment.apiUrl is like 'https://api.monfintrack.com.br/api'
+    const apiBaseUrl = environment.apiUrl.endsWith('/')
+      ? environment.apiUrl.slice(0, -1)
+      : environment.apiUrl;
 
-    return `${cleanBaseUrl}${cleanPath}`;
+    // Extract root URL (e.g. https://api.monfintrack.com.br)
+    const rootBaseUrl = apiBaseUrl.replace(/\/api$/, '').replace(/\/api\/$/, '');
+
+    // Ensure cleanPath starts with /
+    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+
+    return `${rootBaseUrl}${cleanPath}`;
   }
 
   private updateLocalState(prefs: UserPreference) {
     this.preferencesSubject.next(prefs);
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(prefs));
     this.applyTheme(prefs.theme || 'light');
+
+    // Sincronizar com Analytics
+    if (prefs.user_id) {
+      this.firebaseService.identifyUser(prefs.user_id);
+      this.firebaseService.setProperties({
+        subscription_tier: prefs.subscription_tier || 'free'
+      });
+    }
   }
 
   private applyTheme(theme: string) {
