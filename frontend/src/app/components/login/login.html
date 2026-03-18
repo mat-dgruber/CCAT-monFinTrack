@@ -149,13 +149,14 @@
                 class="text-sm font-bold text-secondary uppercase tracking-tighter"
                 >Telefone / WhatsApp</label
               >
-              <input
-                pInputText
+              <p-inputMask
                 id="phone"
                 formControlName="phone"
+                mask="(99) 99999-999?9"
                 placeholder="(00) 00000-0000"
-                class="w-full rounded-2xl py-3 px-4"
-              />
+                styleClass="w-full"
+                inputStyleClass="w-full rounded-2xl py-3 px-4"
+              ></p-inputMask>
             </div>
           }
 
@@ -289,27 +290,22 @@
                 [binary]="true"
                 inputId="terms"
               ></p-checkbox>
-              <label
-                for="terms"
-                class="ml-3 text-xs text-secondary leading-relaxed"
-              >
-                Eu li e concordo com os
+              <div class="ml-3 text-xs text-secondary leading-relaxed">
+                <label for="terms" class=""> Eu li e concordo com os </label>
                 <a
-                  routerLink="/terms"
+                  href="/terms"
                   target="_blank"
-                  (click)="$event.stopPropagation()"
-                  class="text-primary-500 font-bold hover:underline"
+                  class="text-primary-500 font-bold cursor-pointer hover:underline"
                   >Termos de Uso</a
                 >
-                e a
+                <label for="terms" class=""> e a </label>
                 <a
-                  routerLink="/privacy-policy"
+                  href="/privacy-policy"
                   target="_blank"
-                  (click)="$event.stopPropagation()"
-                  class="text-primary-500 font-bold hover:underline"
+                  class="text-primary-500 font-bold cursor-pointer hover:underline"
                   >Política de Privacidade</a
                 >.
-              </label>
+              </div>
             </div>
           }
 

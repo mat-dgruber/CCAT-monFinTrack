@@ -35,6 +35,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ToastModule } from 'primeng/toast';
 import { DividerModule } from 'primeng/divider';
 import { DialogModule } from 'primeng/dialog';
+import { InputMaskModule } from 'primeng/inputmask';
 
 import { AuthService } from '../../services/auth.service';
 import { MFAService } from '../../services/mfa.service';
@@ -57,6 +58,7 @@ const anime = (animeNamespace as any).default || animeNamespace;
     DividerModule,
     DialogModule,
     CheckboxModule,
+    InputMaskModule,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
