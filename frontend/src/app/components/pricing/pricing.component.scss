@@ -1,12 +1,6 @@
 // Custom Premium Styles for Pricing Section
-:host {
-  display: block;
-  perspective: 1000px;
-}
-
 .pricing-card {
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  transform-style: preserve-3d;
+  transition: transform 0.3s ease, shadow 0.3s ease;
   position: relative;
   z-index: 1;
 
@@ -26,24 +20,14 @@
     transition: opacity 0.3s ease;
   }
 
-  & > *,
-  & div,
-  & ul {
-    transform-style: preserve-3d;
-  }
-
   ::ng-deep button,
   ::ng-deep .p-button {
-    transform: translateZ(2px) !important;
     pointer-events: auto !important;
     position: relative !important;
     z-index: 100 !important;
     cursor: pointer !important;
   }
-
-  h3, h1, .flex, .space-y-4, li {
-    transform: translateZ(20px);
-  }
+}
 
   &:hover::before {
     opacity: 1;
