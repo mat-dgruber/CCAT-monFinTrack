@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from app.core.database import get_db
@@ -15,14 +16,26 @@ router = APIRouter()
 def setup_user_account(current_user: Annotated[dict, Depends(get_current_user)]):
     """
     Endpoint para inicializar a conta do usuário.
-    Garante que as categorias padrão (incluindo as ocultas de sistema) existam.
+    Garante que o documento do usuário e as categorias padrão existam.
     """
     try:
         user_id = current_user["uid"]
-        # Garante categorias padrão
+        db = get_db()
+        
+        # 1. Garante que o documento do usuário existe
+        user_ref = db.collection("users").document(user_id)
+        if not user_ref.get().exists:
+            user_ref.set({
+                "uid": user_id,
+                "email": current_user.get("email"),
+                "created_at": datetime.now(),
+                "subscription_tier": "free"
+            })
+
+        # 2. Garante categorias padrão
         category_service.ensure_default_categories(user_id)
 
-        # Garante conta padrão
+        # 3. Garante conta padrão
         account_service.ensure_default_account(user_id)
 
         return {"status": "success", "message": "User setup completed"}
