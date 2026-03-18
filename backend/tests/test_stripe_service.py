@@ -24,9 +24,10 @@ def mock_env(monkeypatch):
 
 @pytest.fixture
 def stripe_service(mock_db, mock_env):
-    with patch("app.services.stripe_service.get_db") as mock_get_db:
-        mock_get_db.return_value = mock_db
+    with patch("app.services.stripe_service.get_db", return_value=mock_db):
         service = StripeService()
+        # Pre-set self._db to avoid calling get_db() again after the patch is gone
+        service._db = mock_db
         return service
 
 
@@ -124,7 +125,7 @@ def test_create_portal_no_customer(mock_portal_create, stripe_service, mock_db):
     with pytest.raises(HTTPException) as exc_info:
         stripe_service.create_portal_session("user_123", "http://return")
     assert exc_info.value.status_code == 400
-    assert "assinatura ativa" in exc_info.value.detail.lower()
+    assert "assinatura vinculada" in exc_info.value.detail.lower()
 
 
 def test_create_portal_no_user(stripe_service, mock_db):
@@ -135,7 +136,7 @@ def test_create_portal_no_user(stripe_service, mock_db):
     with pytest.raises(HTTPException) as exc_info:
         stripe_service.create_portal_session("user_123", "http://return")
     assert exc_info.value.status_code == 404
-    assert "dados do usuário" in exc_info.value.detail.lower()
+    assert "perfil do usuário" in exc_info.value.detail.lower()
 
 
 def test_handle_subscription_updated_active(stripe_service, mock_db):
@@ -149,13 +150,13 @@ def test_handle_subscription_updated_active(stripe_service, mock_db):
     # Mock user document found by customer_id
     mock_user_doc = MagicMock()
     mock_user_doc.reference.id = "user_123"
-    mock_db.collection().where().limit().stream.return_value = [mock_user_doc]
+    mock_db.collection.return_value.where.return_value.limit.return_value.stream.return_value = [mock_user_doc]
 
     # Mock user preferences
     mock_prefs_doc = MagicMock()
     mock_prefs_doc.exists = True
     mock_prefs_doc.to_dict.return_value = {"version": 5}
-    mock_db.collection().document().get.return_value = mock_prefs_doc
+    mock_db.collection.return_value.document.return_value.get.return_value = mock_prefs_doc
 
     asyncio.run(stripe_service._handle_subscription_updated(subscription))
 

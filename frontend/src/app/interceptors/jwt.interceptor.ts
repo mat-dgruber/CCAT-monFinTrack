@@ -17,50 +17,37 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   return authService.isAuthResolved$.pipe(
     filter((resolved) => resolved === true),
     take(1),
-    timeout(20000), // Aumentado para 20s para maior robustez em produção
+    timeout({ first: 20000, with: () => of(true) }), // Não lança erro, apenas emite e continua
     switchMap(() =>
       authService.authState$.pipe(
         take(1),
         switchMap((user) => {
-          if (!user) {
-            // Se não há usuário, prosseguimos sem token (requisições públicas)
-            return next(req);
-          }
+          if (!user) return next(req);
 
-          // Se há usuário, tentamos obter o token
-          // forceRefresh=false por padrão, mas se houver erro recorrente de 401, 
-          // poderíamos considerar forceRefresh se necessário no futuro.
           return from(user.getIdToken()).pipe(
+            catchError((tokenErr) => {
+              console.error('JWT Interceptor: Erro ao obter token do Firebase:', tokenErr);
+              return of(null);
+            }),
             switchMap((token) => {
+              if (!token) return next(req);
+
               const clonedReq = req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${token}`,
-                },
+                setHeaders: { Authorization: `Bearer ${token}` },
               });
               return next(clonedReq);
-            }),
-            catchError((tokenErr) => {
-              console.error(
-                'JWT Interceptor: Erro ao obter token do Firebase para o usuário:',
-                user.uid,
-                tokenErr,
-              );
-              // Prossegue sem token: resultará em 401 controlado pelo backend
-              return next(req);
-            }),
+            })
           );
         }),
-      ),
+        catchError((err) => {
+          console.error('JWT Interceptor: Erro no authState$:', err);
+          return next(req);
+        })
+      )
     ),
     catchError((err) => {
-      if (err.name === 'TimeoutError') {
-        console.error(
-          'JWT Interceptor: Timeout (20s) aguardando inicialização do Firebase. Verifique se o domínio está autorizado no console do Firebase.',
-        );
-      } else {
-        console.error('JWT Interceptor: Erro inesperado no fluxo de auth:', err);
-      }
+      console.error('JWT Interceptor: Erro no fluxo de auth:', err);
       return next(req);
-    }),
+    })
   );
 };

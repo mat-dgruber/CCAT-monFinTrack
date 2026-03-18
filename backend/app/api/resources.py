@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from app.core.database import db
+from app.core.database import get_db
 from app.core.security import get_current_user
 from app.schemas.seasonal_income import (
     SeasonalIncome,
@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/resources", tags=["Resources"])
 def list_resources(current_user: dict = Depends(get_current_user)):
     """Listar todos os recursos sazonais do usuário"""
     user_id = current_user["uid"]
+    db = get_db()
     resources_ref = db.collection("seasonal_incomes").where("user_id", "==", user_id)
     docs = resources_ref.stream()
 
@@ -37,6 +38,7 @@ def create_resource(
 ):
     """Cadastrar novo recurso sazonal"""
     user_id = current_user["uid"]
+    db = get_db()
     new_id = str(uuid.uuid4())
     data = resource.dict()
     data["user_id"] = user_id
@@ -56,6 +58,7 @@ def update_resource(
     current_user: dict = Depends(get_current_user),
 ):
     user_id = current_user["uid"]
+    db = get_db()
     doc_ref = db.collection("seasonal_incomes").document(resource_id)
     doc = doc_ref.get()
 
@@ -80,6 +83,7 @@ def update_resource(
 @router.delete("/{resource_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_resource(resource_id: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user["uid"]
+    db = get_db()
     doc_ref = db.collection("seasonal_incomes").document(resource_id)
     doc = doc_ref.get()
 

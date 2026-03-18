@@ -17,7 +17,7 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY") or os.getenv("STRIPE_API_KEY")
 
 class StripeService:
     def __init__(self):
-        self.db = get_db()
+        self._db = None
         self.prices = {
             "pro_monthly": os.getenv("STRIPE_PRICE_PRO_MONTHLY"),
             "pro_yearly": os.getenv("STRIPE_PRICE_PRO_YEARLY"),
@@ -30,11 +30,25 @@ class StripeService:
         missing_keys = [k for k, v in self.prices.items() if not v]
         if missing_keys:
             logger.warning(
-                f"⚠️  Missing Stripe Price IDs for: {missing_keys}. Checkout will fail for these plans."
+                f"⚠️ IDs de Preço do Stripe ausentes para: {missing_keys}. O checkout falhará para estes planos."
             )
 
         if not stripe.api_key:
-            logger.critical("❌ STRIPE_SECRET_KEY is not set!")
+            logger.critical("❌ STRIPE_SECRET_KEY não está configurada no ambiente!")
+
+    @property
+    def db(self):
+        """Obtém a instância do banco de dados, garantindo que não seja None."""
+        if self._db is None:
+            self._db = get_db()
+
+        if self._db is None:
+            logger.error("❌ Firestore não disponível em StripeService")
+            raise HTTPException(
+                status_code=500,
+                detail="Serviço de banco de dados temporariamente indisponível. Tente novamente em alguns instantes.",
+            )
+        return self._db
 
     def _get_price_id(self, plan: str):
         price_id = self.prices.get(plan)
@@ -65,10 +79,18 @@ class StripeService:
             except stripe.error.InvalidRequestError as e:
                 if "No such customer" in str(e):
                     logger.warning(
-                        f"⚠️ Stripe customer {stripe_customer_id} not found in this mode. Recreating for user {user_id}."
+                        f"⚠️ Cliente Stripe {stripe_customer_id} não encontrado neste modo (Provavelmente troca de Teste/Live). Recriando para o usuário {user_id}."
                     )
                 else:
+                    logger.error(
+                        f"❌ Erro ao recuperar cliente Stripe {stripe_customer_id}: {e}"
+                    )
                     raise e
+            except stripe.error.StripeError as e:
+                logger.error(
+                    f"❌ Erro de comunicação com Stripe ao recuperar cliente: {e}"
+                )
+                raise e
 
         # Create new customer
         try:
@@ -76,13 +98,19 @@ class StripeService:
             stripe_customer_id = customer.id
             user_ref.set({"stripe_customer_id": stripe_customer_id}, merge=True)
             return stripe_customer_id
+        except stripe.error.StripeError as e:
+            logger.error(f"❌ Erro do Stripe ao criar cliente para {user_id}: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erro no gateway de pagamento ao registrar cliente: {str(e)}",
+            ) from e
         except Exception as exc:
             logger.error(
-                f"❌ Erro ao criar cliente Stripe para o usuário {user_id}: {exc}"
+                f"❌ Erro inesperado ao criar cliente Stripe para o usuário {user_id}: {exc}"
             )
             raise HTTPException(
                 status_code=500,
-                detail=f"Falha ao criar cliente no gateway de pagamento: {str(exc)}",
+                detail=f"Falha interna ao preparar checkout: {str(exc)}",
             ) from exc
 
     def create_checkout_session(
@@ -93,7 +121,7 @@ class StripeService:
                 logger.error("❌ STRIPE_SECRET_KEY não está configurado!")
                 raise HTTPException(
                     status_code=500,
-                    detail="Erro de configuração no servidor de pagamentos.",
+                    detail="Erro de configuração no servidor de pagamentos. Chave de API ausente.",
                 )
 
             # Pre-flight check: User must exist in DB
@@ -132,17 +160,21 @@ class StripeService:
             )
             return {"sessionId": checkout_session["id"], "url": checkout_session["url"]}
         except stripe.error.StripeError as e:
-            logger.error(f"❌ Stripe Error in create_checkout_session: {e}")
-            raise HTTPException(status_code=400, detail=f"Erro no Stripe: {str(e)}") from e
+            logger.error(f"❌ Erro do Stripe em create_checkout_session: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erro no gateway de pagamento (Stripe): {str(e)}",
+            ) from e
         except HTTPException:
             raise
         except Exception as e:
             logger.error(
-                f"❌ Erro não tratado em create_checkout_session para o usuário {user_id}: {e}"
+                f"❌ Erro não tratado em create_checkout_session para o usuário {user_id}: {str(e)}",
+                exc_info=True,
             )
             raise HTTPException(
                 status_code=500,
-                detail=f"Erro interno ao criar sessão de checkout: {str(e)}",
+                detail=f"Erro inesperado ao criar sessão de checkout: {str(e)}",
             ) from e
 
     def create_portal_session(self, user_id: str, return_url: str):
@@ -150,9 +182,12 @@ class StripeService:
             user_ref = self.db.collection("users").document(user_id)
             user_doc = user_ref.get()
             if not user_doc.exists:
-                logger.error(f"❌ Portal Session: User '{user_id}' not found.")
+                logger.error(
+                    f"❌ Sessão do Portal: Usuário '{user_id}' não encontrado no Firestore."
+                )
                 raise HTTPException(
-                    status_code=404, detail="Dados do usuário não encontrados."
+                    status_code=404,
+                    detail="Dados de perfil do usuário não encontrados.",
                 )
 
             user_data = user_doc.to_dict()
@@ -160,11 +195,11 @@ class StripeService:
 
             if not stripe_customer_id:
                 logger.warning(
-                    f"⚠️ Portal Session: User '{user_id}' has no Stripe Customer ID."
+                    f"⚠️ Sessão do Portal: Usuário '{user_id}' não possui Stripe Customer ID associado."
                 )
                 raise HTTPException(
                     status_code=400,
-                    detail="Você ainda não possui uma assinatura ativa ou histórico de pagamentos.",
+                    detail="Você ainda não possui uma assinatura vinculada. Realize o primeiro pagamento para liberar o portal.",
                 )
 
             portal_session = stripe.billing_portal.Session.create(
