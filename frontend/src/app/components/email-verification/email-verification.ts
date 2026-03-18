@@ -32,8 +32,12 @@ export class EmailVerification implements OnInit {
   status = signal<'loading' | 'success' | 'error' | 'resending'>('loading');
   errorMessage = signal('');
   isLoggedIn = signal(false);
+  hasPendingSubscription = signal(false);
 
   ngOnInit() {
+    if (localStorage.getItem('pending_subscription')) {
+      this.hasPendingSubscription.set(true);
+    }
     // 1. Monitorar estado de autenticação para ver se já está verificado
     const app = initializeApp(environment.firebaseConfig);
     const auth = getAuth(app);
@@ -187,5 +191,13 @@ export class EmailVerification implements OnInit {
 
   goToLogin() {
     this.router.navigate(['/login']);
+  }
+
+  continueToApp() {
+    if (this.hasPendingSubscription()) {
+      this.router.navigate(['/app/pricing']);
+    } else {
+      this.router.navigate(['/app']);
+    }
   }
 }

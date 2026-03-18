@@ -29,8 +29,8 @@
         </p>
 
         <p-button
-          label="Ir para o Login"
-          (onClick)="goToLogin()"
+          [label]="hasPendingSubscription() ? 'Continuar para Assinatura' : 'Acessar o App'"
+          (onClick)="hasPendingSubscription() ? continueToApp() : goToLogin()"
           styleClass="w-full"
         ></p-button>
       </div>

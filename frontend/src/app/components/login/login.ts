@@ -3,10 +3,11 @@ import {
   inject,
   signal,
   computed,
+  OnInit,
   AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   FormBuilder,
   FormsModule,
@@ -80,14 +81,16 @@ const anime = (animeNamespace as any).default || animeNamespace;
     ]),
   ],
 })
-export class Login implements AfterViewInit {
+export class Login implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private messageService = inject(MessageService);
   private mfaService = inject(MFAService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   isRegisterMode = signal(false);
+  isSubscribeIntent = signal(false);
   isLoading = signal(false);
   showForgotPassword = signal(false);
   resetEmail = '';
@@ -110,6 +113,17 @@ export class Login implements AfterViewInit {
     },
     { validators: this.passwordMatchValidator },
   );
+
+  ngOnInit() {
+    this.route.queryParams.subscribe((params) => {
+      if (params['mode'] === 'register') {
+        this.isRegisterMode.set(true);
+      }
+      if (params['intent'] === 'subscribe') {
+        this.isSubscribeIntent.set(true);
+      }
+    });
+  }
 
   ngAfterViewInit() {
     this.animateEntrance();
@@ -300,7 +314,12 @@ export class Login implements AfterViewInit {
             return;
           }
         } catch (e) {}
-        this.router.navigate(['/app']);
+        
+        if (localStorage.getItem('pending_subscription')) {
+          this.router.navigate(['/app/pricing']);
+        } else {
+          this.router.navigate(['/app']);
+        }
       }
     } catch (error: any) {
       console.error('Login error detail:', error);
@@ -403,7 +422,11 @@ export class Login implements AfterViewInit {
           detail: 'Login realizado com sucesso!',
         });
         this.showMfaDialog.set(false);
-        this.router.navigate(['/app']);
+        if (localStorage.getItem('pending_subscription')) {
+          this.router.navigate(['/app/pricing']);
+        } else {
+          this.router.navigate(['/app']);
+        }
       },
       error: () => {
         this.messageService.add({

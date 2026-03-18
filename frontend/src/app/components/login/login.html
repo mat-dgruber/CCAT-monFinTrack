@@ -76,6 +76,15 @@
       </div>
 
       <div class="form-content">
+        @if (isSubscribeIntent()) {
+          <div class="mb-6 bg-primary-500/10 border border-primary-500/20 text-primary-600 dark:text-primary-400 p-4 rounded-xl flex items-start gap-3 animate-item opacity-0">
+            <i class="pi pi-info-circle text-xl mt-0.5"></i>
+            <div>
+              <p class="font-bold text-sm m-0">Quase lá!</p>
+              <p class="text-xs m-0 mt-1 opacity-90">Crie sua conta gratuitamente (ou faça login) para prosseguir com a assinatura do plano escolhido.</p>
+            </div>
+          </div>
+        }
         <div class="mb-10 animate-item opacity-0">
           <h1 class="text-3xl font-extrabold text-color mb-2">
             {{ isRegisterMode() ? "Crie sua conta" : "Bem-vindo de volta" }}

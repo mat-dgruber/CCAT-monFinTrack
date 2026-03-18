@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
+import { AuthService } from '../../services/auth.service';
 import {
   LucideAngularModule,
   Check,
@@ -61,6 +62,7 @@ export class PricingComponent implements OnInit {
   private messageService = inject(MessageService);
   private router = inject(Router);
   private firebaseService = inject(FirebaseWrapperService);
+  private authService = inject(AuthService);
 
   isAnnual = signal(true);
   loading = signal<string | null>(null);
@@ -72,6 +74,23 @@ export class PricingComponent implements OnInit {
   private readonly PAYMENT_PENDING_KEY = 'payment_pending';
 
   ngOnInit() {
+    const intentStr = localStorage.getItem('pending_subscription');
+    if (intentStr && this.authService.currentUser()) {
+      try {
+        const parsed = JSON.parse(intentStr);
+        this.isAnnual.set(parsed.isAnnual);
+        localStorage.removeItem('pending_subscription');
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Bem-vindo!',
+          detail: 'Você pode agora confirmar sua assinatura do plano escolhido.',
+          life: 5000,
+        });
+      } catch (e) {
+        localStorage.removeItem('pending_subscription');
+      }
+    }
+
     const pending = localStorage.getItem(this.PAYMENT_PENDING_KEY);
     if (!pending) return;
 
@@ -138,15 +157,17 @@ export class PricingComponent implements OnInit {
       'Controle Manual de Gastos',
     ],
     pro: [
-      'Classificação Automática por IA',
+      'Classificação Automática por IA de recibos',
       'Até 50 scans/chats de IA por dia',
       'Relatórios Mensais Inteligentes',
-      'Importação de OFX/Excel/CSV',
+      'Importação de extratos bancários',
       'Gestão Completa de Cartões',
       'Advisor Financeiro Pessoal (IA)',
     ],
     premium: [
-      'Até 500 interações de IA por dia',
+      'Tudo do plano Pro',
+      'Até 10x mais interações de IA que o plano Pro',
+      'IA Scanner de Documentos Complexos',
       'Análise Proativa de Custo de Vida',
       'Detector de Anomalias e Gastos Fantasmas',
       'Caçador de Assinaturas Esquecidas',
@@ -157,6 +178,12 @@ export class PricingComponent implements OnInit {
 
   async subscribe(plan: 'pro' | 'premium') {
     if (this.currentTier() === plan) return;
+
+    if (!this.authService.currentUser()) {
+      localStorage.setItem('pending_subscription', JSON.stringify({ plan, isAnnual: this.isAnnual() }));
+      this.router.navigate(['/login'], { queryParams: { mode: 'register', intent: 'subscribe' } });
+      return;
+    }
 
     const interval = this.isAnnual() ? 'yearly' : 'monthly';
     const planId = `${plan}_${interval}` as
