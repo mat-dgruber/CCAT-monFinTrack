@@ -79,6 +79,7 @@
         icon="pi pi-arrow-right"
         iconPos="right"
         [routerLink]="['/login']"
+        (onClick)="trackCtaClick('hero_primary')"
         (mouseenter)="onBtnEnter($event)"
         (mouseleave)="onBtnLeave($event)"
         (mousemove)="onMagneticMove($event)"
@@ -90,6 +91,7 @@
         label="Ver Planos"
         [routerLink]="['/']"
         fragment="pricing"
+        (onClick)="trackCtaClick('hero_secondary')"
         (mouseenter)="onBtnEnter($event)"
         (mouseleave)="onBtnLeave($event)"
         (mousemove)="onMagneticMove($event)"
@@ -219,9 +221,10 @@
     >
       @for (feat of features; track feat.title) {
         <div
+          (click)="trackFeatureClick(feat.title)"
           (mousemove)="onCardMove($event)"
           (mouseleave)="onCardLeave($event)"
-          class="feature-card opacity-0 bg-surface-card/40 backdrop-blur-2xl p-8 rounded-3xl border border-surface-border/50 transition-all hover:shadow-2xl hover:-translate-y-2 group"
+          class="feature-card opacity-0 bg-surface-card/40 backdrop-blur-2xl p-8 rounded-3xl border border-surface-border/50 transition-all hover:shadow-2xl hover:-translate-y-2 group cursor-pointer"
         >
           <div
             class="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 {{
@@ -312,6 +315,7 @@
         <p-button
           label="Quero meu Advisor"
           [routerLink]="['/login']"
+          (onClick)="trackCtaClick('ai_advisor')"
           (mouseenter)="onBtnEnter($event)"
           (mouseleave)="onBtnLeave($event)"
           styleClass="p-button-lg organic-shape font-bold px-8"
@@ -473,6 +477,7 @@
           icon="pi pi-arrow-right"
           iconPos="right"
           [routerLink]="['/login']"
+          (onClick)="trackCtaClick('bottom_cta')"
           styleClass="premium-cta-btn pulse-animation"
           ariaLabel="Criar conta e domar leão financeiro agora"
         ></p-button>

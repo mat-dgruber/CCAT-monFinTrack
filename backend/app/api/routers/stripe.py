@@ -62,4 +62,5 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Return 500 so Stripe retries (it only retries on 5xx, not 4xx)
+        raise HTTPException(status_code=500, detail=str(e))

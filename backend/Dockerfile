@@ -5,8 +5,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Copy uv from the official image
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+# Install uv via pip (avoids ghcr.io pull which fails in Cloud Build)
+RUN pip install --no-cache-dir uv
 
 # Install dependencies using uv
 RUN uv pip install --system --no-cache -r requirements.txt

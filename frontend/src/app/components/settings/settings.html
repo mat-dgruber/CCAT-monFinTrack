@@ -314,6 +314,7 @@
                 <p-toggleswitch
                   [(ngModel)]="preferences!.notifications_enabled"
                   (ngModelChange)="onNotificationChange($event)"
+                  styleClass="shrink-0"
                 ></p-toggleswitch>
               </div>
 
@@ -341,6 +342,7 @@
                     emailDigestEnabled.set($event); onEmailDigestChange()
                   "
                   [disabled]="selectedTier() === 'free'"
+                  styleClass="shrink-0"
                 ></p-toggleswitch>
               </div>
             </div>
@@ -362,6 +364,7 @@
                 <p-toggleswitch
                   [ngModel]="privacyShared()"
                   (ngModelChange)="privacyShared.set($event); onPrivacyChange()"
+                  styleClass="shrink-0"
                 ></p-toggleswitch>
               </div>
             </div>
@@ -455,6 +458,7 @@
             <p-toggleswitch
               [ngModel]="wakeLockEnabled()"
               (ngModelChange)="toggleWakeLock()"
+              styleClass="shrink-0"
             ></p-toggleswitch>
           </div>
 
@@ -580,6 +584,7 @@
                 <p-toggleswitch
                   [ngModel]="isSwEnabled()"
                   (ngModelChange)="toggleSw($event)"
+                  styleClass="shrink-0"
                 ></p-toggleswitch>
               </div>
             </div>
@@ -809,6 +814,7 @@
             <p-toggleswitch
               [(ngModel)]="tithesEnabled"
               (ngModelChange)="onTithesChange()"
+              styleClass="shrink-0"
             ></p-toggleswitch>
           </div>
         </div>
@@ -895,6 +901,7 @@
                 <p-toggleswitch
                   [(ngModel)]="autoApplyTithe"
                   (ngModelChange)="onTitheSettingsChange()"
+                  styleClass="shrink-0"
                 ></p-toggleswitch>
               </div>
               <div class="h-px bg-surface-border/50"></div>
@@ -911,6 +918,7 @@
                 <p-toggleswitch
                   [(ngModel)]="autoApplyOffering"
                   (ngModelChange)="onTitheSettingsChange()"
+                  styleClass="shrink-0"
                 ></p-toggleswitch>
               </div>
             </div>

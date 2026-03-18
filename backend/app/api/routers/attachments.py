@@ -1,9 +1,9 @@
 import io
 import uuid
-from typing import Annotated
+from typing import Annotated, Optional
 
 from app.core.logger import get_logger
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_current_user_optional
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
@@ -44,18 +44,23 @@ async def upload_attachment(
 
 
 @router.get("/users/{uid}/{folder}/{filename}")
-async def serve_attachment(
+def serve_attachment(
     uid: str,
     folder: str,
     filename: str,
-    current_user: Annotated[dict, Depends(get_current_user)],
+    current_user: Annotated[Optional[dict], Depends(get_current_user_optional)] = None,
 ):
     """
     Securely serves an attachment after verifying user ownership.
+    For profile_images, we allow public access.
     """
-    # Authorization: Only allow user to access their own files
-    if current_user["uid"] != uid:
-        raise HTTPException(status_code=403, detail="Access denied to this file.")
+    # 1. Authorization Logic
+    # Allow public access if folder is profile_images
+    if folder != "profile_images":
+        if not current_user:
+            raise HTTPException(status_code=401, detail="Authentication required.")
+        if current_user["uid"] != uid:
+            raise HTTPException(status_code=403, detail="Access denied to this file.")
 
     from app.services.storage_service import storage_service
 

@@ -3,7 +3,10 @@
   <div
     class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-surface-card border-b border-surface-border flex items-center justify-between px-4 z-30"
   >
-    <div class="flex items-center gap-3 cursor-pointer" routerLink="/app/dashboard">
+    <div
+      class="flex items-center gap-3 cursor-pointer"
+      routerLink="/app/dashboard"
+    >
       <button
         (click)="toggleSidebar()"
         class="p-2 -ml-2 text-secondary hover:bg-surface-hover rounded-lg transition-colors"
@@ -23,13 +26,14 @@
       class="w-8 h-8 rounded-full bg-avatar-bg flex items-center justify-center text-avatar-text font-bold text-sm shadow-sm overflow-hidden"
     >
       @if (userPreferenceService.preferences$ | async; as prefs) {
-        @if (prefs.profile_image_url) {
+        @if (prefs.profile_image_url && !avatarError()) {
           <img
             [src]="
               userPreferenceService.getProfileImageUrl(prefs.profile_image_url)
             "
             alt="Profile"
             class="w-full h-full object-cover"
+            (error)="handleAvatarError()"
           />
         } @else {
           {{ authService.currentUser()?.displayName?.charAt(0)?.toUpperCase() }}
@@ -97,7 +101,7 @@
                 class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
               >
                 <i class="pi pi-calendar-plus"></i>
-                <span class="font-medium">Assinaturas</span>
+                <span class="font-medium">Pagamentos Recorrentes</span>
               </a>
             </li>
             <li>
@@ -155,7 +159,7 @@
                       class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
                     >
                       <i class="pi pi-wallet"></i>
-                      <span class="font-medium">Contas</span>
+                      <span class="font-medium">Contas Bancárias</span>
                     </a>
                   </li>
                   <li>
@@ -263,7 +267,7 @@
               class="w-10 h-10 rounded-full bg-avatar-bg flex items-center justify-center text-avatar-text font-bold shadow-sm overflow-hidden"
             >
               @if (userPreferenceService.preferences$ | async; as prefs) {
-                @if (prefs.profile_image_url) {
+                @if (prefs.profile_image_url && !avatarError()) {
                   <img
                     [src]="
                       userPreferenceService.getProfileImageUrl(
@@ -272,6 +276,7 @@
                     "
                     alt="Profile"
                     class="w-full h-full object-cover"
+                    (error)="handleAvatarError()"
                   />
                 } @else {
                   {{
@@ -343,14 +348,20 @@
         class="h-8 w-auto min-w-[32px]"
       />
       @if (!sidebarCollapsed()) {
-        <h1 class="text-xl font-bold text-emphasis tracking-tight whitespace-nowrap">
+        <h1
+          class="text-xl font-bold text-emphasis tracking-tight whitespace-nowrap"
+        >
           monFinTrack
         </h1>
       }
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto py-6" [class.px-3]="!sidebarCollapsed()" [class.px-2]="sidebarCollapsed()">
+    <nav
+      class="flex-1 overflow-y-auto py-6"
+      [class.px-3]="!sidebarCollapsed()"
+      [class.px-2]="sidebarCollapsed()"
+    >
       <ul class="space-y-1">
         <li>
           <a
@@ -387,14 +398,16 @@
           <a
             routerLink="/app/subscriptions"
             routerLinkActive="bg-nav-active text-nav-active-text"
-            [pTooltip]="sidebarCollapsed() ? 'Assinaturas' : ''"
+            [pTooltip]="sidebarCollapsed() ? 'Transações Recorrentes' : ''"
             tooltipPosition="right"
             class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
             [class.justify-center]="sidebarCollapsed()"
           >
             <i class="pi pi-calendar-plus"></i>
             @if (!sidebarCollapsed()) {
-              <span class="font-medium whitespace-nowrap">Assinaturas</span>
+              <span class="font-medium whitespace-nowrap"
+                >Transações Recorrentes</span
+              >
             }
           </a>
         </li>
@@ -446,7 +459,9 @@
                     class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <i class="pi pi-tags"></i>
-                    <span class="font-medium whitespace-nowrap">Categorias</span>
+                    <span class="font-medium whitespace-nowrap"
+                      >Categorias</span
+                    >
                   </a>
                 </li>
                 <li>
@@ -456,7 +471,9 @@
                     class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <i class="pi pi-wallet"></i>
-                    <span class="font-medium whitespace-nowrap">Contas</span>
+                    <span class="font-medium whitespace-nowrap"
+                      >Contas Bancárias</span
+                    >
                   </a>
                 </li>
                 <li>
@@ -466,7 +483,9 @@
                     class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <i class="pi pi-dollar"></i>
-                    <span class="font-medium whitespace-nowrap">Orçamentos</span>
+                    <span class="font-medium whitespace-nowrap"
+                      >Orçamentos</span
+                    >
                   </a>
                 </li>
                 <li>
@@ -486,7 +505,9 @@
                     class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     <i class="pi pi-chart-line"></i>
-                    <span class="font-medium whitespace-nowrap">Custo de Vida</span>
+                    <span class="font-medium whitespace-nowrap"
+                      >Custo de Vida</span
+                    >
                   </a>
                 </li>
                 <li>
@@ -508,7 +529,9 @@
                     class="w-full flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors text-left"
                   >
                     <i class="pi pi-calculator"></i>
-                    <span class="font-medium whitespace-nowrap">Calculadora</span>
+                    <span class="font-medium whitespace-nowrap"
+                      >Calculadora</span
+                    >
                   </button>
                 </li>
               </ul>
@@ -559,7 +582,7 @@
 
     <!-- User Profile (Desktop) -->
     <div class="border-t border-surface-border p-4 shrink-0 overflow-hidden">
-      <div 
+      <div
         class="flex items-center gap-3 mb-2 transition-all"
         [class.px-4]="!sidebarCollapsed()"
         [class.px-0]="sidebarCollapsed()"
@@ -570,7 +593,7 @@
           class="w-10 h-10 rounded-full bg-avatar-bg flex items-center justify-center text-avatar-text font-bold shadow-sm overflow-hidden shrink-0"
         >
           @if (userPreferenceService.preferences$ | async; as prefs) {
-            @if (prefs.profile_image_url) {
+            @if (prefs.profile_image_url && !avatarError()) {
               <img
                 [src]="
                   userPreferenceService.getProfileImageUrl(
@@ -579,6 +602,7 @@
                 "
                 alt="Profile"
                 class="w-full h-full object-cover"
+                (error)="handleAvatarError()"
               />
             } @else {
               {{
@@ -634,7 +658,8 @@
     <footer
       class="mt-12 py-6 text-center text-sm text-secondary border-t border-surface-border"
     >
-      <div class="flex items-center justify-center gap-4 mb-2">
+      <!-- Links Row -->
+      <div class="flex items-center justify-center flex-wrap gap-4 mb-2">
         <a routerLink="/terms" class="hover:text-color transition-colors"
           >Termos</a
         >
@@ -648,11 +673,83 @@
         <a routerLink="/contact" class="hover:text-color transition-colors"
           >Fale Conosco</a
         >
+        <span class="w-1 h-1 bg-surface-border rounded-full"></span>
+        <a
+          routerLink="/contact"
+          class="inline-flex items-center gap-1 hover:text-color transition-colors"
+        >
+          <i class="pi pi-bug text-[11px]"></i>
+          Reportar Bug
+        </a>
       </div>
-      <p>
-        &copy; {{ currentYear }} monFinTrack. Todos os direitos
-        reservados.
-      </p>
+
+      <!-- Status, Version and Plan Badge Row -->
+      <div class="flex items-center justify-center flex-wrap gap-3 mb-3">
+        <!-- System Status Indicator -->
+        @if (systemStatus() === "checking") {
+          <span class="inline-flex items-center gap-1.5 text-xs text-secondary">
+            <span
+              class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"
+            ></span>
+            Verificando sistemas...
+          </span>
+        } @else if (systemStatus() === "ok") {
+          <span
+            class="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400"
+          >
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            Sistemas operacionais
+          </span>
+        } @else {
+          <span
+            class="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400"
+          >
+            <span
+              class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"
+            ></span>
+            Instabilidade detectada
+          </span>
+        }
+
+        <span class="w-1 h-1 bg-surface-border rounded-full"></span>
+
+        <!-- App Version -->
+        <span class="inline-flex items-center gap-1 text-xs font-mono text-secondary">
+          <i class="pi pi-code text-[10px]"></i>
+          v{{ appVersion }}
+        </span>
+
+        <span class="w-1 h-1 bg-surface-border rounded-full"></span>
+
+        <!-- Plan Badge -->
+        @switch (subscriptionService.currentTier()) {
+          @case ("free") {
+            <span
+              class="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-full px-2 py-0.5 bg-gray-100 dark:bg-gray-800"
+            >
+              <i class="pi pi-user text-[10px]"></i>
+              Plano Free
+            </span>
+          }
+          @case ("pro") {
+            <span
+              class="inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary-400 border border-primary-300 dark:border-primary-500/40 rounded-full px-2 py-0.5 bg-primary-50 dark:bg-primary-500/10"
+            >
+              <i class="pi pi-star text-[10px]"></i>
+              Plano Pro
+            </span>
+          }
+          @case ("premium") {
+            <span
+              class="inline-flex items-center gap-1 text-xs font-black text-orange-500 border border-orange-500/30 rounded-full px-2 py-0.5 bg-orange-500/10"
+            >
+              <i class="pi pi-star-fill text-[10px]"></i>
+              Premium
+            </span>
+          }
+        }
+      </div>
+      <p>&copy; {{ currentYear }} monFinTrack. Todos os direitos reservados.</p>
     </footer>
   </main>
 

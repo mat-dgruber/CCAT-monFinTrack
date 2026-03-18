@@ -25,6 +25,7 @@ interface ChatMessage {
 }
 
 import { Router } from '@angular/router';
+import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
 
 @Component({
   selector: 'app-chat',
@@ -44,6 +45,7 @@ import { Router } from '@angular/router';
 export class ChatComponent {
   private aiService = inject(AIService);
   private router = inject(Router);
+  private firebaseService = inject(FirebaseWrapperService);
   subscriptionService = inject(SubscriptionService);
   canAccess = computed(() => this.subscriptionService.canAccess('chat'));
 
@@ -92,6 +94,11 @@ export class ChatComponent {
 
     const userMsg = this.currentMessage.trim();
     const persona = this.isRoastMode() ? 'roast' : 'friendly';
+
+    this.firebaseService.logEvent('chat_message_sent', {
+      persona: persona,
+      message_length: userMsg.length
+    });
 
     // Map messages to history format
     const history = this.messages()

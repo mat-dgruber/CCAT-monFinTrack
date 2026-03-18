@@ -26,7 +26,10 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
           return from(user.getIdToken()).pipe(
             catchError((tokenErr) => {
-              console.error('JWT Interceptor: Erro ao obter token do Firebase:', tokenErr);
+              console.error(
+                'JWT Interceptor: Erro ao obter token do Firebase:',
+                tokenErr,
+              );
               return of(null);
             }),
             switchMap((token) => {
@@ -36,18 +39,21 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
                 setHeaders: { Authorization: `Bearer ${token}` },
               });
               return next(clonedReq);
-            })
+            }),
           );
         }),
         catchError((err) => {
-          console.error('JWT Interceptor: Erro no authState$:', err);
+          console.error(
+            'JWT Interceptor: Erro na requisição interceptada ou no fluxo de auth:',
+            err,
+          );
           return next(req);
-        })
-      )
+        }),
+      ),
     ),
     catchError((err) => {
       console.error('JWT Interceptor: Erro no fluxo de auth:', err);
       return next(req);
-    })
+    }),
   );
 };

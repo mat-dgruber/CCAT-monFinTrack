@@ -40,7 +40,8 @@ def upload_avatar(
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    url = preference_service.save_profile_image(user_id, file)
+    internal_path = preference_service.save_profile_image(user_id, file)
+    url = f"/api/attachments/{internal_path}"
 
     # Update the user preference with the new URL
     preference_service.update_preferences(

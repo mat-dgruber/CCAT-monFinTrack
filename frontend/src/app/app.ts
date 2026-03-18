@@ -1,8 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ChildrenOutletContexts } from '@angular/router';
+import { RouterModule, ChildrenOutletContexts, Router, NavigationEnd } from '@angular/router';
 import { UserPreferenceService } from './services/user-preference.service';
 import { AuthService } from './services/auth.service'; // Added Import
+import { FirebaseWrapperService } from './services/firebase-wrapper.service';
+import { filter } from 'rxjs/operators';
 
 import { PwaService } from './services/pwa.service';
 import { ChatComponent } from './components/chat/chat.component';
@@ -31,6 +33,8 @@ import { routeTransitionAnimations } from './route-animations';
 export class App {
   public authService = inject(AuthService); // Injected public for template access
   private contexts = inject(ChildrenOutletContexts);
+  private firebaseService = inject(FirebaseWrapperService);
+  private router = inject(Router);
 
   constructor(
     private userPrefs: UserPreferenceService,
@@ -42,6 +46,16 @@ export class App {
     this.seoService.initDynamicSeo();
     // Solicitar permissão de notificação ao iniciar
     this.pushService.requestPermission();
+
+    // Iniciar Rastreamento de Analytics (Page Views)
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.firebaseService.logEvent('page_view', {
+        page_path: event.urlAfterRedirects,
+        page_title: document.title
+      });
+    });
   }
 
   getRouteAnimationData() {

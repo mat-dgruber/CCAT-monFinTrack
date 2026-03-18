@@ -28,6 +28,8 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import { MessageService } from 'primeng/api'; // <--- Importe aqui
 import { provideMarkdown } from 'ngx-markdown';
+import { GlobalErrorHandler } from './services/error-handler.service';
+import { ErrorHandler } from '@angular/core';
 
 import { routes } from './app.routes';
 
@@ -48,6 +50,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([jwtInterceptor])),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
 
     providePrimeNG({
       theme: {

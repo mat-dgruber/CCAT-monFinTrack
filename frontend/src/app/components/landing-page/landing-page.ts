@@ -4,6 +4,7 @@ import {
   OnInit,
   OnDestroy,
   HostListener,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -11,6 +12,7 @@ import { Title, Meta } from '@angular/platform-browser';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { FirebaseWrapperService } from '../../services/firebase-wrapper.service';
 import {
   LucideAngularModule,
   BrainCircuit,
@@ -270,6 +272,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
   isScrolled = false;
   currentYear = new Date().getFullYear();
   private observer: IntersectionObserver | null = null;
+  private firebaseService = inject(FirebaseWrapperService);
 
   constructor(
     private messageService: MessageService,
@@ -503,6 +506,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
 
   checkStatus(event: Event) {
     event.preventDefault();
+    this.firebaseService.logEvent('system_status_checked');
     this.messageService.add({
       severity: 'success',
       summary: 'Sistemas Operacionais',
@@ -510,6 +514,15 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         'Todos os serviços estão funcionando normalmente. API: 🟢 | DB: 🟢',
       life: 5000,
     });
+  }
+
+  // --- Analytics Methods ---
+  trackCtaClick(location: string) {
+    this.firebaseService.logEvent('cta_click', { location: location });
+  }
+
+  trackFeatureClick(featureTitle: string) {
+    this.firebaseService.logEvent('feature_clicked', { feature_name: featureTitle });
   }
 
   private initHeroAnimation() {
@@ -737,6 +750,9 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     this.activeFaqIndex = this.activeFaqIndex === index ? null : index;
 
     if (this.activeFaqIndex !== null) {
+      this.firebaseService.logEvent('faq_opened', {
+        question: this.faqs[index].question
+      });
       const target = wrappers[index] as HTMLElement;
 
       // Get height by temporarily setting it to auto

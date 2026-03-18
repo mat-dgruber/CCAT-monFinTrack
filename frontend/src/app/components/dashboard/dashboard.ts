@@ -133,18 +133,23 @@ export class Dashboard implements OnInit {
     this.route.queryParams.subscribe((params) => {
       if (params['payment'] === 'success') {
         this.messageService.add({
-          severity: 'success',
-          summary: 'Pagamento Confirmado!',
-          detail: 'Obrigado por assinar. Seu plano foi atualizado.',
+          id: 'payment-toast',
+          severity: 'info',
+          summary: 'Processando Assinatura...',
+          detail: 'Estamos ativando seus recursos premium. Um momento...',
+          sticky: true,
         });
-        // Clear param
+
+        // Trigger manual refresh with a small retry logic to account for webhook race condition
+        this.refreshSubscriptionStatus(1);
+
+        // Clear param without triggering a navigation cycle that resets the component state
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: { payment: null },
           queryParamsHandling: 'merge',
+          replaceUrl: true,
         });
-        // Force refresh specific logic if needed? subscription service is reactive to user prefs update.
-        // Assuming backend webhook already fired? Race condition possible.
       } else if (params['payment'] === 'canceled') {
         this.messageService.add({
           severity: 'info',
@@ -156,6 +161,46 @@ export class Dashboard implements OnInit {
           queryParams: { payment: null },
           queryParamsHandling: 'merge',
         });
+      }
+    });
+  }
+
+  private refreshSubscriptionStatus(attempt: number) {
+    const MAX_ATTEMPTS = 12;
+    const RETRY_DELAY = 2000; // 2s between checks — total window ~24s
+
+    this.preferenceService.fetchPreferences(true).subscribe({
+      next: (prefs) => {
+        if (prefs?.subscription_tier !== 'free') {
+          // Success! Tier updated
+          this.messageService.clear('payment-toast');
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Assinatura Ativa!',
+            detail: `Parabéns! Seu plano ${prefs.subscription_tier?.toUpperCase()} já está liberado.`,
+            life: 5000,
+          });
+        } else if (attempt < MAX_ATTEMPTS) {
+          // Still 'free', wait and retry
+          setTimeout(() => {
+            this.refreshSubscriptionStatus(attempt + 1);
+          }, RETRY_DELAY);
+        } else {
+          // Reached max attempts without tier update
+          this.messageService.clear('payment-toast');
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Ativação em processamento',
+            detail: 'O pagamento foi confirmado, mas o Stripe ainda está processando. Seus recursos serão liberados automaticamente em breve.',
+            life: 10000,
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Falha ao atualizar preferências após pagamento', err);
+        if (attempt < MAX_ATTEMPTS) {
+          setTimeout(() => this.refreshSubscriptionStatus(attempt + 1), RETRY_DELAY);
+        }
       }
     });
   }

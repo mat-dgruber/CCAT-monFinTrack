@@ -27,3 +27,22 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail="Token inválido ou expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(
+        HTTPBearer(auto_error=False)
+    ),
+):
+    """
+    Versão opcional da autenticação. Não gera erro 401 se o token estiver ausente.
+    """
+    if not credentials:
+        return None
+
+    try:
+        token = credentials.credentials
+        decoded_token = auth.verify_id_token(token)
+        return decoded_token
+    except Exception:
+        return None

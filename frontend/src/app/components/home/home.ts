@@ -1,7 +1,8 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ChildrenOutletContexts } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
+import { HttpClient } from '@angular/common/http';
 
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -16,6 +17,7 @@ import { PwaService } from '../../services/pwa.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { CalculatorComponent } from '../shared/calculator/calculator.component';
 import { routeTransitionAnimations } from '../../route-animations';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -32,18 +34,41 @@ import { routeTransitionAnimations } from '../../route-animations';
   templateUrl: './home.html',
   animations: [routeTransitionAnimations],
 })
-export class Home {
+export class Home implements OnInit {
   authService = inject(AuthService);
   userPreferenceService = inject(UserPreferenceService);
   pwaService = inject(PwaService);
   subscriptionService = inject(SubscriptionService);
   private contexts = inject(ChildrenOutletContexts);
+  private http = inject(HttpClient);
 
   sidebarVisible = signal(false);
   sidebarCollapsed = signal(localStorage.getItem('sidebarCollapsed') === 'true');
   calculatorVisible = signal(false);
   moreMenuVisible = signal(false);
   currentYear = new Date().getFullYear();
+  appVersion = '1.0.2';
+  systemStatus = signal<'ok' | 'degraded' | 'checking'>('checking');
+  avatarError = signal(false);
+
+  ngOnInit() {
+    this.checkSystemStatus();
+  }
+
+  handleAvatarError() {
+    this.avatarError.set(true);
+    this.userPreferenceService
+      .updatePreferences({ profile_image_url: null } as any)
+      .subscribe();
+  }
+
+  checkSystemStatus() {
+    const healthUrl = environment.apiUrl.replace('/api', '') + '/health';
+    this.http.get(healthUrl, { responseType: 'json' }).subscribe({
+      next: () => this.systemStatus.set('ok'),
+      error: () => this.systemStatus.set('degraded'),
+    });
+  }
 
   firstName = computed(() => {
     const user = this.authService.currentUser();

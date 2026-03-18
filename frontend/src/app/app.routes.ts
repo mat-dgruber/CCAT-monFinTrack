@@ -40,6 +40,20 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'terms',
+    component: Terms,
+    title: 'Termos de Uso',
+    data: { description: 'Termos e condições de uso do monFinTrack.' },
+  },
+  {
+    path: 'privacy-policy',
+    component: PrivacyPolicy,
+    title: 'Política de Privacidade',
+    data: {
+      description: 'Saiba como protegemos seus dados e sua privacidade.',
+    },
+  },
+  {
     path: 'app',
     component: Home,
     canActivate: [authGuard],
@@ -215,20 +229,6 @@ export const routes: Routes = [
         (m) => m.ResetPassword,
       ),
     title: 'Redefinir Senha',
-  },
-  {
-    path: 'terms',
-    component: Terms,
-    title: 'Termos de Uso',
-    data: { description: 'Termos e condições de uso do monFinTrack.' },
-  },
-  {
-    path: 'privacy-policy',
-    component: PrivacyPolicy,
-    title: 'Política de Privacidade',
-    data: {
-      description: 'Saiba como protegemos seus dados e sua privacidade.',
-    },
   },
   {
     path: 'contact',

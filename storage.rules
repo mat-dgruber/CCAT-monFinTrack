@@ -32,9 +32,9 @@ service firebase.storage {
     // --- Rules ---
 
     // 1. User Profile Images
-    // Path: users/{userId}/profile/{filename}
-    match /users/{userId}/profile/{fileName} {
-      allow read: if isOwner(userId); // Or allow public if needed: 'if true'
+    // Path: users/{userId}/profile_images/{filename}
+    match /users/{userId}/profile_images/{fileName} {
+      allow read: if true; // Publicly accessible via proxy or direct URL
       allow write: if isOwner(userId)
                    && isImage()
                    && isBelowSize(5); // Max 5MB

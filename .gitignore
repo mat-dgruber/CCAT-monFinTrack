@@ -55,10 +55,11 @@ connect.lock
 coverage/
 
 # Service Account Keys
-**/app/certs/serviceAccountKey.json
+**/app/certs/*.json
 
 # Firebase Rules
-firestore.rules
+# Do NOT ignore firestore.rules; it's part of your security logic.
+# storage.rules should also be in git.
 
 # LLMS
 llms-full.txt
@@ -68,7 +69,8 @@ llms.txt
 .docker/
 
 /.agent
-*.txt
+# Renamed from *.txt to be more specific to generated LLM context files
+llms-*.txt
 .firebase/
 .superpowers/
 docs/superpowers/

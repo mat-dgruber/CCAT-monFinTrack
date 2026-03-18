@@ -128,7 +128,7 @@ class ScanResponse(BaseModel):
 
 
 @router.post("/scan", response_model=ScanResponse)
-async def scan_receipt_endpoint(
+def scan_receipt_endpoint(
     file: Annotated[Optional[UploadFile], File()] = None,
     file_url: Optional[str] = None,
     current_user: Annotated[dict, Depends(get_current_user)] = None,
@@ -157,7 +157,8 @@ async def scan_receipt_endpoint(
         if not file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="File must be an image")
 
-        content = await file.read()
+        # Use synchronous read for sync endpoint
+        content = file.file.read()
         content_type = file.content_type
 
         # Save file using StorageService

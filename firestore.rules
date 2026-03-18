@@ -1,86 +1,58 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // --- Helper Functions ---
-    
-    function isAuth() {
+
+    // --- Funções Auxiliares ---
+
+    // Verifica se o usuário está autenticado
+    function isSignedIn() {
       return request.auth != null;
     }
-    
-    function isOwner(userId) {
-      return isAuth() && request.auth.uid == userId;
-    }
-    
-    function dataOwner() {
-      return isOwner(resource.data.user_id);
-    }
-    
-    function incomingOwner() {
-      return isOwner(request.resource.data.user_id);
+
+    // Verifica se o documento pertence ao usuário (para documentos existentes)
+    function isOwner(data) {
+      return isSignedIn() && data.user_id == request.auth.uid;
     }
 
-    // --- Rules ---
-
-    // 1. User Preferences & Profiles
-    // Document ID is the userId
-    match /user_preferences/{userId} {
-      allow read, write: if isOwner(userId);
+    // Verifica se o dado sendo enviado pertence ao usuário (para novos documentos)
+    function isCreatingOwnedData() {
+      return isSignedIn() && request.resource.data.user_id == request.auth.uid;
     }
-    
+
+    // --- Regras por Coleção ---
+
+    // 1. Coleção de Usuários (Preferências e Perfil)
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      // O usuário pode ler seu próprio perfil
+      allow read: if isSignedIn() && request.auth.uid == userId;
       
-      // Reports subcollection
-      match /reports/{reportId} {
-        allow read, write: if isOwner(userId);
-      }
+      // O usuário pode atualizar preferências, mas NÃO o tier ou tokens (proteção de negócio)
+      allow update: if isSignedIn() && request.auth.uid == userId 
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscription_tier', 'fcm_tokens', 'uid', 'email']));
+      
+      // Criação e exclusão total geralmente via Backend/Admin
+      allow create, delete: if false; 
     }
 
-    // 2. Financial Records (Collections with user_id field)
-    match /transactions/{txId} {
-      allow read, delete: if dataOwner();
-      allow create: if incomingOwner();
-      allow update: if dataOwner() && incomingOwner();
-    }
-    
-    match /accounts/{accId} {
-      allow read, delete: if dataOwner();
-      allow create: if incomingOwner();
-      allow update: if dataOwner() && incomingOwner();
-    }
-    
-    match /budgets/{budgetId} {
-      allow read, delete: if dataOwner();
-      allow create: if incomingOwner();
-      allow update: if dataOwner() && incomingOwner();
-    }
-    
-    match /categories/{catId} {
-      allow read, delete: if dataOwner();
-      allow create: if incomingOwner();
-      allow update: if dataOwner() && incomingOwner();
-    }
-    
-    match /recurrences/{recId} {
-      allow read, delete: if dataOwner();
-      allow create: if incomingOwner();
-      allow update: if dataOwner() && incomingOwner();
+    // 2. Coleções de Dados do Usuário (Transactions, Accounts, Categories, Budgets, Debts, Invoices)
+    // Usamos um match recursivo para subcoleções se houver
+    match /{collectionName}/{docId} {
+      
+      // Lista de coleções que seguem o padrão de user_id
+      allow read: if isSignedIn() 
+                  && (collectionName in ['transactions', 'accounts', 'categories', 'budgets', 'debts', 'invoices', 'indicators', 'recurring_transactions', 'installments'])
+                  && (resource == null || resource.data.user_id == request.auth.uid);
+
+      allow create: if isSignedIn() 
+                    && (collectionName in ['transactions', 'accounts', 'categories', 'budgets', 'debts', 'invoices', 'indicators', 'recurring_transactions', 'installments'])
+                    && isCreatingOwnedData();
+
+      allow update, delete: if isSignedIn() 
+                            && (collectionName in ['transactions', 'accounts', 'categories', 'budgets', 'debts', 'invoices', 'indicators', 'recurring_transactions', 'installments'])
+                            && isOwner(resource.data);
     }
 
-    // 3. AI Features
-    // Predictions are hashed but we should still restrict access 
-    // to prevent enumeration or cross-tenant leaks if possible.
-    // Since doc ID is a hash of user_id:data, we can't easily check 'resource.data.user_id' 
-    // unless we store it.
-    match /ai_predictions/{hash} {
-      // If we don't have user_id field, we rely on hash secrecy.
-      // But for security audit, we should ensure user_id is in the document.
-      allow read, write: if isAuth(); // Minimum requirement
-    }
-
-    // Default deny
+    // 3. Bloqueio Global (Deny by Default)
     match /{allPaths=**} {
       allow read, write: if false;
     }
