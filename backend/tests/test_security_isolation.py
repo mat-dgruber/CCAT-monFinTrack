@@ -402,8 +402,7 @@ class TestSubscriptionSecurity:
                 )
 
             assert exc_info.value.status_code == 400
-            assert "Stripe Customer ID" in exc_info.value.detail
-
+            assert "Você ainda não possui uma assinatura vinculada" in exc_info.value.detail
     def test_subscription_tier_check_enforced_on_premium_features(self):
         """Free users are blocked from premium-only features (document analysis)."""
         with patch("app.services.document_analysis.get_preferences") as pref_mock:

@@ -257,6 +257,7 @@ class TestStripeWebhookDeep:
     def test_webhook_checkout_completed_links_user(self):
         """checkout.session.completed should link user_id to stripe_customer_id."""
         import asyncio
+        from unittest.mock import AsyncMock
 
         import stripe as stripe_module
 
@@ -284,6 +285,14 @@ class TestStripeWebhookDeep:
                 stripe_module.Webhook,
                 "construct_event",
                 return_value=mock_event,
+            ), patch.object(
+                stripe_module.Subscription,
+                "retrieve",
+                return_value={"id": "sub_xyz", "status": "active"},
+            ), patch.object(
+                service,
+                "_handle_subscription_updated",
+                new_callable=AsyncMock
             ):
                 result = asyncio.run(service.handle_webhook(b"payload", "valid_sig"))
 

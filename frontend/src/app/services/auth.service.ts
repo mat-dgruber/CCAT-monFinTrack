@@ -83,6 +83,7 @@ export class AuthService {
       await this.firebaseWrapper.createUserWithEmailAndPassword(email, pass);
 
     if (credential.user) {
+      this.firebaseWrapper.logEvent('sign_up', { method: 'email' });
       try {
         await this.firebaseWrapper.updateProfile(credential.user, {
           displayName: name,
@@ -121,20 +122,29 @@ export class AuthService {
   }
 
   async login(email: string, pass: string) {
-    const credential = await this.firebaseWrapper.signInWithEmailAndPassword(
-      email,
-      pass,
-    );
-
-    // 5. Verificação de Segurança no Login: Impedir acesso se e-mail não estiver verificado
-    if (!credential.user.emailVerified) {
-      await this.firebaseWrapper.signOut();
-      throw new Error(
-        'E-mail não verificado. Verifique sua caixa de entrada antes de acessar o sistema.',
+    try {
+      const credential = await this.firebaseWrapper.signInWithEmailAndPassword(
+        email,
+        pass,
       );
-    }
 
-    return credential;
+      // 5. Verificação de Segurança no Login: Impedir acesso se e-mail não estiver verificado
+      if (!credential.user.emailVerified) {
+        await this.firebaseWrapper.signOut();
+        this.firebaseWrapper.logEvent('login_failed', { reason: 'email_not_verified' });
+        throw new Error(
+          'E-mail não verificado. Verifique sua caixa de entrada antes de acessar o sistema.',
+        );
+      }
+
+      this.firebaseWrapper.logEvent('login', { method: 'email' });
+      return credential;
+    } catch (error: any) {
+      if (error.message && !error.message.includes('E-mail não verificado')) {
+         this.firebaseWrapper.logEvent('login_failed', { reason: 'error', code: error.code });
+      }
+      throw error;
+    }
   }
 
   async logout() {
@@ -152,6 +162,19 @@ export class AuthService {
   async deleteAccount() {
     const user = this.firebaseWrapper.getAuth().currentUser;
     if (user) {
+      // 1. Chamar o backend para cancelar assinaturas e limpar dados (LGPD)
+      try {
+        await firstValueFrom(this.http.delete(`${environment.apiUrl}/users/me`));
+      } catch (err) {
+        console.error('Erro ao deletar dados do backend:', err);
+        // Opcional: Impedir a exclusão do Firebase se o backend falhar?
+        // Por segurança LGPD, é melhor tentar prosseguir se o erro for apenas rede,
+        // mas se for erro de lógica, o usuário pode ficar com assinatura ativa.
+        // Vamos lançar o erro para que o componente mostre o aviso.
+        throw new Error('Falha ao processar cancelamento de assinaturas e limpeza de dados. Tente novamente mais tarde.');
+      }
+
+      // 2. Deletar do Firebase Auth
       return await this.firebaseWrapper.deleteUser(user);
     }
     throw new Error('No user logged in');

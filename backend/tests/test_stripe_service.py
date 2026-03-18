@@ -161,7 +161,8 @@ def test_handle_subscription_updated_active(stripe_service, mock_db):
     asyncio.run(stripe_service._handle_subscription_updated(subscription))
 
     # Verification user update
-    mock_user_doc.reference.set.assert_called_once_with(
+    # Note: user_ref is retrieved via self.db.collection("users").document(user_id)
+    mock_db.collection().document().set.assert_any_call(
         {
             "subscription_status": "active",
             "current_period_end": 1234567890,
@@ -171,10 +172,11 @@ def test_handle_subscription_updated_active(stripe_service, mock_db):
     )
 
     # Verification prefs update
-    # The second document collection call is for preferences
-    prefs_set_call = mock_db.collection().document().set.call_args
-    assert prefs_set_call[0][0]["subscription_tier"] == "premium"
-    assert prefs_set_call[0][0]["version"] == 6
+    # We should look for the call with 'version' in it to distinguish from user update
+    prefs_set_calls = [call for call in mock_db.collection().document().set.call_args_list if "version" in call[0][0]]
+    assert len(prefs_set_calls) > 0
+    assert prefs_set_calls[0][0][0]["subscription_tier"] == "premium"
+    assert prefs_set_calls[0][0][0]["version"] == 6
 
 
 def test_handle_subscription_updated_canceled(stripe_service, mock_db):
@@ -197,7 +199,7 @@ def test_handle_subscription_updated_canceled(stripe_service, mock_db):
 
     asyncio.run(stripe_service._handle_subscription_updated(subscription))
 
-    mock_user_doc.reference.set.assert_called_once_with(
+    mock_db.collection().document().set.assert_any_call(
         {
             "subscription_status": "canceled",
             "current_period_end": 1234567890,
@@ -206,9 +208,10 @@ def test_handle_subscription_updated_canceled(stripe_service, mock_db):
         merge=True,
     )
 
-    prefs_set_call = mock_db.collection().document().set.call_args_list[0]
-    assert prefs_set_call.args[0]["subscription_tier"] == "free"
-    assert prefs_set_call.args[0]["version"] == 3
+    prefs_set_calls = [call for call in mock_db.collection().document().set.call_args_list if "version" in call[0][0]]
+    assert len(prefs_set_calls) > 0
+    assert prefs_set_calls[0][0][0]["subscription_tier"] == "free"
+    assert prefs_set_calls[0][0][0]["version"] == 3
 
 
 def test_handle_subscription_updated_empty_items(stripe_service, mock_db):
@@ -221,6 +224,7 @@ def test_handle_subscription_updated_empty_items(stripe_service, mock_db):
 
     mock_user_doc = MagicMock()
     mock_user_doc.reference.id = "user_123"
+    mock_user_doc.id = "user_123"
     mock_db.collection().where().limit().stream.return_value = [mock_user_doc]
 
     mock_prefs_doc = MagicMock()
@@ -230,7 +234,7 @@ def test_handle_subscription_updated_empty_items(stripe_service, mock_db):
 
     asyncio.run(stripe_service._handle_subscription_updated(subscription))
 
-    mock_user_doc.reference.set.assert_called_once_with(
+    mock_db.collection().document().set.assert_any_call(
         {
             "subscription_status": "active",
             "current_period_end": 1234567890,
@@ -254,13 +258,15 @@ def test_handle_subscription_deleted(stripe_service, mock_db):
 
     asyncio.run(stripe_service._handle_subscription_deleted(subscription))
 
+    # user_ref is docs[0].reference so mock_user_doc.reference.set is correct
     mock_user_doc.reference.set.assert_called_once_with(
         {"subscription_status": "canceled", "subscription_tier": "free"}, merge=True
     )
 
-    prefs_set_call = mock_db.collection().document().set.call_args_list[0]
-    assert prefs_set_call.args[0]["subscription_tier"] == "free"
-    assert prefs_set_call.args[0]["version"] == 11
+    prefs_set_calls = [call for call in mock_db.collection().document().set.call_args_list if "version" in call[0][0]]
+    assert len(prefs_set_calls) > 0
+    assert prefs_set_calls[0][0][0]["subscription_tier"] == "free"
+    assert prefs_set_calls[0][0][0]["version"] == 11
 
 
 @patch("app.services.stripe_service.StripeService._handle_subscription_updated")

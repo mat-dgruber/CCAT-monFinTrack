@@ -156,6 +156,7 @@ class StripeService:
                 success_url=success_url,
                 cancel_url=cancel_url,
                 client_reference_id=user_id,
+                metadata={"user_id": user_id, "plan": plan},
                 subscription_data={"metadata": {"user_id": user_id, "plan": plan}},
             )
             return {"sessionId": checkout_session["id"], "url": checkout_session["url"]}
@@ -276,15 +277,59 @@ class StripeService:
             try:
                 subscription = stripe.Subscription.retrieve(subscription_id)
                 await self._handle_subscription_updated(subscription)
-            except Exception:
+            except Exception as e:
                 logger.error(
-                    f"Falha ao recuperar assinatura {subscription_id} após o checkout"
+                    f"Falha ao recuperar assinatura {subscription_id} após checkout: {e}"
                 )
+                # Fallback: infer tier from session-level metadata and update Firestore
+                session_metadata = session.get("metadata") or {}
+                plan = session_metadata.get("plan") if isinstance(session_metadata, dict) else None
+                if plan and user_id:
+                    tier = "premium" if "premium" in plan else ("pro" if "pro" in plan else "free")
+                    try:
+                        user_ref = self.db.collection("users").document(user_id)
+                        user_ref.set(
+                            {"subscription_tier": tier, "subscription_status": "active"},
+                            merge=True,
+                        )
+                        prefs_ref = self.db.collection("user_preferences").document(user_id)
+                        prefs_doc = prefs_ref.get()
+                        if prefs_doc.exists:
+                            current_version = prefs_doc.to_dict().get("version", 0)
+                            prefs_ref.set(
+                                {"subscription_tier": tier, "version": current_version + 1},
+                                merge=True,
+                            )
+                        logger.info(
+                            f"Tier atualizado via fallback de metadados para {user_id}: {tier}"
+                        )
+                    except Exception as fb_err:
+                        logger.error(f"Fallback de metadados falhou para {user_id}: {fb_err}")
+                        raise HTTPException(
+                            status_code=500, detail="Webhook processing failed"
+                        ) from fb_err
+                else:
+                    raise HTTPException(
+                        status_code=500, detail="Webhook processing failed"
+                    ) from e
 
     async def _handle_subscription_updated(self, subscription):
         customer_id = subscription.get("customer")
         status = subscription.get("status")
+
+        # Robust status extraction for different object types
+        if not status and hasattr(subscription, "status"):
+            status = subscription.status
+
+        if not status:
+            logger.warning(
+                f"⚠️ Status da assinatura não encontrado no objeto para o cliente {customer_id}. Assinatura: {subscription}"
+            )
+
         current_period_end = subscription.get("current_period_end")
+
+        # Try to get user_id from metadata first (faster, avoids query)
+        user_id = subscription.get("metadata", {}).get("user_id")
 
         # Safely extract price ID from subscription items
         try:
@@ -301,17 +346,22 @@ class StripeService:
             logger.error(f"Falha ao extrair preço da assinatura: {e}")
             tier = "free"
 
-        # Find user by customer_id
-        users_ref = (
-            self.db.collection("users")
-            .where("stripe_customer_id", "==", customer_id)
-            .limit(1)
-        )
-        docs = list(users_ref.stream())
+        # If user_id not in metadata, fall back to query (legacy/fallback)
+        if not user_id:
+            logger.info(
+                f"User ID not in metadata, querying for customer_id: {customer_id}"
+            )
+            users_ref = (
+                self.db.collection("users")
+                .where("stripe_customer_id", "==", customer_id)
+                .limit(1)
+            )
+            docs = list(users_ref.stream())
+            if docs:
+                user_id = docs[0].id
 
-        if docs:
-            user_ref = docs[0].reference
-            user_id = user_ref.id
+        if user_id:
+            user_ref = self.db.collection("users").document(user_id)
             effective_tier = tier if status in ["active", "trialing"] else "free"
             update_data = {
                 "subscription_status": status,
@@ -334,7 +384,11 @@ class StripeService:
                 )
 
             logger.info(
-                f"Assinatura atualizada para o cliente {customer_id}: nível={effective_tier}, status={status}"
+                f"Assinatura atualizada para o usuário {user_id}: nível={effective_tier}, status={status}"
+            )
+        else:
+            logger.error(
+                f"Não foi possível encontrar um usuário para o cliente Stripe {customer_id}"
             )
 
     async def _handle_subscription_deleted(self, subscription):
@@ -364,6 +418,30 @@ class StripeService:
                 )
 
             logger.info(f"Assinatura cancelada para o cliente {customer_id}")
+
+    def cancel_all_subscriptions(self, user_id: str):
+        """Cancela todas as assinaturas ativas de um usuário antes de deletar a conta."""
+        user_ref = self.db.collection("users").document(user_id)
+        user_doc = user_ref.get()
+
+        if not user_doc.exists:
+            return
+
+        user_data = user_doc.to_dict()
+        stripe_customer_id = user_data.get("stripe_customer_id")
+
+        if not stripe_customer_id:
+            return
+
+        try:
+            # List all subscriptions for this customer
+            subscriptions = stripe.Subscription.list(customer=stripe_customer_id, status="active")
+            for sub in subscriptions.data:
+                stripe.Subscription.delete(sub.id)
+                logger.info(f"Assinatura {sub.id} cancelada para o usuário {user_id}")
+        except Exception as e:
+            logger.error(f"Erro ao cancelar assinaturas Stripe para {user_id}: {e}")
+            # Non-blocking error, we still want to allow account deletion
 
     def _infer_tier_from_price(self, price_id: str) -> str:
         # Invert the config map

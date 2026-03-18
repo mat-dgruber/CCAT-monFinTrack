@@ -26,6 +26,7 @@ describe('AuthService', () => {
       'sendPasswordResetEmail',
       'deleteUser',
       'getAuth',
+      'logEvent',
     ]);
 
     const rSpy = jasmine.createSpyObj('Router', ['navigate']);

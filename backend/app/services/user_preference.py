@@ -10,6 +10,7 @@ from app.services import category as category_service
 from app.services import recurrence as recurrence_service
 from app.services import transaction as transaction_service
 from app.services.storage_service import storage_service
+from app.services.stripe_service import StripeService
 from fastapi import UploadFile
 from firebase_admin import auth
 
@@ -17,6 +18,7 @@ logger = get_logger(__name__)
 
 
 COLLECTION_NAME = "user_preferences"
+stripe_service = StripeService()
 
 
 def get_preferences(user_id: str) -> UserPreference:
@@ -118,6 +120,12 @@ def delete_account_completely(user_id: str):
     LGPD/GDPR Compliance: Hard delete of all user records and the user profile itself.
     This should be followed by a Firebase Auth user deletion.
     """
+
+    # 0. Cancel any active subscriptions
+    try:
+        stripe_service.cancel_all_subscriptions(user_id)
+    except Exception as e:
+        logger.error("Error canceling subscriptions for user %s: %s", user_id, e)
 
     # 1. Wipe all data first (Transactions, etc.)
     reset_account(user_id)
