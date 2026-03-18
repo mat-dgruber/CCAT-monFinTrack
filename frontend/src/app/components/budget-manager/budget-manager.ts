@@ -10,6 +10,7 @@ import {
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 // PrimeNG
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -47,6 +48,7 @@ import { PageHelpComponent } from '../page-help/page-help';
     IconFieldModule,
     InputIconModule,
     PageHelpComponent,
+    RouterLink,
   ],
   providers: [CurrencyPipe],
   templateUrl: './budget-manager.html',

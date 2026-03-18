@@ -1,4 +1,4 @@
-<div class="w-full max-w-[1920px] mx-auto p-4 lg:p-6 mb-8 animate-fade-in">
+<div class="w-full max-w-[1920px] mx-auto p-4 lg:p-6 mb-8 animate-fadein">
   <!-- HEADER -->
   <div class="page-header">
     <div class="page-title-group">
@@ -50,7 +50,7 @@
           Financiamento
         </p-tab>
         <p-tab [value]="3">
-          <i class="pi pi-camera mr-2"></i>
+          <i class="pi pi-file mr-2"></i>
           IA Scanner
         </p-tab>
         <p-tab [value]="4">
@@ -370,7 +370,7 @@
                   <!-- AI Report Persistence Section -->
                   @if (debt.report) {
                     <div
-                      class="mt-8 pt-6 border-t border-surface-border animate-fade-in"
+                      class="mt-8 pt-6 border-t border-surface-border animate-fadein"
                     >
                       <p-accordion [multiple]="true" class="report-accordion">
                         <p-accordion-panel [value]="0">
@@ -641,10 +641,9 @@
           }
         </p-tabpanel>
 
-        <!-- TAB 2: PLANO DE PAGAMENTO -->
         <p-tabpanel [value]="1">
           <div
-            class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in-up"
+            class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fadein"
           >
             <div class="col-span-12 md:col-span-4">
               <div
@@ -913,7 +912,7 @@
         <!-- TAB 3: FINANCIAMENTO (MCMV) -->
         <p-tabpanel [value]="2">
           <div
-            class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in-up"
+            class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fadein"
           >
             <div class="col-span-12 md:col-span-5">
               <div
@@ -1237,7 +1236,7 @@
                           <div
                             class="bg-gradient-to-br from-amber-400 to-orange-600 w-28 h-28 rounded-3xl flex items-center justify-center relative z-10 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3"
                           >
-                            <i class="pi pi-sparkles text-5xl text-white"></i>
+                            <i class="pi pi-file text-7xl text-white"></i>
                           </div>
                         </div>
 
@@ -1365,18 +1364,25 @@
                 class="bg-surface-card rounded-[2.5rem] border border-surface-border shadow-sm p-8 flex flex-col gap-8 h-full"
               >
                 <div class="flex flex-col gap-1">
-                   <h3 class="text-2xl font-black text-color tracking-tighter m-0 flex items-center gap-3">
-                     <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                        <i class="pi pi-plus-circle"></i>
-                     </div>
-                     Novo Recurso
-                   </h3>
-                   <p class="text-secondary text-sm font-medium">Cadastre entradas extras para acelerar sua quitação.</p>
+                  <h3
+                    class="text-2xl font-black text-color tracking-tighter m-0 flex items-center gap-3"
+                  >
+                    <div
+                      class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"
+                    >
+                      <i class="pi pi-plus-circle"></i>
+                    </div>
+                    Novo Recurso
+                  </h3>
+                  <p class="text-secondary text-sm font-medium">
+                    Cadastre entradas extras para acelerar sua quitação.
+                  </p>
                 </div>
 
                 <div class="flex flex-col gap-5">
                   <div class="flex flex-col gap-2">
-                    <label class="font-black text-[10px] uppercase tracking-widest text-secondary"
+                    <label
+                      class="font-black text-[10px] uppercase tracking-widest text-secondary"
                       >Nome / Origem <span class="text-red-500">*</span></label
                     >
                     <p-iconField>
@@ -1391,7 +1397,8 @@
                   </div>
 
                   <div class="flex flex-col gap-2">
-                    <label class="font-black text-[10px] uppercase tracking-widest text-secondary"
+                    <label
+                      class="font-black text-[10px] uppercase tracking-widest text-secondary"
                       >Valor Líquido <span class="text-red-500">*</span></label
                     >
                     <p-inputNumber
@@ -1406,7 +1413,8 @@
                   </div>
 
                   <div class="flex flex-col gap-2">
-                    <label class="font-black text-[10px] uppercase tracking-widest text-secondary"
+                    <label
+                      class="font-black text-[10px] uppercase tracking-widest text-secondary"
                       >Data Prevista <span class="text-red-500">*</span></label
                     >
                     <p-datepicker
@@ -1457,18 +1465,27 @@
                 class="bg-surface-card rounded-[2.5rem] border border-surface-border shadow-sm p-8 h-full flex flex-col"
               >
                 <div class="flex justify-between items-center mb-8">
-                   <div class="flex flex-col gap-1">
-                      <h3 class="text-2xl font-black text-color tracking-tighter m-0 flex items-center gap-3 text-emphasis">
-                        <i class="pi pi-briefcase text-primary"></i>
-                        Recursos Planejados
-                      </h3>
-                      <p class="text-secondary text-sm font-medium">Seu arsenal para combater os juros.</p>
-                   </div>
-                   @if (resources().length > 0) {
-                      <div class="bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
-                         <span class="text-xs font-black text-primary uppercase tracking-widest">{{ resources().length }} Itens</span>
-                      </div>
-                   }
+                  <div class="flex flex-col gap-1">
+                    <h3
+                      class="text-2xl font-black text-color tracking-tighter m-0 flex items-center gap-3 text-emphasis"
+                    >
+                      <i class="pi pi-briefcase text-primary"></i>
+                      Recursos Planejados
+                    </h3>
+                    <p class="text-secondary text-sm font-medium">
+                      Seu arsenal para combater os juros.
+                    </p>
+                  </div>
+                  @if (resources().length > 0) {
+                    <div
+                      class="bg-primary/10 px-4 py-2 rounded-full border border-primary/20"
+                    >
+                      <span
+                        class="text-xs font-black text-primary uppercase tracking-widest"
+                        >{{ resources().length }} Itens</span
+                      >
+                    </div>
+                  }
                 </div>
 
                 @if (resources().length === 0) {
@@ -1476,11 +1493,17 @@
                     class="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-40 border-2 border-dashed border-surface-border rounded-3xl"
                   >
                     <i class="pi pi-calendar-plus text-6xl mb-4"></i>
-                    <p class="text-lg font-bold m-0 text-color">Nenhum recurso futuro</p>
-                    <p class="text-sm font-medium max-w-[200px] mt-2">Cadastre bônus ou rendas extras para simular amortizações.</p>
+                    <p class="text-lg font-bold m-0 text-color">
+                      Nenhum recurso futuro
+                    </p>
+                    <p class="text-sm font-medium max-w-[200px] mt-2">
+                      Cadastre bônus ou rendas extras para simular amortizações.
+                    </p>
                   </div>
                 } @else {
-                  <div class="flex flex-col gap-4 overflow-y-auto pr-2 max-h-[500px] custom-scrollbar">
+                  <div
+                    class="flex flex-col gap-4 overflow-y-auto pr-2 max-h-[500px] custom-scrollbar"
+                  >
                     @for (res of resources(); track res.id) {
                       <div
                         class="flex justify-between items-center p-5 bg-surface-ground/30 border border-surface-border rounded-2xl hover:bg-surface-hover transition-all duration-300 group"
@@ -1495,19 +1518,31 @@
                             <div class="font-black text-color tracking-tight">
                               {{ res.name }}
                             </div>
-                            <div class="text-[10px] text-secondary font-black uppercase tracking-widest flex items-center gap-2">
+                            <div
+                              class="text-[10px] text-secondary font-black uppercase tracking-widest flex items-center gap-2"
+                            >
                               <i class="pi pi-calendar"></i>
                               {{ res.receive_date | date: "dd / MM / yyyy" }}
                               @if (res.is_recurrence) {
-                                <p-tag value="ANUAL" severity="info" [rounded]="true" styleClass="text-[8px] font-black"></p-tag>
+                                <p-tag
+                                  value="ANUAL"
+                                  severity="info"
+                                  [rounded]="true"
+                                  styleClass="text-[8px] font-black"
+                                ></p-tag>
                               }
                             </div>
                           </div>
                         </div>
                         <div class="flex items-center gap-6">
                           <div class="text-right flex flex-col">
-                            <span class="text-[9px] font-black text-secondary uppercase opacity-50">Valor</span>
-                            <div class="font-black text-emerald-600 text-xl tracking-tighter">
+                            <span
+                              class="text-[9px] font-black text-secondary uppercase opacity-50"
+                              >Valor</span
+                            >
+                            <div
+                              class="font-black text-emerald-600 text-xl tracking-tighter"
+                            >
                               {{ res.amount | currency: "BRL" }}
                             </div>
                           </div>
@@ -1524,23 +1559,33 @@
                       </div>
                     }
                   </div>
-                  
-                  <div class="mt-8 p-6 bg-gradient-to-br from-primary to-primary-600 rounded-3xl text-white shadow-xl shadow-primary/20 relative overflow-hidden">
-                     <div class="absolute -right-4 -bottom-4 opacity-10 rotate-12">
-                        <i class="pi pi-bolt text-8xl"></i>
-                     </div>
-                     <h4 class="m-0 text-lg font-black tracking-tight mb-1 flex items-center gap-2">
-                        <i class="pi pi-lightbulb"></i>
-                        Estratégia Otimizada
-                     </h4>
-                     <p class="text-xs font-medium opacity-90 leading-relaxed max-w-sm m-0">
-                        O uso destes recursos para amortização antecipada pode reduzir seu tempo de dívida em até <strong>40%</strong> comparado ao pagamento mínimo.
-                     </p>
+
+                  <div
+                    class="mt-8 p-6 bg-gradient-to-br from-primary-700 to-primary-800 rounded-3xl text-white shadow-xl shadow-primary-900/10 relative overflow-hidden"
+                  >
+                    <div
+                      class="absolute -right-4 -bottom-4 opacity-10 rotate-12"
+                    >
+                      <i class="pi pi-bolt text-8xl"></i>
+                    </div>
+                    <h4
+                      class="m-0 text-lg font-black tracking-tight mb-1 flex items-center gap-2"
+                    >
+                      <i class="pi pi-lightbulb"></i>
+                      Estratégia Otimizada
+                    </h4>
+                    <p
+                      class="text-xs font-medium opacity-90 leading-relaxed max-w-sm m-0"
+                    >
+                      O uso destes recursos para amortização antecipada pode
+                      reduzir seu tempo de dívida em até
+                      <strong>40%</strong> comparado ao pagamento mínimo.
+                    </p>
                   </div>
                 }
 
                 <div class="mt-6 pt-6 border-t border-surface-border/50">
-                   <p-button
+                  <p-button
                     label="Simular Impacto no Plano"
                     icon="pi pi-chart-line"
                     severity="warn"
@@ -2763,7 +2808,7 @@
                 class="p-4 bg-primary-50 dark:bg-primary-900/10 rounded-xl border-2 border-primary-100 dark:border-primary-800 flex flex-col relative overflow-hidden"
               >
                 <div
-                  class="absolute top-0 right-0 p-1 bg-primary text-white text-[8px] font-bold uppercase rounded-bl-lg"
+                  class="absolute top-0 right-0 p-1 bg-primary-700 text-white text-[8px] font-bold uppercase rounded-bl-lg"
                 >
                   MAIS ECONOMIA
                 </div>
@@ -2989,7 +3034,7 @@
       >
         <div class="flex items-center gap-3">
           <div
-            class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-md"
+            class="w-10 h-10 rounded-full bg-primary-700 text-white flex items-center justify-center shadow-md"
           >
             <i class="pi pi-chart-line text-lg"></i>
           </div>

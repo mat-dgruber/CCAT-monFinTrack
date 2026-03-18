@@ -5,10 +5,12 @@ import {
   signal,
   effect,
   computed,
+  input,
 } from '@angular/core';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 // PrimeNG Components
 import { ButtonModule } from 'primeng/button';
@@ -46,6 +48,7 @@ import { PageHelpComponent } from '../page-help/page-help';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterLink,
     ButtonModule,
     DialogModule,
     InputTextModule,
@@ -77,6 +80,7 @@ export class AccountManager implements OnInit {
   private categoryService = inject(CategoryService);
 
   // Signals (Estado)
+  isWidget = input<boolean>(false);
   accounts = signal<Account[]>([]);
   loading = signal(true);
   visible = signal(false);

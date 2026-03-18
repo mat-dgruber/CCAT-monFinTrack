@@ -1,27 +1,55 @@
 <div class="w-full">
-  <div class="page-header">
-    <div class="page-title-group">
-      <h1 class="page-title">Contas</h1>
-      <p class="page-description">
-        Gerencie suas contas bancárias, carteiras e cartões de crédito.
-      </p>
+  @if (!isWidget()) {
+    <div class="page-header">
+      <div class="page-title-group">
+        <h1 class="page-title">Contas</h1>
+        <p class="page-description">
+          Gerencie suas contas bancárias, carteiras e cartões de crédito.
+        </p>
+      </div>
+      <div class="page-actions w-full md:w-auto">
+        <app-page-help document="accounts.md"></app-page-help>
+        <p-button
+          label="Nova Conta"
+          icon="pi pi-plus"
+          (onClick)="openNew()"
+        ></p-button>
+      </div>
     </div>
-    <div class="page-actions w-full md:w-auto">
-      <app-page-help document="accounts.md"></app-page-help>
+  } @else {
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center"
+        >
+          <i class="pi pi-wallet text-blue-600 dark:text-blue-400 text-lg"></i>
+        </div>
+        <h3 class="font-black text-emphasis text-xl m-0 tracking-tighter">
+          Minhas Contas
+        </h3>
+      </div>
       <p-button
-        label="Nova Conta"
-        icon="pi pi-plus"
-        (onClick)="openNew()"
+        icon="pi pi-arrow-right"
+        [rounded]="true"
+        [text]="true"
+        size="small"
+        routerLink="/app/accounts"
       ></p-button>
     </div>
-  </div>
+  }
 
   <!-- Account List -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div
+    class="grid grid-cols-1 gap-6"
+    [ngClass]="{
+      'md:grid-cols-2 lg:grid-cols-3': !isWidget(),
+      'md:grid-cols-2 xl:grid-cols-3': isWidget()
+    }"
+  >
     @if (loading()) {
       @for (i of [1, 2, 3]; track i) {
         <div
-          class="p-6 rounded-2xl border border-surface-border bg-surface-card shadow-sm flex flex-col gap-4 animate-pulse"
+          class="p-6 rounded-[2rem] border border-surface-border bg-surface-card shadow-elegant flex flex-col gap-4 animate-pulse"
         >
           <div class="flex items-center gap-4">
             <p-skeleton shape="circle" size="3.5rem"></p-skeleton>
@@ -36,7 +64,7 @@
     } @else {
       @for (acc of accounts(); track acc.id) {
         <div
-          class="group p-6 rounded-2xl border border-surface-border bg-surface-card shadow-sm flex flex-col gap-6 relative transition-all hover:shadow-md hover:border-primary/30"
+          class="group p-6 rounded-[2rem] border border-surface-border bg-surface-card shadow-elegant flex flex-col gap-6 relative transition-all hover:shadow-md hover:border-primary/30"
         >
           <div class="flex justify-between items-start">
             <div class="flex items-center gap-4">
