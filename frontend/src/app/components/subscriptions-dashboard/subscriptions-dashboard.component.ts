@@ -190,6 +190,15 @@ export class SubscriptionsDashboardComponent implements OnInit {
   currentDate = signal(new Date());
   loading = signal(true);
 
+  // Day Selection for Mobile
+  displayDayDialog = signal(false);
+  selectedDay = signal<Date | null>(null);
+  selectedDayRecurrences = computed(() => {
+    const date = this.selectedDay();
+    if (!date) return [];
+    return this.getRecurrencesForDay(date);
+  });
+
   navigateToPricing() {
     this.router.navigate(['/pricing']);
   }
@@ -480,6 +489,16 @@ export class SubscriptionsDashboardComponent implements OnInit {
     });
   });
 
+  isToday(date: Date | null): boolean {
+    if (!date) return false;
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }
+
   prevMonth() {
     const date = this.currentDate();
     this.currentDate.set(new Date(date.getFullYear(), date.getMonth() - 1, 1));
@@ -519,6 +538,11 @@ export class SubscriptionsDashboardComponent implements OnInit {
     return this.projectedRecurrences()
       .filter((r) => r.status === 'pending')
       .reduce((acc, r) => acc + r.amount, 0);
+  });
+
+  remainingCount = computed(() => {
+    return this.projectedRecurrences().filter((r) => r.status === 'pending')
+      .length;
   });
 
   progressPercentage = computed(() => {
@@ -590,6 +614,15 @@ export class SubscriptionsDashboardComponent implements OnInit {
     const rec = this.recurrences().find((r) => r.id === item.id);
     if (rec) {
       this.showDialog(rec, item.dueDate);
+    }
+  }
+
+  onDayClick(date: Date | null) {
+    if (!date) return;
+    const items = this.getRecurrencesForDay(date);
+    if (items.length > 0) {
+      this.selectedDay.set(date);
+      this.displayDayDialog.set(true);
     }
   }
 
