@@ -244,6 +244,13 @@ const anime: any = (AnimeJS as any).default ?? AnimeJS;
           box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
         }
       }
+
+      #features,
+      #pricing,
+      #ai-advisor,
+      #faq {
+        scroll-margin-top: 100px;
+      }
     `,
   ],
 })

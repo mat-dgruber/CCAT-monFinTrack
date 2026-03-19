@@ -89,8 +89,7 @@
       ></p-button>
       <p-button
         label="Ver Planos"
-        [routerLink]="['/']"
-        fragment="pricing"
+        routerLink="/" fragment="pricing"
         (onClick)="trackCtaClick('hero_secondary')"
         (mouseenter)="onBtnEnter($event)"
         (mouseleave)="onBtnLeave($event)"
@@ -455,9 +454,9 @@
       class="ambient-blob blob-orange w-[600px] h-[600px] -bottom-1/2 -right-20 animate-blob [animation-delay:-7s] opacity-20"
     ></div>
 
-    <div class="relative z-10 max-w-4xl mx-auto">
+    <div class="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
       <h2
-        class="text-4xl md:text-6xl font-extrabold mb-8 text-white leading-tight"
+        class="text-4xl md:text-7xl font-extrabold mb-8 text-white leading-tight md:whitespace-nowrap px-4"
       >
         Pronto para domar seu
         <span
@@ -465,12 +464,12 @@
           >leão financeiro?</span
         >
       </h2>
-      <p class="text-slate-300 text-xl mb-12 max-w-2xl mx-auto">
+      <p class="text-slate-300 text-lg md:text-2xl mb-12 max-w-2xl px-4">
         Junte-se a milhares de usuários que transformaram suas finanças com a
         inteligência do monFinTrack.
       </p>
       <div
-        class="inline-block p-1 rounded-full bg-gradient-to-r from-orange-500/30 to-pink-500/30 backdrop-blur-md"
+        class="inline-flex p-1 rounded-full bg-gradient-to-r from-orange-500/30 to-pink-500/30 backdrop-blur-md"
       >
         <p-button
           label="Criar minha conta agora"
@@ -560,24 +559,21 @@
           </li>
           <li>
             <a
-              [routerLink]="['/']"
-              fragment="features"
+              routerLink="/login"
               class="hover:text-primary-500 transition-colors"
               >Scanner de Recibos</a
             >
           </li>
           <li>
             <a
-              [routerLink]="['/']"
-              fragment="pricing"
+              routerLink="/login"
               class="hover:text-primary-500 transition-colors"
               >Planos e Preços</a
             >
           </li>
           <li>
             <a
-              [routerLink]="['/']"
-              fragment="ai-advisor"
+              routerLink="/login"
               class="hover:text-primary-500 transition-colors"
               >Advisor IA</a
             >
@@ -593,8 +589,7 @@
         <ul class="flex flex-col gap-3 text-sm text-secondary">
           <li>
             <a
-              [routerLink]="['/']"
-              fragment="faq"
+              routerLink="/" fragment="faq"
               class="hover:text-primary-500 transition-colors"
               >Central de Ajuda</a
             >
