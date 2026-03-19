@@ -19,11 +19,11 @@
 
   <!-- Bento Grid Layout -->
   <div
-    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 items-start grid-flow-row-dense"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 grid-flow-row-dense"
   >
     <!-- 1. PROFILE (Premium Card) -->
     <div
-      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-8 md:p-12 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 md:p-12 h-full flex flex-col col-span-1 md:row-span-2 lg:row-span-2 transition-all duration-500 hover:-translate-y-1 group"
     >
       <div class="flex items-center gap-4 mb-10">
         <div
@@ -135,281 +135,327 @@
       </div>
     </div>
 
-    <!-- 2. SECURITY CENTER (Wide Bento) -->
+    <!-- 2. ALERTS & NOTIFICATIONS (Wide Bento) -->
     <div
-      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 md:col-span-2 transition-all duration-500 hover:-translate-y-1"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 md:col-span-2 lg:col-span-2 transition-all duration-500 hover:-translate-y-1 group"
     >
-      <div class="flex items-center gap-4 mb-10">
+      <div class="flex items-center gap-4 mb-8">
         <div
-          class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner"
+          class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner group-hover:scale-110 transition-transform duration-500"
         >
-          <i class="pi pi-shield text-xl"></i>
+          <i class="pi pi-bell text-xl"></i>
         </div>
         <h2 class="text-2xl font-black text-emphasis tracking-tight">
-          Central de Segurança
+          Alertas e Privacidade
         </h2>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
-        <!-- Access -->
-        <div class="flex flex-col gap-6">
-          <div class="flex flex-col">
-            <span
-              class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4 opacity-70"
-              >Acesso e Identidade</span
-            >
-
-            <div class="flex flex-col gap-4">
-              <div
-                class="flex flex-col gap-2 p-6 bg-surface-ground/50 rounded-3xl border border-surface-border/50"
-              >
-                <span
-                  class="text-[10px] font-black text-secondary uppercase tracking-widest"
-                  >E-mail Cadastrado</span
-                >
-                <div class="flex items-center justify-between gap-4">
-                  <span class="text-lg font-black text-emphasis truncate">{{
-                    email()
-                  }}</span>
-                  @if (auth.currentUser()?.emailVerified) {
-                    <div
-                      class="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-1.5"
-                    >
-                      <i class="pi pi-verified"></i> Verificado
-                    </div>
-                  } @else {
-                    <button
-                      (click)="verifyEmail()"
-                      class="bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all"
-                    >
-                      Verificar
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <div
-                class="flex items-center justify-between p-6 bg-surface-ground/50 rounded-3xl border border-surface-border/50 group/pass"
-              >
-                <div class="flex flex-col">
-                  <span
-                    class="text-[10px] font-black text-secondary uppercase tracking-widest"
-                    >Senha de Acesso</span
-                  >
-                  <span class="text-sm font-bold text-emphasis opacity-60"
-                    >••••••••••••••••</span
-                  >
-                </div>
-                <p-button
-                  label="Alterar"
-                  [text]="true"
-                  styleClass="font-black text-primary hover:bg-primary/5 px-4 py-2 rounded-xl"
-                  (onClick)="sendPasswordReset()"
-                ></p-button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- MFA Protection -->
-        <div class="flex flex-col gap-6">
-          <span
-            class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4 opacity-70"
-            >Camada Adicional</span
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+        <!-- Notifications Group -->
+        <div class="flex flex-col gap-4">
+          <div
+            class="flex justify-between items-center p-5 bg-surface-ground/30 rounded-3xl border border-surface-border/30 hover:bg-surface-ground/50 transition-all"
           >
+            <div class="flex flex-col">
+              <span class="text-sm font-black text-emphasis">Notificações</span>
+              <span class="text-[9px] font-bold text-secondary uppercase tracking-tight">Push Instantâneo</span>
+            </div>
+            <p-toggleswitch
+              [(ngModel)]="preferences!.notifications_enabled"
+              (ngModelChange)="onNotificationChange($event)"
+            ></p-toggleswitch>
+          </div>
 
           <div
-            class="flex flex-col gap-6 p-8 bg-surface-ground/50 rounded-3xl border border-surface-border/50 relative overflow-hidden"
+            class="flex justify-between items-center p-5 bg-surface-ground/30 rounded-3xl border border-surface-border/30 hover:bg-surface-ground/50 transition-all relative"
           >
-            @if (mfaEnabled()) {
-              <div
-                class="absolute -right-4 -top-4 w-24 h-24 bg-green-500/10 blur-3xl rounded-full"
-              ></div>
-            } @else {
-              <div
-                class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 blur-3xl rounded-full"
-              ></div>
-            }
-
-            <div class="flex items-start gap-5 relative z-10">
-              <div class="shrink-0">
-                @if (mfaEnabled()) {
-                  <div
-                    class="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500 shadow-xl shadow-green-500/10"
-                  >
-                    <i class="pi pi-shield-check text-2xl"></i>
-                  </div>
-                } @else {
-                  <div
-                    class="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-xl shadow-orange-500/10"
-                  >
-                    <i class="pi pi-shield text-2xl"></i>
-                  </div>
-                }
-              </div>
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                  <span class="text-lg font-black text-emphasis"
-                    >MFA (2FA)</span
-                  >
-                  @if (mfaEnabled()) {
-                    <span
-                      class="bg-green-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
-                      >Ativo</span
-                    >
-                  } @else {
-                    <span
-                      class="bg-orange-500 text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
-                      >Desativado</span
-                    >
-                  }
-                </div>
-                <p class="text-xs font-medium text-secondary leading-relaxed">
-                  Reforce sua segurança exigindo um código de autenticação único
-                  a cada login.
-                </p>
-              </div>
-            </div>
-
-            <div class="pt-2">
-              @if (!mfaEnabled()) {
-                <p-button
-                  label="Configurar Proteção"
-                  styleClass="w-full bg-surface-900 dark:bg-surface-50 text-white dark:text-surface-900 border-none rounded-2xl py-3.5 font-black text-sm transition-all shadow-xl"
-                  (onClick)="startMfaSetup()"
-                ></p-button>
-              } @else {
-                <p-button
-                  label="Desativar Proteção"
-                  styleClass="w-full bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white border-none rounded-2xl py-3.5 font-black text-sm transition-all"
-                  (onClick)="disableMFA()"
-                ></p-button>
-              }
-            </div>
-          </div>
-        </div>
-
-        <!-- Privacy & Notifications (Wide Bottom Section) -->
-        <div class="col-span-1 lg:col-span-2 pt-6">
-          <span
-            class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-8 block opacity-70"
-            >Preferências de Privacidade & Alertas</span
-          >
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <!-- Notifications Group -->
-            <div class="flex flex-col gap-6">
-              <div
-                class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30"
-              >
-                <div class="flex flex-col gap-1">
-                  <span class="text-sm font-black text-emphasis"
-                    >Notificações Push</span
-                  >
-                  <span
-                    class="text-[10px] font-bold text-secondary uppercase tracking-tight"
-                    >Sistema & Alertas Instantâneos</span
-                  >
-                </div>
-                <p-toggleswitch
-                  [(ngModel)]="preferences!.notifications_enabled"
-                  (ngModelChange)="onNotificationChange($event)"
-                  styleClass="shrink-0"
-                ></p-toggleswitch>
-              </div>
-
-              <div
-                class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30 relative"
-              >
-                <div class="flex flex-col gap-1">
-                  <div class="flex items-center gap-2">
-                    <span class="text-sm font-black text-emphasis"
-                      >Resumo Semanal</span
-                    >
-                    <span
-                      class="bg-gradient-to-r from-blue-400 to-indigo-600 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-sm"
-                      >Pro</span
-                    >
-                  </div>
-                  <span
-                    class="text-[10px] font-bold text-secondary uppercase tracking-tight"
-                    >Relatório completo via e-mail</span
-                  >
-                </div>
-                <p-toggleswitch
-                  [ngModel]="emailDigestEnabled()"
-                  (ngModelChange)="
-                    emailDigestEnabled.set($event); onEmailDigestChange()
-                  "
-                  [disabled]="selectedTier() === 'free'"
-                  styleClass="shrink-0"
-                ></p-toggleswitch>
-              </div>
-            </div>
-
-            <!-- Privacy Group -->
-            <div class="flex flex-col gap-6">
-              <div
-                class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30"
-              >
-                <div class="flex flex-col gap-1">
-                  <span class="text-sm font-black text-emphasis"
-                    >Contribuição de IA</span
-                  >
-                  <span
-                    class="text-[10px] font-bold text-secondary uppercase tracking-tight"
-                    >Treinamento anônimo de modelos</span
-                  >
-                </div>
-                <p-toggleswitch
-                  [ngModel]="privacyShared()"
-                  (ngModelChange)="privacyShared.set($event); onPrivacyChange()"
-                  styleClass="shrink-0"
-                ></p-toggleswitch>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Danger Zone -->
-      <div class="mt-auto pt-10 border-t border-surface-border/50">
-        <div
-          class="flex flex-col sm:flex-row justify-between items-center gap-6"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500"
-            >
-              <i class="pi pi-exclamation-triangle"></i>
-            </div>
             <div class="flex flex-col">
-              <span
-                class="text-sm font-black text-emphasis uppercase tracking-tighter"
-                >Zona de Perigo</span
-              >
-              <span class="text-[10px] font-bold text-secondary"
-                >Ações irreversíveis de dados</span
-              >
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-black text-emphasis">Relatórios</span>
+                <span class="bg-gradient-to-r from-blue-400 to-indigo-600 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Pro</span>
+              </div>
+              <span class="text-[9px] font-bold text-secondary uppercase tracking-tight">E-mail Semanal</span>
             </div>
+            <p-toggleswitch
+              [ngModel]="emailDigestEnabled()"
+              (ngModelChange)="emailDigestEnabled.set($event); onEmailDigestChange()"
+              [disabled]="selectedTier() === 'free'"
+            ></p-toggleswitch>
           </div>
-          <div class="flex gap-4 w-full sm:w-auto">
-            <p-button
-              label="Limpar Dados"
-              styleClass="p-button-text font-black text-xs text-secondary hover:text-emphasis px-6 py-3"
-              (onClick)="onResetAccount()"
-            ></p-button>
-            <p-button
-              label="Excluir Conta"
-              styleClass="bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white border-none rounded-2xl px-8 py-3.5 font-black text-xs transition-all shadow-xl shadow-red-500/10"
-              (onClick)="confirmDelete()"
-            ></p-button>
+        </div>
+
+        <!-- Privacy Group -->
+        <div class="flex flex-col gap-4">
+          <div
+            class="flex justify-between items-center p-5 bg-surface-ground/30 rounded-3xl border border-surface-border/30 hover:bg-surface-ground/50 transition-all"
+          >
+            <div class="flex flex-col">
+              <span class="text-sm font-black text-emphasis">Privacidade</span>
+              <span class="text-[9px] font-bold text-secondary uppercase tracking-tight">Treinamento Anônimo de IA</span>
+            </div>
+            <p-toggleswitch
+              [ngModel]="privacyShared()"
+              (ngModelChange)="privacyShared.set($event); onPrivacyChange()"
+            ></p-toggleswitch>
+          </div>
+
+          <div
+            class="flex justify-between items-center p-5 bg-surface-ground/30 rounded-3xl border border-surface-border/30 grayscale opacity-40 cursor-not-allowed"
+          >
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-black">Biometria</span>
+                <span class="bg-surface-border/30 text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Soon</span>
+              </div>
+              <span class="text-[9px] font-bold uppercase tracking-tight">FaceID / TouchID</span>
+            </div>
+            <p-toggleswitch [disabled]="true"></p-toggleswitch>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. APP PREFERENCES (System Bento) -->
+
+    <!-- 3. AI INTEGRATION (Modern Card) -->
+    <div
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
+    >
+      <div class="flex items-center justify-between mb-8">
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner group-hover:scale-110 transition-transform duration-500"
+                >
+                  <i class="pi pi-bolt text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-emphasis tracking-tight">
+                  Capy AI
+                </h2>
+              </div>
+              <div
+                class="bg-orange-500 text-white px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-500/20"
+              >
+                {{ aiLimits()?.tier || "Basic" }}
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-8 flex-1">
+              @if (aiLimits()) {
+                <!-- Circular Usage Gauges -->
+                <div
+                  class="grid grid-cols-2 gap-4 p-6 bg-surface-ground/30 rounded-[2.5rem] border border-surface-border/50"
+                >
+                  <div class="flex flex-col items-center gap-3">
+                    <p-knob
+                      [(ngModel)]="aiLimits().classify.used"
+                      [max]="aiLimits().classify.limit"
+                      [readonly]="true"
+                      [size]="100"
+                      valueColor="#f59e0b"
+                      rangeColor="var(--surface-border)"
+                      [strokeWidth]="8"
+                    ></p-knob>
+                    <div class="flex flex-col items-center">
+                      <span
+                        class="text-[9px] font-black text-secondary uppercase tracking-widest"
+                        >Cota Scanner</span
+                      >
+                      <span class="text-xs font-bold text-emphasis"
+                        >{{ getAiRemaining("classify") }} livres</span
+                      >
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col items-center gap-3">
+                    <p-knob
+                      [(ngModel)]="aiLimits().chat.used"
+                      [max]="aiLimits().chat.limit"
+                      [readonly]="true"
+                      [size]="100"
+                      valueColor="#ea580c"
+                      rangeColor="var(--surface-border)"
+                      [strokeWidth]="8"
+                    ></p-knob>
+                    <div class="flex flex-col items-center">
+                      <span
+                        class="text-[9px] font-black text-secondary uppercase tracking-widest"
+                        >Cota Chat</span
+                      >
+                      <span class="text-xs font-bold text-emphasis"
+                        >{{ getAiRemaining("chat") }} envios</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Unlocked Modules -->
+                <div class="flex flex-col gap-4">
+                  <span
+                    class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] ml-1 opacity-70"
+                    >Módulos Ativos</span
+                  >
+                  <div class="flex flex-wrap gap-2">
+                    <div
+                      class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
+                      pTooltip="Usa cota de Scanner"
+                    >
+                      <i class="pi pi-camera text-orange-500 text-xs"></i>
+                      <span class="text-[10px] font-bold text-color"
+                        >Leitura de Recibos</span
+                      >
+                    </div>
+                    <div
+                      class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
+                      pTooltip="Usa cota de Scanner"
+                    >
+                      <i class="pi pi-tag text-orange-500 text-xs"></i>
+                      <span class="text-[10px] font-bold text-color"
+                        >Auto-Categorização</span
+                      >
+                    </div>
+                    <div
+                      class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
+                      pTooltip="Usa cota de Chat"
+                    >
+                      <i class="pi pi-comments text-orange-500 text-xs"></i>
+                      <span class="text-[10px] font-bold text-color"
+                        >Chat Financeiro</span
+                      >
+                    </div>
+                    <div
+                      class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
+                      pTooltip="Usa cota de Chat"
+                    >
+                      <i class="pi pi-file-edit text-orange-500 text-xs"></i>
+                      <span class="text-[10px] font-bold text-color"
+                        >Relatório Mensal</span
+                      >
+                    </div>
+                    <div
+                      class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
+                      pTooltip="Usa cota de Chat"
+                    >
+                      <i class="pi pi-chart-line text-orange-500 text-xs"></i>
+                      <span class="text-[10px] font-bold text-color"
+                        >Consultoria & FIRE</span
+                      >
+                    </div>
+                    <div
+                      class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
+                      pTooltip="Usa cota de Chat"
+                    >
+                      <i class="pi pi-bolt text-orange-500 text-xs"></i>
+                      <span class="text-[10px) font-bold text-color"
+                        >Roast Mode</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- AI Mode (Flavor) -->
+                <div class="flex flex-col gap-4 mt-auto">
+                  <span
+                    class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] ml-1 opacity-70"
+                    >Personalidade da IA</span
+                  >
+                  <div
+                    class="p-4 bg-gradient-to-br from-orange-500/5 to-amber-500/5 rounded-2xl border border-orange-500/10 flex items-center justify-between"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white shadow-lg animate-pulse"
+                      >
+                        <i class="pi pi-face-smile"></i>
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="text-xs font-black text-emphasis"
+                          >Capy Conselheiro</span
+                        >
+                        <span
+                          class="text-[9px] font-bold text-secondary uppercase"
+                          >Equilibrado & Amigável</span
+                        >
+                      </div>
+                    </div>
+                    <p-button
+                      icon="pi pi-chevron-right"
+                      [text]="true"
+                      [rounded]="true"
+                      size="small"
+                      pTooltip="Em breve: Mudar personalidade"
+                    ></p-button>
+                  </div>
+                </div>
+              } @else {
+                <div
+                  class="flex flex-col items-center justify-center flex-1 gap-6"
+                >
+                  <div class="relative">
+                    <div
+                      class="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse rounded-full"
+                    ></div>
+                    <p-progressSpinner
+                      styleClass="w-12 h-12 relative z-10"
+                      strokeWidth="4"
+                      fill="transparent"
+                      animationDuration=".8s"
+                    ></p-progressSpinner>
+                  </div>
+                  <span
+                    class="text-secondary font-black text-xs uppercase tracking-[0.2em] opacity-60"
+                    >Sincronizando IA...</span
+                  >
+                </div>
+              }
+            </div>
+          </div>
+    <!-- 4. SECURITY & 2FA (Compact Bento) -->
+    <div
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
+    >
+      <div class="flex items-center gap-4 mb-8">
+        <div
+          class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner group-hover:rotate-12 transition-transform duration-500"
+        >
+          <i class="pi pi-shield text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-emphasis tracking-tight">
+          Acesso
+        </h2>
+      </div>
+
+      <div class="flex flex-col gap-6 flex-1">
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1 p-5 bg-surface-ground/40 rounded-3xl border border-surface-border/30">
+            <span class="text-[9px] font-black text-secondary uppercase tracking-widest">E-mail</span>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm font-black text-emphasis truncate">{{ email() }}</span>
+              <i class="pi pi-verified text-green-500 text-xs" *ngIf="auth.currentUser()?.emailVerified"></i>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between p-5 bg-surface-ground/40 rounded-3xl border border-surface-border/30">
+            <div class="flex flex-col gap-1">
+              <span class="text-sm font-black text-emphasis">2FA</span>
+              <span class="text-[9px] font-bold" [ngClass]="mfaEnabled() ? 'text-green-500' : 'text-orange-500'">{{ mfaEnabled() ? 'Ativado' : 'Inativo' }}</span>
+            </div>
+            <p-button
+              [icon]="mfaEnabled() ? 'pi pi-check' : 'pi pi-lock'"
+              styleClass="p-button-rounded p-button-text p-1"
+              (onClick)="mfaEnabled() ? disableMFA() : startMfaSetup()"
+            ></p-button>
+          </div>
+        </div>
+
+        <p-button
+          label="Alterar Senha"
+          styleClass="w-full bg-surface-ground hover:bg-surface-hover text-emphasis border border-surface-border/50 rounded-2xl py-3 font-black text-xs transition-all mt-auto"
+          (onClick)="sendPasswordReset()"
+        ></p-button>
+      </div>
+    </div>
+
+
+    <!-- 5. APP PREFERENCES (System Bento) -->
     <div
       class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
     >
@@ -449,7 +495,9 @@
             class="flex justify-between items-center p-6 bg-surface-ground/30 rounded-3xl border border-surface-border/30"
           >
             <div class="flex flex-col gap-1">
-              <span class="text-sm font-black text-emphasis">Manter Ativo</span>
+              <span class="text-sm font-black text-emphasis"
+                >Manter Ativo</span
+              >
               <span
                 class="text-[10px] font-bold text-secondary uppercase tracking-tight"
                 >Evitar bloqueio de tela</span
@@ -483,15 +531,32 @@
               </div>
             </div>
           } @else if (pwaService.isSafari()) {
-            <div class="p-6 bg-indigo-500/5 rounded-3xl border border-indigo-500/20">
+            <div
+              class="p-6 bg-indigo-500/5 rounded-3xl border border-indigo-500/20"
+            >
               <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0"
+                >
                   <i class="pi pi-apple"></i>
                 </div>
                 <div class="flex flex-col gap-1">
-                  <span class="text-sm font-black text-emphasis">Instalação no Safari</span>
-                  <p class="text-[10px] font-medium text-secondary leading-relaxed">
-                    Toque no ícone de <span class="font-black text-indigo-500">Compartilhar</span> <i class="pi pi-share-alt text-[8px]"></i> e selecione <span class="font-black text-indigo-500">"Adicionar à Tela de Início"</span> para instalar este App.
+                  <span class="text-sm font-black text-emphasis"
+                    >Instalação no Safari</span
+                  >
+                  <p
+                    class="text-[10px] font-medium text-secondary leading-relaxed"
+                  >
+                    Toque no ícone de
+                    <span class="font-black text-indigo-500"
+                      >Compartilhar</span
+                    >
+                    <i class="pi pi-share-alt text-[8px]"></i> e
+                    selecione
+                    <span class="font-black text-indigo-500"
+                      >"Adicionar à Tela de Início"</span
+                    >
+                    para instalar este App.
                   </p>
                 </div>
               </div>
@@ -518,7 +583,9 @@
                 <div class="flex flex-col">
                   <span
                     class="text-3xl font-black text-emphasis tracking-tighter uppercase"
-                    >{{ preferences?.subscription_tier || "FREE" }}</span
+                    >{{
+                      preferences?.subscription_tier || "FREE"
+                    }}</span
                   >
                   <span
                     class="text-[10px] font-black text-primary uppercase tracking-[0.2em]"
@@ -556,8 +623,7 @@
               <div class="flex flex-col gap-3">
                 <span
                   class="text-[10px] font-bold text-secondary uppercase tracking-tight"
-                  >Assinatura Simulada</span
-                >
+                >Assinatura Simulada</span>
                 <p-select
                   [options]="tierOptions"
                   [(ngModel)]="selectedTier"
@@ -568,15 +634,13 @@
                   appendTo="body"
                 ></p-select>
               </div>
-
               <div class="h-px bg-surface-border/20 my-1"></div>
 
               <div class="flex justify-between items-center">
                 <div class="flex flex-col">
                   <span
                     class="text-[10px] font-bold text-secondary uppercase tracking-tight"
-                    >Service Worker (PWA)</span
-                  >
+                  >Service Worker (PWA)</span>
                   <span class="text-[8px] text-secondary opacity-60"
                     >Requer recarregamento manual</span
                   >
@@ -593,197 +657,9 @@
       </div>
     </div>
 
-    <!-- 4. AI INTEGRATION (Modern Card) -->
+    <!-- 6. TITHES (Premium 2x2 Bento) -->
     <div
-      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
-    >
-      <div class="flex items-center justify-between mb-8">
-        <div class="flex items-center gap-4">
-          <div
-            class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-inner group-hover:scale-110 transition-transform duration-500"
-          >
-            <i class="pi pi-bolt text-xl"></i>
-          </div>
-          <h2 class="text-2xl font-black text-emphasis tracking-tight">
-            Capy AI
-          </h2>
-        </div>
-        <div
-          class="bg-orange-500 text-white px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-500/20"
-        >
-          {{ aiLimits()?.tier || "Basic" }}
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-8 flex-1">
-        @if (aiLimits()) {
-          <!-- Circular Usage Gauges -->
-          <div
-            class="grid grid-cols-2 gap-4 p-6 bg-surface-ground/30 rounded-[2.5rem] border border-surface-border/50"
-          >
-            <div class="flex flex-col items-center gap-3">
-              <p-knob
-                [(ngModel)]="aiLimits().classify.used"
-                [max]="aiLimits().classify.limit"
-                [readonly]="true"
-                [size]="100"
-                valueColor="#f59e0b"
-                rangeColor="var(--surface-border)"
-                [strokeWidth]="8"
-              ></p-knob>
-              <div class="flex flex-col items-center">
-                <span
-                  class="text-[9px] font-black text-secondary uppercase tracking-widest"
-                  >Cota Scanner</span
-                >
-                <span class="text-xs font-bold text-emphasis"
-                  >{{ getAiRemaining("classify") }} livres</span
-                >
-              </div>
-            </div>
-
-            <div class="flex flex-col items-center gap-3">
-              <p-knob
-                [(ngModel)]="aiLimits().chat.used"
-                [max]="aiLimits().chat.limit"
-                [readonly]="true"
-                [size]="100"
-                valueColor="#ea580c"
-                rangeColor="var(--surface-border)"
-                [strokeWidth]="8"
-              ></p-knob>
-              <div class="flex flex-col items-center">
-                <span
-                  class="text-[9px] font-black text-secondary uppercase tracking-widest"
-                  >Cota Chat</span
-                >
-                <span class="text-xs font-bold text-emphasis"
-                  >{{ getAiRemaining("chat") }} envios</span
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- Unlocked Modules -->
-          <div class="flex flex-col gap-4">
-            <span
-              class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] ml-1 opacity-70"
-              >Módulos Ativos</span
-            >
-            <div class="flex flex-wrap gap-2">
-              <div
-                class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
-                pTooltip="Usa cota de Scanner"
-              >
-                <i class="pi pi-camera text-orange-500 text-xs"></i>
-                <span class="text-[10px] font-bold text-color"
-                  >Leitura de Recibos</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
-                pTooltip="Usa cota de Scanner"
-              >
-                <i class="pi pi-tag text-orange-500 text-xs"></i>
-                <span class="text-[10px] font-bold text-color"
-                  >Auto-Categorização</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
-                pTooltip="Usa cota de Chat"
-              >
-                <i class="pi pi-comments text-orange-500 text-xs"></i>
-                <span class="text-[10px] font-bold text-color"
-                  >Chat Financeiro</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
-                pTooltip="Usa cota de Chat"
-              >
-                <i class="pi pi-file-edit text-orange-500 text-xs"></i>
-                <span class="text-[10px] font-bold text-color"
-                  >Relatório Mensal</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
-                pTooltip="Usa cota de Chat"
-              >
-                <i class="pi pi-chart-line text-orange-500 text-xs"></i>
-                <span class="text-[10px] font-bold text-color"
-                  >Consultoria & FIRE</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-black/20 rounded-xl border border-surface-border/50"
-                pTooltip="Usa cota de Chat"
-              >
-                <i class="pi pi-bolt text-orange-500 text-xs"></i>
-                <span class="text-[10px] font-bold text-color">Roast Mode</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- AI Mode (Flavor) -->
-          <div class="flex flex-col gap-4 mt-auto">
-            <span
-              class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] ml-1 opacity-70"
-              >Personalidade da IA</span
-            >
-            <div
-              class="p-4 bg-gradient-to-br from-orange-500/5 to-amber-500/5 rounded-2xl border border-orange-500/10 flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white shadow-lg animate-pulse"
-                >
-                  <i class="pi pi-face-smile"></i>
-                </div>
-                <div class="flex flex-col">
-                  <span class="text-xs font-black text-emphasis"
-                    >Capy Conselheiro</span
-                  >
-                  <span class="text-[9px] font-bold text-secondary uppercase"
-                    >Equilibrado & Amigável</span
-                  >
-                </div>
-              </div>
-              <p-button
-                icon="pi pi-chevron-right"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                pTooltip="Em breve: Mudar personalidade"
-              ></p-button>
-            </div>
-          </div>
-        } @else {
-          <div class="flex flex-col items-center justify-center flex-1 gap-6">
-            <div class="relative">
-              <div
-                class="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse rounded-full"
-              ></div>
-              <p-progressSpinner
-                styleClass="w-12 h-12 relative z-10"
-                strokeWidth="4"
-                fill="transparent"
-                animationDuration=".8s"
-              ></p-progressSpinner>
-            </div>
-            <span
-              class="text-secondary font-black text-xs uppercase tracking-[0.2em] opacity-60"
-              >Sincronizando IA...</span
-            >
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- 5. TITHES (Modern Card) -->
-    <div
-      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 md:col-span-2 lg:col-span-2 lg:row-span-2 transition-all duration-500 hover:-translate-y-1 group"
     >
       <div class="flex items-center gap-4 mb-10">
         <div
@@ -864,7 +740,7 @@
                     <i class="pi pi-percentage text-[10px]"></i>
                   </div>
                   <span
-                    class="text-[10px] font-black text-secondary uppercase tracking-widest"
+                    class="text-[10px) font-black text-secondary uppercase tracking-widest"
                     >Oferta</span
                   >
                 </div>
@@ -927,7 +803,9 @@
           <div
             class="flex flex-col items-center justify-center flex-1 opacity-20 py-10"
           >
-            <i class="pi pi-heart text-8xl text-surface-border mb-4"></i>
+            <i
+              class="pi pi-heart text-8xl text-surface-border mb-4"
+            ></i>
             <span class="text-xs font-black uppercase tracking-[0.3em]"
               >Funcionalidade Inativa</span
             >
@@ -935,87 +813,510 @@
         }
       </div>
     </div>
-  </div>
-  <!-- End Grid -->
-</div>
 
-<!-- Dialogs & Toasts -->
-<p-toast></p-toast>
-
-<p-dialog
-  header="Segurança em Duas Etapas"
-  [(visible)]="showMfaSetupDialog"
-  [modal]="true"
-  [style]="{ width: '450px' }"
-  styleClass="modern-dialog"
-  appendTo="body"
->
-  <div class="flex flex-col items-center gap-8 py-6">
-    <div class="text-center flex flex-col gap-2">
-      <p class="text-lg font-black text-emphasis m-0">Proteja sua Conta</p>
-      <p class="text-sm font-medium text-secondary m-0">
-        Escaneie o QR Code abaixo com seu app autenticador (Google Auth,
-        Microsoft Auth, Authy, etc).
-      </p>
-    </div>
-
+    <!-- 7. DANGER ZONE (Compact Bento) -->
     <div
-      class="bg-white p-6 rounded-[2rem] shadow-2xl border-4 border-primary/10"
+      class="bg-surface-card/60 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 dark:border-white/5 p-10 h-full flex flex-col col-span-1 transition-all duration-500 hover:-translate-y-1 group"
     >
-      <img [src]="qrCodeUrl()" alt="QR Code" class="w-48 h-48" />
-    </div>
-
-    <div
-      class="flex flex-col gap-3 w-full items-center bg-surface-ground/50 p-4 rounded-2xl border border-surface-border"
-    >
-      <p
-        class="text-[10px] font-black text-secondary uppercase tracking-widest m-0"
-      >
-        Chave Manual (Backup)
-      </p>
-      <div class="flex items-center gap-3 w-full">
-        <code
-          class="text-xs font-black text-primary break-all flex-1 text-center bg-white dark:bg-surface-card p-2 rounded-xl shadow-inner border border-surface-border"
-          >{{ mfaSecret() }}</code
+      <div class="flex items-center gap-4 mb-8">
+        <div
+          class="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 shadow-inner group-hover:animate-pulse transition-transform duration-500"
         >
-        <p-button
-          icon="pi pi-copy"
-          styleClass="w-10 h-10 rounded-xl bg-primary text-white border-none shadow-lg active:scale-90 transition-all"
-          (onClick)="copyToClipboard(mfaSecret())"
-          pTooltip="Copiar"
-        ></p-button>
+          <i class="pi pi-exclamation-triangle text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-black text-emphasis tracking-tight">
+          Perigo
+        </h2>
+      </div>
+
+      <div class="flex flex-col gap-6 flex-1">
+        <span class="text-[10px] font-black text-secondary uppercase tracking-[0.2em] opacity-70">Ações Irreversíveis</span>
+        <div class="flex flex-col gap-3">
+          <p-button
+            label="Limpar Dados"
+            styleClass="w-full p-button-text font-black text-xs text-secondary hover:text-red-500 transition-colors"
+            (onClick)="openResetDialog()"
+          ></p-button>
+          <p-button
+            label="Excluir Conta permanentemente"
+            styleClass="w-full bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white border-none rounded-2xl py-4 font-black text-xs transition-all shadow-lg shadow-red-500/10"
+            (onClick)="openDeleteDialog()"
+          ></p-button>
+        </div>
       </div>
     </div>
-
-    <div class="flex flex-col gap-3 w-full">
-      <label
-        for="mfaToken"
-        class="text-[10px] font-black text-secondary uppercase tracking-widest ml-1"
-        >Código de Verificação</label
-      >
-      <input
-        pInputText
-        id="mfaToken"
-        [(ngModel)]="mfaToken"
-        class="w-full text-center text-3xl tracking-[0.5em] font-black py-4 rounded-2xl border-2 border-primary/30 focus:border-primary transition-all"
-        maxlength="6"
-        placeholder="000000"
-      />
     </div>
 
-    <div class="flex flex-col gap-3 w-full mt-4">
-      <p-button
-        label="Ativar Proteção Agora"
-        icon="pi pi-shield"
-        (onClick)="confirmEnableMFA()"
-        [disabled]="mfaToken().length !== 6"
-        styleClass="w-full bg-primary hover:bg-primary-600 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-primary/20"
-      ></p-button>
-      <p-button
-        label="Configurar depois"
-        styleClass="w-full p-button-text font-bold text-secondary"
-        (onClick)="showMfaSetupDialog.set(false)"
-      ></p-button>
-    </div>
+        <!-- Dialogs & Toasts -->
+        <!-- Account Reset (Clear Data) Dialog -->
+        <p-dialog
+          [(visible)]="showResetDataDialog"
+          [modal]="true"
+          [showHeader]="false"
+          [style]="{ width: '500px' }"
+          styleClass="reset-account-dialog rounded-[2.5rem] overflow-hidden border-none shadow-2xl"
+          appendTo="body"
+        >
+          <div class="flex flex-col h-full bg-surface-card overflow-hidden">
+            <!-- Indigo Header / Refresh Icon -->
+            <div
+              class="bg-indigo-500/10 p-10 flex flex-col items-center gap-4 border-b border-indigo-500/20 relative"
+            >
+              <div class="absolute top-6 right-6">
+                <p-button
+                  icon="pi pi-times"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  (onClick)="showResetDataDialog.set(false)"
+                ></p-button>
+              </div>
+              <div
+                class="w-20 h-20 rounded-3xl bg-indigo-500 flex items-center justify-center text-white shadow-2xl shadow-indigo-500/40"
+              >
+                <i class="pi pi-refresh text-3xl"></i>
+              </div>
+              <h2
+                class="text-2xl font-black text-indigo-600 tracking-tight m-0 uppercase"
+              >
+                Reiniciar Dados
+              </h2>
+            </div>
+
+            <!-- Step 1: Impact Analysis -->
+            @if (resetStep() === 1) {
+              <div
+                class="p-10 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              >
+                <div class="flex flex-col gap-4">
+                  <p class="text-emphasis font-bold text-lg leading-tight m-0">
+                    Deseja começar do zero?
+                  </p>
+                  <p
+                    class="text-secondary text-sm font-medium leading-relaxed m-0"
+                  >
+                    Esta ação limpará as informações financeiras, mas manterá
+                    sua conta ativa:
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div
+                    class="flex flex-col gap-1 p-4 bg-red-500/5 rounded-2xl border border-red-500/10"
+                  >
+                    <span class="text-[10px] font-black text-red-600 uppercase"
+                      >Será Apagado</span
+                    >
+                    <ul
+                      class="m-0 p-0 list-none text-[11px] font-bold text-secondary flex flex-col gap-1"
+                    >
+                      <li>• Transações</li>
+                      <li>• Contas Bancárias</li>
+                      <li>• Orçamentos</li>
+                      <li>• Categorias Custom</li>
+                    </ul>
+                  </div>
+                  <div
+                    class="flex flex-col gap-1 p-4 bg-green-500/5 rounded-2xl border border-green-500/10"
+                  >
+                    <span
+                      class="text-[10px] font-black text-green-600 uppercase"
+                      >Será Mantido</span
+                    >
+                    <ul
+                      class="m-0 p-0 list-none text-[11px] font-bold text-secondary flex flex-col gap-1"
+                    >
+                      <li>• Seu Perfil (Nome/Foto)</li>
+                      <li>• E-mail e Senha</li>
+                      <li>• Plano Premium</li>
+                      <li>• Configurações de UI</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-3 pt-4">
+                  <p-button
+                    label="Entendi, quero limpar tudo"
+                    (onClick)="nextResetStep()"
+                    styleClass="w-full bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-indigo-500/20"
+                  ></p-button>
+                  <p-button
+                    label="Cancelar"
+                    (onClick)="showResetDataDialog.set(false)"
+                    styleClass="w-full p-button-text font-bold text-secondary"
+                  ></p-button>
+                </div>
+              </div>
+            }
+
+            <!-- Step 2: Triple Check -->
+            @if (resetStep() === 2) {
+              <div
+                class="p-10 flex flex-col gap-8 animate-in fade-in zoom-in duration-500 text-center"
+              >
+                <div
+                  class="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 mx-auto border-2 border-amber-500/20"
+                >
+                  <i class="pi pi-exclamation-circle text-4xl font-black"></i>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                  <h3 class="text-2xl font-black text-emphasis m-0">
+                    Confirmar Reinicialização
+                  </h3>
+                  <p class="text-secondary text-sm leading-relaxed m-0 px-4">
+                    Você perderá todo o seu histórico financeiro acumulado. Tem
+                    certeza que não prefere apenas editar o que está errado?
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-3 pt-4">
+                  <p-button
+                    label="Sim, limpar todos os dados"
+                    (onClick)="nextResetStep()"
+                    styleClass="w-full bg-amber-600 hover:bg-amber-700 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-amber-500/20"
+                  ></p-button>
+                  <p-button
+                    label="Não, prefiro manter"
+                    (onClick)="showResetDataDialog.set(false)"
+                    styleClass="w-full p-button-text font-bold text-secondary"
+                  ></p-button>
+                </div>
+              </div>
+            }
+
+            <!-- Step 3: Final Validation -->
+            @if (resetStep() === 3) {
+              <div
+                class="p-10 flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500"
+              >
+                <div class="flex flex-col gap-2">
+                  <p class="text-emphasis font-bold text-lg m-0">
+                    Validação de Segurança
+                  </p>
+                  <p class="text-secondary text-xs font-medium m-0">
+                    Para confirmar a limpeza total, digite a frase abaixo: <br />
+                    <span class="text-emphasis font-black select-all"
+                      >LIMPAR MEUS DADOS</span
+                    >
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                  <input
+                    pInputText
+                    [(ngModel)]="confirmResetInput"
+                    placeholder="Digite a frase aqui"
+                    class="w-full p-4 rounded-2xl border-2 border-surface-border focus:border-indigo-500 transition-all font-bold text-center uppercase"
+                    (paste)="$event.preventDefault()"
+                  />
+                  <span
+                    class="text-[10px] font-bold text-secondary text-center italic opacity-60"
+                    >Dica: Digite exatamente como mostrado acima.</span
+                  >
+                </div>
+
+                <div class="flex flex-col gap-3 pt-4">
+                  <p-button
+                    label="CONFIRMAR LIMPEZA"
+                    [loading]="isLoading()"
+                    [disabled]="!isResetAuthorized() || isLoading()"
+                    (onClick)="confirmResetAccount()"
+                    styleClass="w-full bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-2xl py-4 font-black shadow-2xl shadow-indigo-500/40"
+                  ></p-button>
+                  <p-button
+                    label="Desistir"
+                    [disabled]="isLoading()"
+                    (onClick)="showResetDataDialog.set(false)"
+                    styleClass="w-full p-button-text font-bold text-secondary"
+                  ></p-button>
+                </div>
+              </div>
+            }
+          </div>
+        </p-dialog>
+
+        <!-- Account Deletion Dialog -->
+        <p-dialog
+          [(visible)]="showDeleteAccountDialog"
+          [modal]="true"
+          [showHeader]="false"
+          [style]="{ width: '500px' }"
+          styleClass="delete-account-dialog rounded-[2.5rem] overflow-hidden border-none shadow-2xl"
+          appendTo="body"
+        >
+          <div class="flex flex-col h-full bg-surface-card overflow-hidden">
+            <!-- Red Header / Danger Icon -->
+            <div
+              class="bg-red-500/10 p-10 flex flex-col items-center gap-4 border-b border-red-500/20 relative"
+            >
+              <div class="absolute top-6 right-6">
+                <p-button
+                  icon="pi pi-times"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  (onClick)="showDeleteAccountDialog.set(false)"
+                ></p-button>
+              </div>
+              <div
+                class="w-20 h-20 rounded-3xl bg-red-500 flex items-center justify-center text-white shadow-2xl shadow-red-500/40 animate-pulse"
+              >
+                <i class="pi pi-trash text-3xl"></i>
+              </div>
+              <h2
+                class="text-2xl font-black text-red-600 tracking-tight m-0 uppercase"
+              >
+                Ação Irreversível
+              </h2>
+            </div>
+
+            <!-- Step 1: Warning & Impact -->
+            @if (deleteStep() === 1) {
+              <div
+                class="p-10 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              >
+                <div class="flex flex-col gap-4">
+                  <p class="text-emphasis font-bold text-lg leading-tight m-0">
+                    Você está prestes a apagar sua jornada financeira.
+                  </p>
+                  <p
+                    class="text-secondary text-sm font-medium leading-relaxed m-0"
+                  >
+                    Ao excluir sua conta, as seguintes informações serão
+                    <b>removidas permanentemente</b> de nossos servidores em
+                    conformidade com a LGPD:
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                  <div
+                    class="flex items-center gap-3 p-4 bg-surface-ground/50 rounded-2xl border border-surface-border/50"
+                  >
+                    <i class="pi pi-history text-red-500"></i>
+                    <span class="text-xs font-bold text-secondary"
+                      >Todo o histórico de transações e contas</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-3 p-4 bg-surface-ground/50 rounded-2xl border border-surface-border/50"
+                  >
+                    <i class="pi pi-bolt text-orange-500"></i>
+                    <span class="text-xs font-bold text-secondary"
+                      >Modelos de IA e predições personalizadas</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-3 p-4 bg-surface-ground/50 rounded-2xl border border-surface-border/50"
+                  >
+                    <i class="pi pi-crown text-indigo-500"></i>
+                    <span class="text-xs font-bold text-secondary"
+                      >Assinaturas ativas e histórico de faturas</span
+                    >
+                  </div>
+                </div>
+
+                <div
+                  class="p-4 bg-red-500/5 rounded-2xl border border-red-500/20"
+                >
+                  <p
+                    class="text-[10px] font-black text-red-600 uppercase tracking-widest text-center m-0"
+                  >
+                    Não há como desfazer esta ação após a conclusão.
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-3 pt-4">
+                  <p-button
+                    label="Mudei de ideia"
+                    (onClick)="showDeleteAccountDialog.set(false)"
+                    styleClass="w-full p-button-text font-bold text-secondary"
+                  ></p-button>
+                  <p-button
+                    label="Eu entendo as consequências"
+                    (onClick)="nextDeleteStep()"
+                    styleClass="w-full bg-red-600 hover:bg-red-700 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-red-500/20"
+                  ></p-button>
+                </div>
+              </div>
+            }
+
+            <!-- Step 2: Triple Check (Are you REALLY sure?) -->
+            @if (deleteStep() === 2) {
+              <div
+                class="p-10 flex flex-col gap-8 animate-in fade-in zoom-in duration-500 text-center"
+              >
+                <div
+                  class="w-24 h-24 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 mx-auto border-2 border-orange-500/20"
+                >
+                  <i class="pi pi-question text-4xl font-black"></i>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                  <h3 class="text-2xl font-black text-emphasis m-0">
+                    Tem certeza absoluta?
+                  </h3>
+                  <p class="text-secondary text-sm leading-relaxed m-0 px-4">
+                    Você está a um passo de deletar
+                    <b>todos os seus dados financeiros</b>. Não poderemos
+                    recuperar absolutamente nada depois disso.
+                  </p>
+                </div>
+
+                <div
+                  class="p-4 bg-orange-500/5 rounded-2xl border border-orange-500/20"
+                >
+                  <p
+                    class="text-[10px] font-black text-orange-600 uppercase tracking-widest m-0"
+                  >
+                    Última chance de cancelar antes da validação final.
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-3 pt-4">
+                  <p-button
+                    label="Sim, tenho certeza absoluta"
+                    (onClick)="nextDeleteStep()"
+                    styleClass="w-full bg-orange-600 hover:bg-orange-700 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-orange-500/20"
+                  ></p-button>
+                  <p-button
+                    label="Não quero deletar"
+                    (onClick)="showDeleteAccountDialog.set(false)"
+                    styleClass="w-full p-button-text font-bold text-secondary"
+                  ></p-button>
+                </div>
+              </div>
+            }
+
+            <!-- Step 3: Final Validation -->
+            @if (deleteStep() === 3) {
+              <div
+                class="p-10 flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500"
+              >
+                <div class="flex flex-col gap-2">
+                  <p class="text-emphasis font-bold text-lg m-0">
+                    Validação Final de Segurança
+                  </p>
+                  <p class="text-secondary text-xs font-medium m-0">
+                    Para confirmar, digite seu e-mail abaixo: <br />
+                    <span class="text-emphasis font-black select-all">{{
+                      auth.currentUser()?.email
+                    }}</span>
+                  </p>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                  <input
+                    pInputText
+                    [(ngModel)]="confirmEmailInput"
+                    placeholder="Digite seu e-mail aqui"
+                    class="w-full p-4 rounded-2xl border-2 border-surface-border focus:border-red-500 transition-all font-bold text-center"
+                    (paste)="$event.preventDefault()"
+                  />
+                  <span
+                    class="text-[10px] font-bold text-secondary text-center italic opacity-60"
+                    >Dica: O recurso de colar foi desativado para garantir sua
+                    atenção.</span
+                  >
+                </div>
+
+                <div class="flex flex-col gap-3 pt-4">
+                  <p-button
+                    label="EXCLUIR PERMANENTEMENTE"
+                    [loading]="isLoading()"
+                    [disabled]="!isDeleteAuthorized() || isLoading()"
+                    (onClick)="confirmDeleteAccount()"
+                    styleClass="w-full bg-red-600 hover:bg-red-700 text-white border-none rounded-2xl py-4 font-black shadow-2xl shadow-red-500/40"
+                  ></p-button>
+                  <p-button
+                    label="Cancelar"
+                    [disabled]="isLoading()"
+                    (onClick)="showDeleteAccountDialog.set(false)"
+                    styleClass="w-full p-button-text font-bold text-secondary"
+                  ></p-button>
+                </div>
+              </div>
+            }
+          </div>
+        </p-dialog>
+
+        <p-dialog
+          header="Segurança em Duas Etapas"
+          [(visible)]="showMfaSetupDialog"
+          [modal]="true"
+          [style]="{ width: '450px' }"
+          styleClass="modern-dialog"
+          appendTo="body"
+        >
+          <div class="flex flex-col items-center gap-8 py-6">
+            <div class="text-center flex flex-col gap-2">
+              <p class="text-lg font-black text-emphasis m-0">
+                Proteja sua Conta
+              </p>
+              <p class="text-sm font-medium text-secondary m-0">
+                Escaneie o QR Code abaixo com seu app autenticador (Google Auth,
+                Microsoft Auth, Authy, etc).
+              </p>
+            </div>
+
+            <div
+              class="bg-white p-6 rounded-[2rem] shadow-2xl border-4 border-primary/10"
+            >
+              <img [src]="qrCodeUrl()" alt="QR Code" class="w-48 h-48" />
+            </div>
+
+            <div
+              class="flex flex-col gap-3 w-full items-center bg-surface-ground/50 p-4 rounded-2xl border border-surface-border"
+            >
+              <p
+                class="text-[10px] font-black text-secondary uppercase tracking-widest m-0"
+              >
+                Chave Manual (Backup)
+              </p>
+              <div class="flex items-center gap-3 w-full">
+                <code
+                  class="text-xs font-black text-primary break-all flex-1 text-center bg-white dark:bg-surface-card p-2 rounded-xl shadow-inner border border-surface-border"
+                  >{{ mfaSecret() }}</code
+                >
+                <p-button
+                  icon="pi pi-copy"
+                  styleClass="w-10 h-10 rounded-xl bg-primary text-white border-none shadow-lg active:scale-90 transition-all"
+                  (onClick)="copyToClipboard(mfaSecret())"
+                  pTooltip="Copiar"
+                ></p-button>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 w-full">
+              <label
+                for="mfaToken"
+                class="text-[10px] font-black text-secondary uppercase tracking-widest ml-1"
+                >Código de Verificação</label
+              >
+              <input
+                pInputText
+                id="mfaToken"
+                [(ngModel)]="mfaToken"
+                class="w-full text-center text-3xl tracking-[0.5em] font-black py-4 rounded-2xl border-2 border-primary/30 focus:border-primary transition-all"
+                maxlength="6"
+                placeholder="000000"
+              />
+            </div>
+
+            <div class="flex flex-col gap-3 w-full mt-4">
+              <p-button
+                label="Ativar Proteção Agora"
+                icon="pi pi-shield"
+                (onClick)="confirmEnableMFA()"
+                [disabled]="mfaToken().length !== 6"
+                styleClass="w-full bg-primary hover:bg-primary-600 text-white border-none rounded-2xl py-4 font-black shadow-xl shadow-primary/20"
+              ></p-button>
+              <p-button
+                label="Configurar depois"
+                styleClass="w-full p-button-text font-bold text-secondary"
+                (onClick)="showMfaSetupDialog.set(false)"
+              ></p-button>
+            </div>
+          </div>
+        </p-dialog>
   </div>
-</p-dialog>

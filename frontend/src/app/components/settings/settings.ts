@@ -17,7 +17,6 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { ToastModule } from 'primeng/toast';
 
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -48,7 +47,6 @@ import { PwaService } from '../../services/pwa.service';
     InputTextModule,
     InputNumberModule,
     ToggleSwitchModule,
-    ToastModule,
 
     SelectModule,
     DatePickerModule,
@@ -64,7 +62,6 @@ import { PwaService } from '../../services/pwa.service';
     InputMaskModule,
     PageHelpComponent,
   ],
-  providers: [MessageService],
 })
 export class Settings {
   auth = inject(AuthService);
@@ -516,66 +513,95 @@ export class Settings {
     }
   }
 
-  confirmDelete() {
-    this.confirmationService.confirm({
-      message:
-        'Tem certeza que deseja excluir sua conta permanentemente? Esta ação não pode ser desfeita.',
-      header: 'Confirmar Exclusão',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Excluir Conta',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: async () => {
-        try {
-          await this.auth.deleteAccount();
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Confirmado',
-            detail: 'Conta excluída',
-          });
-          this.router.navigate(['/login']);
-        } catch (error) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erro',
-            detail: 'Falha ao excluir conta',
-          });
-        }
-      },
-    });
+  // Delete Account
+  showDeleteAccountDialog = signal(false);
+  deleteStep = signal(1); // 1: Info/Warning, 2: Triple Check, 3: Final email validation
+  confirmEmailInput = signal('');
+
+  // Reset Account (Clear Data)
+  showResetDataDialog = signal(false);
+  resetStep = signal(1); // 1: Impact, 2: Triple Check, 3: Final text validation
+  confirmResetInput = signal('');
+  
+  isLoading = signal(false);
+
+  isDeleteAuthorized = computed(() => {
+    const userEmail = this.auth.currentUser()?.email || '';
+    return this.confirmEmailInput().trim().toLowerCase() === userEmail.toLowerCase();
+  });
+
+  isResetAuthorized = computed(() => {
+    return this.confirmResetInput().trim().toUpperCase() === 'LIMPAR MEUS DADOS';
+  });
+
+  openDeleteDialog() {
+    this.deleteStep.set(1);
+    this.confirmEmailInput.set('');
+    this.showDeleteAccountDialog.set(true);
   }
 
-  onResetAccount() {
-    this.confirmationService.confirm({
-      message:
-        'Tem certeza que deseja LIMPAR todos os dados da sua conta? Isso excluirá todas as transações, orçamentos e categorias personalizadas.',
-      header: 'Confirmar Limpeza',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Limpar Tudo',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-text p-button-secondary',
-      accept: () => {
-        this.preferenceService.resetAccount().subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Sucesso',
-              detail: 'Dados da conta limpos com sucesso',
-            });
-            // Optional: Reload or redirect
-            window.location.reload();
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erro',
-              detail: 'Falha ao limpar dados da conta',
-            });
-          },
+  openResetDialog() {
+    this.resetStep.set(1);
+    this.confirmResetInput.set('');
+    this.showResetDataDialog.set(true);
+  }
+
+  nextDeleteStep() {
+    this.deleteStep.update(s => s + 1);
+  }
+
+  nextResetStep() {
+    this.resetStep.update(s => s + 1);
+  }
+
+  async confirmDeleteAccount() {
+    if (!this.isDeleteAuthorized()) return;
+    
+    this.isLoading.set(true);
+    try {
+      await this.auth.deleteAccount();
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Conta Excluída',
+        detail: 'Sua conta e dados foram removidos permanentemente. Sentiremos sua falta!',
+        life: 5000
+      });
+      this.showDeleteAccountDialog.set(false);
+      this.router.navigate(['/login']);
+    } catch (err: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: err.message || 'Falha ao excluir conta.'
+      });
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  confirmResetAccount() {
+    if (!this.isResetAuthorized()) return;
+
+    this.isLoading.set(true);
+    this.preferenceService.resetAccount().subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Dados Limpos',
+          detail: 'Sua conta foi zerada com sucesso. Recomeçando em 3, 2, 1...',
+          life: 3000
         });
+        this.showResetDataDialog.set(false);
+        setTimeout(() => window.location.reload(), 2000);
       },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: err.message || 'Falha ao limpar dados da conta.'
+        });
+        this.isLoading.set(false);
+      }
     });
   }
 
