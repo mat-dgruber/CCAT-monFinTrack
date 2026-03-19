@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ChildrenOutletContexts } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { HttpClient } from '@angular/common/http';
+import { MessageService } from 'primeng/api';
 
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -41,6 +42,7 @@ export class Home implements OnInit {
   subscriptionService = inject(SubscriptionService);
   private contexts = inject(ChildrenOutletContexts);
   private http = inject(HttpClient);
+  private messageService = inject(MessageService);
 
   sidebarVisible = signal(false);
   sidebarCollapsed = signal(localStorage.getItem('sidebarCollapsed') === 'true');
@@ -49,6 +51,7 @@ export class Home implements OnInit {
   currentYear = new Date().getFullYear();
   appVersion = '1.0.2';
   systemStatus = signal<'ok' | 'degraded' | 'checking'>('checking');
+  systemStatusError = signal<string | null>(null);
   avatarError = signal(false);
 
   ngOnInit() {
@@ -63,10 +66,31 @@ export class Home implements OnInit {
   }
 
   checkSystemStatus() {
-    const healthUrl = environment.apiUrl.replace('/api', '') + '/health';
+    const healthUrl = environment.apiUrl + '/health';
     this.http.get(healthUrl, { responseType: 'json' }).subscribe({
-      next: () => this.systemStatus.set('ok'),
-      error: () => this.systemStatus.set('degraded'),
+      next: () => {
+        this.systemStatus.set('ok');
+        this.systemStatusError.set(null);
+      },
+      error: (err) => {
+        this.systemStatus.set('degraded');
+        let errorMsg = 'Não foi possível conectar ao servidor.';
+        if (err.error && err.error.detail) {
+          errorMsg = err.error.detail;
+        } else if (err.status === 404) {
+          errorMsg = 'Endpoint de verificação não encontrado (404).';
+        } else if (err.message) {
+          errorMsg = err.message;
+        }
+        this.systemStatusError.set(errorMsg);
+
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Instabilidade Detectada',
+          detail: errorMsg,
+          life: 5000,
+        });
+      },
     });
   }
 

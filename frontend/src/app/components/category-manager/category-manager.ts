@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener, effect, input } from '@angular/core';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,6 +13,8 @@ import { MessageService, MenuItem } from 'primeng/api';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DrawerModule } from 'primeng/drawer';
+import { ChipModule } from 'primeng/chip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MenuModule } from 'primeng/menu';
@@ -43,6 +45,7 @@ import { PageHelpComponent } from '../page-help/page-help';
     PageHelpComponent,
     MenuModule,
     TagModule,
+    DrawerModule,
   ],
   templateUrl: './category-manager.html',
   styleUrl: './category-manager.scss',
@@ -58,6 +61,16 @@ export class CategoryManager implements OnInit {
   visible = signal(false);
   editingId = signal<string | null>(null);
   searchTerm = signal('');
+
+  // --- Lógica de Drawer Mobile ---
+  mobileCategoryActionsVisible = signal(false);
+  selectedCategoryForActions = signal<Category | null>(null);
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   // Computed flat list for the dropdown (only potential parents)
   flatCategories = computed(() => {
@@ -137,22 +150,21 @@ export class CategoryManager implements OnInit {
   getCategoryMenuItems(cat: Category): MenuItem[] {
     return [
       {
-        label: 'Ações',
-        items: [
-          {
-            label: 'Editar',
-            icon: 'pi pi-pencil',
-            command: () => this.editCategory(cat),
-          },
-          {
-            label: 'Excluir',
-            icon: 'pi pi-trash',
-            className: 'text-red-600',
-            command: () => this.deleteCategoryForMenu(cat.id!),
-          },
-        ],
+        label: 'Editar Categoria',
+        icon: 'pi pi-pencil',
+        command: () => this.editCategory(cat),
+      },
+      {
+        label: 'Excluir Categoria',
+        icon: 'pi pi-trash',
+        command: () => this.deleteCategoryForMenu(cat.id!),
       },
     ];
+  }
+
+  openCategoryActions(cat: Category) {
+    this.selectedCategoryForActions.set(cat);
+    this.mobileCategoryActionsVisible.set(true);
   }
 
   private deleteCategoryForMenu(id: string) {

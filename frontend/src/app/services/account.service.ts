@@ -18,35 +18,35 @@ export class AccountService {
 
   getAccounts(forceRefresh = false): Observable<Account[]> {
     const isExpired = Date.now() - this.lastFetch > this.CACHE_TIME;
-    
+
     if (forceRefresh || isExpired) {
       return this.http.get<Account[]>(this.apiUrl).pipe(
         tap((accs) => {
           this.accountsCache$.next(accs);
           this.lastFetch = Date.now();
-        })
+        }),
       );
     }
-    
+
     return this.accountsCache$.asObservable();
   }
 
   createAccount(account: Account): Observable<Account> {
-    return this.http.post<Account>(this.apiUrl, account).pipe(
-      tap(() => this.clearCache())
-    );
+    return this.http
+      .post<Account>(this.apiUrl, account)
+      .pipe(tap(() => this.clearCache()));
   }
 
   updateAccount(id: string, account: Account): Observable<Account> {
-    return this.http.put<Account>(`${this.apiUrl}/${id}`, account).pipe(
-      tap(() => this.clearCache())
-    );
+    return this.http
+      .put<Account>(`${this.apiUrl}/${id}`, account)
+      .pipe(tap(() => this.clearCache()));
   }
 
   deleteAccount(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      tap(() => this.clearCache())
-    );
+    return this.http
+      .delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(tap(() => this.clearCache()));
   }
 
   clearCache() {

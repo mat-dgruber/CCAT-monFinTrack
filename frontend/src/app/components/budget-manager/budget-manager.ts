@@ -6,6 +6,7 @@ import {
   effect,
   Input,
   input,
+  HostListener,
 } from '@angular/core';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule, CurrencyPipe } from '@angular/common';
@@ -21,6 +22,10 @@ import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DrawerModule } from 'primeng/drawer';
+import { TagModule } from 'primeng/tag';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 
 import { BudgetService } from '../../services/budget.service';
 import { CategoryService } from '../../services/category.service';
@@ -49,6 +54,9 @@ import { PageHelpComponent } from '../page-help/page-help';
     InputIconModule,
     PageHelpComponent,
     RouterLink,
+    DrawerModule,
+    TagModule,
+    MenuModule,
   ],
   providers: [CurrencyPipe],
   templateUrl: './budget-manager.html',
@@ -73,6 +81,16 @@ export class BudgetManager implements OnInit {
   visible = signal(false);
 
   editingId = signal<string | null>(null);
+
+  // --- Lógica de Drawer Mobile ---
+  mobileBudgetActionsVisible = signal(false);
+  selectedBudgetForActions = signal<Budget | null>(null);
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   form = this.fb.group({
     category: [null as Category | null, Validators.required],
@@ -242,5 +260,25 @@ export class BudgetManager implements OnInit {
     if (percentage >= 100) return '#ef4444'; // Red (Estourou)
     if (percentage >= 80) return '#f59e0b'; // Amber (Alerta)
     return '#22c55e'; // Green (Ok)
+  }
+
+  getBudgetMenuItems(budget: Budget): MenuItem[] {
+    return [
+      {
+        label: 'Editar Limite',
+        icon: 'pi pi-pencil',
+        command: (event) => this.editBudget(event.originalEvent!, budget),
+      },
+      {
+        label: 'Excluir Limite',
+        icon: 'pi pi-trash',
+        command: (event) => this.deleteBudget(event.originalEvent!, budget.id!),
+      },
+    ];
+  }
+
+  openBudgetActions(budget: Budget) {
+    this.selectedBudgetForActions.set(budget);
+    this.mobileBudgetActionsVisible.set(true);
   }
 }

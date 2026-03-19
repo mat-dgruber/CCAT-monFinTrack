@@ -6,6 +6,7 @@ import {
   effect,
   computed,
   input,
+  HostListener,
 } from '@angular/core';
 import { CustomConfirmService } from '../../services/custom-confirm.service';
 import { CommonModule } from '@angular/common';
@@ -27,6 +28,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MenuModule } from 'primeng/menu';
 import { TagModule } from 'primeng/tag';
+import { DrawerModule } from 'primeng/drawer';
 
 // Serviços e Modelos
 import { AccountService } from '../../services/account.service';
@@ -64,6 +66,7 @@ import { PageHelpComponent } from '../page-help/page-help';
     PageHelpComponent,
     MenuModule,
     TagModule,
+    DrawerModule, // Added DrawerModule
   ],
   templateUrl: './account-manager.html',
   styleUrl: './account-manager.scss',
@@ -146,7 +149,10 @@ export class AccountManager implements OnInit {
     color: ['#000000'],
   });
 
-  // --- Lógica de Transferência ---
+  // --- Lógica de Drawer Mobile ---
+  mobileAccountActionsVisible = signal(false);
+  selectedAccountForActions = signal<Account | null>(null);
+
   transferVisible = signal(false);
   sourceAccount = signal<Account | null>(null);
 
@@ -173,6 +179,13 @@ export class AccountManager implements OnInit {
   });
 
   // Construtor com Efeito (Ouve atualizações do sistema)
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.isMobile.set(window.innerWidth < 768);
+  }
+
   constructor() {
     effect(() => {
       // Registra dependência do sinal de refresh
@@ -220,71 +233,26 @@ export class AccountManager implements OnInit {
   getAccountMenuItems(acc: Account): MenuItem[] {
     return [
       {
-        label: 'Ações da Conta',
-        items: [
-          {
-            label: 'Editar Conta',
-            icon: 'pi pi-pencil',
-            command: () => {
-              this.editingId.set(acc.id!);
-              if (acc.credit_cards) {
-                this.currentCards.set([...acc.credit_cards]);
-              } else {
-                this.currentCards.set([]);
-              }
-              const dataToPatch = {
-                name: acc.name,
-                type: acc.type,
-                balance: acc.balance,
-                icon: acc.icon || 'pi pi-wallet',
-                color: acc.color || '#3b82f6',
-              };
-              this.form.patchValue(dataToPatch);
-              this.visible.set(true);
-            },
-          },
-          {
-            label: 'Transferir Saldo',
-            icon: 'pi pi-arrow-right-arrow-left',
-            command: () => {
-              this.sourceAccount.set(acc);
-              this.transferForm.reset({
-                destination_account_id: '',
-                amount: 0,
-                date: new Date(),
-                payment_method: 'bank_transfer',
-              });
-              this.transferVisible.set(true);
-            },
-          },
-          {
-            label: 'Excluir Conta',
-            icon: 'pi pi-trash',
-            className: 'text-red-600',
-            command: () => {
-              this.confirmationService.confirm({
-                message: `Tem certeza que deseja excluir a conta '${acc.name}'?`,
-                header: 'Confirmar Exclusão',
-                icon: 'pi pi-exclamation-triangle',
-                acceptLabel: 'Excluir',
-                rejectLabel: 'Cancelar',
-                acceptButtonStyleClass: 'p-button-danger',
-                rejectButtonStyleClass: 'p-button-text p-button-secondary',
-                accept: () => {
-                  this.accountService.deleteAccount(acc.id!).subscribe(() => {
-                    this.messageService.add({
-                      severity: 'success',
-                      summary: 'Conta Excluída',
-                    });
-                    this.refreshService.triggerRefresh();
-                  });
-                },
-              });
-            },
-          },
-        ],
+        label: 'Editar Conta',
+        icon: 'pi pi-pencil',
+        command: (event) => this.editAccount(event.originalEvent!, acc),
+      },
+      {
+        label: 'Transferir Saldo',
+        icon: 'pi pi-arrow-right-arrow-left',
+        command: (event) => this.openTransfer(event.originalEvent!, acc),
+      },
+      {
+        label: 'Excluir Conta',
+        icon: 'pi pi-trash',
+        command: (event) => this.deleteAccount(event.originalEvent!, acc.id!),
       },
     ];
+  }
+
+  openAccountActions(acc: Account) {
+    this.selectedAccountForActions.set(acc);
+    this.mobileAccountActionsVisible.set(true);
   }
 
   // Abrir modal para Nova Conta

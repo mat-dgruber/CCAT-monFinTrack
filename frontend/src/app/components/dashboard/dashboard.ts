@@ -28,7 +28,6 @@ import { MarkdownModule } from 'ngx-markdown'; // Import Markdown Module if used
 import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // Import ActivatedRoute and RouterModule
 import { SkeletonModule } from 'primeng/skeleton'; // Import SkeletonModule
 import { MessageService } from 'primeng/api'; // Import MessageService
-import { ToastModule } from 'primeng/toast'; // Import ToastModule
 
 // Services
 import {
@@ -72,10 +71,8 @@ import { PageHelpComponent } from '../page-help/page-help';
     MarkdownModule,
     ButtonModule,
     RouterModule,
-    ToastModule, // Add ToastModule
     PageHelpComponent,
   ],
-  providers: [MessageService], // Add MessageService
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

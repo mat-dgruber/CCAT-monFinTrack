@@ -98,14 +98,33 @@
                 [text]="true"
                 [rounded]="true"
                 severity="secondary"
-                (onClick)="menu.toggle($event)"
+                (onClick)="isMobile() ? openAccountActions(acc) : menu.toggle($event)"
               ></p-button>
-              <p-menu
+               <p-menu
                 #menu
                 [model]="getAccountMenuItems(acc)"
                 [popup]="true"
                 appendTo="body"
-              ></p-menu>
+                styleClass="premium-menu shadow-2xl border-none !rounded-2xl overflow-hidden min-w-[200px]"
+              >
+                <ng-template pTemplate="start">
+                  <div class="p-4 bg-surface-ground/50 border-b border-surface-border">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+                        [style.backgroundColor]="acc.color + '20'"
+                        [style.color]="acc.color"
+                      >
+                        <i [class]="acc.icon" class="text-sm"></i>
+                      </div>
+                      <div class="flex flex-col min-w-0">
+                        <span class="text-xs font-bold text-color truncate">{{ acc.name }}</span>
+                        <span class="text-[10px] text-secondary uppercase font-bold tracking-tighter">{{ acc.type }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
+              </p-menu>
             </div>
           </div>
 
@@ -386,6 +405,86 @@
     </div>
   </form>
 </p-dialog>
+
+<!-- Mobile Account Actions Bottom Sheet -->
+<p-drawer
+  [(visible)]="mobileAccountActionsVisible"
+  [modal]="true"
+  position="bottom"
+  styleClass="!h-auto !rounded-t-[32px]"
+  [header]="selectedAccountForActions()?.name || 'Ações'"
+>
+  <ng-template pTemplate="content">
+    <div
+      class="flex flex-col gap-3 pb-8"
+      *ngIf="selectedAccountForActions() as acc"
+    >
+      <div
+        class="flex items-center justify-between p-4 bg-surface-ground/50 rounded-2xl mb-2"
+      >
+        <div class="flex flex-col">
+          <span class="text-xs font-bold text-secondary uppercase tracking-widest"
+            >Saldo Atual</span
+          >
+          <span
+            class="text-xl font-extrabold"
+            [class.text-red-500]="acc.balance < 0"
+            [class.text-primary]="acc.balance >= 0"
+          >
+            {{ acc.balance | currency: "BRL" }}
+          </span>
+        </div>
+        <p-tag
+          [value]="acc.type | accountType"
+          [severity]="getAccountTypeSeverity(acc.type)"
+          [rounded]="true"
+        ></p-tag>
+      </div>
+
+      <button
+        (click)="editAccount($event, acc); mobileAccountActionsVisible.set(false)"
+        class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-surface-card border border-surface-border font-bold active:bg-surface-hover transition-all text-color"
+      >
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-600"
+        >
+          <i class="pi pi-pencil"></i>
+        </div>
+        Editar Conta
+      </button>
+
+      <button
+        (click)="
+          sourceAccount.set(acc);
+          transferVisible.set(true);
+          mobileAccountActionsVisible.set(false)
+        "
+        class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-surface-card border border-surface-border font-bold active:bg-surface-hover transition-all text-color"
+      >
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 text-primary"
+        >
+          <i class="pi pi-arrow-right-arrow-left"></i>
+        </div>
+        Transferir Saldo
+      </button>
+
+      <button
+        (click)="
+          deleteAccount($event, acc.id!); mobileAccountActionsVisible.set(false)
+        "
+        class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-red-500/5 border border-red-500/20 text-red-600 font-bold active:bg-red-500/10 transition-all"
+      >
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10"
+        >
+          <i class="pi pi-trash"></i>
+        </div>
+        Excluir Conta
+      </button>
+    </div>
+  </ng-template>
+</p-drawer>
 
 <!-- Credit Card Dialog -->
 <p-dialog

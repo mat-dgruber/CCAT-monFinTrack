@@ -49,9 +49,21 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th class="bg-surface-card text-color uppercase text-[10px] font-black tracking-widest px-6 py-4">Nome</th>
-            <th class="bg-surface-card text-color uppercase text-[10px] font-black tracking-widest px-6 py-4">Tipo</th>
-            <th class="bg-surface-card text-color uppercase text-[10px] font-black tracking-widest px-6 py-4 text-right">Ações</th>
+            <th
+              class="bg-surface-card text-color uppercase text-[10px] font-black tracking-widest px-6 py-4"
+            >
+              Nome
+            </th>
+            <th
+              class="bg-surface-card text-color uppercase text-[10px] font-black tracking-widest px-6 py-4"
+            >
+              Tipo
+            </th>
+            <th
+              class="bg-surface-card text-color uppercase text-[10px] font-black tracking-widest px-6 py-4 text-right"
+            >
+              Ações
+            </th>
           </tr>
         </ng-template>
 
@@ -71,31 +83,58 @@
                     <i [class]="row.parent.icon"></i>
                   </div>
                   <div class="flex flex-col gap-1">
-                    <span class="text-lg font-black text-color">{{ row.parent.name }}</span>
+                    <span class="text-lg font-black text-color">{{
+                      row.parent.name
+                    }}</span>
                     <p-tag
-                      [value]="row.parent.type === 'expense' ? 'Despesa' : 'Receita'"
+                      [value]="
+                        row.parent.type === 'expense' ? 'Despesa' : 'Receita'
+                      "
                       [severity]="getCategoryTypeSeverity(row.parent.type)"
                       [rounded]="true"
                       styleClass="text-[9px] uppercase font-black px-2 py-0.5"
                     ></p-tag>
                   </div>
                 </div>
-                
+
                 <div class="flex gap-2">
-                   <p-button
+                  <p-button
                     #menuBtn
                     icon="pi pi-ellipsis-v"
-                    [text]="true"
-                    [rounded]="true"
                     severity="secondary"
-                    (onClick)="menu.toggle($event)"
+                    [rounded]="true"
+                    [text]="true"
+                    (onClick)="
+                      isMobile()
+                        ? openCategoryActions(row.parent)
+                        : menu.toggle($event)
+                    "
                   ></p-button>
                   <p-menu
                     #menu
                     [model]="getCategoryMenuItems(row.parent)"
                     [popup]="true"
                     appendTo="body"
-                  ></p-menu>
+                    styleClass="premium-menu shadow-2xl border-none !rounded-2xl overflow-hidden min-w-[200px]"
+                  >
+                    <ng-template pTemplate="start">
+                      <div class="p-4 bg-surface-ground/50 border-b border-surface-border">
+                        <div class="flex items-center gap-3">
+                          <div
+                            class="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+                            [style.backgroundColor]="row.parent.color + '20'"
+                            [style.color]="row.parent.color"
+                          >
+                            <i [class]="row.parent.icon" class="text-sm"></i>
+                          </div>
+                          <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-color truncate">{{ row.parent.name }}</span>
+                            <span class="text-[10px] text-secondary uppercase font-bold tracking-tighter">Categoria</span>
+                          </div>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </p-menu>
                 </div>
               </div>
             </td>
@@ -125,9 +164,10 @@
                     >
                       <i [class]="row.icon"></i>
                     </div>
-                    <span class="text-sm font-bold text-secondary tracking-tight group-hover:text-primary transition-colors">{{
-                      row.name
-                    }}</span>
+                    <span
+                      class="text-sm font-bold text-secondary tracking-tight group-hover:text-primary transition-colors"
+                      >{{ row.name }}</span
+                    >
                   </div>
                 </div>
               </td>
@@ -135,7 +175,9 @@
                 <!-- Espaço vazio para manter alinhamento -->
               </td>
               <td class="text-right px-6">
-                <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                  class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
                   <p-button
                     #menuBtnSub
                     icon="pi pi-ellipsis-h"
@@ -150,7 +192,26 @@
                     [model]="getCategoryMenuItems(row)"
                     [popup]="true"
                     appendTo="body"
-                  ></p-menu>
+                    styleClass="premium-menu shadow-2xl border-none !rounded-2xl overflow-hidden min-w-[200px]"
+                  >
+                    <ng-template pTemplate="start">
+                      <div class="p-4 bg-surface-ground/50 border-b border-surface-border">
+                        <div class="flex items-center gap-3">
+                          <div
+                            class="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+                            [style.backgroundColor]="row.color + '20'"
+                            [style.color]="row.color"
+                          >
+                            <i [class]="row.icon" class="text-sm"></i>
+                          </div>
+                          <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-color truncate">{{ row.name }}</span>
+                            <span class="text-[10px] text-secondary uppercase font-bold tracking-tighter">Subcategoria</span>
+                          </div>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </p-menu>
                 </div>
               </td>
             </tr>
@@ -196,7 +257,9 @@
               <i [class]="cat.icon"></i>
             </div>
             <div class="flex-1 min-w-0 flex flex-col gap-1">
-              <div class="font-black text-color leading-tight">{{ cat.name }}</div>
+              <div class="font-black text-color leading-tight">
+                {{ cat.name }}
+              </div>
               <p-tag
                 [value]="cat.type === 'expense' ? 'Despesa' : 'Receita'"
                 [severity]="getCategoryTypeSeverity(cat.type)"
@@ -206,7 +269,7 @@
             </div>
             <!-- Parent Actions -->
             <div class="flex gap-1">
-               <p-button
+              <p-button
                 #menuBtnMob
                 icon="pi pi-ellipsis-v"
                 [text]="true"
@@ -244,7 +307,9 @@
                     <i [class]="sub.icon"></i>
                   </div>
 
-                  <div class="flex-1 font-bold text-xs text-secondary tracking-tight">
+                  <div
+                    class="flex-1 font-bold text-xs text-secondary tracking-tight"
+                  >
                     {{ sub.name }}
                   </div>
 
@@ -284,7 +349,8 @@
         </div>
         <h3 class="text-xl font-black text-color mb-2">Sem categorias</h3>
         <p class="text-secondary mb-8 max-w-[200px] text-sm font-medium">
-          Nenhuma categoria encontrada para sua busca ou você ainda não criou nenhuma.
+          Nenhuma categoria encontrada para sua busca ou você ainda não criou
+          nenhuma.
         </p>
         <p-button
           label="Nova Categoria"
@@ -471,3 +537,74 @@
     </div>
   </form>
 </p-dialog>
+
+<!-- Mobile Category Actions Bottom Sheet -->
+<p-drawer
+  [(visible)]="mobileCategoryActionsVisible"
+  [modal]="true"
+  position="bottom"
+  styleClass="!h-auto !rounded-t-[32px]"
+  [header]="selectedCategoryForActions()?.name || 'Ações'"
+>
+  <ng-template pTemplate="content">
+    <div
+      class="flex flex-col gap-3 pb-8"
+      *ngIf="selectedCategoryForActions() as cat"
+    >
+      <div
+        class="flex items-center justify-between p-4 bg-surface-ground/50 rounded-2xl mb-2"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner"
+            [style.backgroundColor]="cat.color + '15'"
+            [style.color]="cat.color"
+          >
+            <i [class]="cat.icon" class="text-xl"></i>
+          </div>
+          <div class="flex flex-col">
+            <span
+              class="text-xs font-bold text-secondary uppercase tracking-widest"
+              >Tipo</span
+            >
+            <span class="font-bold text-color">
+              {{ cat.type === "expense" ? "Despesa" : "Receita" }}
+            </span>
+          </div>
+        </div>
+        <p-tag
+          [value]="cat.parent_id ? 'Subcategoria' : 'Categoria Pai'"
+          [severity]="cat.parent_id ? 'info' : 'success'"
+          [rounded]="true"
+        ></p-tag>
+      </div>
+
+      <button
+        (click)="editCategory(cat); mobileCategoryActionsVisible.set(false)"
+        class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-surface-card border border-surface-border font-bold active:bg-surface-hover transition-all text-color"
+      >
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-600"
+        >
+          <i class="pi pi-pencil"></i>
+        </div>
+        Editar Categoria
+      </button>
+
+      <button
+        (click)="
+          deleteCategory($event, cat.id!);
+          mobileCategoryActionsVisible.set(false)
+        "
+        class="w-full py-4 px-6 rounded-2xl flex items-center gap-4 bg-red-500/5 border border-red-500/20 text-red-600 font-bold active:bg-red-500/10 transition-all"
+      >
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10"
+        >
+          <i class="pi pi-trash"></i>
+        </div>
+        Excluir Categoria
+      </button>
+    </div>
+  </ng-template>
+</p-drawer>

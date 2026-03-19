@@ -170,7 +170,7 @@
                       class="flex items-center gap-3 px-3 py-2 text-secondary rounded-lg hover:bg-surface-hover transition-colors"
                     >
                       <i class="pi pi-dollar"></i>
-                      <span class="font-medium">Orçamentos</span>
+                      <span class="font-medium">Limites de Gastos</span>
                     </a>
                   </li>
                   <li>
@@ -484,7 +484,7 @@
                   >
                     <i class="pi pi-dollar"></i>
                     <span class="font-medium whitespace-nowrap"
-                      >Orçamentos</span
+                      >Limites de Gastos</span
                     >
                   </a>
                 </li>
@@ -687,7 +687,11 @@
       <div class="flex items-center justify-center flex-wrap gap-3 mb-3">
         <!-- System Status Indicator -->
         @if (systemStatus() === "checking") {
-          <span class="inline-flex items-center gap-1.5 text-xs text-secondary">
+          <span
+            class="inline-flex items-center gap-1.5 text-xs text-secondary cursor-wait"
+            [pTooltip]="'Verificando conexão com o servidor...'"
+            tooltipPosition="top"
+          >
             <span
               class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"
             ></span>
@@ -695,14 +699,20 @@
           </span>
         } @else if (systemStatus() === "ok") {
           <span
-            class="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400"
+            class="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 cursor-help"
+            [pTooltip]="'Todos os sistemas estão operacionais. Clique para verificar novamente.'"
+            tooltipPosition="top"
+            (click)="checkSystemStatus()"
           >
             <span class="w-2 h-2 rounded-full bg-green-500"></span>
             Sistemas operacionais
           </span>
         } @else {
           <span
-            class="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400"
+            class="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 cursor-pointer"
+            [pTooltip]="(systemStatusError() || 'Erro desconhecido') + '. Clique para tentar novamente.'"
+            tooltipPosition="top"
+            (click)="checkSystemStatus()"
           >
             <span
               class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"

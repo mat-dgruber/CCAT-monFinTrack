@@ -5,6 +5,8 @@ import {
   inject,
   computed,
   effect,
+  HostListener,
+  input,
 } from '@angular/core';
 import {
   trigger,
@@ -53,6 +55,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SliderModule } from 'primeng/slider';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { DrawerModule } from 'primeng/drawer';
 
 import { DebtService, DebtAlert } from '../../services/debt.service';
 import { ResourceService } from '../../services/resource.service';
@@ -115,8 +118,8 @@ import {
     ToggleSwitchModule,
     MarkdownModule,
     MenuModule,
+    DrawerModule,
   ],
-  providers: [MessageService],
   templateUrl: './debt-planner.html',
   styleUrl: './debt-planner.scss',
   animations: [
@@ -232,6 +235,15 @@ export class DebtPlannerComponent implements OnInit {
   alertsLoading = signal(false);
   evolutionTable = signal<any[]>([]);
   showEvolutionTable = signal(false);
+  // --- Lógica de Drawer Mobile ---
+  mobileDebtActionsVisible = signal(false);
+  selectedDebtForActions = signal<Debt | null>(null);
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.isMobile.set(window.innerWidth < 768);
+  }
   // RESOURCES
   resources = signal<SeasonalIncome[]>([]);
   resourceLoading = false;
@@ -502,51 +514,45 @@ export class DebtPlannerComponent implements OnInit {
     return '#22c55e'; // Green
   }
 
+  openDebtActions(debt: Debt) {
+    this.selectedDebtForActions.set(debt);
+    this.mobileDebtActionsVisible.set(true);
+  }
+
   getDebtMenuItems(debt: Debt): MenuItem[] {
     const items: MenuItem[] = [
       {
-        label: 'Ações Básicas',
-        items: [
-          {
-            label: 'Ver Detalhes',
-            icon: 'pi pi-eye',
-            command: () => this.viewDebtDetails(debt),
-          },
-          {
-            label: 'Editar Dívida',
-            icon: 'pi pi-pencil',
-            command: () => this.editDebt(debt),
-          },
-        ],
+        label: 'Ver Detalhes',
+        icon: 'pi pi-eye',
+        command: () => this.viewDebtDetails(debt),
       },
       {
-        label: 'Simuladores',
-        items: [
-          {
-            label: 'Simular Antecipação',
-            icon: 'pi pi-calculator',
-            command: () => this.openCalculator(debt),
-          },
-        ],
+        label: 'Editar Dívida',
+        icon: 'pi pi-pencil',
+        command: () => this.editDebt(debt),
+      },
+      {
+        label: 'Simular Antecipação',
+        icon: 'pi pi-calculator',
+        command: () => this.openCalculator(debt),
       },
     ];
 
     if (debt.status === DebtStatus.OVERDUE || debt.status === DebtStatus.NEGOTIATION) {
-      (items[1].items as MenuItem[]).push({
+      items.push({
         label: 'Simular Acordo',
         icon: 'pi pi-handshake',
         command: () => this.openAgreement(debt),
       });
     }
 
-    (items as any).push({
+    items.push({
       separator: true
     });
 
     items.push({
-      label: 'Excluir',
+      label: 'Excluir Dívida',
       icon: 'pi pi-trash',
-      className: 'text-red-600',
       command: () => this.deleteDebt(debt.id),
     });
 
@@ -1293,10 +1299,15 @@ export class DebtPlannerComponent implements OnInit {
   }
 
   getDebtStatusIcon(status: string) {
-    if (status === 'on_time') return 'pi pi-check-circle';
-    if (status === 'overdue' || status === 'late')
-      return 'pi pi-exclamation-circle';
-    return 'pi pi-refresh';
+    if (status === 'overdue') return 'pi pi-exclamation-triangle';
+    if (status === 'paid') return 'pi pi-check-circle';
+    return 'pi pi-clock';
+  }
+
+  getDebtStatusColor(status: string) {
+    if (status === 'overdue') return '#ef4444'; // Red
+    if (status === 'paid') return '#22c55e'; // Green
+    return '#f59e0b'; // Amber
   }
 
   navigateToPricing() {
