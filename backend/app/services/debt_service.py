@@ -16,6 +16,7 @@ from app.services.debt_calculator_service import DebtCalculatorService
 from app.services.user_preference import get_preferences
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
+from google.cloud import firestore
 
 COLLECTION_NAME = "debts"
 
@@ -109,28 +110,52 @@ def get_debt(user_id: str, debt_id: str) -> Debt:
 def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
     check_tier_eligibility(user_id)
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(debt_id)
-    doc = doc_ref.get()
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", debt_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Debt not found")
+
+    doc_ref = docs[0].reference
+    current_data = docs[0].to_dict()
 
     # Serialize to JSON mode to ensure dates are strings for Firestore
     data = debt_in.model_dump(exclude_unset=True, mode="json")
     doc_ref.update(data)
 
-    return get_debt(user_id, debt_id)
+    # Reconstruct Debt object without another read
+    current_data.update(data)
+    debt_obj = Debt(id=debt_id, **current_data)
+    # Calculate stats
+    try:
+        stats = DebtCalculatorService.calculate_debt_stats(debt_obj)
+        debt_obj.stats = stats
+    except Exception:
+        pass
+
+    return debt_obj
 
 
 def delete_debt(user_id: str, debt_id: str):
     check_tier_eligibility(user_id)
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(debt_id)
-    doc = doc_ref.get()
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", debt_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Debt not found")
 
+    doc_ref = docs[0].reference
     doc_ref.delete()
     return {"status": "success"}
 

@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.core.logger import get_logger
 from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
 from fastapi import HTTPException
+from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 logger = get_logger(__name__)
@@ -82,13 +83,19 @@ def update_recurrence(
     scope: str = "all",
 ) -> Recurrence:
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(recurrence_id)
-    doc = doc_ref.get()
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", recurrence_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Recurrence not found")
 
-    current_data = doc.to_dict()
+    doc_ref = docs[0].reference
+    current_data = docs[0].to_dict()
 
     # If scope is "future", we cancel the current one and create a new one
     if scope == "future":
@@ -148,8 +155,8 @@ def update_recurrence(
 
     doc_ref.update(data)
 
-    updated_doc = doc_ref.get()
-    return Recurrence(id=updated_doc.id, **updated_doc.to_dict())
+    current_data.update(data)
+    return Recurrence(id=recurrence_id, **current_data)
 
 
 def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
@@ -157,21 +164,28 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
     Soft delete: marca como inativo e define data de cancelamento.
     """
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(recurrence_id)
-    doc = doc_ref.get()
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", recurrence_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Recurrence not found")
 
-    doc_ref.update(
-        {
-            "active": False,
-            "cancellation_date": datetime.now(timezone.utc).date().isoformat(),
-        }
-    )
+    doc_ref = docs[0].reference
+    current_data = docs[0].to_dict()
 
-    updated_doc = doc_ref.get()
-    return Recurrence(id=updated_doc.id, **updated_doc.to_dict())
+    cancel_data = {
+        "active": False,
+        "cancellation_date": datetime.now(timezone.utc).date().isoformat(),
+    }
+    doc_ref.update(cancel_data)
+
+    current_data.update(cancel_data)
+    return Recurrence(id=recurrence_id, **current_data)
 
 
 def delete_all_recurrences(user_id: str):

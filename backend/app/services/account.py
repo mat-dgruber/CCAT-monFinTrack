@@ -1,14 +1,16 @@
 from app.core.database import get_db
 from app.schemas.account import Account, AccountCreate, AccountType
 from fastapi import HTTPException
+from google.cloud import firestore
 
 COLLECTION_NAME = "accounts"
 
 
+# Criar: Só o usuário logado
 def create_account(account_in: AccountCreate, user_id: str) -> Account:
     db = get_db()
     data = account_in.model_dump()
-    data["user_id"] = user_id  # <--- MARCA D'ÁGUA DO DONO
+    data["user_id"] = user_id  # MARCA O DONO
 
     update_time, doc_ref = db.collection(COLLECTION_NAME).add(data)
     return Account(id=doc_ref.id, **data)
@@ -29,14 +31,22 @@ def list_accounts(user_id: str) -> list[Account]:
 # Update: Verifica se a conta é do usuário antes de mexer
 def update_account(account_id: str, account_in: AccountCreate, user_id: str) -> Account:
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(account_id)
-    doc = doc_ref.get()
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    # Query otimizada para verificar existência e posse em 1 leitura
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", account_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
+
+    if not docs:
         raise HTTPException(
             status_code=404, detail="Account not found or access denied"
         )
 
+    doc_ref = docs[0].reference
     data = account_in.model_dump()
     data["user_id"] = user_id  # Garante que não perde a posse
     doc_ref.update(data)
@@ -47,14 +57,22 @@ def update_account(account_id: str, account_in: AccountCreate, user_id: str) -> 
 # Delete: Verifica dono
 def delete_account(account_id: str, user_id: str):
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(account_id)
-    doc = doc_ref.get()
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    # Query otimizada para verificar posse em 1 leitura
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", account_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
+
+    if not docs:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    doc_ref.delete()
+    docs[0].reference.delete()
     return {"status": "success"}
+
 
 
 # Helper para uso interno (Transaction Service usa isso)

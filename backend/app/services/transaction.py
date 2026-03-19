@@ -392,14 +392,22 @@ def update_transaction(
     transaction_id: str, transaction_in: TransactionUpdate, user_id: str
 ) -> Transaction:
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
+
+    # Query otimizada para verificar existência e posse em 1 leitura
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", transaction_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
     # Verifica Propriedade
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    old_data = doc.to_dict()
+    doc_ref = docs[0].reference
+    old_data = docs[0].to_dict()
     # Serialize Enums/Datetimes to JSON-compatible format for Firestore
     update_data = transaction_in.model_dump(exclude_unset=True, mode="json")
 
@@ -505,14 +513,22 @@ def delete_transaction(transaction_id: str, user_id: str, scope: str = "all"):
     scope: 'single' = apenas esta parcela, 'future' = esta + futuras, 'all' = todo o grupo.
     """
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(transaction_id)
-    doc = doc_ref.get()
+
+    # Query otimizada para verificar existência e posse em 1 leitura
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", transaction_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
     # Verifica Propriedade
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    data = doc.to_dict()
+    doc_ref = docs[0].reference
+    data = docs[0].to_dict()
     installment_group_id = data.get("installment_group_id")
 
     # Lógica de Exclusão em Grupo (Se for parcelado)

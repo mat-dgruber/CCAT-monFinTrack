@@ -7,6 +7,7 @@ from app.schemas.budget import Budget, BudgetCreate
 from app.schemas.category import Category, CategoryType
 from app.services import category as category_service
 from fastapi import HTTPException
+from google.cloud import firestore
 
 COLLECTION_NAME = "budgets"
 
@@ -85,16 +86,25 @@ def list_budgets_with_progress(
     )
     budgets = []
 
-    # 2. Pegar todas as transações DO USUÁRIO e filtrar em memória para manter compatibilidade com testes e evitar problemas de índice
-    transactions_query = db.collection("transactions").where("user_id", "==", user_id)
+    # 2. Pegar todas as transações DO USUÁRIO e filtrar no BANCO se possível
+    # Otimização: Filtro por data e tipo 'expense' direto no Firestore
+    transactions_query = (
+        db.collection("transactions")
+        .where("user_id", "==", user_id)
+        .where("type", "==", "expense")
+    )
+
+    if month and year:
+        start_date, end_date = get_month_range(month, year)
+        transactions_query = transactions_query.where("date", ">=", start_date).where(
+            "date", "<=", end_date
+        )
 
     try:
-        all_transactions = transactions_query.stream()
-        filtered_transactions = list(all_transactions)
+        # Tenta a query otimizada (requer índice)
+        filtered_transactions = list(transactions_query.stream())
     except Exception as e:
         # Fallback for missing index or other query errors
-        # If it's the specific index error (status 400), we fallback to a simpler query
-        # and filter by type manually.
         from app.core.logger import get_logger
 
         logger = get_logger(__name__)
@@ -134,9 +144,6 @@ def list_budgets_with_progress(
                 if not (start_date <= t_date <= end_date):
                     continue
 
-            # If we reach here, it's a match. We only need the stream-compatible doc-like objects
-            # but since we are already evaluating, we can just store the data or the doc itself.
-            # To maintain compatibility with the rest of the code that calls doc.to_dict():
             filtered_transactions.append(doc)
 
     spending_map = {}
@@ -202,11 +209,18 @@ def list_budgets_with_progress(
 
 def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(budget_id)
-    doc = doc_ref.get()
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", budget_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Budget not found or access denied")
+
+    doc_ref = docs[0].reference
 
     cat = category_service.get_category(budget_in.category_id, user_id)
 
@@ -223,12 +237,18 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
 
 def delete_budget(budget_id: str, user_id: str):
     db = get_db()
-    doc_ref = db.collection(COLLECTION_NAME).document(budget_id)
-    doc = doc_ref.get()
+    query = (
+        db.collection(COLLECTION_NAME)
+        .where("user_id", "==", user_id)
+        .where(firestore.FieldPath.document_id(), "==", budget_id)
+        .limit(1)
+    )
+    docs = list(query.stream())
 
-    if not doc.exists or doc.to_dict().get("user_id") != user_id:
+    if not docs:
         raise HTTPException(status_code=404, detail="Budget not found")
 
+    doc_ref = docs[0].reference
     doc_ref.delete()
     return {"status": "success"}
 
