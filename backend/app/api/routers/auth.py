@@ -173,8 +173,10 @@ async def request_email_verification(
         raise
     except Exception as e:
         logger.error(
-            f"Unexpected error in request_email_verification for {request.email}: {e}"
+            f"Unexpected error in request_email_verification for {request.email}: {e}",
+            exc_info=True
         )
+        # Temporariamente expondo o erro real para debug em produção
         raise HTTPException(
-            status_code=500, detail="Erro inesperado ao enviar e-mail de verificação"
+            status_code=500, detail=f"Erro interno: {str(e)}"
         ) from e
