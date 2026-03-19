@@ -20,9 +20,26 @@ logger = get_logger(__name__)
 
 
 # --- AI SCHEMAS (Saved Tokens vs Verbose Prompts) ---
+class TransactionPayload(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    amount: Optional[float] = None
+    type: Optional[str] = None
+    date: Optional[str] = None
+    account_id: Optional[str] = None
+    account: Optional[str] = None
+    category_id: Optional[str] = None
+    category: Optional[str] = None
+    credit_card_id: Optional[str] = None
+    credit_card: Optional[str] = None
+    payment_method: Optional[str] = None
+
+
 class ChatAction(BaseModel):
     type: str = Field(description="Action type: create_transaction, search, etc.")
-    payload: dict = Field(default_factory=dict, description="Data for the action")
+    payload: TransactionPayload = Field(
+        default_factory=TransactionPayload, description="Data for the action"
+    )
 
 
 class AIResponse(BaseModel):
@@ -315,7 +332,10 @@ def chat_finance(
         action_data = None
         if ai_data.action:
             # Converte para o formato interno que o app espera (Payload legacy)
-            action_data = {"type": ai_data.action.type, "data": ai_data.action.payload}
+            action_data = {
+                "type": ai_data.action.type,
+                "data": ai_data.action.payload.model_dump(),
+            }
 
         # 1.b Pre-fetch Categories for resolution se houver ação
         categories = []
@@ -469,6 +489,7 @@ def chat_finance(
 
     except Exception as e:
         logger.error("Chat Error: %s", e, exc_info=True)
+        print(f"[DEBUG] {type(e).__name__}: {e}")
         return "Tive um problema técnico ao processar sua mensagem. Pode repetir?"
 
 

@@ -23,7 +23,6 @@ from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
-from google.cloud.firestore_v1.field_path import FieldPath
 
 logger = get_logger(__name__)
 COLLECTION_NAME = "transactions"
@@ -394,21 +393,12 @@ def update_transaction(
 ) -> Transaction:
     db = get_db()
 
-    # Query otimizada para verificar existência e posse em 1 leitura
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", transaction_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    # Verifica Propriedade
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(transaction_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    doc_ref = docs[0].reference
-    old_data = docs[0].to_dict()
+    doc_ref = doc_snapshot.reference
+    old_data = doc_snapshot.to_dict()
     # Serialize Enums/Datetimes to JSON-compatible format for Firestore
     update_data = transaction_in.model_dump(exclude_unset=True, mode="json")
 
@@ -515,21 +505,12 @@ def delete_transaction(transaction_id: str, user_id: str, scope: str = "all"):
     """
     db = get_db()
 
-    # Query otimizada para verificar existência e posse em 1 leitura
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", transaction_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    # Verifica Propriedade
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(transaction_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    doc_ref = docs[0].reference
-    data = docs[0].to_dict()
+    doc_ref = doc_snapshot.reference
+    data = doc_snapshot.to_dict()
     installment_group_id = data.get("installment_group_id")
 
     # Lógica de Exclusão em Grupo (Se for parcelado)

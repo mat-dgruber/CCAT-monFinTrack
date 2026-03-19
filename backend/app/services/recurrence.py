@@ -5,9 +5,7 @@ from app.core.database import get_db
 from app.core.logger import get_logger
 from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
 from fastapi import HTTPException
-from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
-from google.cloud.firestore_v1.field_path import FieldPath
 
 logger = get_logger(__name__)
 
@@ -86,19 +84,12 @@ def update_recurrence(
     scope: str = "all",
 ) -> Recurrence:
     db = get_db()
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", recurrence_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(recurrence_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Recurrence not found")
 
-    doc_ref = docs[0].reference
-    current_data = docs[0].to_dict()
+    doc_ref = doc_snapshot.reference
+    current_data = doc_snapshot.to_dict()
 
     # If scope is "future", we cancel the current one and create a new one
     if scope == "future":
@@ -167,19 +158,12 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
     Soft delete: marca como inativo e define data de cancelamento.
     """
     db = get_db()
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", recurrence_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(recurrence_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Recurrence not found")
 
-    doc_ref = docs[0].reference
-    current_data = docs[0].to_dict()
+    doc_ref = doc_snapshot.reference
+    current_data = doc_snapshot.to_dict()
 
     cancel_data = {
         "active": False,

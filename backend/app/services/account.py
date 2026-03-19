@@ -1,9 +1,7 @@
 from app.core.database import get_db
 from app.schemas.account import Account, AccountCreate, AccountType
 from fastapi import HTTPException
-from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
-from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "accounts"
 
@@ -38,21 +36,13 @@ def list_accounts(user_id: str) -> list[Account]:
 def update_account(account_id: str, account_in: AccountCreate, user_id: str) -> Account:
     db = get_db()
 
-    # Query otimizada para verificar existência e posse em 1 leitura
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", account_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(account_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(
             status_code=404, detail="Account not found or access denied"
         )
 
-    doc_ref = docs[0].reference
+    doc_ref = doc_snapshot.reference
     data = account_in.model_dump()
     data["user_id"] = user_id  # Garante que não perde a posse
     doc_ref.update(data)
@@ -64,19 +54,11 @@ def update_account(account_id: str, account_in: AccountCreate, user_id: str) -> 
 def delete_account(account_id: str, user_id: str):
     db = get_db()
 
-    # Query otimizada para verificar posse em 1 leitura
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", account_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(account_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    docs[0].reference.delete()
+    doc_snapshot.reference.delete()
     return {"status": "success"}
 
 

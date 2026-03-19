@@ -209,13 +209,15 @@ def test_delete_transaction_simple(mock_db, mock_external_services):
         "account_id": "acc1",
         "status": TransactionStatus.PAID,
     }
+    mock_doc_ref = MagicMock()
+    mock_doc.reference = mock_doc_ref
     mock_db.collection.return_value.document.return_value.get.return_value = mock_doc
 
     # Execute
     transaction_service.delete_transaction("trans1", user_id)
 
     # Verify
-    mock_db.collection.return_value.document.return_value.delete.assert_called_once()
+    mock_doc_ref.delete.assert_called_once()
     # Should revert balance because it was PAID expense
     balance_mock.assert_called_once_with(
         mock_db,

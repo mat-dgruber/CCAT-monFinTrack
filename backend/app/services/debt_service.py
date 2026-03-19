@@ -16,9 +16,7 @@ from app.services.debt_calculator_service import DebtCalculatorService
 from app.services.user_preference import get_preferences
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
-from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
-from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "debts"
 
@@ -116,19 +114,12 @@ def get_debt(user_id: str, debt_id: str) -> Debt:
 def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
     check_tier_eligibility(user_id)
     db = get_db()
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", debt_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(debt_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Debt not found")
 
-    doc_ref = docs[0].reference
-    current_data = docs[0].to_dict()
+    doc_ref = doc_snapshot.reference
+    current_data = doc_snapshot.to_dict()
 
     # Serialize to JSON mode to ensure dates are strings for Firestore
     data = debt_in.model_dump(exclude_unset=True, mode="json")
@@ -150,19 +141,11 @@ def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
 def delete_debt(user_id: str, debt_id: str):
     check_tier_eligibility(user_id)
     db = get_db()
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", debt_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(debt_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Debt not found")
 
-    doc_ref = docs[0].reference
-    doc_ref.delete()
+    doc_snapshot.reference.delete()
     return {"status": "success"}
 
 

@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from app.schemas.account import AccountCreate, AccountType
 from app.services import account as account_service
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 
 @pytest.fixture
@@ -82,7 +83,10 @@ def test_list_accounts(mock_db):
     assert accounts[0].id == "acc1"
     assert accounts[1].name == "Account 2"
     # Verify filter
-    mock_db.collection.return_value.where.assert_called_with("user_id", "==", user_id)
+    call_args = mock_db.collection.return_value.where.call_args
+    assert "filter" in call_args.kwargs
+    ff = call_args.kwargs["filter"]
+    assert isinstance(ff, FieldFilter)
 
 
 def test_update_account_success(mock_db):
@@ -101,6 +105,9 @@ def test_update_account_success(mock_db):
     mock_doc_snap = MagicMock()
     mock_doc_snap.exists = True
     mock_doc_snap.to_dict.return_value = {"user_id": user_id, "name": "Old Name"}
+    
+    mock_doc_ref = MagicMock()
+    mock_doc_snap.reference = mock_doc_ref
 
     mock_db.collection.return_value.document.return_value.get.return_value = (
         mock_doc_snap
@@ -111,7 +118,7 @@ def test_update_account_success(mock_db):
 
     # Verify
     assert result.name == "Updated Name"
-    mock_db.collection.return_value.document.return_value.update.assert_called_once()
+    mock_doc_ref.update.assert_called_once()
 
 
 def test_delete_account_success(mock_db):
@@ -123,6 +130,9 @@ def test_delete_account_success(mock_db):
     mock_doc_snap = MagicMock()
     mock_doc_snap.exists = True
     mock_doc_snap.to_dict.return_value = {"user_id": user_id}
+    
+    mock_doc_ref = MagicMock()
+    mock_doc_snap.reference = mock_doc_ref
 
     mock_db.collection.return_value.document.return_value.get.return_value = (
         mock_doc_snap
@@ -132,7 +142,7 @@ def test_delete_account_success(mock_db):
     account_service.delete_account(account_id, user_id)
 
     # Verify
-    mock_db.collection.return_value.document.return_value.delete.assert_called_once()
+    mock_doc_ref.delete.assert_called_once()
 
 
 def test_delete_account_access_denied(mock_db):

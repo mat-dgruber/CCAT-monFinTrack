@@ -7,9 +7,7 @@ from app.schemas.budget import Budget, BudgetCreate
 from app.schemas.category import Category, CategoryType
 from app.services import category as category_service
 from fastapi import HTTPException
-from google.cloud import firestore
 from google.cloud.firestore_v1 import FieldFilter
-from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "budgets"
 
@@ -221,18 +219,11 @@ def list_budgets_with_progress(
 
 def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budget:
     db = get_db()
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", budget_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(budget_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Budget not found or access denied")
 
-    doc_ref = docs[0].reference
+    doc_ref = doc_snapshot.reference
 
     cat = category_service.get_category(budget_in.category_id, user_id)
 
@@ -249,19 +240,11 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
 
 def delete_budget(budget_id: str, user_id: str):
     db = get_db()
-    query = (
-        db.collection(COLLECTION_NAME)
-        .where(filter=FieldFilter("user_id", "==", user_id))
-        .where(filter=FieldFilter(FieldPath.document_id(), "==", budget_id))
-        .limit(1)
-    )
-    docs = list(query.stream())
-
-    if not docs:
+    doc_snapshot = db.collection(COLLECTION_NAME).document(budget_id).get()
+    if not doc_snapshot.exists or doc_snapshot.to_dict().get("user_id") != user_id:
         raise HTTPException(status_code=404, detail="Budget not found")
 
-    doc_ref = docs[0].reference
-    doc_ref.delete()
+    doc_snapshot.reference.delete()
     return {"status": "success"}
 
 
