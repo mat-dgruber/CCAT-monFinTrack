@@ -112,7 +112,8 @@ def test_list_budgets_with_progress(mock_db):
     mock_db.collection.side_effect = side_effect_collection
 
     # Configure Streams
-    mock_cat_col.where.return_value.stream.return_value = [cat1_doc, cat2_doc]
+    mock_cat_col.where.return_value = mock_cat_col
+    mock_cat_col.stream.return_value = [cat1_doc, cat2_doc]
 
     # 2. Mock Budgets
     # Budget for "cat1" (Food) with 1000 limit
@@ -123,7 +124,8 @@ def test_list_budgets_with_progress(mock_db):
         "amount": 1000.0,
         "user_id": user_id,
     }
-    mock_budget_col.where.return_value.stream.return_value = [budget_doc]
+    mock_budget_col.where.return_value = mock_budget_col
+    mock_budget_col.stream.return_value = [budget_doc]
 
     # 3. Mock Transactions
     # Spend 100 in Cat1, 200 in Cat2. Total for Cat1 budget should be 300.
@@ -141,7 +143,8 @@ def test_list_budgets_with_progress(mock_db):
         "type": "expense",
     }
 
-    mock_trans_col.where.return_value.stream.return_value = [t1, t2]
+    mock_trans_col.where.return_value = mock_trans_col
+    mock_trans_col.stream.return_value = [t1, t2]
 
     # Execute
     budgets = budget_service.list_budgets_with_progress(user_id)

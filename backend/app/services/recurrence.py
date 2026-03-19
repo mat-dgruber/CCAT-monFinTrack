@@ -6,7 +6,8 @@ from app.core.logger import get_logger
 from app.schemas.recurrence import Recurrence, RecurrenceCreate, RecurrenceUpdate
 from fastapi import HTTPException
 from google.cloud import firestore
-from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore_v1 import FieldFilter
+from google.cloud.firestore_v1.field_path import FieldPath
 
 logger = get_logger(__name__)
 
@@ -57,7 +58,9 @@ def get_recurrence(recurrence_id: str, user_id: str) -> Optional[Recurrence]:
 
 def list_recurrences(user_id: str, active_only: bool = False) -> List[Recurrence]:
     db = get_db()
-    query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+    query = db.collection(COLLECTION_NAME).where(
+        filter=FieldFilter("user_id", "==", user_id)
+    )
 
     if active_only:
         query = query.where(filter=FieldFilter("active", "==", True))
@@ -85,8 +88,8 @@ def update_recurrence(
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", recurrence_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", recurrence_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -166,8 +169,8 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", recurrence_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", recurrence_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -190,7 +193,11 @@ def cancel_recurrence(recurrence_id: str, user_id: str) -> Recurrence:
 
 def delete_all_recurrences(user_id: str):
     db = get_db()
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
 
     batch = db.batch()
     count = 0

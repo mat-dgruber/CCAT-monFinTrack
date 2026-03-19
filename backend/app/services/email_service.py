@@ -59,12 +59,18 @@ class EmailService:
             )
             return
 
-        message = MessageSchema(
-            subject=subject, recipients=recipients, body=body, subtype=subtype
-        )
+        try:
+            message = MessageSchema(
+                subject=subject, recipients=recipients, body=body, subtype=subtype
+            )
 
-        fm = FastMail(self.conf)
-        await fm.send_message(message)
+            fm = FastMail(self.conf)
+            await fm.send_message(message)
+            logger.info("Email sent successfully to %s: %s", recipients, subject)
+        except Exception as e:
+            logger.error("Failed to send email to %s: %s. Error: %s", recipients, subject, e)
+            # Re-raise or handle based on needs, but here we just log as it might be in background tasks
+            raise e
 
     def render_template(self, template_name: str, context: dict) -> str:
         template = self.env.get_template(template_name)

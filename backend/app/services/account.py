@@ -2,6 +2,8 @@ from app.core.database import get_db
 from app.schemas.account import Account, AccountCreate, AccountType
 from fastapi import HTTPException
 from google.cloud import firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "accounts"
 
@@ -20,7 +22,11 @@ def create_account(account_in: AccountCreate, user_id: str) -> Account:
 def list_accounts(user_id: str) -> list[Account]:
     db = get_db()
     # FILTRO DE SEGURANÇA
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
 
     accounts = []
     for doc in docs:
@@ -35,8 +41,8 @@ def update_account(account_id: str, account_in: AccountCreate, user_id: str) -> 
     # Query otimizada para verificar existência e posse em 1 leitura
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", account_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", account_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -61,8 +67,8 @@ def delete_account(account_id: str, user_id: str):
     # Query otimizada para verificar posse em 1 leitura
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", account_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", account_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -72,7 +78,6 @@ def delete_account(account_id: str, user_id: str):
 
     docs[0].reference.delete()
     return {"status": "success"}
-
 
 
 # Helper para uso interno (Transaction Service usa isso)
@@ -89,7 +94,11 @@ def get_account(account_id: str, user_id: str = None):
 
 def delete_all_accounts(user_id: str):
     db = get_db()
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
 
     batch = db.batch()
     count = 0

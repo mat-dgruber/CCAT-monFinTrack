@@ -8,6 +8,8 @@ from app.schemas.category import Category, CategoryType
 from app.services import category as category_service
 from fastapi import HTTPException
 from google.cloud import firestore
+from google.cloud.firestore_v1 import FieldFilter
+from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "budgets"
 
@@ -34,7 +36,9 @@ def create_budget(budget_in: BudgetCreate, user_id: str) -> Budget:
 def list_budgets(user_id: str) -> list[dict]:
     db = get_db()
     budget_docs = (
-        db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
     )
     return [{**doc.to_dict(), "id": doc.id} for doc in budget_docs]
 
@@ -45,7 +49,11 @@ def list_budgets_with_progress(
     db = get_db()
 
     # 0. Buscar todas as categorias para montar mapa de hierarquia
-    cat_docs = db.collection("categories").where("user_id", "==", user_id).stream()
+    cat_docs = (
+        db.collection("categories")
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
     # Mapa: parent_id -> [child_id, child_id, ...]
     children_map = {}
     all_categories_map = {}  # id -> obj
@@ -82,7 +90,9 @@ def list_budgets_with_progress(
 
     # 1. Pegar metas DO USUÁRIO
     budget_docs = (
-        db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
     )
     budgets = []
 
@@ -90,15 +100,15 @@ def list_budgets_with_progress(
     # Otimização: Filtro por data e tipo 'expense' direto no Firestore
     transactions_query = (
         db.collection("transactions")
-        .where("user_id", "==", user_id)
-        .where("type", "==", "expense")
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter("type", "==", "expense"))
     )
 
     if month and year:
         start_date, end_date = get_month_range(month, year)
-        transactions_query = transactions_query.where("date", ">=", start_date).where(
-            "date", "<=", end_date
-        )
+        transactions_query = transactions_query.where(
+            filter=FieldFilter("date", ">=", start_date)
+        ).where(filter=FieldFilter("date", "<=", end_date))
 
     try:
         # Tenta a query otimizada (requer índice)
@@ -113,7 +123,9 @@ def list_budgets_with_progress(
         )
 
         # Simple query: just user_id
-        fallback_query = db.collection("transactions").where("user_id", "==", user_id)
+        fallback_query = db.collection("transactions").where(
+            filter=FieldFilter("user_id", "==", user_id)
+        )
         all_txs_stream = fallback_query.stream()
 
         filtered_transactions = []
@@ -211,8 +223,8 @@ def update_budget(budget_id: str, budget_in: BudgetCreate, user_id: str) -> Budg
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", budget_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", budget_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -239,8 +251,8 @@ def delete_budget(budget_id: str, user_id: str):
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", budget_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", budget_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -255,7 +267,11 @@ def delete_budget(budget_id: str, user_id: str):
 
 def delete_all_budgets(user_id: str):
     db = get_db()
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
 
     batch = db.batch()
     count = 0

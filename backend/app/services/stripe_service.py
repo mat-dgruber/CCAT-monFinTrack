@@ -452,3 +452,6 @@ class StripeService:
                 if "pro" in plan_name:
                     return "pro"
         return "free"
+
+
+stripe_service = StripeService()

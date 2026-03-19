@@ -5,6 +5,7 @@ from app.schemas.category import Category, CategoryCreate, CategoryType
 from fastapi import HTTPException
 from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "categories"
 
@@ -449,7 +450,9 @@ def list_categories(
 ) -> List[Category]:
     db = get_db()
     # Filtra apenas categorias do usuário
-    query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+    query = db.collection(COLLECTION_NAME).where(
+        filter=FieldFilter("user_id", "==", user_id)
+    )
 
     if cat_type:
         query = query.where(filter=FieldFilter("type", "==", cat_type.value))
@@ -485,7 +488,11 @@ def list_all_categories_flat(user_id: str) -> List[Category]:
     Otimizado para batch preloading / lookup por ID no list_transactions.
     """
     db = get_db()
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
 
     categories: List[Category] = []
     for doc in docs:
@@ -505,8 +512,8 @@ def update_category(
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", category_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", category_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -529,8 +536,8 @@ def delete_category(category_id: str, user_id: str):
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", category_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", category_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -543,7 +550,7 @@ def delete_category(category_id: str, user_id: str):
     # Check for subcategories
     children_query = (
         db.collection(COLLECTION_NAME)
-        .where("parent_id", "==", category_id)
+        .where(filter=FieldFilter("parent_id", "==", category_id))
         .limit(1)
         .stream()
     )
@@ -576,7 +583,11 @@ def get_category(category_id: str, user_id: str = None):
 def delete_all_custom_categories(user_id: str):
     db = get_db()
     # Delete only categories belonging to the user
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
 
     batch = db.batch()
     count = 0

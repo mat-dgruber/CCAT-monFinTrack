@@ -13,7 +13,12 @@ logger = logging.getLogger("monfintrack.database")
 load_dotenv()
 
 
+_db_cache = None
+
+
 def get_db():
+    global _db_cache
+
     # If we are testing, return a mock unless we really want real DB
     is_testing = "PYTEST_CURRENT_TEST" in os.environ or os.getenv("TESTING") == "True"
 
@@ -22,6 +27,10 @@ def get_db():
         if firebase_admin._apps:
             return firestore.client()
         return MagicMock()
+
+    # Return cached client if available
+    if _db_cache is not None:
+        return _db_cache
 
     if not firebase_admin._apps:
         # Tenta ler arquivo local (Dev)
@@ -52,7 +61,11 @@ def get_db():
             )
             logger.info("✅ Conexão com Firebase inicializada com sucesso!")
         except Exception as e:
-            logger.error("❌ ERRO CRÍTICO: Não foi possível inicializar o Firebase: %s", e, exc_info=True)
+            logger.error(
+                "❌ ERRO CRÍTICO: Não foi possível inicializar o Firebase: %s",
+                e,
+                exc_info=True,
+            )
             # Em produção, queremos saber exatamente o que falhou
             if not is_testing:
                 # Mantemos o erro para ser capturado no get_db
@@ -60,8 +73,11 @@ def get_db():
 
     try:
         if not firebase_admin._apps:
-             raise Exception("Firebase Admin SDK não foi inicializado (sem apps).")
-        return firestore.client()
+            raise Exception("Firebase Admin SDK não foi inicializado (sem apps).")
+
+        # Cache the client instance
+        _db_cache = firestore.client()
+        return _db_cache
     except Exception as e:
         if not is_testing:
             logger.error("❌ Erro ao obter cliente do Firestore: %s", e, exc_info=True)

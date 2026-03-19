@@ -13,8 +13,46 @@ from app.services import budget as budget_service
 from app.services import category as category_service
 from app.services import transaction as transaction_service
 from google import genai
+from google.genai import types
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
+
+
+# --- AI SCHEMAS (Saved Tokens vs Verbose Prompts) ---
+class ChatAction(BaseModel):
+    type: str = Field(description="Action type: create_transaction, search, etc.")
+    payload: dict = Field(default_factory=dict, description="Data for the action")
+
+
+class AIResponse(BaseModel):
+    response: str = Field(description="Natural language response to the user")
+    action: Optional[ChatAction] = Field(None, description="Optional structured action")
+
+
+class ClassificationResponse(BaseModel):
+    category_id: str = Field(description="The ID of the predicted category.")
+
+
+# --- SYSTEM INSTRUCTIONS (Moved out of Prompt to save tokens) ---
+SYSTEM_FINANCE_BASE = """Role: Financial Assistant. Task: Manage finances clearly and concisely. Language: PT-BR.
+Rules:
+1. Date/Time context: Use given now_str for relative 'yesterday', 'today'.
+2. Transaction Extraction: Get short title and description.
+3. ACCOUNT/PAYMENT:
+   - Ask for Payment Method if missing.
+   - Auto-select card if account has ONLY ONE.
+   - ASK if ambiguous (multiple cards or no account).
+4. If info missing, response must ask and action must be null."""
+
+SYSTEM_FINANCE_ROAST = (
+    SYSTEM_FINANCE_BASE
+    + "\nExtra: Role is Sarcastic Roast. Be acidic and critique spending with humor."
+)
+
+SYSTEM_CLASSIFY = """You are an expert financial assistant. Your task is to classify a transaction description into one of the provided categories.
+Output ONLY the category ID in JSON format. If no suitable category is found, output null.
+Example: {"category_id": "12345"}"""
 
 # Configura o Cliente (carregado do .env)
 GENAI_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -115,8 +153,8 @@ def classify_transaction(
         cat_lines = [f"{c.name},{c.id}" for c in categories]
         cat_context = "C:\n" + "\n".join(cat_lines)
 
-        # 2. Few-Shot (Últimas 30 txs)
-        history = transaction_service.list_transactions(user_id, limit=30)
+        # 2. Few-Shot (Últimas 15 txs para economia de tokens)
+        history = transaction_service.list_transactions(user_id, limit=15)
         examples = []
         for t in history:
             if t.category and t.title:
@@ -125,33 +163,30 @@ def classify_transaction(
 
         examples_block = "Hist:\n" + "\n".join(examples)
 
-        # 3. Prompt Otimizado
+        # 3. Prompt Compacto
         model_name = get_model_for_tier(tier)
 
-        prompt = f"""
-        {cat_context}
-        {examples_block}
-        
-        Task: Classify '{description}'. verify Hist for patterns.
-        Ret: CategoryID OR 'null'.
-        """
+        prompt = f"{cat_context}\n{examples_block}\nClassify:'{description}'"
 
-        # 3. Chama a IA
-        from google.genai import types
-
-        config = types.GenerateContentConfig(
-            candidate_count=1,
-            max_output_tokens=500,
-            temperature=0.1,  # Low temperature for classification
+        # 4. Chama IA com JSON Nativo
+        response = _call_with_retry(
+            model_name=model_name,
+            prompt_or_parts=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_CLASSIFY,
+                response_mime_type="application/json",
+                response_schema=ClassificationResponse,
+                temperature=0.1,
+            ),
         )
 
-        response = _call_with_retry(model_name, prompt, config=config)
-        if not response:
+        if not response or not response.text:
             return None
 
-        predicted_id = response.text.strip()
+        res_data = ClassificationResponse.model_validate_json(response.text)
+        predicted_id = res_data.category_id
 
-        if predicted_id.lower() == "null":
+        if not predicted_id or predicted_id.lower() == "null":
             return None
 
         # Valida ID
@@ -192,45 +227,28 @@ def chat_finance(
         return "AI offline."
 
     try:
-        # 1. Contexto Otimizado
-
-        # A. Contas (Simplificado com Cartões)
-        try:
-            accounts = account_service.list_accounts(user_id)
-        except Exception as e:
-            logger.error("Error listing accounts for chat: %s", e)
-            accounts = []
-
+        # A. Contas (Minificado)
+        accounts = account_service.list_accounts(user_id)
         acc_details = []
         for a in accounts:
-            cards_str = ""
-            if a.credit_cards:
-                cards_str = f" [Cards: {', '.join([c.name for c in a.credit_cards])}]"
-            acc_details.append(f"{a.name}:R${int(a.balance)}{cards_str}")
+            cards = (
+                f"|C:{','.join([c.name[:10] for c in a.credit_cards])}"
+                if a.credit_cards
+                else ""
+            )
+            acc_details.append(f"{a.name[:15]}:R${int(a.balance)}{cards}")
+        acc_str = " ; ".join(acc_details)
 
-        acc_str = " | ".join(acc_details)
-
-        # B. Transações (Últimas 15 para manter o contexto leve)
-        try:
-            transactions = transaction_service.list_transactions(user_id, limit=15)
-        except Exception as e:
-            logger.error("Error listing transactions for chat: %s", e)
-            transactions = []
-
-        tx_list = []
-        for t in transactions:
-            # Use YYYY-MM-DD for clear temporal awareness
-            d = t.date.strftime("%Y-%m-%d")
-            n = t.title[:20]
-            v = float(t.amount)
-            c = t.category.name if t.category else "Outros"
-            tx_list.append(f"[{d}] {n}: R${v:.2f} ({c})")
+        # B. Transações (Compacto)
+        transactions = transaction_service.list_transactions(user_id, limit=15)
+        tx_list = [
+            f"{t.date.strftime('%d/%m')} {t.title[:15]}:R${float(t.amount):.0f}"
+            for t in transactions
+        ]
         tx_str = "\n".join(tx_list)
-
         # C. Totais Mês Atual
         now = datetime.now()
         start_month = datetime(now.year, now.month, 1)
-
         try:
             txs_month = transaction_service.list_transactions(
                 user_id, start_date=start_month, limit=100
@@ -246,128 +264,58 @@ def chat_finance(
                 c = t.category.name if t.category else "Outros"
                 v = abs(float(t.amount))
                 cat_totals[c] = cat_totals.get(c, 0) + v
-                total_spent += v
 
         top_cats = dict(
             sorted(cat_totals.items(), key=lambda x: x[1], reverse=True)[:5]
         )
+        total_spent = sum(cat_totals.values())
 
         # D. Histórico e Relógio
         now_str = now.strftime("%Y-%m-%d %H:%M:%S (%A)")
-        history_str = ""
+        contents = []
         if history:
-            # Pegar últimas 6 mensagens do histórico para manter contexto mas economizar tokens
-            last_history = history[-6:]
-            history_str = "\n".join(
-                [f"{h['role']}: {h['content']}" for h in last_history]
-            )
+            # Pegar últimas 6 mensagens do histórico e formatar para o SDK
+            for h in history[-6:]:
+                role = "user" if h["role"] == "user" else "model"
+                contents.append(
+                    types.Content(
+                        role=role, parts=[types.Part.from_text(text=h["content"])]
+                    )
+                )
 
-        # 2. System Prompt
+        # 2. IA Configs
         model_name = get_model_for_tier(tier)
+        sys_instr = SYSTEM_FINANCE_ROAST if persona == "roast" else SYSTEM_FINANCE_BASE
 
-        base_ctx = f"""
-        # CONTEXTO ATUAL
-        - Data/Hora: {now_str}
-        - Contas: {acc_str if acc_str else "Nenhuma conta cadastrada"}
-        - Gasto Total no Mês: R${total_spent:.2f}
-        - Top Categorias: {json.dumps(top_cats, ensure_ascii=False)}
-
-        # ÚLTIMAS TRANSAÇÕES
-        {tx_str if tx_str else "Nenhuma transação recente encontrada"}
-
-        # HISTÓRICO RECENTE
-        {history_str}
-        """
-
-        if persona == "roast":
-            system_instructions = """
-            Role: Assistente Financeiro Sarcástico e Ácido (Roast).
-            Task: Critique os gastos do usuário com muito sarcasmo e humor ácido. Seja direto e "bravo" com desperdícios.
-            Rules:
-            1. Idioma: Português (Brasil).
-            2. Se o usuário quiser adicionar uma transação, você DEVE fazer isso, mas reclamando muito.
-            3. Use o contexto de data/hora para resolver datas relativas como "ontem", "anteontem", "hoje" em datas reais (YYYY-MM-DD).
-            4. Tente extrair um 'title' curto (ex: Pizza) e uma 'description' mais detalhada se o usuário falar algo extra.
-            5. SELEÇÃO DE CONTA/PAGAMENTO:
-               - Se o usuário NÃO mencionou a FORMA DE PAGAMENTO (Crédito, Débito, PIX, Dinheiro, etc.), PERGUNTE como ele pagou antes de criar.
-               - Se mencionou 'cartão de crédito' e a conta tiver APENAS UM cartão, selecione-o automaticamente.
-               - Se a conta tiver MAIS DE UM cartão e o usuário não especificou qual, PERGUNTE qual cartão.
-               - Se o usuário NÃO mencionou a CONTA, PERGUNTE qual conta usar.
-            6. Saída: SEMPRE JSON válido. Se faltar informação (conta, forma de pagamento ou cartão ambíguo), 'action' deve ser null e você deve perguntar o que falta na 'response'.
-            """
-        else:
-            system_instructions = """
-            Role: Assistente Financeiro Amigável e Prestativo.
-            Task: Ajude o usuário a gerenciar suas finanças com clareza e empatia.
-            Rules:
-            1. Idioma: Português (Brasil). Conciso.
-            2. Use o contexto de data/hora para referências temporais. Converta "ontem", "hoje", etc., em datas reais (YYYY-MM-DD).
-            3. Tente extrair um 'title' curto e uma 'description' mais detalhada se o usuário fornecer contexto.
-            4. SELEÇÃO DE CONTA/PAGAMENTO:
-               - Se o usuário NÃO mencionou a FORMA DE PAGAMENTO (Crédito, Débito, PIX, Dinheiro, etc.), PERGUNTE educadamente como ele pagou antes de criar.
-               - Se mencionou 'cartão de crédito' e a conta tiver APENAS UM cartão, selecione-o automaticamente.
-               - Se a conta tiver MAIS DE UM cartão e o usuário não especificou qual, PERGUNTE qual cartão ele quer usar.
-               - Se o usuário NÃO mencionou a CONTA, PERGUNTE qual conta ele quer usar.
-            5. Saída: SEMPRE JSON válido. Se faltar informação (conta, forma de pagamento ou cartão ambíguo), 'action' deve ser null e você deve perguntar o que falta na 'response'.
-            """
-
-        final_prompt = f"""
-        {system_instructions}
-
-        {base_ctx}
-
-        USER QUESTION: {message}
-
-        RESPONSE FORMAT (JSON ONLY):
-        {{
-          "response": "Sua mensagem aqui",
-          "action": {{
-            "type": "create_transaction",
-            "data": {{
-              "amount": 50.0,
-              "title": "Nome Curto",
-              "description": "Detalhes opcionais aqui",
-              "date": "YYYY-MM-DD",
-              "category": "Nome da Categoria",
-              "account": "Nome da Conta",
-              "credit_card": "Nome do Cartão (opcional)",
-              "payment_method": "credit_card, debit_card, pix, cash, bank_transfer, etc",
-              "type": "expense"
-            }}
-          }} OR null
-        }}
-        """
-        from google.genai import types
-
-        config = types.GenerateContentConfig(
-            response_mime_type="application/json",
-            candidate_count=1,
-            max_output_tokens=1000,
-            temperature=0.8 if persona == "roast" else 0.4,
+        # 3. Prompt Compacto
+        user_prompt = f"Now:{now_str} | Bal:{acc_str} | Month:R${total_spent:.0f} | Top:{json.dumps(top_cats)}\nTXs:\n{tx_str if tx_str else 'None'}\n\nUser Question: {message}"
+        contents.append(
+            types.Content(role="user", parts=[types.Part.from_text(text=user_prompt)])
         )
 
-        response = _call_with_retry(model_name, final_prompt, config=config)
-        if not response:
-            return "Estou com dificuldades para processar sua mensagem agora. Tente novamente em alguns segundos."
+        # 4. Chama a IA com Schema JSON Nativo
+        response = client.models.generate_content(
+            model=model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=sys_instr,
+                response_mime_type="application/json",
+                response_schema=AIResponse,
+                temperature=0.8 if persona == "roast" else 0.4,
+            ),
+        )
 
-        text_response = response.text.strip()
+        if not response or not response.text:
+            return "AI offline ou sem resposta."
 
-        # Limpar markdown ```json se presente
-        if "```json" in text_response:
-            text_response = (
-                text_response.replace("```json", "").replace("```", "").strip()
-            )
+        # Parse via Pydantic (garante validação total)
+        ai_data = AIResponse.model_validate_json(response.text)
 
-        # Parse the JSON response
-        try:
-            ai_data = json.loads(text_response)
-        except json.JSONDecodeError:
-            # Se falhar o JSON, tenta extrair apenas o campo response se possível, ou retorna o texto puro
-            logger.warning("AI failed to return valid JSON: %s", text_response)
-            return text_response
-
-        final_message = ai_data.get("response", "Não consegui formular uma resposta.")
-        action_data = ai_data.get("action")
+        final_message = ai_data.response
+        action_data = None
+        if ai_data.action:
+            # Converte para o formato interno que o app espera (Payload legacy)
+            action_data = {"type": ai_data.action.type, "data": ai_data.action.payload}
 
         # 1.b Pre-fetch Categories for resolution se houver ação
         categories = []
@@ -958,3 +906,19 @@ def generate_weekly_insights(user_id: str, data: dict, tier: str = "pro") -> str
     except Exception as e:
         logger.error("Weekly Insights Error: %s", e)
         return "Continue focado em seus objetivos financeiros! A consistência é o segredo do sucesso."
+
+
+# --- Instância para Exportação (Retrocompatibilidade) ---
+class AIService:
+    def __init__(self):
+        self.chat_finance = chat_finance
+        self.classify_transaction = classify_transaction
+        self.parse_receipt = parse_receipt
+        self.generate_monthly_report = generate_monthly_report
+        self.generate_budget_plan = generate_budget_plan
+        self.generate_debt_advice = generate_debt_advice
+        self.analyze_cost_of_living = analyze_cost_of_living
+        self.generate_weekly_insights = generate_weekly_insights
+
+
+ai_service = AIService()

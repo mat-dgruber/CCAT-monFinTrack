@@ -17,6 +17,8 @@ from app.services.user_preference import get_preferences
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from google.cloud import firestore
+from google.cloud.firestore_v1 import FieldFilter
+from google.cloud.firestore_v1.field_path import FieldPath
 
 COLLECTION_NAME = "debts"
 
@@ -73,7 +75,11 @@ def list_debts(user_id: str) -> List[Debt]:
     check_tier_eligibility(user_id)
 
     db = get_db()
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = (
+        db.collection(COLLECTION_NAME)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .stream()
+    )
     debts = []
     for doc in docs:
         d_dict = doc.to_dict()
@@ -112,8 +118,8 @@ def update_debt(user_id: str, debt_id: str, debt_in: DebtUpdate) -> Debt:
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", debt_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", debt_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -146,8 +152,8 @@ def delete_debt(user_id: str, debt_id: str):
     db = get_db()
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", debt_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", debt_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -222,7 +228,11 @@ def generate_payment_plan(
     # --- SEASONAL INCOME FETCH ---
     def fetch_seasonal_resources(uid: str) -> List[Dict[str, Any]]:
         db = get_db()
-        docs = db.collection("seasonal_incomes").where("user_id", "==", uid).stream()
+        docs = (
+            db.collection("seasonal_incomes")
+            .where(filter=FieldFilter("user_id", "==", uid))
+            .stream()
+        )
         res = []
         for doc in docs:
             d = doc.to_dict()

@@ -22,7 +22,8 @@ from app.services.analysis_service import analysis_service
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException
 from google.cloud import firestore
-from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore_v1 import FieldFilter
+from google.cloud.firestore_v1.field_path import FieldPath
 
 logger = get_logger(__name__)
 COLLECTION_NAME = "transactions"
@@ -267,7 +268,7 @@ def list_transactions(
 ) -> list[Transaction]:
     db = get_db()
     # FILTRO DO USUÁRIO
-    query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+    query = db.collection(COLLECTION_NAME).where(filter=FieldFilter("user_id", "==", user_id))
 
     transactions = []
 
@@ -280,9 +281,9 @@ def list_transactions(
         if start_date.tzinfo is None:
             pass
 
-        query = query.where(filter=FieldFilter("date", ">=", start_date)).where(
-            filter=FieldFilter("date", "<=", end_date)
-        )
+        query = query.where(
+            filter=FieldFilter("date", ">=", start_date)
+        ).where(filter=FieldFilter("date", "<=", end_date))
         # OTIMIZAÇÃO EXTRA: Ordenação e Limite no DB
         # Isso requer índice: user_id ASC, date DESC
         query = query.order_by("date", direction=firestore.Query.DESCENDING)
@@ -295,7 +296,7 @@ def list_transactions(
     except Exception as e:
         logger.warning("Erro ao consultar DB (Provavelmente falta índice): %s", e)
         # Fallback: Busca tudo e filtra na memória (Comportamento antigo, lento mas funcional)
-        query = db.collection(COLLECTION_NAME).where("user_id", "==", user_id)
+        query = db.collection(COLLECTION_NAME).where(filter=FieldFilter("user_id", "==", user_id))
         all_transactions = query.stream()
 
     # ==========================================
@@ -396,8 +397,8 @@ def update_transaction(
     # Query otimizada para verificar existência e posse em 1 leitura
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", transaction_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", transaction_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -517,8 +518,8 @@ def delete_transaction(transaction_id: str, user_id: str, scope: str = "all"):
     # Query otimizada para verificar existência e posse em 1 leitura
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where(firestore.FieldPath.document_id(), "==", transaction_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter(FieldPath.document_id(), "==", transaction_id))
         .limit(1)
     )
     docs = list(query.stream())
@@ -538,8 +539,8 @@ def delete_transaction(transaction_id: str, user_id: str, scope: str = "all"):
         # Busca todas as parcelas do grupo
         group_query = (
             db.collection(COLLECTION_NAME)
-            .where("user_id", "==", user_id)
-            .where("installment_group_id", "==", installment_group_id)
+            .where(filter=FieldFilter("user_id", "==", user_id))
+            .where(filter=FieldFilter("installment_group_id", "==", installment_group_id))
             .stream()
         )
 
@@ -654,8 +655,8 @@ def update_installment_group(
     # Busca as outras parcelas do grupo
     group_query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where("installment_group_id", "==", installment_group_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter("installment_group_id", "==", installment_group_id))
         .stream()
     )
 
@@ -733,9 +734,9 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
 
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where("status", "==", TransactionStatus.PENDING)
-        .where("date", ">=", today)
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter("status", "==", TransactionStatus.PENDING))
+        .where(filter=FieldFilter("date", ">=", today))
         .order_by("date", direction=firestore.Query.ASCENDING)
         .limit(limit)
     )
@@ -804,7 +805,7 @@ def get_upcoming_transactions(user_id: str, limit: int = 10) -> List[Transaction
 
 def delete_all_transactions(user_id: str):
     db = get_db()
-    docs = db.collection(COLLECTION_NAME).where("user_id", "==", user_id).stream()
+    docs = db.collection(COLLECTION_NAME).where(filter=FieldFilter("user_id", "==", user_id)).stream()
 
     batch = db.batch()
     count = 0
@@ -837,7 +838,7 @@ def get_first_transaction_date(user_id: str) -> Optional[datetime]:
     # Query for the oldest transaction
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
+        .where(filter=FieldFilter("user_id", "==", user_id))
         .order_by("date", direction=firestore.Query.ASCENDING)
         .limit(1)
     )
@@ -872,9 +873,9 @@ def list_pending_tithes(user_id: str) -> List[Transaction]:
 
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where("type", "==", "income")
-        .where("tithe_status", "==", "PENDING")
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter("type", "==", "income"))
+        .where(filter=FieldFilter("tithe_status", "==", "PENDING"))
     )
 
     transactions = []
@@ -888,8 +889,8 @@ def list_pending_tithes(user_id: str) -> List[Transaction]:
         # Fallback: Query sem filtro de tithe_status
         query = (
             db.collection(COLLECTION_NAME)
-            .where("user_id", "==", user_id)
-            .where("type", "==", "income")
+            .where(filter=FieldFilter("user_id", "==", user_id))
+            .where(filter=FieldFilter("type", "==", "income"))
         )
         docs = query.stream()
 
@@ -954,9 +955,9 @@ def batch_pay_tithes(user_id: str) -> dict:
 
     query = (
         db.collection(COLLECTION_NAME)
-        .where("user_id", "==", user_id)
-        .where("type", "==", "income")
-        .where("tithe_status", "==", "PENDING")
+        .where(filter=FieldFilter("user_id", "==", user_id))
+        .where(filter=FieldFilter("type", "==", "income"))
+        .where(filter=FieldFilter("tithe_status", "==", "PENDING"))
     )
 
     try:
@@ -966,8 +967,8 @@ def batch_pay_tithes(user_id: str) -> dict:
         # Fallback
         query = (
             db.collection(COLLECTION_NAME)
-            .where("user_id", "==", user_id)
-            .where("type", "==", "income")
+            .where(filter=FieldFilter("user_id", "==", user_id))
+            .where(filter=FieldFilter("type", "==", "income"))
         )
         docs = [
             d for d in query.stream() if d.to_dict().get("tithe_status") == "PENDING"
