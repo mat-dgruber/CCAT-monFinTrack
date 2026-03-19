@@ -297,6 +297,7 @@ export class Login implements OnInit, AfterViewInit {
       if (this.isRegisterMode()) {
         await this.authService.register(email!, password!, name!, phone!);
         this.messageService.add({
+          key: 'main-toast',
           severity: 'success',
           summary: 'Conta Criada!',
           detail:
@@ -354,7 +355,17 @@ export class Login implements OnInit, AfterViewInit {
         errorStr.includes('E-mail não verificado')
       ) {
         msg =
-          'Seu e-mail ainda não foi verificado. Por favor, cheque sua caixa de entrada e spam.';
+          'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e spam. ';
+        this.messageService.add({
+          key: 'main-toast',
+          severity: 'info',
+          summary: 'Verificação Pendente',
+          detail: msg,
+          life: 15000,
+          sticky: true,
+          data: { type: 'resend', email: email }
+        });
+        return; // Early return to avoid default error toast
       } else if (errorCode === 'auth/too-many-requests') {
         msg =
           'Muitas tentativas malsucedidas. Sua conta foi temporariamente bloqueada. Tente mais tarde ou redefina sua senha.';
@@ -405,6 +416,27 @@ export class Login implements OnInit, AfterViewInit {
         severity: 'error',
         summary: 'Erro',
         detail: msg,
+      });
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async resendVerification(email: string) {
+    this.isLoading.set(true);
+    try {
+      await this.authService.resendVerificationEmail(email);
+      this.messageService.clear();
+      this.messageService.add({
+        severity: 'success',
+        summary: 'E-mail Reenviado',
+        detail: 'Verifique sua caixa de entrada.',
+      });
+    } catch (err: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Falha ao reenviar e-mail.',
       });
     } finally {
       this.isLoading.set(false);

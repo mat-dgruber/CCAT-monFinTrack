@@ -1,4 +1,31 @@
-<p-toast key="main-toast"></p-toast>
+<p-toast key="main-toast">
+  <ng-template let-message pTemplate="message">
+    <div class="flex flex-col gap-3 w-full">
+      <div class="flex items-center gap-2">
+        @if (message.severity === 'info') {
+          <i class="pi pi-info-circle text-blue-500" style="font-size: 1.5rem"></i>
+        } @else if (message.severity === 'error') {
+          <i class="pi pi-times-circle text-red-500" style="font-size: 1.5rem"></i>
+        } @else {
+          <i class="pi pi-exclamation-triangle text-orange-500" style="font-size: 1.5rem"></i>
+        }
+        <div class="flex flex-col">
+          <span class="font-bold text-color">{{ message.summary }}</span>
+          <span class="text-sm text-secondary">{{ message.detail }}</span>
+        </div>
+      </div>
+      @if (message.data?.type === 'resend') {
+        <div class="flex justify-end">
+          <p-button
+            label="Reenviar e-mail de verificação"
+            (onClick)="resendVerification(message.data.email)"
+            styleClass="p-button-sm p-button-info organic-shape font-bold"
+          ></p-button>
+        </div>
+      }
+    </div>
+  </ng-template>
+</p-toast>
 
 <div class="min-h-screen w-full flex overflow-hidden bg-surface-ground">
   <!-- Side Panel (Visual) - Hidden on mobile -->

@@ -110,6 +110,7 @@ async def request_email_verification(
 
         # Generate Firebase Verification Link
         try:
+            logger.info(f"Generating verification link for {request.email}...")
             action_code_settings = auth.ActionCodeSettings(
                 url=f"{APP_URL}/verify-email/",
                 handle_code_in_app=True,
@@ -118,6 +119,7 @@ async def request_email_verification(
             firebase_link = auth.generate_email_verification_link(
                 request.email, action_code_settings
             )
+            logger.info(f"Firebase link generated successfully for {request.email}")
             # Extract oobCode and use a DIRECT link to our app to bypass Firebase UI
             # and prevent parameter stripping during redirects.
             from urllib.parse import parse_qs, urlparse
