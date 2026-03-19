@@ -1,14 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { Transaction } from '../models/transaction.model';
 import { environment } from '../../environments/environment';
+import { DashboardService } from './dashboard.service';
+import { BudgetService } from './budget.service';
+import { AccountService } from './account.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TransactionService {
   private http = inject(HttpClient);
+  private dashboardService = inject(DashboardService);
+  private budgetService = inject(BudgetService);
+  private accountService = inject(AccountService);
 
   private apiUrl = `${environment.apiUrl}/transactions`;
 
@@ -30,7 +36,9 @@ export class TransactionService {
   }
 
   createTransaction(transaction: Transaction): Observable<Transaction[]> {
-    return this.http.post<Transaction[]>(this.apiUrl, transaction);
+    return this.http.post<Transaction[]>(this.apiUrl, transaction).pipe(
+      tap(() => this.invalidateRelatedCaches())
+    );
   }
 
   // Atualiza uma transação existente
@@ -42,12 +50,22 @@ export class TransactionService {
     const params = new HttpParams().set('scope', scope);
     return this.http.put<Transaction>(`${this.apiUrl}/${id}`, transaction, {
       params,
-    });
+    }).pipe(
+      tap(() => this.invalidateRelatedCaches())
+    );
   }
 
   deleteTransaction(id: string, scope: string = 'all'): Observable<void> {
     const params = new HttpParams().set('scope', scope);
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { params });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { params }).pipe(
+      tap(() => this.invalidateRelatedCaches())
+    );
+  }
+
+  private invalidateRelatedCaches() {
+    this.dashboardService.clearCache();
+    this.budgetService.clearCache();
+    this.accountService.clearCache();
   }
 
   getUpcomingTransactions(limit: number = 10): Observable<Transaction[]> {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, ReplaySubject, tap } from 'rxjs';
 
 import { Budget } from '../models/budget.model';
 
@@ -32,13 +32,17 @@ import { environment } from '../../environments/environment';
 })
 export class DashboardService {
   private http = inject(HttpClient);
-
   private apiUrl = `${environment.apiUrl}/dashboard`;
+
+  private dashboardCache = new Map<string, ReplaySubject<DashboardSummary>>();
+  private lastFetch = new Map<string, number>();
+  private readonly CACHE_TIME = 60000; // 1 minuto
 
   getSummary(
     month: number,
     year: number,
     filters?: any,
+    forceRefresh = false
   ): Observable<DashboardSummary> {
     let params = new HttpParams()
       .set('month', month.toString())
@@ -69,6 +73,27 @@ export class DashboardService {
       }
     }
 
-    return this.http.get<DashboardSummary>(this.apiUrl, { params });
+    const key = params.toString();
+    const isExpired = Date.now() - (this.lastFetch.get(key) || 0) > this.CACHE_TIME;
+
+    if (forceRefresh || isExpired || !this.dashboardCache.has(key)) {
+      if (!this.dashboardCache.has(key)) {
+        this.dashboardCache.set(key, new ReplaySubject<DashboardSummary>(1));
+      }
+
+      return this.http.get<DashboardSummary>(this.apiUrl, { params }).pipe(
+        tap((data) => {
+          this.dashboardCache.get(key)?.next(data);
+          this.lastFetch.set(key, Date.now());
+        })
+      );
+    }
+
+    return this.dashboardCache.get(key)!.asObservable();
+  }
+
+  clearCache() {
+    this.dashboardCache.clear();
+    this.lastFetch.clear();
   }
 }

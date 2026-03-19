@@ -44,18 +44,19 @@ export class AuthService {
       this._isAuthResolved.next(true);
     });
 
-    // Safety timeout: se o Firebase não responder em 20s, marcamos como resolvido
-    // Aumentado para 20s para dar mais tempo ao Firebase em conexões lentas (4G/Mobile),
+    // Safety timeout: se o Firebase não responder em 40s (aumentado para redes instáveis), marcamos como resolvido
+    // Aumentado para 40s para dar mais tempo ao Firebase em conexões lentas (4G/Mobile),
     // mas ainda emitindo null para destravar guards e interceptors.
     setTimeout(() => {
       if (!this._isAuthResolved.value) {
         console.warn(
-          'AuthService: Auth resolution safety timeout reached (20s). Procedendo para destravar o app.'
+          'AuthService: Auth resolution safety timeout reached (40s). Procedendo para destravar o app.'
         );
         this.authStateSubject.next(null); // Destrava quem está esperando authState$
         this._isAuthResolved.next(true);
       }
-    }, 20000);
+    }, 40000);
+
 
     // Verifica a sessão periodicamente se houver duração configurada
     if (environment.sessionDuration > 0) {
@@ -198,6 +199,12 @@ export class AuthService {
       this.http.post(`${environment.apiUrl}/auth/verify-email`, {
         email: user.email,
       }),
+    );
+  }
+
+  async resendVerificationEmail(email: string) {
+    return await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/auth/verify-email`, { email }),
     );
   }
 
