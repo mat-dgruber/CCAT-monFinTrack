@@ -13,6 +13,7 @@ from app.core.logger import get_logger
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
@@ -23,6 +24,9 @@ load_dotenv()
 
 logger = get_logger(__name__)
 app = FastAPI()
+
+# Enable GZip compression for responses over 1000 bytes
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Conecta o limitador ao App
 app.state.limiter = limiter

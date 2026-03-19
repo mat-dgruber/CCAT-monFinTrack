@@ -22,7 +22,7 @@ steps:
       - "managed"
       - "--allow-unauthenticated"
       - "--min-instances"
-      - "1"
+      - "0"
       # Environmental variables can be set here or mapped from Secret Manager
       # - '--set-env-vars'
       # - 'STORAGE_BUCKET=ccat-monfintrack.firebasestorage.app'
