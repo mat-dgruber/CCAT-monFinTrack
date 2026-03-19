@@ -126,17 +126,6 @@ async def startup_event():
         # mas rotas que usam DB vão falhar.
 
 
-@app.get("/health")
-def health_check():
-    try:
-        get_db()
-        return {"status": "ok", "database": "connected"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Database connection error: {str(e)}"
-        ) from e
-
-
 @app.get("/")
 def read_root():
     return {"mensagem": "Olá, Mundo!"}

@@ -40,6 +40,9 @@ def get_db():
         json_creds = os.getenv("FIREBASE_CREDENTIALS_JSON")
 
         try:
+            # Garante o Project ID para o Auth Service
+            project_id = os.getenv("PROJECT_ID", "ccat-monfintrack")
+
             if cred_path and os.path.exists(cred_path):
                 logger.info("Usando credenciais do arquivo: %s", cred_path)
                 cred = credentials.Certificate(cred_path)
@@ -54,12 +57,15 @@ def get_db():
             firebase_admin.initialize_app(
                 cred,
                 {
+                    "projectId": project_id,
                     "storageBucket": os.getenv(
-                        "STORAGE_BUCKET", "ccat-monfintrack.firebasestorage.app"
-                    )
+                        "STORAGE_BUCKET", f"{project_id}.firebasestorage.app"
+                    ),
                 },
             )
-            logger.info("✅ Conexão com Firebase inicializada com sucesso!")
+            logger.info(
+                "✅ Conexão com Firebase (%s) inicializada com sucesso!", project_id
+            )
         except Exception as e:
             logger.error(
                 "❌ ERRO CRÍTICO: Não foi possível inicializar o Firebase: %s",
@@ -81,4 +87,5 @@ def get_db():
     except Exception as e:
         if not is_testing:
             logger.error("❌ Erro ao obter cliente do Firestore: %s", e, exc_info=True)
+            raise e  # Raise to let health check catch it
         return MagicMock() if is_testing else None

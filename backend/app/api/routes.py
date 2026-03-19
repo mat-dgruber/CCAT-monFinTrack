@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from app.api import user_preference
+from app.core.database import get_db
 from app.core.limiter import limiter
 from app.core.security import get_current_user
 from app.schemas.account import Account, AccountCreate
@@ -19,6 +20,18 @@ from app.services import transaction as transaction_service
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 router = APIRouter()
+
+
+@router.get("/health")
+def health_check():
+    """Verifica a saúde do sistema e conexão com o banco de dados."""
+    try:
+        get_db()
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Database connection error: {str(e)}"
+        ) from e
 
 
 @router.post("/accounts", response_model=Account)

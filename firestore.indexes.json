@@ -142,11 +142,5 @@
       "density": "SPARSE_ALL"
     }
   ],
-  "fieldOverrides": [
-    {
-      "collectionGroup": "ai_predictions",
-      "fieldPath": "created_at",
-      "ttl": true
-    }
-  ]
+  "fieldOverrides": []
 }
